@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "Packet.h"
 
-static BufferManager Buffer_Manager;
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -11,28 +11,27 @@ namespace SL {
 				size_t size = 0;
 				char* data = nullptr;
 			};
+			char * getdata(Blk & blk)
+			{
+				return nullptr;
+			}
+			size_t getsize(Blk & blk)
+			{
+				return size_t();
+			}
 		}
 	}
 }
-size_t getSize(const std::shared_ptr<SL::Remote_Access_Library::Network::Blk>& b)
+size_t SL::Remote_Access_Library::Network::getSize(const std::shared_ptr<SL::Remote_Access_Library::Network::Blk>& b)
 {
 	return b->size;
 }
 
-char* getData(const std::shared_ptr<SL::Remote_Access_Library::Network::Blk>& b)
+char* SL::Remote_Access_Library::Network::getData(const std::shared_ptr<SL::Remote_Access_Library::Network::Blk>& b)
 {
 	return b->data;
 }
 
-std::shared_ptr<SL::Remote_Access_Library::Network::Blk> AquireBuffer(size_t req_bytes)
-{
-	return Buffer_Manager.AquireBuffer(req_bytes);
-}
-
-void ReleaseBuffer(std::shared_ptr<SL::Remote_Access_Library::Network::Blk>& buffer)
-{
-	Buffer_Manager.ReleaseBuffer(buffer);
-}
 
 class BufferManager {
 	size_t _Bytes_Allocated = 0;
@@ -69,8 +68,15 @@ public:
 		}//otherwise ignore and let it be reclaimed
 	}
 };
+static BufferManager Buffer_Manager;
 
-SL::Remote_Access_Library::Network::Packet::Packet(PACKET_TYPES ptype, size_t packetsize)
+#define HEADERSIZE sizeof(PacketHeader)
+
+std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Library::Network::Packet::CreatePacket(PACKET_TYPES ptype, size_t packetsize) {
+	return std::make_shared<Packet>(Buffer_Manager.AquireBuffer(packetsize + HEADERSIZE));
+}
+
+SL::Remote_Access_Library::Network::Packet::Packet(std::shared_ptr<Blk>& blk): _Data(blk)
 {
 
 }
@@ -82,17 +88,20 @@ SL::Remote_Access_Library::Network::Packet::~Packet()
 
 
 char* SL::Remote_Access_Library::Network::Packet::get_Payload() {
-
+	if (!_Data) return nullptr;
+	return _Data->data + HEADERSIZE;
 }
 
 size_t SL::Remote_Access_Library::Network::Packet::get_Payloadsize() {
-
+	if (!_Data) return 0;
+	auto ptr = (PacketHeader*)_Data->data;
+	return ptr->PayloadLen;
 }
-size_t SL::Remote_Access_Library::Network::Packet::get_Packetsize() {
 
-}
 SL::Remote_Access_Library::Network::PACKET_TYPES SL::Remote_Access_Library::Network::Packet::get_Packettype() {
-
+	if (!_Data) return PACKET_TYPES::INVALID;
+	auto ptr = (PacketHeader*)_Data->data;
+	return (PACKET_TYPES)ptr->Packet_Type;
 }
 
 

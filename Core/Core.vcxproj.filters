@@ -32,6 +32,12 @@
     <ClInclude Include="Packet.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonNetwork.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -49,10 +55,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\xxhash.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Socket.cpp">
+    <ClCompile Include="Packet.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="Packet.cpp">
+    <ClCompile Include="Implementations.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

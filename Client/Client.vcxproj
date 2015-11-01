@@ -156,6 +156,11 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{c870874b-bffe-4ae9-ad8a-6f1a400381ab}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\Remote_Access_Library\packages\FLTK.1.3.3.0\build\native\fltk.targets" Condition="Exists('..\Remote_Access_Library\packages\FLTK.1.3.3.0\build\native\fltk.targets')" />

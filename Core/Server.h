@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include "pimpl.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -14,7 +15,7 @@ namespace SL {
 				void Start();
 				void Stop();
 			private:
-				std::unique_ptr<ServerImpl> _ServerImpl;
+				Utilities::pimpl<ServerImpl>_ServerImpl;
 			};
 		}
 	}

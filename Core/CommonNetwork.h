@@ -7,6 +7,7 @@ namespace SL {
 		namespace Network {
 			class Socket;
 			class Packet;
+	
 			struct NetworkEvents {
 				std::function<void(const Socket*)> OnConnect;
 				std::function<void(const Socket*, std::shared_ptr<Packet>&)> OnReceive;

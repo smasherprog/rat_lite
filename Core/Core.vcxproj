@@ -131,13 +131,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommonNetwork.h" />
     <ClInclude Include="Packet.h" />
+    <ClInclude Include="pimpl.h" />
+    <ClInclude Include="pimpl_impl.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Implementations.cpp" />
     <ClCompile Include="stdafx.cpp">

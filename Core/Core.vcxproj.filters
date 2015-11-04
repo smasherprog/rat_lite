@@ -12,6 +12,9 @@
     <Filter Include="Network">
       <UniqueIdentifier>{ab4646b5-1090-4107-a2da-01d90b5069b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{375b01d4-71b3-4f5e-8c08-102373b6121d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -38,6 +41,15 @@
     <ClInclude Include="CommonNetwork.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="BufferManager.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="pimpl.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="pimpl_impl.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -60,6 +72,9 @@
     </ClCompile>
     <ClCompile Include="Implementations.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferManager.cpp">
+      <Filter>Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

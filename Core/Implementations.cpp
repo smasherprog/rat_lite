@@ -3,12 +3,11 @@
 #include <thread>
 #include "Packet.h"
 #include "Socket.h"
-#include "Server.h"
+#include "Listener.h"
 #include <boost/asio.hpp>
 #include <mutex>
 #include "CommonNetwork.h"
 #include <atomic>
-#include "pimpl_impl.h"
 
 struct SL::Remote_Access_Library::Network::SocketImpl {
 	SocketImpl(SocketImpl&& impl) : io_service(std::move(impl.io_service)), socket(std::move(impl.socket)), NetworkEvents_(std::move(impl.NetworkEvents_)) {}
@@ -41,9 +40,11 @@ void do_read_header(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> 
 void do_write(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl);
 void do_read_body(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl);
 
-SL::Remote_Access_Library::Network::Socket::Socket(Utilities::pimpl<SocketImpl>&& impl): _SocketImpl(std::move(impl)) {
+SL::Remote_Access_Library::Network::Socket::Socket(SocketImpl* impl): _SocketImpl(impl) {
 
-	do_read_header(shared_from_this(), _SocketImpl.get());
+}
+SL::Remote_Access_Library::Network::Socket::~Socket() {
+	delete _SocketImpl;
 }
 
 std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Library::Network::Socket::ConnectTo(const char* host, const char* port, NetworkEvents& netevents) {
@@ -51,10 +52,9 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Li
 	static io_runner _io_runner;
 
 	boost::asio::ip::tcp::resolver resolver(_io_runner.io_service);
-	auto endpoint_iterator = resolver.resolve({ host,port });
-	Utilities::pimpl<SocketImpl> _SocketImpl(_io_runner.io_service, netevents);
-	auto socket = std::make_shared<SL::Remote_Access_Library::Network::Socket>(std::move(_SocketImpl));
-	do_connect(socket, _SocketImpl.get(), endpoint_iterator);
+	auto socketimpl = new SocketImpl(_io_runner.io_service, netevents);
+	auto socket = std::make_shared<SL::Remote_Access_Library::Network::Socket>(socketimpl);
+	do_connect(socket, socketimpl, resolver.resolve({ host,port }));
 	return socket;
 }
 
@@ -68,7 +68,7 @@ void SL::Remote_Access_Library::Network::Socket::send(std::shared_ptr<Packet> pa
 		_SocketImpl->OutgoingPackets.push_back(pack);
 		if (!write_in_progress)
 		{
-			do_write(self, _SocketImpl.get());
+			do_write(self, _SocketImpl);
 		}
 	});
 }
@@ -76,10 +76,9 @@ void SL::Remote_Access_Library::Network::Socket::send(std::shared_ptr<Packet> pa
 void SL::Remote_Access_Library::Network::Socket::close()
 {
 	auto self(shared_from_this());
-	auto impl(_SocketImpl.get());
-	impl->io_service.post([self, impl]() {
-		impl->NetworkEvents_.OnClose(self.get());
-		impl->socket.close();
+	_SocketImpl->NetworkEvents_.OnClose(self);
+	_SocketImpl->io_service.post([self, this]() {
+		_SocketImpl->socket.close();
 	});
 }
 
@@ -96,6 +95,8 @@ void do_connect(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr,
 		else ptr->close();
 	});
 }
+
+
 void do_read_header(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl) {
 
 	boost::asio::async_read(impl->socket, boost::asio::buffer(&impl->PacketHeader, sizeof(impl->PacketHeader)), [ptr, impl](boost::system::error_code ec, std::size_t /*length*/)
@@ -104,7 +105,19 @@ void do_read_header(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> 
 		else ptr->close();
 	});
 }
-
+void do_read_body(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl) {
+	impl->IncomingPacket = SL::Remote_Access_Library::Network::Packet::CreatePacket(impl->PacketHeader.Packet_Type, impl->PacketHeader.PayloadLen);
+	auto p(impl->IncomingPacket->get_Payload());
+	auto size(impl->IncomingPacket->get_Payloadsize());
+	boost::asio::async_read(impl->socket, boost::asio::buffer(p, size), [ptr, impl](boost::system::error_code ec, std::size_t /*length*/)
+	{
+		if (!ec) {
+			impl->NetworkEvents_.OnReceive(ptr, impl->IncomingPacket);
+			do_read_header(ptr, impl);
+		}
+		else ptr->close();
+	});
+}
 
 void do_write(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl) {
 	auto blk(impl->OutgoingPackets.front()->get_Blk());
@@ -122,25 +135,12 @@ void do_write(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, S
 		else ptr->close();
 	});
 }
-void do_read_body(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl) {
-	impl->IncomingPacket = SL::Remote_Access_Library::Network::Packet::CreatePacket(impl->PacketHeader.Packet_Type, impl->PacketHeader.PayloadLen);
-	auto p(impl->IncomingPacket->get_Payload());
-	auto size(impl->IncomingPacket->get_Payloadsize());
-	boost::asio::async_read(impl->socket, boost::asio::buffer(p, size), [ptr, impl](boost::system::error_code ec, std::size_t /*length*/)
-	{
-		if (!ec) {
-			impl->NetworkEvents_.OnReceive(ptr.get(), impl->IncomingPacket);
-			do_read_header(ptr, impl);
-		}
-		else ptr->close();
-	});
-}
 
 
 ////////////////////////SERVER HERE
 
-struct SL::Remote_Access_Library::Network::ServerImpl {
-	ServerImpl(const boost::asio::ip::tcp::endpoint& endpoint, NetworkEvents& netevents) :
+struct SL::Remote_Access_Library::Network::ListinerImpl {
+	ListinerImpl(const boost::asio::ip::tcp::endpoint& endpoint, NetworkEvents& netevents) :
 		NetworkEvents_(netevents),
 		acceptor_(io_service, endpoint),
 		socket_(io_service) {
@@ -150,32 +150,34 @@ struct SL::Remote_Access_Library::Network::ServerImpl {
 	boost::asio::io_service io_service;
 	boost::asio::ip::tcp::acceptor acceptor_;
 	boost::asio::ip::tcp::socket socket_;
-	std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::Socket>> Clients;
 	NetworkEvents NetworkEvents_;	
 	std::thread io_servicethread;
 };
 
-void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::Server> ptr, SL::Remote_Access_Library::Network::ServerImpl* impl) {
+void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::Listener> ptr, SL::Remote_Access_Library::Network::ListinerImpl* impl) {
 	impl->acceptor_.async_accept(impl->socket_, [ptr, impl](boost::system::error_code ec)
 	{
 		if (!ec)
 		{
-			SL::Remote_Access_Library::Utilities::pimpl<SL::Remote_Access_Library::Network::SocketImpl> _SocketImpl(impl->io_service, std::move(impl->socket_), impl->NetworkEvents_);
-			auto socket = std::make_shared<SL::Remote_Access_Library::Network::Socket>(std::move(_SocketImpl));
-			impl->Clients.push_back(socket);
-			impl->NetworkEvents_.OnConnect(socket.get());//notify of successful connect
+			auto socketimpl = new SL::Remote_Access_Library::Network::SocketImpl(impl->io_service, std::move(impl->socket_), impl->NetworkEvents_);
+			auto sock = std::make_shared<SL::Remote_Access_Library::Network::Socket>(socketimpl);
+			impl->NetworkEvents_.OnConnect(sock);
+			do_read_header(sock, socketimpl);
 		}
 		do_accept(ptr, impl);
 	});
 }
 
-SL::Remote_Access_Library::Network::Server::Server(unsigned short port, NetworkEvents& netevents): _ServerImpl(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), netevents)
+SL::Remote_Access_Library::Network::Listener::Listener(unsigned short port, NetworkEvents& netevents)
 {
-
+	_ListinerImpl = new SL::Remote_Access_Library::Network::ListinerImpl(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), netevents);
 }
-void SL::Remote_Access_Library::Network::Server::Start() {
-	do_accept(shared_from_this(), _ServerImpl.get());
+SL::Remote_Access_Library::Network::Listener::~Listener() {
+	delete _ListinerImpl;
 }
-void SL::Remote_Access_Library::Network::Server::Stop() {
-	_ServerImpl->io_service.stop();
+void SL::Remote_Access_Library::Network::Listener::Start() {
+	do_accept(shared_from_this(), _ListinerImpl);
+}
+void SL::Remote_Access_Library::Network::Listener::Stop() {
+	_ListinerImpl->io_service.stop();
 }

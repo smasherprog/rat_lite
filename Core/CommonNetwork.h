@@ -9,9 +9,9 @@ namespace SL {
 			class Packet;
 	
 			struct NetworkEvents {
-				std::function<void(const Socket*)> OnConnect;
-				std::function<void(const Socket*, std::shared_ptr<Packet>&)> OnReceive;
-				std::function<void(const Socket*)> OnClose;
+				std::function<void(const std::shared_ptr<Socket>)> OnConnect;
+				std::function<void(const std::shared_ptr<Socket>, std::shared_ptr<Packet>&)> OnReceive;
+				std::function<void(const std::shared_ptr<Socket>)> OnClose;
 			};
 
 			enum class PACKET_TYPES : unsigned char {

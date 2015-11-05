@@ -134,8 +134,7 @@
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommonNetwork.h" />
     <ClInclude Include="Packet.h" />
-    <ClInclude Include="pimpl.h" />
-    <ClInclude Include="pimpl_impl.h" />
+    <ClInclude Include="Listener.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="stdafx.h" />
@@ -144,6 +143,7 @@
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Implementations.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -4,7 +4,7 @@
 #include "Packet.h"
 #include "BufferManager.h"
 
-SL::Remote_Access_Library::Utilities::BufferManager PacketBufferManager;
+SL::Remote_Access_Library::Utilities::BufferManager SL::Remote_Access_Library::Network::PacketBufferManager;
 
 #define HEADERSIZE sizeof(PacketHeader)
 

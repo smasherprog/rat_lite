@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "pimpl.h"
+
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -8,9 +8,10 @@ namespace SL {
 			struct Blk;
 			struct BufferManagerImpl;
 			class BufferManager {
-				pimpl<BufferManagerImpl> _BufferManagerImpl;
+				BufferManagerImpl* _BufferManagerImpl;
 			public:
 				BufferManager(size_t max_buffersize = 1024 *1024 *64);//default 64MBs
+				~BufferManager();
 				std::shared_ptr<Blk> AquireBuffer(size_t req_bytes);
 				void ReleaseBuffer(std::shared_ptr<Blk>& buffer);
 			};

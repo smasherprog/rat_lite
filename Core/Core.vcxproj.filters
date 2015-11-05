@@ -15,6 +15,9 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{375b01d4-71b3-4f5e-8c08-102373b6121d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{96a1648d-1830-48c7-87e7-cfded2ac04ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -35,20 +38,17 @@
     <ClInclude Include="Packet.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="Server.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="CommonNetwork.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="BufferManager.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="pimpl.h">
-      <Filter>Utilities</Filter>
+    <ClInclude Include="Listener.h">
+      <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="pimpl_impl.h">
-      <Filter>Utilities</Filter>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +75,9 @@
     </ClCompile>
     <ClCompile Include="BufferManager.cpp">
       <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

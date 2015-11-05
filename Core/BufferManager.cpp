@@ -27,7 +27,13 @@ char* SL::Remote_Access_Library::Utilities::getData(const std::shared_ptr<SL::Re
 
 SL::Remote_Access_Library::Utilities::BufferManager::BufferManager(size_t max_buffersize)
 {
+	_BufferManagerImpl = new BufferManagerImpl();
 	_BufferManagerImpl->Max_Buffer_Size = max_buffersize;
+}
+
+SL::Remote_Access_Library::Utilities::BufferManager::~BufferManager()
+{
+	delete _BufferManagerImpl;
 }
 
 std::shared_ptr<SL::Remote_Access_Library::Utilities::Blk> SL::Remote_Access_Library::Utilities::BufferManager::AquireBuffer(size_t req_bytes) {

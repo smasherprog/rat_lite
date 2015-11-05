@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include <iostream>
-#include "..\Core\Server.h"
+#include "Server.h"
 #include "..\Core\CommonNetwork.h"
 #include <thread>
 #include <chrono>

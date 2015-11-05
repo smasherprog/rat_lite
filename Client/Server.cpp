@@ -1,6 +1,7 @@
-#include "CommonNetwork.h"
+#include "stdafx.h"
+#include "..\Core\CommonNetwork.h"
 #include "Server.h"
-#include "Listener.h"
+#include "..\Core\Listener.h"
 #include <vector>
 #include <algorithm>
 #include <thread>

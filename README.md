@@ -5,3 +5,5 @@ https://github.com/smasherprog/Mouse_Capture<br/> and <br/>https://github.com/sm
 <p>Once you have the repos, you can start building. I have a .sln file for windows platform in the Remote_Access_Library for building on windows.</p>
 <h4>Note for Contributors:</h4>
 <p>Please search for cross-platform solutions to problems. If there are none, please try to seperate the platform specific code into their own .cpp files and #ifdef the code.</p>
+<h3>LICENSE:</h3>
+<p>https://tldrlegal.com/license/mit-license MIT</p>

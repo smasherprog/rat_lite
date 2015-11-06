@@ -8,6 +8,8 @@
 #include "..\..\Screen_Capture\Screen_Capture\Screen.h"
 #include <mutex>
 #include <chrono>
+#include "..\Core\Socket.h"
+#include "..\Core\Packet.h"
 
 using namespace std::literals;
 
@@ -39,7 +41,7 @@ void OnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> p
 }
 void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl);
 SL::Remote_Access_Library::Server::Server(unsigned short port, Network::NetworkEvents& netevents)
-{	
+{
 	_ServerImpl = std::make_shared<SL::Remote_Access_Library::ServerImpl>();
 	Network::NetworkEvents lowerevents;
 	lowerevents.OnConnect = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { OnConnect(ptr, _ServerImpl); };
@@ -61,10 +63,28 @@ SL::Remote_Access_Library::Server::~Server()
 void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl) {
 	serverimpl->_Listener->Start();
 	auto screen(SL::Screen_Capture::CaptureDesktop(false));
-
+	std::cout << "Testing Screen Gran and Compression methods right meow! " << std::endl;
 	while (serverimpl->Keepgoing) {
+		std::cout << "Grabbing Screen " << std::endl;
+		screen = SL::Screen_Capture::CaptureDesktop(false);
+		auto pack = SL::Remote_Access_Library::Network::Packet::CreatePacket(SL::Remote_Access_Library::Network::PACKET_TYPES::RESOLUTIONCHANGE, screen.getDataSize());
+		memcpy(pack->get_Payload(), screen.getData(), screen.getDataSize());
+		std::cout << "Got Screen, uncompressed size is: " << screen.getDataSize()<< std::endl;
+		auto start = std::chrono::high_resolution_clock::now();
+		pack->compress();
 
-		std::this_thread::sleep_for(100ms);
+		std::cout << "Got Screen, compressed size is: " << pack->get_Payloadsize() << " Took: "<< std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count()<< std::endl;
+		
+		auto pack1 = SL::Remote_Access_Library::Network::Packet::CreatePacket(SL::Remote_Access_Library::Network::PACKET_TYPES::RESOLUTIONCHANGE, screen.getDataSize());
+		memcpy(pack1->get_Payload(), screen.getData(), screen.getDataSize());
+		start = std::chrono::high_resolution_clock::now();
+		pack1->compress1();
+		std::cout << "Got Screen, compressed1 size is: " << pack1->get_Payloadsize() << " Took: " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count() << std::endl;
+
+		for (auto& a : serverimpl->Clients) {
+			//a->send(pack);
+		}
+		std::this_thread::sleep_for(10s);
 
 	}
 	serverimpl->_Listener->Stop();

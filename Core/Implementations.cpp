@@ -9,6 +9,7 @@
 #include "CommonNetwork.h"
 #include <atomic>
 #include <iostream>
+#include "lz4.h"
 
 struct SL::Remote_Access_Library::Network::SocketImpl {
 	SocketImpl(SocketImpl&& impl) : io_service(std::move(impl.io_service)), socket(std::move(impl.socket)), NetworkEvents_(std::move(impl.NetworkEvents_)) {}
@@ -58,7 +59,7 @@ SL::Remote_Access_Library::Network::Socket::~Socket() {
 	delete _SocketImpl;
 }
 
-std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Library::Network::Socket::ConnectTo(const char* host, const char* port, NetworkEvents& netevents, long timeout_in_s) {
+std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Library::Network::Socket::ConnectTo(const char* host, const char* port, NetworkEvents& netevents) {
 	//first thread in will initialize this and start the io_service
 	static io_runner _io_runner;
 
@@ -73,6 +74,7 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Li
 
 void SL::Remote_Access_Library::Network::Socket::send(std::shared_ptr<Packet> pack)
 {
+	pack->compress();
 	auto self(shared_from_this());
 	_SocketImpl->io_service.post([this, pack, self]()
 	{
@@ -143,6 +145,7 @@ void do_write(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, S
 	{
 		if (!ec)
 		{
+			assert(byteswritten == getSize(impl->OutgoingPackets.front()->get_Blk()));
 			impl->PendingBytestobesent -= byteswritten;
 			impl->OutgoingPackets.pop_front();
 			if (!impl->OutgoingPackets.empty())

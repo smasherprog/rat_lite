@@ -18,7 +18,8 @@ int main()
 	netevents.OnClose = [](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { std::cout << "Disconnected" << std::endl; };
 	SL::Remote_Access_Library::Server s(6000, netevents);
 		while(true){
-		std::this_thread::sleep_for(1s);
+		
+		std::this_thread::sleep_for(5s);
 	}
 
 

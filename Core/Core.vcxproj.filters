@@ -5,15 +5,18 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
     <Filter Include="Network">
       <UniqueIdentifier>{ab4646b5-1090-4107-a2da-01d90b5069b5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{375b01d4-71b3-4f5e-8c08-102373b6121d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="Compression">
+      <UniqueIdentifier>{ccefab9b-6544-4eed-b8b1-08fd2478d5e6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +47,42 @@
     <ClInclude Include="lz4frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="huff0.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="huff0_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="mem.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd_internal.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstdhc.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstdhc_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="bitstream.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="error.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="fse.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="fse_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -69,6 +108,18 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\xxhash.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="huff0.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="zstd.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="zstdhc.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="fse.c">
+      <Filter>Compression</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

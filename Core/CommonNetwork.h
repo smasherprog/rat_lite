@@ -9,7 +9,7 @@ namespace SL {
 			class Socket;
 			class Packet;
 			inline void DefaultOnConnect(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { std::cout << "DEFAULT OnConnected Called!" << std::endl; };
-			inline void DefaultOnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) { std::cout << "DEFAULT OnReceive Called!" << std::endl; };
+			inline void DefaultOnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) { std::cout << "DEFAULT OnReceive Called!" <<  std::endl; };
 			inline void DefaultOnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { std::cout << "DEFAULT OnClose Called!" << std::endl; };
 			
 			struct NetworkEvents {
@@ -41,6 +41,7 @@ namespace SL {
 			};
 			struct PacketHeader {
 				unsigned int PayloadLen = 0;
+				unsigned int UnCompressedlen = 0;
 				PACKET_TYPES Packet_Type = PACKET_TYPES::INVALID;
 			};
 

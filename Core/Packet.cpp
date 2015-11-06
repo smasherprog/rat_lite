@@ -3,15 +3,39 @@
 #include <algorithm>
 #include "Packet.h"
 #include "BufferManager.h"
+#include "lz4.h"
+#include "zstd.h"
 
 SL::Remote_Access_Library::Utilities::BufferManager SL::Remote_Access_Library::Network::PacketBufferManager;
 
 #define HEADERSIZE sizeof(PacketHeader)
 
 std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Library::Network::Packet::CreatePacket(PACKET_TYPES ptype, size_t packetsize) {
-	return std::make_shared<Packet>(PacketBufferManager.AquireBuffer(packetsize + HEADERSIZE));
+	auto pac= std::make_shared<Packet>(PacketBufferManager.AquireBuffer(LZ4_compressBound(packetsize + HEADERSIZE)));
+	auto ptr = (PacketHeader*)getData(pac->_Data);
+	ptr->PayloadLen = packetsize;
+	ptr->Packet_Type = ptype;
+	ptr->UnCompressedlen = 0;
+	return pac;
 }
 
+int SL::Remote_Access_Library::Network::Packet::compress()
+{
+	auto ptr = (PacketHeader*)getData(_Data);
+	if (ptr->UnCompressedlen > 0)return ptr->PayloadLen;//allready compressed
+	ptr->UnCompressedlen = get_Payloadsize();
+	ptr->PayloadLen= LZ4_compress_default(get_Payload(), get_Payload(), get_Payloadsize(), getSize(_Data) - HEADERSIZE );
+	return ptr->PayloadLen;
+}
+int SL::Remote_Access_Library::Network::Packet::compress1()
+{
+	auto ptr = (PacketHeader*)getData(_Data);
+	if (ptr->UnCompressedlen > 0)return ptr->PayloadLen;//allready compressed
+	ptr->UnCompressedlen = get_Payloadsize();
+
+	ptr->PayloadLen = ZSTD_compress(get_Payload(), getSize(_Data) - HEADERSIZE, get_Payload(), get_Payloadsize());
+	return ptr->PayloadLen;
+}
 SL::Remote_Access_Library::Network::Packet::Packet(Packet&& pac) : _Data(std::move(pac._Data)) {}
 SL::Remote_Access_Library::Network::Packet& SL::Remote_Access_Library::Network::Packet::operator=(const Packet&& pac) {
 	_Data = std::move(pac._Data);

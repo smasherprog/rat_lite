@@ -131,15 +131,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="bitstream.h" />
     <ClInclude Include="BufferManager.h" />
     <ClInclude Include="CommonNetwork.h" />
+    <ClInclude Include="error.h" />
+    <ClInclude Include="fse.h" />
+    <ClInclude Include="fse_static.h" />
+    <ClInclude Include="huff0.h" />
+    <ClInclude Include="huff0_static.h" />
+    <ClInclude Include="mem.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="zstd.h" />
+    <ClInclude Include="zstdhc.h" />
+    <ClInclude Include="zstdhc_static.h" />
+    <ClInclude Include="zstd_internal.h" />
+    <ClInclude Include="zstd_static.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BufferManager.cpp" />
+    <ClCompile Include="fse.c" />
+    <ClCompile Include="huff0.c" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Implementations.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -148,6 +162,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="zstd.c" />
+    <ClCompile Include="zstdhc.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Mouse_Capture\Mouse_Capture\Mouse_Capture.vcxproj">

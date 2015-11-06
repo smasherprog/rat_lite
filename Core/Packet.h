@@ -22,8 +22,9 @@ namespace SL {
 				~Packet();
 				//this will construct a packet of packetsize bytes
 				static std::shared_ptr<Packet> CreatePacket(PACKET_TYPES ptype, size_t packetsize);
-
-				
+				//compressed the data and returns the compressed size
+				int compress();
+				int compress1();
 				//gets a pointer to the beginning of the allocated payload
 				char* get_Payload();
 				//gets the size of the users payload, NOT including the library headers which are added onto a packet

@@ -11,7 +11,7 @@ namespace SL {
 			class Socket: public std::enable_shared_from_this<Socket> {
 			public:
 				//factory to create a socket and connect to the destination address
-				static std::shared_ptr<Socket> ConnectTo(const char* host, const char* port, NetworkEvents& netevents);
+				static std::shared_ptr<Socket> ConnectTo(const char* host, const char* port, NetworkEvents& netevents, long timeout_in_s=10);
 				//constructed with opaque type for internal use only
 				Socket(SocketImpl* impl);
 				~Socket();

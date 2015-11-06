@@ -41,10 +41,12 @@ void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl);
 SL::Remote_Access_Library::Server::Server(unsigned short port, Network::NetworkEvents& netevents)
 {	
 	_ServerImpl = std::make_shared<SL::Remote_Access_Library::ServerImpl>();
-	_ServerImpl->_NetworkEvents.OnConnect = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) {OnConnect(ptr, _ServerImpl); };
-	_ServerImpl->_NetworkEvents.OnReceive = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) {OnReceive(ptr, pac, _ServerImpl); };
-	_ServerImpl->_NetworkEvents.OnClose = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { OnClose(ptr, _ServerImpl); };
-	_ServerImpl->_Listener = std::make_shared<Network::Listener>(port, _ServerImpl->_NetworkEvents);
+	Network::NetworkEvents lowerevents;
+	lowerevents.OnConnect = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { OnConnect(ptr, _ServerImpl); };
+	lowerevents.OnReceive = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) {OnReceive(ptr, pac, _ServerImpl); };
+	lowerevents.OnClose = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { OnClose(ptr, _ServerImpl); };
+	_ServerImpl->_NetworkEvents = netevents;
+	_ServerImpl->_Listener = std::make_shared<Network::Listener>(port, lowerevents);
 	_ServerImpl->Keepgoing = true;
 	_ServerImpl->_Runner = std::thread(Run, _ServerImpl);
 }

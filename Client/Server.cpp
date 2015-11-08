@@ -5,11 +5,12 @@
 #include <vector>
 #include <algorithm>
 #include <thread>
-#include "..\..\Screen_Capture\Screen_Capture\Screen.h"
+#include "..\Core\Screen.h"
 #include <mutex>
 #include <chrono>
 #include "..\Core\Socket.h"
 #include "..\Core\Packet.h"
+#include "turbojpeg.h"
 
 using namespace std::literals;
 
@@ -48,7 +49,7 @@ SL::Remote_Access_Library::Server::Server(unsigned short port, Network::NetworkE
 	lowerevents.OnReceive = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) {OnReceive(ptr, pac, _ServerImpl); };
 	lowerevents.OnClose = [this](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { OnClose(ptr, _ServerImpl); };
 	_ServerImpl->_NetworkEvents = netevents;
-	_ServerImpl->_Listener = std::make_shared<Network::Listener>(port, lowerevents);
+	_ServerImpl->_Listener = Network::Listener::CreateListener(port, lowerevents);
 	_ServerImpl->Keepgoing = true;
 	_ServerImpl->_Runner = std::thread(Run, _ServerImpl);
 }
@@ -62,27 +63,54 @@ SL::Remote_Access_Library::Server::~Server()
 //keep the data ALIVE!
 void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl) {
 	serverimpl->_Listener->Start();
-	auto screen(SL::Screen_Capture::CaptureDesktop(false));
+
+	auto compfree = [](void* handle) {tjDestroy(handle); };
+
+	auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
+	std::vector<char> compressBuffer;
+
+	auto screen(SL::Remote_Access_Library::Screen_Capture::CaptureDesktop(false));
 	std::cout << "Testing Screen Gran and Compression methods right meow! " << std::endl;
 	while (serverimpl->Keepgoing) {
 		std::cout << "Grabbing Screen " << std::endl;
-		screen = SL::Screen_Capture::CaptureDesktop(false);
-		auto pack = SL::Remote_Access_Library::Network::Packet::CreatePacket(SL::Remote_Access_Library::Network::PACKET_TYPES::RESOLUTIONCHANGE, screen.getDataSize());
-		memcpy(pack->get_Payload(), screen.getData(), screen.getDataSize());
-		std::cout << "Got Screen, uncompressed size is: " << screen.getDataSize()<< std::endl;
-		auto start = std::chrono::high_resolution_clock::now();
-		pack->compress();
+		screen = SL::Remote_Access_Library::Screen_Capture::CaptureDesktop(false);
+		std::cout << "Got Screen, uncompressed RGBA size is: " << screen->size() << std::endl;
+		SL::Remote_Access_Library::Network::PacketHeader p;
+		p.Packet_Type = SL::Remote_Access_Library::Network::PACKET_TYPES::RESOLUTIONCHANGE;
+		p.PayloadLen = screen->size();
+		auto pack = SL::Remote_Access_Library::Network::Packet::CreatePacket(p);
+		memcpy(pack->data(), screen->data(), screen->size());
 
-		std::cout << "Got Screen, compressed size is: " << pack->get_Payloadsize() << " Took: "<< std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count()<< std::endl;
-		
-		auto pack1 = SL::Remote_Access_Library::Network::Packet::CreatePacket(SL::Remote_Access_Library::Network::PACKET_TYPES::RESOLUTIONCHANGE, screen.getDataSize());
-		memcpy(pack1->get_Payload(), screen.getData(), screen.getDataSize());
-		start = std::chrono::high_resolution_clock::now();
-		pack1->compress1();
-		std::cout << "Got Screen, compressed1 size is: " << pack1->get_Payloadsize() << " Took: " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count() << std::endl;
+		/*	auto GOGRAY = false;
+			auto imgquality = 70;
+			auto set = GOGRAY ? TJSAMP_GRAY : TJSAMP_420;
+
+			auto maxsize = tjBufSize(screen->Width(), screen->Height(), set);
+			long unsigned int _jpegSize = maxsize;
+
+			if (compressBuffer.capacity() < maxsize) compressBuffer.reserve(maxsize + 16);
+			auto ptr = (unsigned char*)compressBuffer.data();
+
+			start = std::chrono::high_resolution_clock::now();
+
+			if (tjCompress2(_jpegCompressor.get(), (unsigned char*)screen->data(), screen->Width(), 0, screen->Height(), TJPF_BGRX, &ptr, &_jpegSize, set, imgquality, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+				std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+			}
+			else {
+				std::cout << "JEPG Compression  " << _jpegSize << " Took: " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count() << std::endl;
+			}
+
+			auto pack2 = SL::Remote_Access_Library::Network::Packet::CreatePacket(SL::Remote_Access_Library::Network::PACKET_TYPES::RESOLUTIONCHANGE, _jpegSize);
+			memcpy(pack2->get_Payload(), ptr, _jpegSize);
+			start = std::chrono::high_resolution_clock::now();
+			pack2->compress();
+			std::cout << "Got Screen, JPEG + compressed size is: " << pack2->get_Payloadsize() << " Took: " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count() << std::endl;
+
+
+	*/
 
 		for (auto& a : serverimpl->Clients) {
-			//a->send(pack);
+			a->send(pack);
 		}
 		std::this_thread::sleep_for(10s);
 

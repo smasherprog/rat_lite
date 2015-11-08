@@ -6,11 +6,12 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
+
 			class Socket;
 			class Packet;
-			inline void DefaultOnConnect(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { std::cout << "DEFAULT OnConnected Called!" << std::endl; };
-			inline void DefaultOnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) { std::cout << "DEFAULT OnReceive Called!" <<  std::endl; };
-			inline void DefaultOnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { std::cout << "DEFAULT OnClose Called!" << std::endl; };
+			void DefaultOnConnect(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr);
+			void DefaultOnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac);
+			void DefaultOnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr);
 			
 			struct NetworkEvents {
 				std::function<void(const std::shared_ptr<Socket>)> OnConnect = DefaultOnConnect;
@@ -18,7 +19,7 @@ namespace SL {
 				std::function<void(const std::shared_ptr<Socket>)> OnClose = DefaultOnClose;
 			};
 
-			enum class PACKET_TYPES : unsigned char {
+			enum class PACKET_TYPES : unsigned int {
 				INVALID,
 				RESOLUTIONCHANGE,
 				UPDATEREGION,
@@ -43,9 +44,8 @@ namespace SL {
 				unsigned int PayloadLen = 0;
 				unsigned int UnCompressedlen = 0;
 				PACKET_TYPES Packet_Type = PACKET_TYPES::INVALID;
-			};
-
-
+			}; 
+		
 
 		}
 	}

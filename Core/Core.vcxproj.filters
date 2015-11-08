@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="Network">
       <UniqueIdentifier>{ab4646b5-1090-4107-a2da-01d90b5069b5}</UniqueIdentifier>
     </Filter>
@@ -18,11 +10,17 @@
     <Filter Include="Compression">
       <UniqueIdentifier>{ccefab9b-6544-4eed-b8b1-08fd2478d5e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Screen_Capture">
+      <UniqueIdentifier>{c551e70a-958f-425f-aceb-0b37eb50cae9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mouse_Capture">
+      <UniqueIdentifier>{ca795e03-8240-4fba-a9a2-40100b615c65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\INTERNAL">
+      <UniqueIdentifier>{960c60e3-ba5f-43a0-b6ee-3901fbf64ded}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Socket.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -37,15 +35,6 @@
     </ClInclude>
     <ClInclude Include="Listener.h">
       <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="lz4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lz4hc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lz4frame.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="huff0.h">
       <Filter>Compression</Filter>
@@ -83,11 +72,18 @@
     <ClInclude Include="fse_static.h">
       <Filter>Compression</Filter>
     </ClInclude>
+    <ClInclude Include="Screen.h">
+      <Filter>Screen_Capture</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>Mouse_Capture</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Internal_Impls.h">
+      <Filter>Network\INTERNAL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Packet.cpp">
       <Filter>Network</Filter>
     </ClCompile>
@@ -96,18 +92,6 @@
     </ClCompile>
     <ClCompile Include="BufferManager.cpp">
       <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\lz4.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\lz4hc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\lz4frame.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\xxhash.c">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="huff0.c">
       <Filter>Compression</Filter>
@@ -120,6 +104,19 @@
     </ClCompile>
     <ClCompile Include="fse.c">
       <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenGrab_Win.cpp">
+      <Filter>Screen_Capture</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen.cpp">
+      <Filter>Screen_Capture</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>Mouse_Capture</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Internal_Impls.cpp">
+      <Filter>Network\INTERNAL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

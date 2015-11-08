@@ -8,8 +8,10 @@ namespace SL {
 			struct NetworkEvents;
 			class Listener : public std::enable_shared_from_this<Listener> {
 			public:
-				//does not start listening until start is called
-				Listener(unsigned short port, NetworkEvents& netevents);
+				//factory to create a listening socket
+				static std::shared_ptr<Listener> CreateListener(unsigned short port, NetworkEvents& netevents);
+
+				Listener(ListinerImpl* impl);
 				~Listener();
 
 				void Start();

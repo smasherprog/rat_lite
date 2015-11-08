@@ -199,6 +199,7 @@
     <Import Project="..\packages\boost_wave-vc140.1.59.0.0\build\native\boost_wave-vc140.targets" Condition="Exists('..\packages\boost_wave-vc140.1.59.0.0\build\native\boost_wave-vc140.targets')" />
     <Import Project="..\packages\boost_wserialization-vc140.1.59.0.0\build\native\boost_wserialization-vc140.targets" Condition="Exists('..\packages\boost_wserialization-vc140.1.59.0.0\build\native\boost_wserialization-vc140.targets')" />
     <Import Project="..\packages\boost-vc140.1.59.0.0\build\native\boost-vc140.targets" Condition="Exists('..\packages\boost-vc140.1.59.0.0\build\native\boost-vc140.targets')" />
+    <Import Project="..\packages\Libjpeg-Turbo.1.4.2.11\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\packages\Libjpeg-Turbo.1.4.2.11\build\native\Libjpeg-Turbo.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -238,5 +239,6 @@
     <Error Condition="!Exists('..\packages\boost_wave-vc140.1.59.0.0\build\native\boost_wave-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_wave-vc140.1.59.0.0\build\native\boost_wave-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\boost_wserialization-vc140.1.59.0.0\build\native\boost_wserialization-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_wserialization-vc140.1.59.0.0\build\native\boost_wserialization-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\boost-vc140.1.59.0.0\build\native\boost-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost-vc140.1.59.0.0\build\native\boost-vc140.targets'))" />
+    <Error Condition="!Exists('..\packages\Libjpeg-Turbo.1.4.2.11\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Libjpeg-Turbo.1.4.2.11\build\native\Libjpeg-Turbo.targets'))" />
   </Target>
 </Project>

@@ -36,8 +36,10 @@ void OnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket>
 void OnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::ServerImpl>& s) {
 	{
 		std::lock_guard<std::mutex> lock(s->ClientsLock);
-		std::remove(begin(s->Clients), end(s->Clients), ptr);
+		auto socketptr = ptr.get();
+		s->Clients.erase(std::remove_if(begin(s->Clients), end(s->Clients), [socketptr](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket>& p) { return p.get() == socketptr; }));
 	}
+	std::cout << "Client Size: " << s->Clients.size() << std::endl;
 	s->_NetworkEvents.OnClose(ptr);
 }
 void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl);

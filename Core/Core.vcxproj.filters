@@ -82,6 +82,9 @@
     <ClInclude Include="Internal_Impls.h">
       <Filter>Network\INTERNAL</Filter>
     </ClInclude>
+    <ClInclude Include="ThreadPool.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -117,6 +120,12 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Internal_Impls.cpp">
       <Filter>Network\INTERNAL</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadPool.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonNetwork.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

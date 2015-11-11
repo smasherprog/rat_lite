@@ -10,59 +10,33 @@
 #include <atomic>
 #include <iostream>
 #include "zstd.h"
+#include "Internal_Impls.h"
 
-void SL::Remote_Access_Library::Network::DefaultOnConnect(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { 
-	std::cout << "DEFAULT OnConnected Called!" << std::endl; 
-};
-void SL::Remote_Access_Library::Network::DefaultOnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) { 
-	std::cout << "DEFAULT OnReceive Called! PacketType: " <<(int)pac->header()->Packet_Type<<" Size: "<< pac->header()->PayloadLen<< std::endl;
-};
-void SL::Remote_Access_Library::Network::DefaultOnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr) { 
-	std::cout << "DEFAULT OnClose Called!" << std::endl; 
-};
 
 struct SL::Remote_Access_Library::Network::SocketImpl {
-	SocketImpl(SocketImpl&& impl) : io_service(std::move(impl.io_service)), socket(std::move(impl.socket)), NetworkEvents_(std::move(impl.NetworkEvents_)) {}
-	SocketImpl(boost::asio::io_service& io, boost::asio::ip::tcp::socket& s, NetworkEvents& netevents) : io_service(io), socket(std::move(s)), NetworkEvents_(netevents) {}
-	SocketImpl(boost::asio::io_service& io, NetworkEvents& netevents) : io_service(io), socket(io), NetworkEvents_(netevents) {}
+	SocketImpl(boost::asio::io_service& io, boost::asio::ip::tcp::socket& s, NetworkEvents& netevents, Utilities::ThreadPool& t) : io_service(io), socket(std::move(s)), NetworkEvents_(netevents), ThreadPool(t) {}
+	SocketImpl(boost::asio::io_service& io, NetworkEvents& netevents, Utilities::ThreadPool& t) : io_service(io), socket(io), NetworkEvents_(netevents), ThreadPool(t) {}
 
 	boost::asio::io_service& io_service;
+	Utilities::ThreadPool& ThreadPool;
 	boost::asio::ip::tcp::socket socket;
 
 	NetworkEvents NetworkEvents_;
 	PacketHeader PacketHeader;
-	std::deque<	std::shared_ptr<Packet>> OutgoingPackets;
+	std::deque<std::shared_ptr<Packet>> OutgoingPackets;
 	std::shared_ptr<Packet> IncomingPacket;
 
 
 };
 
-class io_runner {
-public:
-	boost::asio::io_service io_service;
 
-	io_runner():work(io_service) {
-		io_servicethread = std::thread([this]() {
-			std::cout << "Starting io_service for Connecto Factory" << std::endl;
-			io_service.run();
-			std::cout << "stopping io_service for Connecto Factory" << std::endl;
-		});
-	}
-	~io_runner() {
-		io_service.stop();
-		io_servicethread.detach();//it will stop eventually, but we dont need to wait for that...
-	}
-private:
-	std::thread io_servicethread;
-	boost::asio::io_service::work work;
-};
 void do_connect(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 void do_read_header(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl);
 void do_write(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl);
 void do_write_header(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl);
 void do_read_body(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, SL::Remote_Access_Library::Network::SocketImpl* impl);
 
-void compress_payload(std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pack)
+void compress_payload(std::shared_ptr<SL::Remote_Access_Library::Network::Packet> pack)
 {
 	if (pack->header()->UnCompressedlen > 0) return;//allready compressed
 	pack->header()->UnCompressedlen = pack->header()->PayloadLen;
@@ -79,10 +53,10 @@ SL::Remote_Access_Library::Network::Socket::~Socket() {
 
 std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Library::Network::Socket::ConnectTo(const char* host, const char* port, NetworkEvents& netevents) {
 	//first thread in will initialize this and start the io_service
-	static io_runner _io_runner;
+	static INTERNAL::io_runner _io_runner;
 
 	boost::asio::ip::tcp::resolver resolver(_io_runner.io_service);
-	auto socketimpl = new SocketImpl(_io_runner.io_service, netevents);
+	auto socketimpl = new SocketImpl(_io_runner.io_service, netevents, _io_runner.ThreadPool);
 	auto socket = std::make_shared<SL::Remote_Access_Library::Network::Socket>(socketimpl);
 
 	do_connect(socket, socketimpl, resolver.resolve({ host, port }));
@@ -92,17 +66,21 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Socket> SL::Remote_Access_Li
 void SL::Remote_Access_Library::Network::Socket::send(std::shared_ptr<Packet>& pack)
 {
 	auto self(shared_from_this());
-	compress_payload(pack);
-	std::cout << "Sending " << pack->header()->PayloadLen << " bytes" << std::endl;
-	_SocketImpl->io_service.post([this, pack, self]()
-	{
-		bool write_in_progress = !_SocketImpl->OutgoingPackets.empty();
-		_SocketImpl->OutgoingPackets.push_back(pack);
-		if (!write_in_progress)
+
+	_SocketImpl->ThreadPool.Enqueue([this, pack, self]() {
+		compress_payload(pack);
+		std::cout << "Sending " << pack->header()->PayloadLen << " bytes" << std::endl;
+		_SocketImpl->io_service.post([this, pack, self]()
 		{
-			do_write_header(self, _SocketImpl);
-		}
+			bool write_in_progress = !_SocketImpl->OutgoingPackets.empty();
+			_SocketImpl->OutgoingPackets.push_back(pack);
+			if (!write_in_progress)
+			{
+				do_write_header(self, _SocketImpl);
+			}
+		});
 	});
+
 }
 
 void SL::Remote_Access_Library::Network::Socket::close()
@@ -119,7 +97,7 @@ void do_connect(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr,
 	boost::asio::async_connect(impl->socket, endpoint_iterator, [ptr, impl](boost::system::error_code ec, boost::asio::ip::tcp::resolver::iterator)
 	{
 		if (!impl->socket.is_open()) return;
-		
+
 		if (!ec) {
 			impl->NetworkEvents_.OnConnect(ptr);
 			do_read_header(ptr, impl);
@@ -185,23 +163,15 @@ void do_write(std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, S
 
 ////////////////////////SERVER HERE
 
-struct SL::Remote_Access_Library::Network::ListinerImpl {
+struct SL::Remote_Access_Library::Network::ListinerImpl : SL::Remote_Access_Library::INTERNAL::io_runner {
 	ListinerImpl(const boost::asio::ip::tcp::endpoint& endpoint, NetworkEvents& netevents) :
 		NetworkEvents_(netevents),
 		acceptor_(io_service, endpoint),
-		socket_(io_service) {
-		io_servicethread = std::thread([this]() {
-			std::cout << "Starting io_service for listener" << std::endl;
-			io_service.run();
-			std::cout << "stopping io_service for listener" << std::endl;
-		});
-	}
+		socket_(io_service) {}
 
-	boost::asio::io_service io_service;
 	boost::asio::ip::tcp::acceptor acceptor_;
 	boost::asio::ip::tcp::socket socket_;
 	NetworkEvents NetworkEvents_;
-	std::thread io_servicethread;
 };
 
 void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::Listener> ptr, SL::Remote_Access_Library::Network::ListinerImpl* impl) {
@@ -209,7 +179,7 @@ void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::Listener> ptr
 	{
 		if (!ec)
 		{
-			auto socketimpl = new SL::Remote_Access_Library::Network::SocketImpl(impl->io_service, std::move(impl->socket_), impl->NetworkEvents_);
+			auto socketimpl = new SL::Remote_Access_Library::Network::SocketImpl(impl->io_service, std::move(impl->socket_), impl->NetworkEvents_, impl->ThreadPool);
 			auto sock = std::make_shared<SL::Remote_Access_Library::Network::Socket>(socketimpl);
 			impl->NetworkEvents_.OnConnect(sock);
 			do_read_header(sock, socketimpl);

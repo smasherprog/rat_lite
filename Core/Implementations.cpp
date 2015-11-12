@@ -193,12 +193,15 @@ SL::Remote_Access_Library::Network::Listener::Listener(ListinerImpl* impl) : _Li
 
 }
 SL::Remote_Access_Library::Network::Listener::~Listener() {
+	Stop();
 	delete _ListinerImpl;
 }
 void SL::Remote_Access_Library::Network::Listener::Start() {
 	do_accept(shared_from_this(), _ListinerImpl);
 }
 void SL::Remote_Access_Library::Network::Listener::Stop() {
+	_ListinerImpl->socket_.close();
+	_ListinerImpl->acceptor_.close();
 	_ListinerImpl->io_service.stop();
 }
 

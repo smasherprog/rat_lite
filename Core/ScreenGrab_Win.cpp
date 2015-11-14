@@ -111,7 +111,7 @@ std::shared_ptr<SL::Remote_Access_Library::Screen_Capture::Image> SL::Remote_Acc
 	bmpInfo.bmiHeader.biWidth = width;
 	bmpInfo.bmiHeader.biHeight = -height;
 	bmpInfo.bmiHeader.biPlanes = 1;
-	bmpInfo.bmiHeader.biBitCount = 24;//always 32 bits damnit!!!
+	bmpInfo.bmiHeader.biBitCount = 32;//always 32 bits damnit!!!
 	bmpInfo.bmiHeader.biCompression = BI_RGB;
 	bmpInfo.bmiHeader.biSizeImage = ((width * bmpInfo.bmiHeader.biBitCount + 31) / 32) * 4 * height;
 
@@ -119,7 +119,7 @@ std::shared_ptr<SL::Remote_Access_Library::Screen_Capture::Image> SL::Remote_Acc
 	SelectObject(capturedc.get(), originalBmp);
 
 	//Sanity check to ensure the data is correct
-	//SaveBMP(bmpInfo.bmiHeader, SL::Remote_Access_Library::Utilities::getData(blk), "c:\\users\\scott\\desktop\\one.bmp");
+	//SaveBMP(bmpInfo.bmiHeader, retimage->data(), "c:\\users\\scott\\desktop\\one.bmp");
 	return retimage;
 }
 

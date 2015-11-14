@@ -14,7 +14,7 @@ SL::Remote_Access_Library::Utilities::ThreadPool::ThreadPool(int threads) :
 	}
 }
 
-void SL::Remote_Access_Library::Utilities::ThreadPool::Enqueue(std::function<void()>&& f)
+void SL::Remote_Access_Library::Utilities::ThreadPool::Enqueue(std::function<void()> f)
 {
 	// Scope based locking.
 	{
@@ -22,7 +22,7 @@ void SL::Remote_Access_Library::Utilities::ThreadPool::Enqueue(std::function<voi
 		std::unique_lock<std::mutex> lock(tasksMutex);
 
 		// Push task into queue.
-		tasks.emplace(std::move(f));
+		tasks.push(f);
 	}
 
 	// Wake up one thread.
@@ -31,9 +31,10 @@ void SL::Remote_Access_Library::Utilities::ThreadPool::Enqueue(std::function<voi
 
 void SL::Remote_Access_Library::Utilities::ThreadPool::Invoke() {
 
-	std::function<void()> task;
+	
 	while (true)
 	{
+		std::function<void()> task;
 		// Scope based locking.
 		{
 			// Put unique lock on task mutex.

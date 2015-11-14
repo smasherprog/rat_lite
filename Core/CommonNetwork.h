@@ -10,13 +10,13 @@ namespace SL {
 			class Socket;
 			class Packet;
 			void DefaultOnConnect(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr);
-			void DefaultOnReceive(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac);
-			void DefaultOnClose(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr);
+			void DefaultOnReceive(const Socket* ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac);
+			void DefaultOnClose(const Socket* ptr);
 			
 			struct NetworkEvents {
 				std::function<void(const std::shared_ptr<Socket>)> OnConnect = DefaultOnConnect;
-				std::function<void(const std::shared_ptr<Socket>, std::shared_ptr<Packet>&)> OnReceive = DefaultOnReceive;
-				std::function<void(const std::shared_ptr<Socket>)> OnClose = DefaultOnClose;
+				std::function<void(const Socket*, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>&)> OnReceive = DefaultOnReceive;
+				std::function<void(const Socket*)> OnClose = DefaultOnClose;
 			};
 
 			enum class PACKET_TYPES : unsigned int {

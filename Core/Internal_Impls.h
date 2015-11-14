@@ -2,13 +2,14 @@
 #include "BufferManager.h"
 #include <boost/asio.hpp>
 #include <thread>
+
+#include "CommonNetwork.h"
+#include "Packet.h"
 #include "ThreadPool.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Utilities {
-			class ThreadPool;
-		}
+	
 	
 		//this namespace should only be accessed by the Core library and NEVER by a consumer of this library
 		namespace INTERNAL {
@@ -26,7 +27,11 @@ namespace SL {
 				boost::asio::io_service::work work;
 			
 			};
-	
+
+			struct SocketImpl;
+			std::shared_ptr<SocketImpl> Create(boost::asio::io_service& io, Network::NetworkEvents& netevents, Utilities::ThreadPool& t, boost::asio::ip::tcp::socket&& s);
+			std::shared_ptr<SocketImpl> Create(boost::asio::io_service& io, Network::NetworkEvents& netevents, Utilities::ThreadPool& t);
+
 		}
 	}
 }

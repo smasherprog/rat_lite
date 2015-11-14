@@ -172,9 +172,10 @@
     <ClCompile Include="Internal_Impls.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Packet.cpp" />
-    <ClCompile Include="Implementations.cpp" />
+    <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScreenGrab_Win.cpp" />
+    <ClCompile Include="Socket.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

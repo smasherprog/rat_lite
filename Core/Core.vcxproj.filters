@@ -90,9 +90,6 @@
     <ClCompile Include="Packet.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="Implementations.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="BufferManager.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
@@ -125,6 +122,12 @@
       <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="CommonNetwork.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Socket.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Listener.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

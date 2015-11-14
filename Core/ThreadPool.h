@@ -14,13 +14,13 @@ namespace SL {
 			public:
 
 				// Constructor.
-				ThreadPool(int threads);
+				ThreadPool(int threads=2);
 
 				// Destructor.
 				~ThreadPool();
 
 				// Adds task to a task queue.
-				void Enqueue(std::function<void()>&& f);
+				void Enqueue(std::function<void()> f);
 
 				// Shut down the pool.
 				void ShutDown();

@@ -4,6 +4,8 @@
 #include <algorithm>
 #include "BufferManager.h"
 
+
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Screen_Capture {
@@ -17,9 +19,11 @@ namespace SL {
 				int Offsetx = 0;//distance in pixels from the MOST left screen. This can be negative because the primary monitor starts at 0, but this screen could be layed out to the left of the primary, in which case the offset is negative
 				int Offsety = 0;//distance in pixels from the MOST bottom of the screen
 				int Index = 0;//Index of the screen from LEFT to right of the physical monitors
-			};
+			};	
+		
 			struct Image_Impl;
 			class Image {
+			
 				Utilities::Blk _Data;
 				unsigned int _Height;
 				unsigned int _Width;

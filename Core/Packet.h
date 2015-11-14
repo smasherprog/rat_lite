@@ -3,6 +3,8 @@
 #include "CommonNetwork.h"
 #include "BufferManager.h"
 
+extern int inflight;
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {

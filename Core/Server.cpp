@@ -74,8 +74,11 @@ void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl) {
 		std::cout << "Grabbing Screen " << std::endl;
 		screen = SL::Remote_Access_Library::Screen_Capture::CaptureDesktop(false);
 		std::cout << "Got Screen, uncompressed RGBA size is: " << screen->size() << std::endl;
+		screen->compress();
+		std::cout << "Got Screen, Image Compressed RGBA size is: " << screen->size() << std::endl;
 
 		SL::Remote_Access_Library::Network::Commands::ImageChange imgheader;
+
 		imgheader.top = imgheader.left = 0;
 		imgheader.height = screen->Height();
 		imgheader.width = screen->Width();
@@ -85,6 +88,8 @@ void Run(std::shared_ptr<SL::Remote_Access_Library::ServerImpl> serverimpl) {
 		p.PayloadLen = screen->size() + sizeof(imgheader);
 
 		auto pack = SL::Remote_Access_Library::Network::Packet::CreatePacket(p, imgheader, screen->data(), screen->size());
+		pack->compress();
+		std::cout << "packet Compressed size is: " << pack->header()->PayloadLen << std::endl;
 
 		{
 			std::lock_guard<std::mutex> lock(serverimplementation->ClientsLock);

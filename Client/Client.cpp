@@ -3,8 +3,8 @@
 
 #include "stdafx.h"
 #include <iostream>
-#include "Server.h"
-#include "..\Core\CommonNetwork.h"
+#include "..\Core\Server.h"
+#include "..\Core\Socket.h"
 #include <thread>
 #include <chrono>
 
@@ -17,7 +17,7 @@ int main()
 	netevents.OnReceive = [](const SL::Remote_Access_Library::Network::Socket* ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac) { std::cout << "OnReceive" << std::endl; };
 	netevents.OnClose = [](const SL::Remote_Access_Library::Network::Socket* ptr) { std::cout << "Disconnected" << std::endl; };
 	SL::Remote_Access_Library::Server s(6000, netevents);
-		while(true){
+	while(true){
 		
 		std::this_thread::sleep_for(5s);
 	}

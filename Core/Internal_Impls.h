@@ -2,19 +2,19 @@
 #include "BufferManager.h"
 #include <boost/asio.hpp>
 #include <thread>
-
-#include "CommonNetwork.h"
 #include "Packet.h"
 #include "ThreadPool.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
-	
+		namespace Network{
+			struct NetworkEvents;
+		}
 	
 		//this namespace should only be accessed by the Core library and NEVER by a consumer of this library
 		namespace INTERNAL {
-			extern Utilities::BufferManager _Buffer;
-
+			extern Utilities::BufferManager _PacketBuffer;
+			extern Utilities::BufferManager _ImageBuffer;
 			class io_runner {
 			public:
 				boost::asio::io_service io_service;

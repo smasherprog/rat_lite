@@ -19,15 +19,18 @@
     <Filter Include="Network\INTERNAL">
       <UniqueIdentifier>{960c60e3-ba5f-43a0-b6ee-3901fbf64ded}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{8d4b1865-94c4-40e3-aff5-01e0a62960ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{581a85e1-4b37-4374-8238-60a55ffdbad6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Socket.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Packet.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="CommonNetwork.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="BufferManager.h">
@@ -85,6 +88,18 @@
     <ClInclude Include="ThreadPool.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Commands.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Image.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="MainWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -121,14 +136,20 @@
     <ClCompile Include="ThreadPool.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="CommonNetwork.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="Socket.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Listener.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Image.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

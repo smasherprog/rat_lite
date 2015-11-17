@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "Screen.h"
 
-
 #if _WIN32
+
+#include "Image.h"
 #include "Internal_Impls.h"
 #include <algorithm>
 //RAII Objects to ensure proper destruction
@@ -66,10 +67,10 @@ void SaveBMP(BITMAPINFOHEADER bi, const char* imgdata, std::string filepath_dst)
 }
 
 
-std::shared_ptr<SL::Remote_Access_Library::Screen_Capture::Image> SL::Remote_Access_Library::Screen_Capture::CaptureDesktop(bool capturemouse)
+std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Screen_Capture::CaptureDesktop(bool capturemouse)
 {
 	auto Screens = GetMoitors();
-	if (Screens.empty()) return SL::Remote_Access_Library::Screen_Capture::Image::CreateImage(0, 0);
+	if (Screens.empty()) return SL::Remote_Access_Library::Utilities::Image::CreateImage(0, 0);
 
 	auto width(0), height(0), left(0), top(0);
 	std::for_each(begin(Screens), end(Screens), [&](SL::Remote_Access_Library::Screen_Capture::Screen_Info& s) {width += s.Width; height = std::max(height, s.Height); });
@@ -78,12 +79,12 @@ std::shared_ptr<SL::Remote_Access_Library::Screen_Capture::Image> SL::Remote_Acc
 	static auto capturedc(RAIIHDC(CreateCompatibleDC(desktopdc.get())));
 	static auto capturebmp(RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), width, height)));
 
-	if (!desktopdc || !capturedc || !capturebmp) return SL::Remote_Access_Library::Screen_Capture::Image::CreateImage(0, 0);
+	if (!desktopdc || !capturedc || !capturebmp) return SL::Remote_Access_Library::Utilities::Image::CreateImage(0, 0);
 
 																															// Selecting an object into the specified DC 
 	auto originalBmp = SelectObject(capturedc.get(), capturebmp.get());
 	size_t total_size = height*width * 4;
-	auto retimage(SL::Remote_Access_Library::Screen_Capture::Image::CreateImage(height, width));
+	auto retimage(SL::Remote_Access_Library::Utilities::Image::CreateImage(height, width));
 	if (BitBlt(capturedc.get(), 0, 0, width, height, desktopdc.get(), left, top, SRCCOPY | CAPTUREBLT) == FALSE) {
 		//if the screen cannot be captured, set everything to 1 and return 
 		

@@ -3,7 +3,7 @@
 #include <mutex>
 #include <algorithm>
 #include "BufferManager.h"
-
+#include <iostream>
 
 struct SL::Remote_Access_Library::Utilities::BufferManagerImpl {
 	size_t _Bytes_Allocated = 0;
@@ -23,7 +23,7 @@ SL::Remote_Access_Library::Utilities::BufferManager::~BufferManager()
 {
 	delete _BufferManagerImpl;
 }
-#include <iostream>
+
 SL::Remote_Access_Library::Utilities::Blk SL::Remote_Access_Library::Utilities::BufferManager::AquireBuffer(size_t req_bytes) {
 	if (req_bytes == 0) return Blk();
 	std::lock_guard<std::mutex> lock(_BufferManagerImpl->_BufferLock);

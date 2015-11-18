@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 #include "Image.h"
-
+#include <FL/fl_draw.H>
 
 void button_cb(Fl_Widget *w, void *d) {
 	auto wnd = (SL::Remote_Access_Library::UI::MainWindow*)d;
@@ -13,47 +13,32 @@ SL::Remote_Access_Library::UI::MainWindow::MainWindow(int x, int y, int w, int h
 	resizable(this);
 	netevents.OnReceive = std::bind(&SL::Remote_Access_Library::UI::MainWindow::onreceive, this, std::placeholders::_1, std::placeholders::_2);
 	scroller = new Fl_Scroll(0, 0, w, h);
-	auto overb = new Fl_Button(5, 5, 100, 25, "Connect");
+	overb = new Fl_Button(5, 5, 100, 25, "Connect");
 	overb->callback(button_cb, this);
-
-	mypicturebox = new Fl_Box(20, 20, w-30, h-30);
-
-	resizable(mypicturebox);
 	end();
+	Fl::visual(FL_RGB);
 }
+void SL::Remote_Access_Library::UI::MainWindow::draw() {
+	
+	if(Img)	fl_draw_image((const uchar*)Img->data(), 0, 0, Img->Width(), Img->Height(), 3, Img->Width()*3);
+	else Fl_Window::draw();
+}
+
 
 void SL::Remote_Access_Library::UI::MainWindow::Update(Network::Commands::ImageChange * info, char * data, unsigned int len)
 {
-	auto img = Remote_Access_Library::Utilities::Image::CreateImage(info->height, info->width, data, len, true);
-	img->decompress();
-
-	/*auto src = (rgba*)p->data();
-
-	need to swizzle the data
-	for (size_t i = 0; i < curimage.size(); i++)
-	{
-		curimage[i].b = src[i].r;
-		curimage[i].g = src[i].g;
-		curimage[i].r = src[i].b;
-		curimage[i].a = 0;
-	}*/
-	curimage.resize(img->Height()*img->Width());
-	memcpy(curimage.data(), img->data(), img->size());
-	
-	if (myimage != nullptr) {
-		delete myimage;
-	}
-	myimage = new Fl_RGB_Image((unsigned char*)curimage.data(), info->width, info->height, 4);
-	mypicturebox->size(info->width, info->height);
-	mypicturebox->image(myimage);
-
-	mypicturebox->redraw();
-
+	Img = Remote_Access_Library::Utilities::Image::CreateImage(info->height, info->width, data, len, true);
+	Img->decompress();
+	redraw();
 }
 void SL::Remote_Access_Library::UI::MainWindow::Connect()
 {
-	if (sock)sock->close();
-	sock = SL::Remote_Access_Library::Network::Socket::ConnectTo("127.0.0.1", "6000", netevents);
+	if (sock) {
+		sock->close();
+	}
+	else {
+		sock = SL::Remote_Access_Library::Network::Socket::ConnectTo("127.0.0.1", "6000", netevents);
+	}
 }
 
 void SL::Remote_Access_Library::UI::MainWindow::onreceive(const SL::Remote_Access_Library::Network::Socket* s, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& p) {

@@ -30,7 +30,7 @@ namespace SL {
 				unsigned int Height() const { return _Height; }
 				unsigned int Width() const { return _Width; }
 				bool compressed() const { return Compressed; }
-
+			
 			};
 	
 		}

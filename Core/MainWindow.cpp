@@ -12,11 +12,11 @@ SL::Remote_Access_Library::UI::MainWindow::MainWindow(int x, int y, int w, int h
 {
 	resizable(this);
 	netevents.OnReceive = std::bind(&SL::Remote_Access_Library::UI::MainWindow::onreceive, this, std::placeholders::_1, std::placeholders::_2);
-
+	scroller = new Fl_Scroll(0, 0, w, h);
 	auto overb = new Fl_Button(5, 5, 100, 25, "Connect");
 	overb->callback(button_cb, this);
 
-	mypicturebox = new Fl_Box(20, 20, 370, 370);
+	mypicturebox = new Fl_Box(20, 20, w-30, h-30);
 
 	resizable(mypicturebox);
 	end();
@@ -37,13 +37,16 @@ void SL::Remote_Access_Library::UI::MainWindow::Update(Network::Commands::ImageC
 		curimage[i].r = src[i].b;
 		curimage[i].a = 0;
 	}*/
-	curimage.resize(img->size());
+	curimage.resize(img->Height()*img->Width());
 	memcpy(curimage.data(), img->data(), img->size());
-
-	if (myimage != nullptr) delete myimage;
+	
+	if (myimage != nullptr) {
+		delete myimage;
+	}
 	myimage = new Fl_RGB_Image((unsigned char*)curimage.data(), info->width, info->height, 4);
-
+	mypicturebox->size(info->width, info->height);
 	mypicturebox->image(myimage);
+
 	mypicturebox->redraw();
 
 }

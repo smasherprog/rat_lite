@@ -41,15 +41,16 @@ void SL::Remote_Access_Library::Utilities::Image::compress(int quality)
 
 	if (tjCompress2(_jpegCompressor, (unsigned char*)data(), Width(), 0, Height(), TJPF_BGRX, (unsigned char**)&buf.data, &maxsize, set, quality, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 		std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+		Remote_Access_Library::INTERNAL::_ImageBuffer.ReleaseBuffer(buf);
 	}
-	else {
+	else {		
 		std::cout << "JEPG Compression  " << maxsize << " Took: " << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count() << std::endl;
+		Remote_Access_Library::INTERNAL::_ImageBuffer.ReleaseBuffer(_Data);
+		_Data = buf;
+		Size = maxsize;
+		Compressed = true;
 	}
-	Size = maxsize;
-	Compressed = true;
 	tjDestroy(_jpegCompressor);
-	Remote_Access_Library::INTERNAL::_ImageBuffer.ReleaseBuffer(buf);
-
 }
 void SL::Remote_Access_Library::Utilities::Image::decompress()
 {
@@ -59,11 +60,12 @@ void SL::Remote_Access_Library::Utilities::Image::decompress()
 	int jpegSubsamp = 0;
 	auto outwidth = 0;
 	auto outheight = 0;
-	if (tjDecompressHeader2(_jpegDecompressor, (unsigned char*)data(), size(), &outwidth, &outheight, &jpegSubsamp) >0) {
+	if (tjDecompressHeader2(_jpegDecompressor, (unsigned char*)data(), size(), &outwidth, &outheight, &jpegSubsamp) >=0) {
 		auto buf = Remote_Access_Library::INTERNAL::_ImageBuffer.AquireBuffer(outwidth *outheight* 4);
 		if (tjDecompress(_jpegDecompressor, (unsigned char*)data(), size(), (unsigned char*)buf.data, outwidth, 0, outheight, TJPF_BGRX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) >= 0) {
 			_Width = outwidth;
 			_Height = outheight;
+			Size = _Width * _Height*4;
 			Compressed = false;
 			Remote_Access_Library::INTERNAL::_ImageBuffer.ReleaseBuffer(_Data);
 			_Data = buf;

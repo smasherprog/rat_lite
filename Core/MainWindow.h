@@ -12,7 +12,7 @@
 #include <FL/Fl_Toggle_Button.H>
 #include <FL/FL_Box.H>
 #include <FL/Fl_RGB_Image.H>
-
+#include <FL/Fl_Scroll.H>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -20,6 +20,7 @@ namespace SL {
 			class MainWindow : public Fl_Double_Window {
 				Fl_Box* mypicturebox = nullptr;
 				Fl_RGB_Image* myimage = nullptr;
+				Fl_Scroll* scroller = nullptr;
 				struct rgba {
 				unsigned char r, g, b, a;};
 				std::vector<rgba> curimage;

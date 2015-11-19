@@ -3,11 +3,11 @@
 
 #include "stdafx.h"
 #include <iostream>
-#include "..\Core\MainWindow.h"
+#include "..\Core\Viewer.h"
+#include <FL\Fl.H>
 
 int main(int argc, char **argv) {
 
-	SL::Remote_Access_Library::UI::MainWindow wnd(10, 10, 400, 400, "Viewer Placeholder");
-	wnd.show();
+	SL::Remote_Access_Library::UI::Viewer wnd;
 	return Fl::run();
 }

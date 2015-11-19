@@ -12,6 +12,7 @@
 #include <FL/Fl_Toggle_Button.H>
 #include <FL/Fl_RGB_Image.H>
 #include <FL/Fl_Scroll.H>
+#include <FL/Fl_Box.H>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -22,16 +23,16 @@ namespace SL {
 			class MainWindow : public Fl_Double_Window {
 				Fl_Button* overb;
 				Fl_Scroll* scroller = nullptr;
-				std::shared_ptr<Utilities::Image> Img;
-				Network::NetworkEvents netevents;
-				std::shared_ptr<Network::Socket> sock;
-				void onreceive(const SL::Remote_Access_Library::Network::Socket* s, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& p);
-				 void draw() override;
+				Fl_RGB_Image* image = nullptr;
+				Fl_Box* img_box = nullptr;
+				std::vector<char> Data;
+				std::function<void()> _OnToggleConnection;
+				
 			public:
-				MainWindow(int x, int y, int w, int h, const char *l);
+				MainWindow(int x, int y, int w, int h, const char *l, std::function<void()> ontoggleconnection);
 
-				void Update(Network::Commands::ImageChange* info, char* data, unsigned int len);
-				void Connect();
+				void Update(Network::Commands::ImageChange* info, std::shared_ptr<Utilities::Image>& img);
+				void ToggleConnect();
 			};
 
 		}

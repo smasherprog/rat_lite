@@ -7,15 +7,6 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{375b01d4-71b3-4f5e-8c08-102373b6121d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Compression">
-      <UniqueIdentifier>{ccefab9b-6544-4eed-b8b1-08fd2478d5e6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Screen_Capture">
-      <UniqueIdentifier>{c551e70a-958f-425f-aceb-0b37eb50cae9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Mouse_Capture">
-      <UniqueIdentifier>{ca795e03-8240-4fba-a9a2-40100b615c65}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Network\INTERNAL">
       <UniqueIdentifier>{960c60e3-ba5f-43a0-b6ee-3901fbf64ded}</UniqueIdentifier>
     </Filter>
@@ -24,6 +15,12 @@
     </Filter>
     <Filter Include="UI">
       <UniqueIdentifier>{8d4b1865-94c4-40e3-aff5-01e0a62960ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Capturing">
+      <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\INTERNAL">
+      <UniqueIdentifier>{b7ba53d4-7453-4637-b306-809f13c09180}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -39,52 +36,7 @@
     <ClInclude Include="Listener.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="huff0.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="huff0_static.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="mem.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstd.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstd_internal.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstd_static.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstdhc.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstdhc_static.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="bitstream.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="error.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="fse.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="fse_static.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="Screen.h">
-      <Filter>Screen_Capture</Filter>
-    </ClInclude>
-    <ClInclude Include="Mouse.h">
-      <Filter>Mouse_Capture</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Internal_Impls.h">
-      <Filter>Network\INTERNAL</Filter>
-    </ClInclude>
     <ClInclude Include="ThreadPool.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -103,6 +55,33 @@
     <ClInclude Include="Viewer.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="ConnectWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen.h">
+      <Filter>Capturing</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>Capturing</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerImpl.h">
+      <Filter>Server\INTERNAL</Filter>
+    </ClInclude>
+    <ClInclude Include="Shapes.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketImpl.h">
+      <Filter>Network\INTERNAL</Filter>
+    </ClInclude>
+    <ClInclude Include="ListenerImpl.h">
+      <Filter>Network\INTERNAL</Filter>
+    </ClInclude>
+    <ClInclude Include="IO_Runner.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -111,31 +90,7 @@
     <ClCompile Include="BufferManager.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="huff0.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="zstd.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="zstdhc.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="fse.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="ScreenGrab_Win.cpp">
-      <Filter>Screen_Capture</Filter>
-    </ClCompile>
-    <ClCompile Include="Screen.cpp">
-      <Filter>Screen_Capture</Filter>
-    </ClCompile>
-    <ClCompile Include="Mouse.cpp">
-      <Filter>Mouse_Capture</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="Internal_Impls.cpp">
-      <Filter>Network\INTERNAL</Filter>
-    </ClCompile>
     <ClCompile Include="ThreadPool.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
@@ -151,14 +106,29 @@
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="MainWindow.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="Viewer.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <ClCompile Include="ConnectWindow.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen.cpp">
+      <Filter>Capturing</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>Capturing</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseNetworkDriver.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerImpl.cpp">
+      <Filter>Server\INTERNAL</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="IO_Runner.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -7,6 +7,7 @@ namespace SL {
 			namespace Commands {
 				enum class PACKET_TYPES : unsigned int {
 					INVALID,
+					RESOLUTIONCHANGE,
 					IMAGECHANGE,
 					MOUSEEVENT,
 					KEYEVENT

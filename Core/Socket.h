@@ -9,15 +9,14 @@ namespace SL {
 		}
 		namespace Network {
 			class Packet;
-			struct NetworkEvents;
-	
+			class BaseNetworkDriver;
 
 			//this class is async so all calls return immediately and are later executed, which is why callbacks are passed to the factory so you can be notified 
 			class Socket: public std::enable_shared_from_this<Socket> {
 			public:
 				//factory to create a socket and connect to the destination address
-				static std::shared_ptr<Socket> ConnectTo(const char* host, const char* port, NetworkEvents& netevents);
-				//constructed with opaque type for internal use only
+
+				static std::shared_ptr<Socket> ConnectTo(const char* host, const char* port, SL::Remote_Access_Library::Network::BaseNetworkDriver* netevents);
 				Socket(std::shared_ptr<INTERNAL::SocketImpl>& impl);
 				
 				~Socket();
@@ -44,17 +43,6 @@ namespace SL {
 				void do_read_body();
 				
 
-			};
-
-
-			void DefaultOnConnect(const std::shared_ptr<SL::Remote_Access_Library::Network::Socket> ptr);
-			void DefaultOnReceive(const Socket* ptr, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& pac);
-			void DefaultOnClose(const Socket* ptr);
-
-			struct NetworkEvents {
-				std::function<void(const std::shared_ptr<Socket>)> OnConnect = DefaultOnConnect;
-				std::function<void(const Socket*, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>&)> OnReceive = DefaultOnReceive;
-				std::function<void(const Socket*)> OnClose = DefaultOnClose;
 			};
 		}
 	}

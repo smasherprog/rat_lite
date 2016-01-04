@@ -1,19 +1,22 @@
 #pragma once
 #include <memory>
 #include "BufferManager.h"
-#include <vector>
 #include "Commands.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
+		namespace INTERNAL {
+			extern Utilities::BufferManager _PacketBuffer;
+		}
 		namespace Network {
-			#define HEADERSIZE sizeof(PacketHeader)
+	
 
 			struct PacketHeader {
 				unsigned int PayloadLen = 0;
 				unsigned int UnCompressedlen = 0;
 				Commands::PACKET_TYPES Packet_Type = Commands::PACKET_TYPES::INVALID;
 			};
+			#define HEADERSIZE sizeof(PacketHeader)
 
 			struct Packet_Impl;
 			class Packet {
@@ -25,12 +28,12 @@ namespace SL {
 				Packet(Packet_Impl&);
 				~Packet();
 				//pointer to the beginning of the packet payload
-				char* data() const { return _Data.data; }
-				PacketHeader* header() { return &_PacketHeader; }
+				char* data() const;
+				PacketHeader* header();
 
-				//compresses the packet, so make sure not to write data after this, otherwise you could corrupt the data.  tempbuffer is for performance: ompressing packets requires another buffer to copy data to, so this allows a prevous buffer to be reused. If you dont pass a buffer, one will be created and used for each call to compress
+				bool compressed() const;
+
 				void compress();
-				//this decompresses the packet, tempbuffer is for performance: decompressing packets requires another buffer to copy data to, so this allows a prevous buffer to be reused. If you dont pass a buffer, one will be created and used for each call to decompress
 				void decompress();
 
 			private:

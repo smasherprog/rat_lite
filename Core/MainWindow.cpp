@@ -1,55 +1,60 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 #include "Image.h"
-#include <FL/fl_draw.H>
-#include "Image.h"
+#include "Socket.h"
+#include "Packet.h"
 
-void button_cb(Fl_Widget *w, void *d) {
-	auto wnd = (SL::Remote_Access_Library::UI::MainWindow*)d;
-	wnd->ToggleConnect();
+
+void SL::Remote_Access_Library::UI::MainWindow::Update(Network::Commands::ImageChange* info, std::shared_ptr<Utilities::Image>& img)
+{
+	auto tmpImage = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
+	//tmpImage->SaveFile("c:\\users\\scott\\desktop\\somefile.bmp", wxBitmapType::wxBITMAP_TYPE_BMP);
+
+	_Image = tmpImage;
+	SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);
+	Refresh(false);
 }
 
-SL::Remote_Access_Library::UI::MainWindow::MainWindow(int x, int y, int w, int h, const char * l, std::function<void()> onToggleConnection) : Fl_Double_Window(x, y, w, h, l), _OnToggleConnection(onToggleConnection)
+void SL::Remote_Access_Library::UI::MainWindow::OnDraw(wxDC & dc)
 {
-	resizable(this);
+	auto imgcopy = _Image;
+	if (imgcopy) dc.DrawBitmap(*imgcopy, 0, 0, false);
+}
+
+void SL::Remote_Access_Library::UI::MainWindow::NewImage(Network::Commands::ImageChange* info, std::shared_ptr<Utilities::Image>& img)
+{
+	Update(info, img);
+}
+
+
+
+void SL::Remote_Access_Library::UI::MainWindow::OnReceive(const SL::Remote_Access_Library::Network::Socket * s, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& p)
+{
+	if (p->header()->Packet_Type == SL::Remote_Access_Library::Network::Commands::PACKET_TYPES::IMAGECHANGE) {
+		auto imginfo = (SL::Remote_Access_Library::Network::Commands::ImageChange*)p->data();
+		auto img = Remote_Access_Library::Utilities::Image::CreateImage(imginfo->height, imginfo->width, p->data() + sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange), p->header()->PayloadLen - sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange));
 	
-	scroller = new Fl_Scroll(0, 0, w, h);
-	overb = new Fl_Button(5, 5, 100, 25, "Connect");
-	img_box = new Fl_Box(5, 5, w - 5, h - 5);
-	overb->callback(button_cb, this);
-	resizable(img_box);
-	resizable(scroller);
-	end();
-	Fl::visual(FL_RGB);
+	//	Update(imginfo, img);
+	}
+	else if (p->header()->Packet_Type == SL::Remote_Access_Library::Network::Commands::PACKET_TYPES::RESOLUTIONCHANGE) {
+		auto imginfo = (SL::Remote_Access_Library::Network::Commands::ImageChange*)p->data();
+		auto img = Remote_Access_Library::Utilities::Image::CreateImage(imginfo->height, imginfo->width, p->data() + sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange), p->header()->PayloadLen - sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange));
+	
+		NewImage(imginfo, img);
+	}
 }
 
-void SL::Remote_Access_Library::UI::MainWindow::Update(Network::Commands::ImageChange * info, std::shared_ptr<Utilities::Image>& img)
+
+SL::Remote_Access_Library::UI::MainWindow::MainWindow(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port, std::function<void()> ondisconnect)
+	: wxScrolledWindow(frame, wxID_ANY), _OnDisconnect(ondisconnect)
 {
-	auto h(0), w(0);
-	if (image != nullptr) {
-		h = image->h();
-		w = image->w();
-	}
-	if (image == nullptr || info->height >= h || info->width >= w) {	
-		delete image;
-		image = new Fl_RGB_Image((unsigned char*)img->data(), info->width, info->height, 3, info->width * 3);
-		img_box->image(image);
-		img_box->size(info->width, info->height);
-	}
-	else if (info->height < h && info->width < w) {
-		for (auto i = 0; i < info->width; i++) {
-			auto ptr = image->array + (info->left * 4) + (info->top*image->w() * 4);
-			memcpy((void*)ptr, img->data() + (i*info->width * 4), info->width * 4);
-		}
-	}
-	img_box->redraw();
-	Fl::check();
-
+	//Network::NetworkEvents netevents;
+	//netevents.OnClose = [this](const Network::Socket* sock) { _OnDisconnect(); };
+	//netevents.OnReceive = std::bind(&SL::Remote_Access_Library::UI::MainWindow::OnReceive, this, std::placeholders::_1, std::placeholders::_2);
+	//_Socket = SL::Remote_Access_Library::Network::Socket::ConnectTo(dst_host.c_str(), dst_port.c_str(), netevents);
 }
 
-void SL::Remote_Access_Library::UI::MainWindow::ToggleConnect()
+SL::Remote_Access_Library::UI::MainWindow::~MainWindow()
 {
-	_OnToggleConnection();
+	_Socket->close();
 }
-
-

@@ -1,9 +1,6 @@
 #include "stdafx.h"
-#include <vector>
-#include <mutex>
-#include <algorithm>
 #include "BufferManager.h"
-#include <iostream>
+
 
 struct SL::Remote_Access_Library::Utilities::BufferManagerImpl {
 	size_t _Bytes_Allocated = 0;

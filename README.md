@@ -2,12 +2,8 @@
 <p>The library is not yet stable and in development . . . </p>
 
 
-
-
-
+<hr/>
 <h3>Visual Studio Development</h3>
-
-<div style="padding-left:20px;">
 
 <p><b>Client.sln:</b> Builds an application you would give to a person and tell them to run so you can connect to their computer.<br/> 
 <b>Viewer.sln:</b> Builds an application that you use to see and interact with the Client application.
@@ -15,7 +11,7 @@
 <h4>Visual Studio 2015 setup</h4>
 <h5>Dependencies:</h5>
 
-<b>wxWidgets setup</b>
+<b>wxWidgets</b>
 
 <ul>
 <li>
@@ -25,7 +21,7 @@ Download the latest release from here https://github.com/wxWidgets/wxWidgets/rel
 Extract to c:\wxWidgets
 </li>
 <li>
-Open the latests solution file in C:\wxWidgets\build\msw\    as of 3.0.2  the solution is wx_vc12.sln
+Open the latest solution file in C:\wxWidgets\build\msw\    as of 3.0.2  the solution is wx_vc12.sln
 <br/>
 </li>
 <li>
@@ -44,8 +40,18 @@ Now, batch build and the compile will succeed.
 </p>
 
 
+<b>Boost</b>
+<ul>
+<li>
+Download the latest release from here http://sourceforge.net/projects/boost/files/boost-binaries/  Currently working with 1.60<br/>
+For example, goto 1.60.0 folder, then download boost_1_60_0-msvc-14.0-64.exe     and  boost_1_60_0-msvc-14.0-32.exe
+</li>
+<li>
+Install to c:\boost
+</li>
+</ul>
 
-</div>
+
 
 
 <h3>LICENSE:</h3>

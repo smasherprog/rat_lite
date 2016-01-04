@@ -17,7 +17,7 @@ Performance
 <a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Visual-Studio-Development">Visual Studio</a>
 </li>
 <li>
-<a href="#">Ubuntu</a>
+<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Ubuntu-Development">Ubuntu</a>
 </li>
 </ul>
 </p>

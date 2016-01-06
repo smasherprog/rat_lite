@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include <iostream>
-#include "..\Core\Viewer.h"
+#include "..\UI\Viewer.h"
 
 //main entry point for this application, this is a wxWixgets implementation. The macro expands to the correct entry point for each platform. 
 //On Windows it expands to int WinMain(){} It calls the Oninit Function defined in the class below

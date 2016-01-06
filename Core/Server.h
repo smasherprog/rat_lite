@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <thread>
 
 namespace SL {
 	namespace Remote_Access_Library {

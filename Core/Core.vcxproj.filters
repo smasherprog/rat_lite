@@ -13,9 +13,6 @@
     <Filter Include="Server">
       <UniqueIdentifier>{581a85e1-4b37-4374-8238-60a55ffdbad6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UI">
-      <UniqueIdentifier>{8d4b1865-94c4-40e3-aff5-01e0a62960ce}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
     </Filter>
@@ -48,15 +45,6 @@
     </ClInclude>
     <ClInclude Include="Server.h">
       <Filter>Server</Filter>
-    </ClInclude>
-    <ClInclude Include="MainWindow.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="Viewer.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="ConnectWindow.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="Screen.h">
       <Filter>Capturing</Filter>
@@ -106,12 +94,6 @@
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="Viewer.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
-    <ClCompile Include="ConnectWindow.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
     <ClCompile Include="Screen.cpp">
       <Filter>Capturing</Filter>
     </ClCompile>
@@ -123,9 +105,6 @@
     </ClCompile>
     <ClCompile Include="ServerImpl.cpp">
       <Filter>Server\INTERNAL</Filter>
-    </ClCompile>
-    <ClCompile Include="MainWindow.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="IO_Runner.cpp">
       <Filter>Network</Filter>

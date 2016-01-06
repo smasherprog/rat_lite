@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}</ProjectGuid>
+    <ProjectGuid>{BBB97CB6-0F8D-4063-9DBA-7FD7C0E34CAA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Core</RootNamespace>
+    <RootNamespace>UI</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,19 +70,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\Core\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\Core\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\Core\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\Core\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -92,13 +92,9 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIBWIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -108,13 +104,9 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIBWIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,13 +118,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
@@ -146,61 +134,39 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BaseNetworkDriver.h" />
-    <ClInclude Include="BufferManager.h" />
-    <ClInclude Include="Commands.h" />
-    <ClInclude Include="Image.h" />
-    <ClInclude Include="ListenerImpl.h" />
-    <ClInclude Include="Mouse.h" />
-    <ClInclude Include="IO_Runner.h" />
-    <ClInclude Include="Packet.h" />
-    <ClInclude Include="Listener.h" />
-    <ClInclude Include="Shapes.h" />
-    <ClInclude Include="Screen.h" />
-    <ClInclude Include="Server.h" />
-    <ClInclude Include="ServerImpl.h" />
-    <ClInclude Include="Socket.h" />
-    <ClInclude Include="SocketImpl.h" />
+    <ClInclude Include="ConnectWindow.h" />
+    <ClInclude Include="MainWindow.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="Viewer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BaseNetworkDriver.cpp" />
-    <ClCompile Include="BufferManager.cpp" />
-    <ClCompile Include="Image.cpp" />
-    <ClCompile Include="IO_Runner.cpp" />
-    <ClCompile Include="Mouse.cpp" />
-    <ClCompile Include="Packet.cpp" />
-    <ClCompile Include="Listener.cpp" />
-    <ClCompile Include="Screen.cpp" />
-    <ClCompile Include="Server.cpp" />
-    <ClCompile Include="ServerImpl.cpp" />
-    <ClCompile Include="Socket.cpp" />
+    <ClCompile Include="ConnectWindow.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="Viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{c870874b-bffe-4ae9-ad8a-6f1a400381ab}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\zstd\visual\2013\zstdlib\zstdlib.vcxproj">
       <Project>{8bfd8150-94d5-4bf9-8a50-7bd9929a0850}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
 </Project>

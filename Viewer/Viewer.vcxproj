@@ -170,8 +170,8 @@
     <ClCompile Include="Viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
-      <Project>{c870874b-bffe-4ae9-ad8a-6f1a400381ab}</Project>
+    <ProjectReference Include="..\UI\UI.vcxproj">
+      <Project>{bbb97cb6-0f8d-4063-9dba-7fd7c0e34caa}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ConnectWindow.h"
+#include "MainWindow.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -7,10 +8,8 @@ namespace SL {
 			class ConnectWindowImpl : public wxFrame
 			{
 			public:
-				ConnectWindowImpl(std::function<void(std::string)> connfunc, std::function<void()> onquit)
-					: wxFrame(NULL, wxID_ANY, "Connect to host", wxPoint(wxID_ANY, wxID_ANY), wxSize(340, 150)),
-					_ConnectTo(connfunc),
-					_OnQuit(onquit)
+				ConnectWindowImpl()
+					: wxFrame(NULL, wxID_ANY, "Connect to host", wxPoint(wxID_ANY, wxID_ANY), wxSize(340, 150))
 				{
 					auto panel = new wxPanel(this, wxID_ANY);
 
@@ -33,30 +32,31 @@ namespace SL {
 					auto m_buttonQuit = new wxButton(panel, wxID_EXIT, ("Quit"));
 					hbox3->Add(m_buttonQuit);
 					vbox->Add(hbox3, 0, wxALIGN_RIGHT | wxTOP | wxRIGHT | wxBOTTOM, 10);
-					Connect(wxID_EXIT, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SL::Remote_Access_Library::UI::ConnectWindowImpl::OnQuit));
-
+				
 					panel->SetSizer(vbox);
 					Centre();
+
 				}
 				virtual ~ConnectWindowImpl() {}
-	
-				void OnQuit(wxCommandEvent & event)
-				{
-					_OnQuit();
-				}
 
 				void OnConnect(wxCommandEvent & event)
 				{
 					if (m_serverEntry->IsEmpty()) wxMessageBox(wxT("Server must not be emmpty!"), wxT("Warning!"), wxICON_WARNING);
 					else {
-						_ConnectTo(m_serverEntry->GetValue().ToStdString());
+						wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+						auto wnd = new wxFrame(NULL, -1, wxT("Scrolling an Image"), wxPoint(50, 50), wxSize(650, 650));
+						auto _MainWindow = new MainWindow(wnd, "RDP Window", m_serverEntry->GetValue().ToStdString(), "6000");
+						sizer->Add(_MainWindow->get_Frame(), 1, wxALL | wxEXPAND);
+						wnd->SetSizer(sizer);
+						wnd->Show();
+
 					}
 				}
-
-				std::function<void(std::string)> _ConnectTo;
-				std::function<void()> _OnQuit;
+			
 				wxTextCtrl* m_serverEntry;
+
 			};
+	
 		}
 	}
 }
@@ -65,9 +65,9 @@ namespace SL {
 
 
 
-SL::Remote_Access_Library::UI::ConnectWindow::ConnectWindow(std::function<void(std::string)> connfunc, std::function<void()> onquit)
+SL::Remote_Access_Library::UI::ConnectWindow::ConnectWindow()
 {
-	_Impl = std::make_unique<ConnectWindowImpl>(connfunc, onquit);
+	_Impl = std::make_unique<ConnectWindowImpl>();
 }
 
 wxFrame * SL::Remote_Access_Library::UI::ConnectWindow::get_Frame()

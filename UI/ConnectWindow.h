@@ -1,6 +1,5 @@
 #pragma once
-#include <string>
-#include <functional>
+#include <memory>
 
 class wxFrame;
 namespace SL {
@@ -11,7 +10,7 @@ namespace SL {
 			class ConnectWindow 
 			{
 			public:
-				ConnectWindow(std::function<void(std::string)> connfunc, std::function<void()> onquit);
+				ConnectWindow();
 				wxFrame* get_Frame();
 			private:
 				std::unique_ptr<ConnectWindowImpl> _Impl;

@@ -34,14 +34,15 @@ SL::Remote_Access_Library::Network::PacketHeader * SL::Remote_Access_Library::Ne
 bool SL::Remote_Access_Library::Network::Packet::compressed() const {
 	return _PacketHeader.UnCompressedlen > 0;
 }
-void SL::Remote_Access_Library::Network::Packet::compress()
+void SL::Remote_Access_Library::Network::Packet::compress(int compressionlevel)
 {
+	assert(compressionlevel >= 1 && compressionlevel <= 19);
 	if (compressed()) return;//allready compressed
 	auto maxsize = ZSTD_compressBound(_PacketHeader.PayloadLen);
 	auto buf = Remote_Access_Library::INTERNAL::_PacketBuffer.AquireBuffer(maxsize);
 	
 	_PacketHeader.UnCompressedlen = _PacketHeader.PayloadLen;
-	_PacketHeader.PayloadLen = static_cast<unsigned int>(ZSTD_compress(buf.data, maxsize, data(), _PacketHeader.PayloadLen));
+	_PacketHeader.PayloadLen = static_cast<unsigned int>(ZSTD_compress(buf.data, maxsize, data(), _PacketHeader.PayloadLen, compressionlevel));
 	std::cout << "compress from: " << _PacketHeader.UnCompressedlen << " To " << _PacketHeader.PayloadLen<<std::endl;
 	Remote_Access_Library::INTERNAL::_PacketBuffer.ReleaseBuffer(_Data);
 	_Data = buf;

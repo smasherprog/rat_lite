@@ -32,8 +32,8 @@ namespace SL {
 				PacketHeader* header();
 
 				bool compressed() const;
-
-				void compress();
+				//compressionlevel 1- 19
+				void compress(int compressionlevel=4);
 				void decompress();
 
 			private:

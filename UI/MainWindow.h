@@ -1,21 +1,22 @@
 #pragma once
 
-#include <functional>
 #include <string>
-class wxScrolledWindow;
+class wxFrame;
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
 			class MainWindowImpl;
-			class MainWindow 
+			class MainWindow
 			{
 			public:
 
-				MainWindow(wxFrame* frame, const std::string title, std::string dst_host, std::string dst_port, std::function<void()> ondisconnect);
+				MainWindow(wxFrame* frame, const std::string title, std::string dst_host, std::string dst_port);
+				~MainWindow();
 				wxScrolledWindow* get_Frame();
 			private:
-				std::unique_ptr<MainWindowImpl> _MainWindowImpl;
+				MainWindowImpl* _MainWindowImpl;
+
 			};
 
 

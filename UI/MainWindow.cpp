@@ -1,37 +1,31 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 #include "Image.h"
+#include "ReceiverNetworkDriver.h"
+#include "Commands.h"
 #include "Socket.h"
-#include "Packet.h"
-
+#include <mutex>
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
-
 			class MainWindowImpl : public wxScrolledWindow
 			{
+				std::shared_ptr<wxBitmap> _Image;
+				std::unique_ptr<Network::ReceiverNetworkDriver<MainWindowImpl>> _ReceiverNetworkDriver;
+				std::mutex _CloseLock;
+				wxFrame* Parent = nullptr;
 			public:
 
-				MainWindowImpl(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port, std::function<void()> ondisconnect)
-					: wxScrolledWindow(frame, wxID_ANY), _OnDisconnect(ondisconnect)
+				MainWindowImpl(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port)
+					: wxScrolledWindow(frame, wxID_ANY)
 				{
-					//Network::NetworkEvents netevents;
-					//netevents.OnClose = [this](const Network::Socket* sock) { _OnDisconnect(); };
-					//netevents.OnReceive = std::bind(&SL::Remote_Access_Library::UI::MainWindow::OnReceive, this, std::placeholders::_1, std::placeholders::_2);
-					//_Socket = SL::Remote_Access_Library::Network::Socket::ConnectTo(dst_host.c_str(), dst_port.c_str(), netevents);
+					_ReceiverNetworkDriver = std::make_unique<Network::ReceiverNetworkDriver<MainWindowImpl>>(this, dst_host, dst_port);
+					Parent = frame;
 				}
 				virtual ~MainWindowImpl() {
-					_Socket->close();
-				}
-
 	
-
-				std::function<void()> _OnDisconnect;
-				std::shared_ptr<Network::Socket> _Socket;
-				std::shared_ptr<wxBitmap> _Image;
-
-
+				}
 
 				void Update(Network::Commands::ImageChange* info, std::shared_ptr<Utilities::Image>& img)
 				{
@@ -53,28 +47,14 @@ namespace SL {
 				{
 					Update(info, img);
 				}
-
-
-
-				void OnReceive(const SL::Remote_Access_Library::Network::Socket * s, std::shared_ptr<SL::Remote_Access_Library::Network::Packet>& p)
-				{
-					if (p->header()->Packet_Type == SL::Remote_Access_Library::Network::Commands::PACKET_TYPES::IMAGECHANGE) {
-						auto imginfo = (SL::Remote_Access_Library::Network::Commands::ImageChange*)p->data();
-						auto img = Remote_Access_Library::Utilities::Image::CreateImage(imginfo->height, imginfo->width, p->data() + sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange), p->header()->PayloadLen - sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange));
-
-						//	Update(imginfo, img);
-					}
-					else if (p->header()->Packet_Type == SL::Remote_Access_Library::Network::Commands::PACKET_TYPES::RESOLUTIONCHANGE) {
-						auto imginfo = (SL::Remote_Access_Library::Network::Commands::ImageChange*)p->data();
-						auto img = Remote_Access_Library::Utilities::Image::CreateImage(imginfo->height, imginfo->width, p->data() + sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange), p->header()->PayloadLen - sizeof(SL::Remote_Access_Library::Network::Commands::ImageChange));
-
-						NewImage(imginfo, img);
-					}
+				void OnClose(const Network::Socket* socket) {
+					wxQueueEvent(Parent, new wxCloseEvent(wxEVT_CLOSE_WINDOW));
 				}
+				void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
 
+				}
+			
 			};
-
-
 		}
 	}
 }
@@ -82,13 +62,23 @@ namespace SL {
 
 
 
-SL::Remote_Access_Library::UI::MainWindow::MainWindow(wxFrame* frame, const std::string title, std::string dst_host, std::string dst_port, std::function<void()> ondisconnect)
+
+
+
+SL::Remote_Access_Library::UI::MainWindow::MainWindow(wxFrame* frame, const std::string title, std::string dst_host, std::string dst_port)
 {
-	_MainWindowImpl = std::make_unique<MainWindowImpl>(frame, title, dst_host, dst_port, ondisconnect);
+	_MainWindowImpl = new MainWindowImpl(frame, title, dst_host, dst_port);
+}
+
+SL::Remote_Access_Library::UI::MainWindow::~MainWindow()
+{//specifc order
+	if (!_MainWindowImpl->IsBeingDeleted()) {
+		_MainWindowImpl->Destroy();
+	}
 }
 
 wxScrolledWindow * SL::Remote_Access_Library::UI::MainWindow::get_Frame()
 {
-	return _MainWindowImpl.get();
+	return _MainWindowImpl;
 }
 

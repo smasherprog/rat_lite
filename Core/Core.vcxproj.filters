@@ -70,6 +70,9 @@
     <ClInclude Include="IO_Runner.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="ReceiverNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">

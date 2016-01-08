@@ -70,19 +70,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -167,6 +167,7 @@
     <ClInclude Include="IO_Runner.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Listener.h" />
+    <ClInclude Include="ReceiverNetworkDriver.h" />
     <ClInclude Include="Shapes.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="Server.h" />

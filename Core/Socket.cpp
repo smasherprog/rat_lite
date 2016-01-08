@@ -57,8 +57,12 @@ void SL::Remote_Access_Library::Network::Socket::send(std::shared_ptr<Packet>& p
 void SL::Remote_Access_Library::Network::Socket::close()
 {
 	_SocketImpl->NetworkEvents_->OnClose(this);
+	try
+	{
 	_SocketImpl->socket.shutdown(boost::asio::socket_base::shutdown_send);
 	_SocketImpl->socket.close();
+	}
+	catch (...) {}//I dont care about exceptions when the socket is being closed!
 }
 
 void SL::Remote_Access_Library::Network::Socket::connect(const char * host, const char * port)
@@ -88,7 +92,6 @@ void SL::Remote_Access_Library::Network::Socket::connect(const char * host, cons
 		}
 		catch (...) {
 			_SocketImpl->NetworkEvents_->OnClose(this);
-
 		}
 	}
 }

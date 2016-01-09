@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 #include "Image.h"
-#include "ReceiverNetworkDriver.h"
+#include "ClientNetworkDriver.h"
 #include "Commands.h"
 #include "Socket.h"
 #include <mutex>
@@ -12,15 +12,14 @@ namespace SL {
 			class MainWindowImpl : public wxScrolledWindow
 			{
 				std::shared_ptr<wxBitmap> _Image;
-				std::unique_ptr<Network::ReceiverNetworkDriver<MainWindowImpl>> _ReceiverNetworkDriver;
+				Network::ClientNetworkDriver<MainWindowImpl> _ReceiverNetworkDriver;
 				std::mutex _CloseLock;
 				wxFrame* Parent = nullptr;
 			public:
 
 				MainWindowImpl(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port)
-					: wxScrolledWindow(frame, wxID_ANY)
+					: wxScrolledWindow(frame, wxID_ANY), _ReceiverNetworkDriver(this, dst_host, dst_port)
 				{
-					_ReceiverNetworkDriver = std::make_unique<Network::ReceiverNetworkDriver<MainWindowImpl>>(this, dst_host, dst_port);
 					Parent = frame;
 				}
 				virtual ~MainWindowImpl() {

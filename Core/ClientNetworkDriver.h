@@ -11,13 +11,13 @@ namespace SL {
 
 		namespace Network {
 			
-			template<class T>class ReceiverNetworkDriver : public BaseNetworkDriver {
+			template<class T>class ClientNetworkDriver : public BaseNetworkDriver {
 				T* _Receiver;
 				std::shared_ptr<Network::Socket> _Socket;
 
 			public:
-				ReceiverNetworkDriver(T* r, std::string dst_host, std::string dst_port) : _Receiver(r){_Socket = SL::Remote_Access_Library::Network::Socket::ConnectTo(dst_host.c_str(), dst_port.c_str(), this);}
-				virtual ~ReceiverNetworkDriver() { }
+				ClientNetworkDriver(T* r, std::string dst_host, std::string dst_port) : _Receiver(r){_Socket = SL::Remote_Access_Library::Network::Socket::ConnectTo(dst_host.c_str(), dst_port.c_str(), this);}
+				virtual ~ClientNetworkDriver() { }
 				virtual void OnConnect(const std::shared_ptr<Socket>& socket) override { _Receiver->OnConnect(socket); }
 				virtual void OnClose(const Socket* socket) override { _Receiver->OnClose(socket); }
 

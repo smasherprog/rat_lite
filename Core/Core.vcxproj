@@ -72,18 +72,24 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>c:\wxWidgets\include;C:\boost;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);$(LibraryPath)</LibraryPath>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -167,11 +173,11 @@
     <ClInclude Include="IO_Runner.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Listener.h" />
-    <ClInclude Include="ReceiverNetworkDriver.h" />
+    <ClInclude Include="ClientNetworkDriver.h" />
+    <ClInclude Include="ServerNetworkDriver.h" />
     <ClInclude Include="Shapes.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="Server.h" />
-    <ClInclude Include="ServerImpl.h" />
     <ClInclude Include="Socket.h" />
     <ClInclude Include="SocketImpl.h" />
     <ClInclude Include="stdafx.h" />
@@ -187,7 +193,6 @@
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Server.cpp" />
-    <ClCompile Include="ServerImpl.cpp" />
     <ClCompile Include="Socket.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -16,9 +16,6 @@
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Server\INTERNAL">
-      <UniqueIdentifier>{b7ba53d4-7453-4637-b306-809f13c09180}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Socket.h">
@@ -55,9 +52,6 @@
     <ClInclude Include="BaseNetworkDriver.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="ServerImpl.h">
-      <Filter>Server\INTERNAL</Filter>
-    </ClInclude>
     <ClInclude Include="Shapes.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -70,7 +64,10 @@
     <ClInclude Include="IO_Runner.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="ReceiverNetworkDriver.h">
+    <ClInclude Include="ClientNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerNetworkDriver.h">
       <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
@@ -105,9 +102,6 @@
     </ClCompile>
     <ClCompile Include="BaseNetworkDriver.cpp">
       <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="ServerImpl.cpp">
-      <Filter>Server\INTERNAL</Filter>
     </ClCompile>
     <ClCompile Include="IO_Runner.cpp">
       <Filter>Network</Filter>

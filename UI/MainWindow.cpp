@@ -43,25 +43,27 @@ namespace SL {
 						_Image = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
 					}
 					else {//update part of the image
-						wxNativePixelData data(*_Image);
-						if (!data) wxMessageBox("Could not access image data!");
-						else if (data.GetWidth() < rect->Width || data.GetHeight() < rect->Height) wxMessageBox("Bitmap too small!");
-						else {
-							auto stride = 32;
-							auto rawdata = (char*)_Image->GetRawData(data, stride);
-#if _WIN32
-							auto bytestrde = data.GetRowStride()*(data.GetHeight() - 1);
-							rawdata += bytestrde;//the wxwidgets library advances the pointer in their GetRawData function 
-#endif
-							auto srcimgrowstride = img->Stride()*img->Width();
-							
-							for (unsigned int dstrow = rect->Origin.X, srcrow=0; dstrow < rect->Origin.X + rect->Width; dstrow++, srcrow++) {
-								auto dst = rawdata + (rect->Origin.Y*data.GetRowStride()) + (dstrow + stride);//move pointer
-								memcpy(dst, img->data() + (srcrow*srcimgrowstride), srcimgrowstride);
-
-							}
-							_Image->UngetRawData(data);
-						}
+						std::cout << "Updating Image" << std::endl;
+//						wxAlphaPixelData data(*_Image);
+//						if (!data) wxMessageBox("Could not access image data!");
+//						else if (data.GetWidth() < rect->Width || data.GetHeight() < rect->Height) wxMessageBox("Bitmap too small!");
+//						else {
+//							auto stride = 32;
+//							auto rawdata = (char*)_Image->GetRawData(data, stride);
+//#if _WIN32
+//							auto bytestrde = data.GetRowStride()*(data.GetHeight() - 1);
+//							rawdata += bytestrde;//the wxwidgets library advances the pointer in their GetRawData function 
+//#endif
+//							auto srcimgrowstride = img->Stride()*img->Width();
+//							
+//							for (unsigned int dstrow = rect->Origin.X, srcrow=0; dstrow < rect->Origin.X + rect->Width; dstrow++, srcrow++) {
+//								auto dst = rawdata + (rect->Origin.Y*data.GetRowStride()) + (dstrow + stride);//move pointer
+//								memcpy(dst, img->data() + (srcrow*srcimgrowstride), srcimgrowstride);
+//
+//							}
+//							_Image->UngetRawData(data);
+//}
+				
 					}
 
 					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);
@@ -71,7 +73,7 @@ namespace SL {
 					wxQueueEvent(Parent, new wxCloseEvent(wxEVT_CLOSE_WINDOW));
 				}
 				void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
-
+					int k = 0;
 				}
 
 			};

@@ -19,8 +19,7 @@ namespace SL {
 				static std::shared_ptr<Image_Wrapper> CreateWrappedImage(unsigned int h, unsigned int w);
 				static std::shared_ptr<Image> CreateImage(unsigned int h, unsigned int w, const char* data, size_t len);
 				static std::shared_ptr<Image_Wrapper> CreateWrappedImage(unsigned int h, unsigned int w, const char* data, size_t len);
-				static std::vector<Rect> GetDifs(const Image& oldimg, const Image& newimg, const unsigned int maxdist = 16);
-
+				static std::vector<Rect> GetDifs(const Image& oldimg, const Image& newimg, const unsigned int maxdist = 64);
 				Image(Image_Impl&);
 				~Image();
 			

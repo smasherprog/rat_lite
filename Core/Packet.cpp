@@ -17,7 +17,6 @@ SL::Remote_Access_Library::Network::Packet::Packet(Packet_Impl& priv) {
 }
 SL::Remote_Access_Library::Network::Packet::~Packet()
 {
-	std::cout << "~Packet " << std::endl;
 }
 
 char * SL::Remote_Access_Library::Network::Packet::data() const

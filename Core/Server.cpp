@@ -26,7 +26,8 @@ namespace SL {
 				_Runner.join();
 			}
 			void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
-
+				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
+				_ServerNetworkDriver.Send(Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
 			}
 			void OnClose(const Network::Socket* socket) {
 
@@ -41,9 +42,18 @@ namespace SL {
 				else {//compare and send all difs along
 					auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 					if (newimg->data() != LastScreen->data()) {
-						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg)) {
+
+						auto start = std::chrono::steady_clock::now();
+						auto retdif = SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg, 64);
+						auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+
+						std::cout << "It took " << elapsed.count() << " milliseconds to compare run ProcessScreen " << retdif.size()<< std::endl;
+
+
+						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg, 64)) {
 							_ServerNetworkDriver.Send(r, *newimg);
 						}
+
 						LastScreen = newimg;//swap
 					}
 				}
@@ -61,10 +71,7 @@ namespace SL {
 
 				}
 			}
-
-
 			Network::ServerNetworkDriver<ServerImpl> _ServerNetworkDriver;
-
 			bool _Keepgoing;
 			std::thread _Runner;
 		};

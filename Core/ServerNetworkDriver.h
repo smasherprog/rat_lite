@@ -31,9 +31,9 @@ namespace SL {
 				void OnClose(const Socket* socket);
 				std::vector<std::shared_ptr<Network::Socket>> GetClients();
 
-
+				void Send(Socket* socket, SL::Remote_Access_Library::Utilities::Rect& r, const Utilities::Image & img);
 				void Send(SL::Remote_Access_Library::Utilities::Rect& r, const Utilities::Image & img);
-		
+				void StartListening() { _Listener->Start(); }
 			};
 
 			template<class T>class ServerNetworkDriver : public BaseNetworkDriver {
@@ -41,7 +41,9 @@ namespace SL {
 				ServerNetworkDriverImpl _ServerNetworkDriverImpl;
 
 			public:
-				ServerNetworkDriver(T* r, unsigned short port) : _Receiver(r), _ServerNetworkDriverImpl(Network::Listener::CreateListener(port, this)) {  }
+				ServerNetworkDriver(T* r, unsigned short port) : _Receiver(r), _ServerNetworkDriverImpl(Network::Listener::CreateListener(port, this)) { 
+					_ServerNetworkDriverImpl.StartListening();
+				}
 				virtual ~ServerNetworkDriver() { }
 				virtual void OnConnect(const std::shared_ptr<Socket>& socket) override {
 					_ServerNetworkDriverImpl.OnConnect(socket);

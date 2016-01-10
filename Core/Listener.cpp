@@ -32,5 +32,5 @@ void SL::Remote_Access_Library::Network::Listener::Start() {
 
 
 std::shared_ptr<SL::Remote_Access_Library::Network::Listener> SL::Remote_Access_Library::Network::Listener::CreateListener(unsigned short port, Network::BaseNetworkDriver* netevents) {
-	return std::make_shared<SL::Remote_Access_Library::Network::Listener>(new SL::Remote_Access_Library::INTERNAL::ListinerImpl(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), netevents));
+	return std::make_shared<Network::Listener>(new INTERNAL::ListinerImpl(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), netevents));
 }

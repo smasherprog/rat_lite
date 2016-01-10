@@ -24,9 +24,6 @@
     <ClInclude Include="Packet.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="BufferManager.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="Listener.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -75,9 +72,6 @@
     <ClCompile Include="Packet.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="BufferManager.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ThreadPool.cpp">
       <Filter>Utilities</Filter>
@@ -104,6 +98,9 @@
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="IO_Runner.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerNetworkDriver.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

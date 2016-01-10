@@ -12,7 +12,7 @@
 
 using namespace std::literals;
 
-std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> GetOne2() {
+std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> GetOne2() {
 
 	auto start = std::chrono::steady_clock::now();
 
@@ -58,7 +58,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> GetOne2() {
 	auto bytestrde = data.GetRowStride()*(data.GetHeight() - 1);
 	rawdata += bytestrde;//the wxwidgets library advances the pointer in their GetRawData function 
 #endif
-	auto retimg = SL::Remote_Access_Library::Utilities::Image::CreateImage(h, w, (const char*)rawdata, h*w * 4);
+	auto retimg = SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(h, w, (const char*)rawdata, h*w * 4);
 	bitmap.UngetRawData(data);
 	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 	std::cout << "It took " << elapsed.count() << " milliseconds to complete a screen grab" << std::endl;
@@ -70,7 +70,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> GetOne2() {
 
 class DesktopCache {
 	SL::Remote_Access_Library::Utilities::ThreadPool _ThreadPool;
-	std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> _Image;
+	std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> _Image;
 	std::chrono::time_point<std::chrono::steady_clock> _Timer;
 	std::mutex _TimerLock;
 public:
@@ -87,13 +87,19 @@ public:
 			if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _Timer).count() > DESKTOPCAPTURERATE && _ThreadPool.TaskCount()==0) {
 				_Timer = std::chrono::steady_clock::now();
 				_ThreadPool.Enqueue([this]() {
-					_Image = GetOne2();
+					auto tmp = GetOne2();
+					std::cout << "beg assign   " << std::endl;
+					_Image.reset();
+					_Image = tmp;
+					std::cout << "end assign   " << std::endl;
 				});
 			}
 		}
 		while (true) {
 			auto tmpimage = _Image;
-			if (tmpimage) return tmpimage;
+			if (tmpimage) {
+				return std::shared_ptr<SL::Remote_Access_Library::Utilities::Image>(tmpimage, &tmpimage->WrappedImage);
+			}
 			else { //wait for an image to become available. This should only happen on the first call to this function
 				std::this_thread::sleep_for(DESKTOPWAITCAPTURERATE);
 			}

@@ -165,7 +165,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BaseNetworkDriver.h" />
-    <ClInclude Include="BufferManager.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="ListenerImpl.h" />
@@ -185,7 +184,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseNetworkDriver.cpp" />
-    <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IO_Runner.cpp" />
     <ClCompile Include="Mouse.cpp" />
@@ -193,6 +191,7 @@
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="ServerNetworkDriver.cpp" />
     <ClCompile Include="Socket.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

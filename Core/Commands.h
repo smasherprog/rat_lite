@@ -7,15 +7,13 @@ namespace SL {
 			namespace Commands {
 				enum class PACKET_TYPES : unsigned int {
 					INVALID,
-					RESOLUTIONCHANGE,
-					IMAGECHANGE,
+
+					IMAGEDIF,
 					MOUSEEVENT,
 					KEYEVENT
 
 				};
-				struct ImageChange {
-					unsigned int top, left, height, width;
-				};
+			
 			}
 
 

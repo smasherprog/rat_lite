@@ -1,15 +1,10 @@
 #pragma once
 #include <memory>
-#include "BufferManager.h"
 #include "Commands.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace INTERNAL {
-			extern Utilities::BufferManager _PacketBuffer;
-		}
 		namespace Network {
-	
 
 			struct PacketHeader {
 				unsigned int PayloadLen = 0;
@@ -22,7 +17,7 @@ namespace SL {
 			class Packet {
 
 			public:
-				//Use this to generate new Packets!
+			
 				static std::shared_ptr<Packet> CreatePacket(PacketHeader header); 
 				template<class T> static std::shared_ptr<Packet> CreatePacket(PacketHeader header, T& commandheader, char* data, size_t len);
 				Packet(Packet_Impl&);
@@ -38,8 +33,7 @@ namespace SL {
 
 			private:
 				PacketHeader _PacketHeader;
-				Utilities::Blk _Data;
-
+				std::unique_ptr<char[]> _Data;
 			};
 			template<class T>
 			inline std::shared_ptr<Packet> Packet::CreatePacket(PacketHeader header, T & commandheader, char * data, size_t len)

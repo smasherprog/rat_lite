@@ -14,18 +14,20 @@ namespace SL {
 			public:
 				Rect() :Height(0), Width(0) {}
 				Rect(const Rect& rect) : Rect(rect.Origin, rect.Height, rect.Width) {}
-				Rect(Point origin, unsigned int height, unsigned int width) : Origin(origin), Height(height), Width(width) {}
+				Rect(Point origin, int height, int width) : Origin(origin), Height(height), Width(width) {}
 				Point Center() const { return Point(Origin.X + (Width / 2), Origin.Y + (Height / 2)); }
 				void Expand_To_Include(const Point& p) {
-					if ( p.X<=Origin.X ) Origin.X = p.X;
-					if (p.Y  <=Origin.Y) Origin.Y = p.Y;
-					auto xextent = Origin.X + Width;
-					if (xextent <= p.X) Width += p.X - xextent;
-					auto yextent = Origin.Y + Height;
-					if (yextent <= p.Y) Height += p.Y - yextent;
+					if (p.X <= left()) Origin.X = p.X;
+					if (p.Y <= top()) Origin.Y = p.Y;
+					if (right() <= p.X) Width = p.X - left() + 1;
+					if (bottom() <= p.Y) Height = p.Y- top() +1;
 				}
 				Point Origin;
-				unsigned int Height, Width;
+				int Height, Width;
+				int top() const { return Origin.Y; }
+				int bottom() const { return Origin.Y + Height; }
+				int left() const { return Origin.X; }
+				int right() const { return Origin.X + Width; }
 			};
 
 			inline unsigned int SquaredDistance(const Point& p1, const Point& p2) {

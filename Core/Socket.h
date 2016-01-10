@@ -11,7 +11,7 @@ namespace SL {
 			class Packet;
 			class BaseNetworkDriver;
 
-			//this class is async so all calls return immediately and are later executed, which is why callbacks are passed to the factory so you can be notified 
+			//this class is async so all calls return immediately and are later executed
 			class Socket: public std::enable_shared_from_this<Socket> {
 			public:
 				//factory to create a socket and connect to the destination address

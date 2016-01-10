@@ -1,7 +1,6 @@
 #pragma once
 #include "BaseNetworkDriver.h"
 #include "Socket.h"
-#include "Image.h"
 #include "Packet.h"
 #include <memory>
 #include <string>
@@ -9,25 +8,48 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-
+		namespace Utilities {
+			class Image;
+			class Rect;
+		}
 		namespace Network {
+
+			class ServerNetworkDriverImpl {
+
+				std::shared_ptr<Network::Listener> _Listener;
+
+				void SendToAll(std::shared_ptr<Network::Packet>& packet);
+				void SendToAll(std::vector<std::shared_ptr<Network::Packet>>& packets);
+
+				std::vector<std::shared_ptr<Network::Socket>> _Clients;
+				std::mutex _ClientsLock;
+
+			public:
+				ServerNetworkDriverImpl(std::shared_ptr<Network::Listener> listener) :_Listener(listener) {}
+				~ServerNetworkDriverImpl() { }
+				void OnConnect(const std::shared_ptr<Socket>& socket);
+				void OnClose(const Socket* socket);
+				std::vector<std::shared_ptr<Network::Socket>> GetClients();
+
+
+				void Send(SL::Remote_Access_Library::Utilities::Rect& r, const Utilities::Image & img);
+		
+			};
 
 			template<class T>class ServerNetworkDriver : public BaseNetworkDriver {
 				T* _Receiver;
-				std::shared_ptr<Network::Listener> _Listener;
+				ServerNetworkDriverImpl _ServerNetworkDriverImpl;
 
 			public:
-				ServerNetworkDriver(T* r, unsigned short port) : _Receiver(r) { _Listener = Network::Listener::CreateListener(port, this); }
+				ServerNetworkDriver(T* r, unsigned short port) : _Receiver(r), _ServerNetworkDriverImpl(Network::Listener::CreateListener(port, this)) {  }
 				virtual ~ServerNetworkDriver() { }
 				virtual void OnConnect(const std::shared_ptr<Socket>& socket) override {
-					std::lock_guard<std::mutex> lock(ClientsLock);
-					Clients.push_back(socket);
+					_ServerNetworkDriverImpl.OnConnect(socket);
 					_Receiver->OnConnect(socket); 
 				}
 				virtual void OnClose(const Socket* socket) override {
 					_Receiver->OnClose(socket); 
-					std::lock_guard<std::mutex> lock(ClientsLock);
-					Clients.erase(std::remove_if(begin(Clients), end(Clients), [socket](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket>& p) { return p.get() == socket; }), Clients.end());
+					_ServerNetworkDriverImpl.OnClose(socket);
 				}
 
 
@@ -36,26 +58,17 @@ namespace SL {
 
 
 				}
-				void SendToAll(std::shared_ptr<Network::Packet>& packet) {
-					std::lock_guard<std::mutex> lock(ClientsLock);
-					std::for_each(begin(Clients), end(Clients), [&packet](std::shared_ptr<SL::Remote_Access_Library::Network::Socket>& a) {	a->send(packet); });
-				}
-				void SendToAll(std::vector<std::shared_ptr<Network::Packet>>& packets) {
-					std::lock_guard<std::mutex> lock(ClientsLock);
-					std::for_each(begin(Clients), end(Clients), [&packets](std::shared_ptr<SL::Remote_Access_Library::Network::Socket>& a) {
-						for (auto& p : packets) {
-							a->send(p);
-						}
-					});
+
+				//forward calls along...
+				template<class  ... Ts>
+				void Send(Ts&& ... args) {
+					_ServerNetworkDriverImpl.Send(std::forward<Ts>(args) ...);
 				}
 
-				std::vector<std::shared_ptr<Network::Socket>> Clients;
-				std::mutex ClientsLock;
-
+				std::vector<std::shared_ptr<Network::Socket>> GetClients() {
+					return _ServerNetworkDriverImpl.GetClients();
+				}
 			};
-
 		}
-
 	}
-
 }

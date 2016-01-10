@@ -5,6 +5,7 @@
 #include "Commands.h"
 #include "Socket.h"
 #include <mutex>
+#include <wx/rawbmp.h>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -23,28 +24,48 @@ namespace SL {
 					Parent = frame;
 				}
 				virtual ~MainWindowImpl() {
-	
-				}
 
-				void Update(Network::Commands::ImageChange* info, std::shared_ptr<Utilities::Image>& img)
-				{
-					auto tmpImage = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
-					//tmpImage->SaveFile("c:\\users\\scott\\desktop\\somefile.bmp", wxBitmapType::wxBITMAP_TYPE_BMP);
-
-					_Image = tmpImage;
-					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);
-					Refresh(false);
 				}
 
 				virtual void OnDraw(wxDC & dc) override
 				{
+					//need to make a tmp of the image because it might be replaced by another caller
 					auto imgcopy = _Image;
 					if (imgcopy) dc.DrawBitmap(*imgcopy, 0, 0, false);
 				}
 
-				void NewImage(Network::Commands::ImageChange* info, std::shared_ptr<Utilities::Image>& img)
+				void ImageDif(Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img)
 				{
-					Update(info, img);
+					if (!_Image) {//first image, just copy all the data
+						_Image = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
+					}
+					else if (_Image->GetHeight() < img->Height() || _Image->GetWidth() <= img->Width()) {//resolution change.. make image bigger
+						_Image = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
+					}
+					else {//update part of the image
+						wxNativePixelData data(*_Image);
+						if (!data) wxMessageBox("Could not access image data!");
+						else if (data.GetWidth() < rect->Width || data.GetHeight() < rect->Height) wxMessageBox("Bitmap too small!");
+						else {
+							auto stride = 32;
+							auto rawdata = (char*)_Image->GetRawData(data, stride);
+#if _WIN32
+							auto bytestrde = data.GetRowStride()*(data.GetHeight() - 1);
+							rawdata += bytestrde;//the wxwidgets library advances the pointer in their GetRawData function 
+#endif
+							auto srcimgrowstride = img->Stride()*img->Width();
+							
+							for (unsigned int dstrow = rect->Origin.X, srcrow=0; dstrow < rect->Origin.X + rect->Width; dstrow++, srcrow++) {
+								auto dst = rawdata + (rect->Origin.Y*data.GetRowStride()) + (dstrow + stride);//move pointer
+								memcpy(dst, img->data() + (srcrow*srcimgrowstride), srcimgrowstride);
+
+							}
+							_Image->UngetRawData(data);
+						}
+					}
+
+					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);
+					Refresh(false);
 				}
 				void OnClose(const Network::Socket* socket) {
 					wxQueueEvent(Parent, new wxCloseEvent(wxEVT_CLOSE_WINDOW));
@@ -52,7 +73,7 @@ namespace SL {
 				void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
 
 				}
-			
+
 			};
 		}
 	}

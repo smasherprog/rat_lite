@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "Image.h"
 
-
-SL::Remote_Access_Library::Utilities::BufferManager SL::Remote_Access_Library::INTERNAL::_ImageBuffer;
-
 struct SL::Remote_Access_Library::Utilities::Image_Impl {
 	unsigned int height;
 	unsigned int width;
@@ -15,12 +12,28 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 	i.width = w;
 	return std::make_shared<SL::Remote_Access_Library::Utilities::Image>(i);
 }
+std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(unsigned int h, unsigned int w)
+{
+	Image_Impl i;
+	i.height = h;
+	i.width = w;
+	return std::shared_ptr<Image_Wrapper>(new Image_Wrapper(i));
+}
 std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::CreateImage(unsigned int h, unsigned int w, const char * data, size_t len)
 {
 	assert(h*w * 4 == len);
 	auto img = CreateImage(h, w);
 	memcpy(img->data(), data, len);
 	img->Size = len;
+	return img;
+}
+
+std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(unsigned int h, unsigned int w, const char * data, size_t len)
+{
+	assert(h*w * 4 == len);
+	auto img = CreateWrappedImage(h, w);
+	memcpy(img->WrappedImage.data(), data, len);
+	img->WrappedImage.Size = len;
 	return img;
 }
 
@@ -69,9 +82,13 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 }
 
 SL::Remote_Access_Library::Utilities::Image::Image(Image_Impl& impl) : _Height(impl.height), _Width(impl.width), Size(impl.height*impl.width * 4) {
-	_Data = Remote_Access_Library::INTERNAL::_ImageBuffer.AquireBuffer(impl.height*impl.width * 4);//stride is always 4 bytes
+	_Data = std::make_unique<char[]>(Size);
 }
 SL::Remote_Access_Library::Utilities::Image::~Image() {
 
-	Remote_Access_Library::INTERNAL::_ImageBuffer.ReleaseBuffer(_Data);
+}
+
+SL::Remote_Access_Library::Utilities::Image_Wrapper::Image_Wrapper(Image_Impl & impl): WrappedImage(impl)
+{
+
 }

@@ -27,7 +27,7 @@ namespace SL {
 			}
 			void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
 				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
-				_ServerNetworkDriver.Send(Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
+				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
 			}
 			void OnClose(const Network::Socket* socket) {
 

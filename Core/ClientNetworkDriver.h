@@ -17,7 +17,7 @@ namespace SL {
 
 			public:
 				ClientNetworkDriver(T* r, std::string dst_host, std::string dst_port) : _Receiver(r) { _Socket = SL::Remote_Access_Library::Network::Socket::ConnectTo(dst_host.c_str(), dst_port.c_str(), this); }
-				virtual ~ClientNetworkDriver() { }
+				virtual ~ClientNetworkDriver() { _Socket->close(); }
 				virtual void OnConnect(const std::shared_ptr<Socket>& socket) override { _Receiver->OnConnect(socket); }
 				virtual void OnClose(const Socket* socket) override { _Receiver->OnClose(socket); }
 

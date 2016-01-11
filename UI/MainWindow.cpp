@@ -12,58 +12,70 @@ namespace SL {
 		namespace UI {
 			class MainWindowImpl : public wxScrolledWindow
 			{
-				std::shared_ptr<wxBitmap> _Image;
+				std::unique_ptr<wxBitmap> _Image;
+				char* ImageBuffer;
+				std::unique_ptr<wxAlphaPixelData> ImageData;
 				Network::ClientNetworkDriver<MainWindowImpl> _ReceiverNetworkDriver;
-				std::mutex _CloseLock;
+				std::mutex _ImageLock;
 				wxFrame* Parent = nullptr;
 			public:
 
 				MainWindowImpl(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port)
 					: wxScrolledWindow(frame, wxID_ANY), _ReceiverNetworkDriver(this, dst_host, dst_port)
 				{
+					ImageBuffer = nullptr;
+				
 					Parent = frame;
 				}
 				virtual ~MainWindowImpl() {
-
+					if (_Image && ImageData) {
+						_Image->UngetRawData(*ImageData);
+					}
 				}
 
 				virtual void OnDraw(wxDC & dc) override
 				{
-					//need to make a tmp of the image because it might be replaced by another caller
-					auto imgcopy = _Image;
-					if (imgcopy) dc.DrawBitmap(*imgcopy, 0, 0, false);
+					std::cout << "Beg DrawBitmap" << std::endl;
+					if (_Image) {
+						std::lock_guard<std::mutex> lock(_ImageLock);
+						if(_Image) dc.DrawBitmap(*_Image, 0, 0, false);
+					}
+					std::cout << "End DrawBitmap" << std::endl;
 				}
 
 				void ImageDif(Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img)
 				{
-					if (!_Image) {//first image, just copy all the data
-						_Image = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
+					auto stride = 32;
+					auto gennewimg = false;
+					if (_Image) {
+						if (_Image->GetHeight() < img->Height() || _Image->GetWidth() <= img->Width()) {
+							_Image->UngetRawData(*ImageData);
+							ImageData.reset();
+							gennewimg = true;
+						}
 					}
-					else if (_Image->GetHeight() < img->Height() || _Image->GetWidth() <= img->Width()) {//resolution change.. make image bigger
-						_Image = std::make_shared<wxBitmap>(img->data(), img->Width(), img->Height(), 32);
+					else {//first image, just copy all the data
+						gennewimg = true;
 					}
-					else {//update part of the image
+					if (gennewimg) {
+						_Image = std::make_unique<wxBitmap>();
+						_Image->Create(img->Width(), img->Height(), stride);
+						ImageData = std::make_unique<wxAlphaPixelData>(*_Image);
+						ImageBuffer = (char*)_Image->GetRawData(*ImageData, stride);
+						auto dstrowdata = ImageBuffer;
+						for (auto row = 0; row < img->Height(); row++) {
+							memcpy(dstrowdata, img->data() + (row*img->Stride()*img->Width()), img->Stride()*img->Width());
+							dstrowdata += ImageData->GetRowStride();
+						}
+					} else {//update part of the image
 						std::cout << "Updating Image" << std::endl;
-//						wxAlphaPixelData data(*_Image);
-//						if (!data) wxMessageBox("Could not access image data!");
-//						else if (data.GetWidth() < rect->Width || data.GetHeight() < rect->Height) wxMessageBox("Bitmap too small!");
-//						else {
-//							auto stride = 32;
-//							auto rawdata = (char*)_Image->GetRawData(data, stride);
-//#if _WIN32
-//							auto bytestrde = data.GetRowStride()*(data.GetHeight() - 1);
-//							rawdata += bytestrde;//the wxwidgets library advances the pointer in their GetRawData function 
-//#endif
-//							auto srcimgrowstride = img->Stride()*img->Width();
-//							
-//							for (unsigned int dstrow = rect->Origin.X, srcrow=0; dstrow < rect->Origin.X + rect->Width; dstrow++, srcrow++) {
-//								auto dst = rawdata + (rect->Origin.Y*data.GetRowStride()) + (dstrow + stride);//move pointer
-//								memcpy(dst, img->data() + (srcrow*srcimgrowstride), srcimgrowstride);
-//
-//							}
-//							_Image->UngetRawData(data);
-//}
-				
+						std::lock_guard<std::mutex> lock(_ImageLock);
+
+						auto srcimgrowstride = img->Stride()*img->Width();
+						for (unsigned int dstrow = rect->Origin.X, srcrow = 0; dstrow < rect->right(); dstrow++, srcrow++) {
+							auto dst = ImageBuffer + (rect->Origin.Y*ImageData->GetRowStride()) + (dstrow + stride);//move pointer
+							//memcpy(dst, img->data() + (srcrow*srcimgrowstride), srcimgrowstride);
+						}
 					}
 
 					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);

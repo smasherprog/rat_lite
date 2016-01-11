@@ -46,8 +46,8 @@ namespace SL {
 				}
 				virtual ~ServerNetworkDriver() { }
 				virtual void OnConnect(const std::shared_ptr<Socket>& socket) override {
-					_ServerNetworkDriverImpl.OnConnect(socket);
 					_Receiver->OnConnect(socket); 
+					_ServerNetworkDriverImpl.OnConnect(socket);
 				}
 				virtual void OnClose(const Socket* socket) override {
 					_Receiver->OnClose(socket); 

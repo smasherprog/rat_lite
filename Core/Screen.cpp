@@ -53,12 +53,14 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> GetOne2() {
 	wxAlphaPixelData data(bitmap);
 
 	auto rawdata = (char*)bitmap.GetRawData(data, 32);
-
-#if _WIN32
-	auto bytestrde = data.GetRowStride()*(data.GetHeight() - 1);
-	rawdata += bytestrde;//the wxwidgets library advances the pointer in their GetRawData function 
-#endif
-	auto retimg = SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(h, w, (const char*)rawdata, h*w * 4);
+	auto retimg = SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(h, w);
+	auto dst = retimg->WrappedImage.data();
+	auto absrowstride = abs(data.GetRowStride());
+	for (auto row = 0; row < data.GetHeight(); row++) {
+		memcpy(dst, rawdata, absrowstride);
+		dst += absrowstride;
+		rawdata += data.GetRowStride();
+	}
 	bitmap.UngetRawData(data);
 	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 	std::cout << "It took " << elapsed.count() << " milliseconds to complete a screen grab" << std::endl;
@@ -87,11 +89,8 @@ public:
 			if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _Timer).count() > DESKTOPCAPTURERATE && _ThreadPool.TaskCount()==0) {
 				_Timer = std::chrono::steady_clock::now();
 				_ThreadPool.Enqueue([this]() {
-					auto tmp = GetOne2();
-					std::cout << "beg assign   " << std::endl;
 					_Image.reset();
-					_Image = tmp;
-					std::cout << "end assign   " << std::endl;
+					_Image = GetOne2();
 				});
 			}
 		}

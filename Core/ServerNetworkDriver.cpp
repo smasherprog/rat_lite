@@ -35,7 +35,7 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Packet> GenerateDifs(SL::Rem
 	auto start = p->data();
 	memcpy(start, &r, sizeof(SL::Remote_Access_Library::Utilities::Rect));
 	start += sizeof(SL::Remote_Access_Library::Utilities::Rect);
-	for (unsigned int row = r.Origin.Y; row < r.Height + r.Origin.Y; row++) {
+	for (auto row = r.Origin.Y; row < r.Height + r.Origin.Y; row++) {
 
 		auto startcopy = img.data() + (row*img.Stride()*img.Width());//advance rows
 		startcopy += r.Origin.Y*img.Stride();//advance columns

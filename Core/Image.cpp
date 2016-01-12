@@ -36,7 +36,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_
 	img->WrappedImage.Size = len;
 	return img;
 }
-std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg, const unsigned int maxdist)
+std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg, unsigned int maxdist)
 {
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> rects;
 	if (oldimg.Width() != newimg.Width() || oldimg.Height() != newimg.Height()) {
@@ -47,10 +47,10 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	auto oldimg_ptr = (const unsigned int*)oldimg.data();
 	auto newimg_ptr = (const unsigned int*)newimg.data();
 
-	for (auto row = 0; row < oldimg.Width(); row++) {
-		for (auto col = 0; col < oldimg.Height(); col += maxdist) {
+	for (decltype(oldimg.Width()) row = 0; row < oldimg.Width(); row++) {
+		for (decltype(oldimg.Height()) col = 0; col < oldimg.Height(); col += maxdist) {
 
-			for (auto x = 0; x < maxdist; x++) {
+			for (decltype(maxdist) x = 0; x < maxdist; x++) {
 				auto old = oldimg_ptr[col*oldimg.Width() + row + x];
 				auto ne = newimg_ptr[col*newimg.Width() + row + x];
 				if (ne != old) {
@@ -71,13 +71,13 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 		}
 	}
 	for (auto& r : rects) {
-		if (r.Origin.X + r.Width>newimg.Width()) {
+		if (r.Origin.X + r.Width > static_cast<int>(newimg.Width())) {
 			r.Origin.X = newimg.Width() - maxdist;
-			r.Width = maxdist;
+			r.Width = static_cast<int>(maxdist);
 		}
-		if (r.Origin.Y + r.Height > newimg.Height()) {
-			r.Origin.Y = newimg.Height() - maxdist;
-			r.Height = maxdist;
+		if (r.Origin.Y + r.Height > static_cast<int>(newimg.Height())) {
+			r.Origin.Y = static_cast<int>(newimg.Height()) - static_cast<int>(maxdist);
+			r.Height = static_cast<int>(maxdist);
 		}
 		std::cout << r << std::endl;
 	}

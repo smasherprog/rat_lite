@@ -18,7 +18,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> GetOne2() {
 
 	//its faster to make a copy of the entire screen area rather than a call per display
 	int h = 0, w = 0;
-	for (auto i = 0; i < wxDisplay::GetCount(); i++) {
+	for (decltype(wxDisplay::GetCount()) i = 0; i < wxDisplay::GetCount(); i++) {
 		wxDisplay d(i);
 		h = std::max(h, d.GetGeometry().height);
 		w += d.GetGeometry().width;

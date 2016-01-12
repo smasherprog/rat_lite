@@ -13,7 +13,6 @@ namespace SL {
 			class MainWindowImpl : public wxScrolledWindow
 			{
 				std::unique_ptr<wxBitmap> _Image;
-				char* ImageBuffer;
 				std::unique_ptr<wxAlphaPixelData> ImageData;
 				Network::ClientNetworkDriver<MainWindowImpl> _ReceiverNetworkDriver;
 				std::mutex _ImageLock;
@@ -23,14 +22,10 @@ namespace SL {
 				MainWindowImpl(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port)
 					: wxScrolledWindow(frame, wxID_ANY), _ReceiverNetworkDriver(this, dst_host, dst_port)
 				{
-					ImageBuffer = nullptr;
-				
 					Parent = frame;
 				}
 				virtual ~MainWindowImpl() {
-					if (_Image && ImageData) {
-						_Image->UngetRawData(*ImageData);
-					}
+			
 				}
 
 				virtual void OnDraw(wxDC & dc) override
@@ -48,9 +43,7 @@ namespace SL {
 					auto stride = 32;
 					auto gennewimg = false;
 					if (_Image) {
-						if (_Image->GetHeight() < img->Height() || _Image->GetWidth() <= img->Width()) {
-							_Image->UngetRawData(*ImageData);
-							ImageData.reset();
+						if (_Image->GetHeight() < static_cast<int>(img->Height()) || _Image->GetWidth() <= static_cast<int>(img->Width())) {
 							gennewimg = true;
 						}
 					}
@@ -61,21 +54,26 @@ namespace SL {
 						_Image = std::make_unique<wxBitmap>();
 						_Image->Create(img->Width(), img->Height(), stride);
 						ImageData = std::make_unique<wxAlphaPixelData>(*_Image);
-						ImageBuffer = (char*)_Image->GetRawData(*ImageData, stride);
-						auto dstrowdata = ImageBuffer;
-						for (auto row = 0; row < img->Height(); row++) {
-							memcpy(dstrowdata, img->data() + (row*img->Stride()*img->Width()), img->Stride()*img->Width());
+
+						auto dstrowdata = ImageData->GetPixels().m_ptr;
+						auto imgrowstride = img->Stride()*img->Width();
+						for (decltype(img->Height()) row = 0; row < img->Height(); row++) {
+							memcpy(dstrowdata, img->data() + (row*imgrowstride), imgrowstride);
 							dstrowdata += ImageData->GetRowStride();
 						}
+				
+
 					} else {//update part of the image
 						std::cout << "Updating Image" << std::endl;
 						std::lock_guard<std::mutex> lock(_ImageLock);
-
-						auto srcimgrowstride = img->Stride()*img->Width();
-						for (unsigned int dstrow = rect->Origin.X, srcrow = 0; dstrow < rect->right(); dstrow++, srcrow++) {
-							auto dst = ImageBuffer + (rect->Origin.Y*ImageData->GetRowStride()) + (dstrow + stride);//move pointer
-							//memcpy(dst, img->data() + (srcrow*srcimgrowstride), srcimgrowstride);
+						auto dstrowdata = ImageData->GetPixels().m_ptr;
+						auto imgrowstride = img->Stride()*img->Width();
+						
+						for (auto dstrow = rect->Origin.Y, srcrow = 0; dstrow < rect->bottom(); dstrow++, srcrow++) {
+							auto dst = dstrowdata + (dstrow*ImageData->GetRowStride()) + (rect->Origin.X * 4);//move pointer
+							memcpy(dst, img->data() + (srcrow*imgrowstride), imgrowstride);
 						}
+					
 					}
 
 					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);

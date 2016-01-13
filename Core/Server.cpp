@@ -43,13 +43,6 @@ namespace SL {
 					auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 					if (newimg->data() != LastScreen->data()) {
 
-						auto start = std::chrono::steady_clock::now();
-						auto retdif = SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg, 64);
-						auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-
-						std::cout << "It took " << elapsed.count() << " milliseconds to compare run ProcessScreen " << retdif.size()<< std::endl;
-
-
 						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg, 64)) {
 							_ServerNetworkDriver.Send(r, *newimg);
 						}
@@ -67,7 +60,7 @@ namespace SL {
 					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 
 					std::cout << "It took " << elapsed.count() << " milliseconds to compare run ProcessScreen " << std::endl;
-					std::this_thread::sleep_for(1s);
+					std::this_thread::sleep_for(10s);
 
 				}
 			}

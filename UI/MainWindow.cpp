@@ -68,9 +68,13 @@ namespace SL {
 						std::lock_guard<std::mutex> lock(_ImageLock);
 						auto dstrowdata = ImageData->GetPixels().m_ptr;
 						auto imgrowstride = img->Stride()*img->Width();
-						
+						auto dstrowstride = ImageData->GetRowStride();
+						//if the stride is negative, move pointer to the beginning of the image.
+						//this happens on windows where the image is upside down
+					
+
 						for (auto dstrow = rect->Origin.Y, srcrow = 0; dstrow < rect->bottom(); dstrow++, srcrow++) {
-							auto dst = dstrowdata + (dstrow*ImageData->GetRowStride()) + (rect->Origin.X * 4);//move pointer
+							auto dst = dstrowdata + (dstrow*dstrowstride) + (rect->Origin.X * img->Stride());//move pointer
 							memcpy(dst, img->data() + (srcrow*imgrowstride), imgrowstride);
 						}
 					

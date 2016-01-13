@@ -47,22 +47,28 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	auto oldimg_ptr = (const unsigned int*)oldimg.data();
 	auto newimg_ptr = (const unsigned int*)newimg.data();
 
-	for (decltype(oldimg.Width()) row = 0; row < oldimg.Width(); row++) {
-		for (decltype(oldimg.Height()) col = 0; col < oldimg.Height(); col += maxdist) {
+	for (decltype(oldimg.Width()) row = 0; row < oldimg.Height(); row++) {
+		for (decltype(oldimg.Height()) col = 0; col < oldimg.Width(); col += maxdist) {
 
 			for (decltype(maxdist) x = 0; x < maxdist; x++) {
-				auto old = oldimg_ptr[col*oldimg.Width() + row + x];
-				auto ne = newimg_ptr[col*newimg.Width() + row + x];
+				auto old = oldimg_ptr[row*oldimg.Width() + col + x];
+				auto ne = newimg_ptr[row*newimg.Width() + col + x];
 				if (ne != old) {
 					auto begrow = (row / maxdist)*maxdist;
 					auto found = std::find_if(rbegin(rects), rend(rects), [=](const SL::Remote_Access_Library::Utilities::Rect& r) {
-						return SquaredDistance(Point(row, col), r) <= (maxdist*maxdist + 128 * 128);
+						return r.Contains(Point(col + x, row)) || 
+							(SquaredDistance(Point(col + x, row), Point(r.left(), r.top())) <= maxdist*maxdist + maxdist*maxdist) || 
+							(SquaredDistance(Point(col + x, row), Point(r.right(), r.top())) <= maxdist*maxdist + maxdist*maxdist) || 
+							(SquaredDistance(Point(col + x, row), Point(r.left(), r.bottom())) <= maxdist*maxdist + maxdist*maxdist) || 
+							(SquaredDistance(Point(col + x, row), Point(r.right(), r.bottom())) <= maxdist*maxdist + maxdist*maxdist);
+
 					});
+
 					if (found == rend(rects)) {//nothing found insert new rect
-						rects.push_back(Rect(Point(begrow, col), maxdist, maxdist));
+						rects.push_back(Rect(Point(col, begrow), maxdist, maxdist));
 					}
 					else {
-						found->Expand_To_Include(Point(begrow, col));//expand the rect to encompas the point
+						found->Expand_To_Include(Point(col, begrow));//expand the rect to encompas the point
 					}
 
 					break;//get out..
@@ -71,13 +77,11 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 		}
 	}
 	for (auto& r : rects) {
-		if (r.Origin.X + r.Width > static_cast<int>(newimg.Width())) {
-			r.Origin.X = newimg.Width() - maxdist;
-			r.Width = static_cast<int>(maxdist);
+		if (r.right() > static_cast<int>(newimg.Width())) {
+			r.right(static_cast<int>(newimg.Width()));
 		}
-		if (r.Origin.Y + r.Height > static_cast<int>(newimg.Height())) {
-			r.Origin.Y = static_cast<int>(newimg.Height()) - static_cast<int>(maxdist);
-			r.Height = static_cast<int>(maxdist);
+		if (r.bottom() > static_cast<int>(newimg.Height())) {
+			r.bottom(static_cast<int>(newimg.Height()));
 		}
 		std::cout << r << std::endl;
 	}

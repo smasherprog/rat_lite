@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "Packet.h"
-#include "Socket.h"
+#include "TCPSocket.h"
 #include "Listener.h"
-#include "BaseNetworkDriver.h"
+#include "IBaseNetworkDriver.h"
 #include "ListenerImpl.h"
 #include "SocketImpl.h"
 
@@ -12,7 +12,7 @@ void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::Listener> ptr
 	{
 		if (!ec)
 		{
-			auto sock = std::make_shared<SL::Remote_Access_Library::Network::Socket>(std::make_shared<SL::Remote_Access_Library::INTERNAL::SocketImpl>(impl->io_service, impl->NetworkEvents_, std::move(impl->socket_)));
+			auto sock = std::make_shared<SL::Remote_Access_Library::Network::TCPSocket>(std::make_shared<SL::Remote_Access_Library::INTERNAL::SocketImpl>(impl->io_service, impl->NetworkEvents_, std::move(impl->socket_)));
 			sock->connect(nullptr, nullptr);
 		}
 		do_accept(ptr, impl);
@@ -31,6 +31,6 @@ void SL::Remote_Access_Library::Network::Listener::Start() {
 }
 
 
-std::shared_ptr<SL::Remote_Access_Library::Network::Listener> SL::Remote_Access_Library::Network::Listener::CreateListener(unsigned short port, Network::BaseNetworkDriver* netevents) {
+std::shared_ptr<SL::Remote_Access_Library::Network::Listener> SL::Remote_Access_Library::Network::Listener::CreateListener(unsigned short port, Network::IBaseNetworkDriver* netevents) {
 	return std::make_shared<Network::Listener>(new INTERNAL::ListinerImpl(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), netevents));
 }

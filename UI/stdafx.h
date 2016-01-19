@@ -11,10 +11,8 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
 
-
 #endif
 
-#include <boost/asio.hpp>
 #include <thread>
 #include <memory>
 #include <atomic>

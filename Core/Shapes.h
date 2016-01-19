@@ -55,9 +55,9 @@ namespace SL {
 			}
 			inline unsigned int SquaredDistance(const Point& p, const Rect& r)
 			{
-				auto cx = std::max(std::min(p.X, r.right()), r.Origin.X);
-				auto cy = std::max(std::min(p.Y, r.bottom()), r.Origin.Y);
-				return (p.X - cx)*(p.X - cx) + (p.Y - cy)*(p.Y - cy);
+				auto cx = std::max(std::min(p.X, r.right()), r.left());
+				auto cy = std::max(std::min(p.Y, r.bottom()), r.top());
+				return SquaredDistance(Point(cx, cy), p);
 			}
 			inline unsigned int Distance(const Point& p1, const Point& p2) { sqrt(SquaredDistance(p1, p2)); }
 			

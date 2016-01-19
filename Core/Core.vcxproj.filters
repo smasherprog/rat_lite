@@ -18,9 +18,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Socket.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="Packet.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -46,9 +43,6 @@
     <ClInclude Include="Mouse.h">
       <Filter>Capturing</Filter>
     </ClInclude>
-    <ClInclude Include="BaseNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="Shapes.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -67,6 +61,21 @@
     <ClInclude Include="ServerNetworkDriver.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="WebSocketServerNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="IBaseNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ISocket.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPSocket.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocket.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -75,9 +84,6 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ThreadPool.cpp">
       <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="Socket.cpp">
-      <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Listener.cpp">
       <Filter>Network</Filter>
@@ -94,14 +100,23 @@
     <ClCompile Include="Mouse.cpp">
       <Filter>Capturing</Filter>
     </ClCompile>
-    <ClCompile Include="BaseNetworkDriver.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="IO_Runner.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="ServerNetworkDriver.cpp">
       <Filter>Network</Filter>
     </ClCompile>
+    <ClCompile Include="IBaseNetworkDriver.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPSocket.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocket.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

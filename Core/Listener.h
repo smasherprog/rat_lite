@@ -8,11 +8,11 @@ namespace SL {
 		}
 		namespace Network {
 		
-			class BaseNetworkDriver;
+			class IBaseNetworkDriver;
 			class Listener : public std::enable_shared_from_this<Listener> {
 			public:
 				//factory to create a listening socket
-				static std::shared_ptr<Listener> CreateListener(unsigned short port, Network::BaseNetworkDriver* netevents);
+				static std::shared_ptr<Listener> CreateListener(unsigned short port, Network::IBaseNetworkDriver* netevents);
 
 				Listener(INTERNAL::ListinerImpl* impl);
 				~Listener();

@@ -20,16 +20,13 @@ namespace SL {
 			
 				static std::shared_ptr<Packet> CreatePacket(PacketHeader header); 
 				template<class T> static std::shared_ptr<Packet> CreatePacket(PacketHeader header, T& commandheader, char* data, size_t len);
+	
+
 				Packet(Packet_Impl&);
 				~Packet();
 				//pointer to the beginning of the packet payload
 				char* data() const;
 				PacketHeader* header();
-
-				bool compressed() const;
-				//compressionlevel 1- 19
-				void compress(int compressionlevel=4);
-				void decompress();
 
 			private:
 				PacketHeader _PacketHeader;

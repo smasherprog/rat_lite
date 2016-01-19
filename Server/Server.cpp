@@ -2,9 +2,7 @@
 //
 
 #include "stdafx.h"
-#include <iostream>
 #include "..\Core\Server.h"
-#include "..\Core\Socket.h"
 #include <thread>
 #include <chrono>
 

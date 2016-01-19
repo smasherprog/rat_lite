@@ -7,13 +7,13 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
-			class BaseNetworkDriver;
+			class IBaseNetworkDriver;
 		}
 		//this namespace should only be accessed by the Core library and NEVER by a consumer of this library
 		namespace INTERNAL {
 			class ListinerImpl: public Network::IO_Runner {
 			public:
-				ListinerImpl(const boost::asio::ip::tcp::endpoint& endpoint, Network::BaseNetworkDriver* netevents) :
+				ListinerImpl(const boost::asio::ip::tcp::endpoint& endpoint, Network::IBaseNetworkDriver* netevents) :
 					NetworkEvents_(netevents),
 					acceptor_(io_service, endpoint),
 					socket_(io_service) {}
@@ -24,7 +24,7 @@ namespace SL {
 		
 				boost::asio::ip::tcp::acceptor acceptor_;
 				boost::asio::ip::tcp::socket socket_;
-				Network::BaseNetworkDriver* NetworkEvents_;
+				Network::IBaseNetworkDriver* NetworkEvents_;
 		};
 	
 

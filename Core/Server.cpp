@@ -25,11 +25,11 @@ namespace SL {
 				_Keepgoing = false;
 				_Runner.join();
 			}
-			void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
+			void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
 				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
 			}
-			void OnClose(const Network::Socket* socket) {
+			void OnClose(const Network::ISocket* socket) {
 
 			}
 

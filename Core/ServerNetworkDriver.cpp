@@ -3,16 +3,16 @@
 #include "Image.h"
 #include "Shapes.h"
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::OnConnect(const std::shared_ptr<Socket>& socket)
+void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::OnConnect(const std::shared_ptr<ISocket>& socket)
 {
 	std::lock_guard<std::mutex> lock(_ClientsLock);
 	_Clients.push_back(socket);
 }
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::OnClose(const Socket * socket)
+void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::OnClose(const ISocket * socket)
 {
 	std::lock_guard<std::mutex> lock(_ClientsLock);
-	_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [socket](const std::shared_ptr<SL::Remote_Access_Library::Network::Socket>& p) { return p.get() == socket; }), _Clients.end());
+	_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [socket](const std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>& p) { return p.get() == socket; }), _Clients.end());
 }
 
 void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::SendToAll(std::shared_ptr<Network::Packet>& packet) {
@@ -45,7 +45,7 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Packet> GenerateDifs(SL::Rem
 	}
 	return p;
 }
-void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::Send(Socket * socket, SL::Remote_Access_Library::Utilities::Rect & r, const Utilities::Image & img)
+void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::Send(ISocket * socket, SL::Remote_Access_Library::Utilities::Rect & r, const Utilities::Image & img)
 {
 	socket->send(GenerateDifs(r, img));
 }
@@ -55,7 +55,7 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::Send(SL::Remot
 	SendToAll(GenerateDifs(r, img));
 }
 
-std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::Socket>> SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::GetClients() {
+std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>> SL::Remote_Access_Library::Network::ServerNetworkDriverImpl::GetClients() {
 	//make a copy of the list
 	std::lock_guard<std::mutex> lock(_ClientsLock);
 	return _Clients;

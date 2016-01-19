@@ -3,7 +3,7 @@
 #include "Image.h"
 #include "ClientNetworkDriver.h"
 #include "Commands.h"
-#include "Socket.h"
+#include "ISocket.h"
 #include <mutex>
 #include <wx/rawbmp.h>
 
@@ -69,9 +69,6 @@ namespace SL {
 						auto dstrowdata = ImageData->GetPixels().m_ptr;
 						auto imgrowstride = img->Stride()*img->Width();
 						auto dstrowstride = ImageData->GetRowStride();
-						//if the stride is negative, move pointer to the beginning of the image.
-						//this happens on windows where the image is upside down
-					
 
 						for (auto dstrow = rect->Origin.Y, srcrow = 0; dstrow < rect->bottom(); dstrow++, srcrow++) {
 							auto dst = dstrowdata + (dstrow*dstrowstride) + (rect->Origin.X * img->Stride());//move pointer
@@ -83,10 +80,10 @@ namespace SL {
 					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);
 					Refresh(false);
 				}
-				void OnClose(const Network::Socket* socket) {
+				void OnClose(const Network::ISocket* socket) {
 					wxQueueEvent(Parent, new wxCloseEvent(wxEVT_CLOSE_WINDOW));
 				}
-				void OnConnect(const std::shared_ptr<Network::Socket>& socket) {
+				void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
 					int k = 0;
 				}
 

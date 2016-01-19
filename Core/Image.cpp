@@ -56,19 +56,15 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 				if (ne != old) {
 					auto begrow = (row / maxdist)*maxdist;
 					auto found = std::find_if(rbegin(rects), rend(rects), [=](const SL::Remote_Access_Library::Utilities::Rect& r) {
-						return r.Contains(Point(col + x, row)) || 
-							(SquaredDistance(Point(col + x, row), Point(r.left(), r.top())) <= maxdist*maxdist + maxdist*maxdist) || 
-							(SquaredDistance(Point(col + x, row), Point(r.right(), r.top())) <= maxdist*maxdist + maxdist*maxdist) || 
-							(SquaredDistance(Point(col + x, row), Point(r.left(), r.bottom())) <= maxdist*maxdist + maxdist*maxdist) || 
-							(SquaredDistance(Point(col + x, row), Point(r.right(), r.bottom())) <= maxdist*maxdist + maxdist*maxdist);
-
+						return SquaredDistance(Point(col + x, row), r) <= maxdist*maxdist;
 					});
 
 					if (found == rend(rects)) {//nothing found insert new rect
 						rects.push_back(Rect(Point(col, begrow), maxdist, maxdist));
 					}
 					else {
-						found->Expand_To_Include(Point(col, begrow));//expand the rect to encompas the point
+
+						found->Expand_To_Include(Point(col+ maxdist, begrow+ maxdist));//expand the rect to encompas the point
 					}
 
 					break;//get out..

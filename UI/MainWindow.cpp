@@ -17,12 +17,15 @@ namespace SL {
 				Network::ClientNetworkDriver<MainWindowImpl> _ReceiverNetworkDriver;
 				std::mutex _ImageLock;
 				wxFrame* Parent = nullptr;
+				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
+				Network::SocketStats LastStats;
 			public:
 
 				MainWindowImpl(wxFrame* frame, const wxString& title, std::string dst_host, std::string dst_port)
 					: wxScrolledWindow(frame, wxID_ANY), _ReceiverNetworkDriver(this, dst_host, dst_port)
 				{
 					Parent = frame;
+					_NetworkStatsTimer= std::chrono::steady_clock::now();
 				}
 				virtual ~MainWindowImpl() {
 			
@@ -40,6 +43,15 @@ namespace SL {
 
 				void ImageDif(Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img)
 				{
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() >1000) {
+						_NetworkStatsTimer = std::chrono::steady_clock::now();
+						auto stats = _ReceiverNetworkDriver.get_SocketStats();
+						wxString st = "Client ";
+
+						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " kbs Received ";
+						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " kbs Sent";
+						Parent->SetTitle(st);
+					}
 					auto stride = 32;
 					auto gennewimg = false;
 					if (_Image) {
@@ -61,8 +73,6 @@ namespace SL {
 							memcpy(dstrowdata, img->data() + (row*imgrowstride), imgrowstride);
 							dstrowdata += ImageData->GetRowStride();
 						}
-				
-
 					} else {//update part of the image
 						std::cout << "Updating Image" << std::endl;
 						std::lock_guard<std::mutex> lock(_ImageLock);

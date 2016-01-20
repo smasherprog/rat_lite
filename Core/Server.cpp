@@ -43,7 +43,7 @@ namespace SL {
 					auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 					if (newimg->data() != LastScreen->data()) {
 
-						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg, 64)) {
+						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg)) {
 							_ServerNetworkDriver.Send(r, *newimg);
 						}
 

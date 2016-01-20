@@ -36,8 +36,9 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_
 	img->WrappedImage.Size = len;
 	return img;
 }
-std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg, unsigned int maxdist)
+std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg)
 {
+	#define maxdist 64
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> rects;
 	if (oldimg.Width() != newimg.Width() || oldimg.Height() != newimg.Height()) {
 		rects.push_back(Rect(Point(0, 0), newimg.Height(), newimg.Width()));

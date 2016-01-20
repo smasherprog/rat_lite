@@ -13,7 +13,7 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Li
 }
 SL::Remote_Access_Library::Network::Packet::Packet(Packet_Impl& priv) {
 	_PacketHeader = priv.h;
-	_Data= std::make_unique<char[]>(_PacketHeader.PayloadLen);
+	_Data= std::make_unique<char[]>(std::max(_PacketHeader.PayloadLen, _PacketHeader.UnCompressedlen));
 }
 SL::Remote_Access_Library::Network::Packet::~Packet()
 {

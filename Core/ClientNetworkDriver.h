@@ -39,6 +39,9 @@ namespace SL {
 					_Receiver->ImageDif(imgrect, img);
 
 				}
+				SocketStats get_SocketStats() {
+					return _Socket->get_SocketStats();
+				}
 			};
 		}
 	}

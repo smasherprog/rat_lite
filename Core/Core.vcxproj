@@ -70,24 +70,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;..\zstd\lib;$(IncludePath)</IncludePath>
+    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -188,6 +188,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="WebSocket.h" />
+    <ClInclude Include="WebSocketListener.h" />
     <ClInclude Include="WebSocketServerNetworkDriver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +211,7 @@
     </ClCompile>
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="WebSocket.cpp" />
+    <ClCompile Include="WebSocketListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\zstd\visual\2013\zstdlib\zstdlib.vcxproj">

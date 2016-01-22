@@ -34,9 +34,6 @@
     <ClInclude Include="Image.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Server.h">
-      <Filter>Server</Filter>
-    </ClInclude>
     <ClInclude Include="Screen.h">
       <Filter>Capturing</Filter>
     </ClInclude>
@@ -79,6 +76,12 @@
     <ClInclude Include="SocketStats.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketListener.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -93,9 +96,6 @@
     </ClCompile>
     <ClCompile Include="Image.cpp">
       <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="Server.cpp">
-      <Filter>Server</Filter>
     </ClCompile>
     <ClCompile Include="Screen.cpp">
       <Filter>Capturing</Filter>
@@ -120,6 +120,12 @@
     </ClCompile>
     <ClCompile Include="SocketImpl.cpp">
       <Filter>Network\INTERNAL</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketListener.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

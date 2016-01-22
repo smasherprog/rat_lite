@@ -25,10 +25,10 @@ namespace SL {
 					: wxScrolledWindow(frame, wxID_ANY), _ReceiverNetworkDriver(this, dst_host, dst_port)
 				{
 					Parent = frame;
-					_NetworkStatsTimer= std::chrono::steady_clock::now();
+					_NetworkStatsTimer = std::chrono::steady_clock::now();
 				}
 				virtual ~MainWindowImpl() {
-			
+
 				}
 
 				virtual void OnDraw(wxDC & dc) override
@@ -36,14 +36,14 @@ namespace SL {
 					std::cout << "Beg DrawBitmap" << std::endl;
 					if (_Image) {
 						std::lock_guard<std::mutex> lock(_ImageLock);
-						if(_Image) dc.DrawBitmap(*_Image, 0, 0, false);
+						if (_Image) dc.DrawBitmap(*_Image, 0, 0, false);
 					}
 					std::cout << "End DrawBitmap" << std::endl;
 				}
 
 				void ImageDif(Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img)
 				{
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() >1000) {
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 						_NetworkStatsTimer = std::chrono::steady_clock::now();
 						auto stats = _ReceiverNetworkDriver.get_SocketStats();
 						wxString st = "Client ";
@@ -62,7 +62,10 @@ namespace SL {
 					else {//first image, just copy all the data
 						gennewimg = true;
 					}
+
 					if (gennewimg) {
+						//lock needed for image updates
+						std::lock_guard<std::mutex> lock(_ImageLock);
 						_Image = std::make_unique<wxBitmap>();
 						_Image->Create(img->Width(), img->Height(), stride);
 						ImageData = std::make_unique<wxAlphaPixelData>(*_Image);
@@ -73,8 +76,9 @@ namespace SL {
 							memcpy(dstrowdata, img->data() + (row*imgrowstride), imgrowstride);
 							dstrowdata += ImageData->GetRowStride();
 						}
-					} else {//update part of the image
-						std::cout << "Updating Image" << std::endl;
+					}
+					else {//update part of the image
+						 //lock needed for image updates
 						std::lock_guard<std::mutex> lock(_ImageLock);
 						auto dstrowdata = ImageData->GetPixels().m_ptr;
 						auto imgrowstride = img->Stride()*img->Width();
@@ -84,7 +88,7 @@ namespace SL {
 							auto dst = dstrowdata + (dstrow*dstrowstride) + (rect->Origin.X * img->Stride());//move pointer
 							memcpy(dst, img->data() + (srcrow*imgrowstride), imgrowstride);
 						}
-					
+
 					}
 
 					SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);

@@ -69,27 +69,6 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 					}
 				}
 			}
-
-
-			//for (decltype(maxdist) x = col; x < maxdist + col; x++) {
-			//	auto old = oldimg_ptr[row*oldimg.Width() +x];
-			//	auto ne = newimg_ptr[row*newimg.Width() + x];
-			//	if (ne != old) {
-			//		//counter += 1;
-			//		auto begrow = (row / maxdist)*maxdist;
-			//		auto found = std::find_if(rbegin(rects), rend(rects), [=](const SL::Remote_Access_Library::Utilities::Rect& r) {
-			//			return SquaredDistance(Point(x, row), r) <= maxdist*maxdist;
-			//		});
-
-			//		if (found == rend(rects)) {//nothing found insert new rect
-			//			rects.push_back(Rect(Point(col, begrow), maxdist, maxdist));
-			//		}
-			//		else {
-			//			found->Expand_To_Include(Point(col+ maxdist, begrow+ maxdist));//expand the rect to encompas the point
-			//		}
-			//		break;//get out..
-			//	}
-			//}
 		}
 	}
 	if (rects.size() <= 2) return rects;//make sure there is at least 2

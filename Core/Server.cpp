@@ -56,7 +56,7 @@ namespace SL {
 
 				while (_Keepgoing) {
 					ProcessScreen();
-					std::this_thread::sleep_for(10s);
+					std::this_thread::sleep_for(1s);
 
 				}
 			}

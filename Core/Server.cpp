@@ -55,11 +55,7 @@ namespace SL {
 			void Run() {
 
 				while (_Keepgoing) {
-					auto start = std::chrono::steady_clock::now();
 					ProcessScreen();
-					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-
-					std::cout << "It took " << elapsed.count() << " milliseconds to compare run ProcessScreen " << std::endl;
 					std::this_thread::sleep_for(10s);
 
 				}

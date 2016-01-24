@@ -168,15 +168,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ConnectWindow.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="IServerDriver.h" />
     <ClInclude Include="ISocket.h" />
-    <ClInclude Include="ListenerImpl.h" />
+    <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Mouse.h" />
-    <ClInclude Include="IO_Runner.h" />
     <ClInclude Include="Packet.h" />
-    <ClInclude Include="Listener.h" />
     <ClInclude Include="ClientNetworkDriver.h" />
     <ClInclude Include="ServerNetworkDriver.h" />
     <ClInclude Include="Shapes.h" />
@@ -184,7 +184,6 @@
     <ClInclude Include="Server.h" />
     <ClInclude Include="SocketStats.h" />
     <ClInclude Include="TCPSocket.h" />
-    <ClInclude Include="SocketImpl.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="WebSocket.h" />
@@ -192,16 +191,14 @@
     <ClInclude Include="WebSocketServerNetworkDriver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IBaseNetworkDriver.cpp" />
+    <ClCompile Include="ConnectWindow.cpp" />
     <ClCompile Include="Image.cpp" />
-    <ClCompile Include="IO_Runner.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Packet.cpp" />
-    <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="ServerNetworkDriver.cpp" />
-    <ClCompile Include="SocketImpl.cpp" />
     <ClCompile Include="TCPSocket.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

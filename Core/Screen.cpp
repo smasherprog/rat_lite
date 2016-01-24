@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Screen.h"
 #include "Image.h"
+
 #include "wx/display.h"
 #include "wx/rawbmp.h"
 #include "wx/bitmap.h"

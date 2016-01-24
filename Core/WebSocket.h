@@ -5,16 +5,21 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
+		namespace INTERNAL {
+			class WebSocketSocketImpl;
+		}
 		namespace Network {
 			class Packet;
 			class IBaseNetworkDriver;
 
 			//this class is async so all calls return immediately and are later executed
 			class WebSocket : public ISocket {
+				std::shared_ptr<INTERNAL::WebSocketSocketImpl> _SocketImpl;
 			public:
 
-				WebSocket();
-
+			
+				WebSocket(std::shared_ptr<INTERNAL::WebSocketSocketImpl>& impl);
+		
 				virtual ~WebSocket();
 				//adds the data to the internal queue, does not block and returns immediately.
 				virtual void send(std::shared_ptr<Packet>& pack) override;
@@ -23,7 +28,7 @@ namespace SL {
 		
 				virtual SocketStats get_SocketStats() const override;
 
-	
+				
 			};
 		}
 	}

@@ -9,6 +9,8 @@ namespace SL {
 			Server(unsigned short port);
 			~Server();
 
+			int Run();
+
 		private:
 			std::shared_ptr<ServerImpl> _ServerImpl;
 			

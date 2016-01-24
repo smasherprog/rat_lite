@@ -31,8 +31,8 @@
 #  - Public forum : https://groups.google.com/forum/#!forum/lz4c
 # ################################################################
 
-# Version number
-export VERSION := 0.4.5
+# force a version number : uncomment below export (otherwise, default to the one declared into zstd.h)
+#export VERSION := 0.4.6
 
 PRGDIR  = programs
 ZSTDDIR = lib
@@ -78,6 +78,9 @@ travis-install:
 
 test:
 	$(MAKE) -C $(PRGDIR) $@
+
+cmaketest:
+	cd contrib/cmake ; cmake . ; $(MAKE)
 
 clangtest: clean
 	clang -v

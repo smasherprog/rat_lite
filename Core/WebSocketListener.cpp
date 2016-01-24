@@ -22,7 +22,7 @@ namespace SL {
 
 
 				void on_connect(lws *wsi) {
-
+					lws_callback_on_writable(wsi);
 				}
 				void on_message(lws *wsi, void *in, size_t len) {
 
@@ -55,6 +55,10 @@ static int callback_websockets(lws *wsi, enum lws_callback_reasons reason, void 
 	case LWS_CALLBACK_CLOSED:
 		self->on_close(wsi);
 		break;
+
+	case LWS_CALLBACK_SERVER_WRITEABLE:
+		self->on_close(wsi);
+		break;
 	}
 	return 0;
 }
@@ -72,6 +76,9 @@ std::shared_ptr<SL::Remote_Access_Library::Network::WebSocketListener> SL::Remot
 	info.port = port;
 	info.gid = -1;
 	info.uid = -1;
+	info.ka_time = 1;
+	info.ka_probes = 5;
+	info.ka_time = 1;
 	info.protocols = server_protocols;
 
 	auto selfint = new INTERNAL::WebSocketListinerImpl();

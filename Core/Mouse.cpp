@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Image.h"
 #include "Mouse.h"
+
 #include "wx/rawbmp.h"
 #include "wx/bitmap.h"
 #include "ThreadPool.h"

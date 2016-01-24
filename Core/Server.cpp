@@ -4,32 +4,41 @@
 #include "Mouse.h"
 #include "Image.h"
 #include "ServerNetworkDriver.h"
-#include <atomic>
+#include "IServerDriver.h"
+
 
 using namespace std::literals;
 
 
 namespace SL {
 	namespace Remote_Access_Library {
-		class ServerImpl {
+		class ServerImpl: public Network::IServerDriver {
 		public:
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
+			Network::ServerNetworkDriver _ServerNetworkDriver;
+			Network::IBaseNetworkDriver* _IBaseNetworkDriver;
+			bool _Keepgoing;
 
-			ServerImpl(unsigned short port) : _ServerNetworkDriver(this, port)
+
+			ServerImpl(unsigned short port, Network::IBaseNetworkDriver* parent = nullptr) : _ServerNetworkDriver(this, port), _IBaseNetworkDriver(parent)
 			{
 				_Keepgoing = true;
-				_Runner = std::thread(&SL::Remote_Access_Library::ServerImpl::Run, this);
 			}
 
-			~ServerImpl() {
+			virtual ~ServerImpl() {
 				_Keepgoing = false;
-				_Runner.join();
 			}
-			void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
+			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
 				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
+				if (_IBaseNetworkDriver != nullptr) _IBaseNetworkDriver->OnConnect(socket);
 			}
-			void OnClose(const Network::ISocket* socket) {
+			virtual void OnClose(const Network::ISocket* socket) {
+
+				if (_IBaseNetworkDriver != nullptr) _IBaseNetworkDriver->OnClose(socket);
+			}
+
+			virtual void OnReceive(const Network::ISocket* socket, std::shared_ptr<Network::Packet>& packet) {
 
 			}
 
@@ -52,17 +61,16 @@ namespace SL {
 				}
 			}
 
-			void Run() {
-
+			int Run() {
+				_ServerNetworkDriver.StartNetworkProcessing();
 				while (_Keepgoing) {
 					ProcessScreen();
 					std::this_thread::sleep_for(1s);
 
 				}
+				return 0;
 			}
-			Network::ServerNetworkDriver<ServerImpl> _ServerNetworkDriver;
-			bool _Keepgoing;
-			std::thread _Runner;
+	
 		};
 
 	}
@@ -77,4 +85,10 @@ SL::Remote_Access_Library::Server::Server(unsigned short port)
 SL::Remote_Access_Library::Server::~Server()
 {
 
+}
+
+int SL::Remote_Access_Library::Server::Run()
+{
+	return _ServerImpl->Run();
+	
 }

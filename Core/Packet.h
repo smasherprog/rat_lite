@@ -7,9 +7,10 @@ namespace SL {
 		namespace Network {
 
 			struct PacketHeader {
+				unsigned int ID = 0;
 				unsigned int PayloadLen = 0;
 				unsigned int UnCompressedlen = 0;
-				Commands::PACKET_TYPES Packet_Type = Commands::PACKET_TYPES::INVALID;
+				unsigned int Packet_Type = 0;
 			};
 			#define HEADERSIZE sizeof(PacketHeader)
 

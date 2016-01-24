@@ -10,8 +10,9 @@ namespace SL {
 
 					IMAGEDIF,
 					MOUSEEVENT,
-					KEYEVENT
-
+					KEYEVENT,
+					//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
+					LAST_PACKET_TYPE
 				};
 			
 			}

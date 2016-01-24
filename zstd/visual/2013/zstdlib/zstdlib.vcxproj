@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -27,7 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lib\bitstream.h" />
-    <ClInclude Include="..\..\..\lib\error.h" />
     <ClInclude Include="..\..\..\lib\fse.h" />
     <ClInclude Include="..\..\..\lib\fse_static.h" />
     <ClInclude Include="..\..\..\lib\huff0.h" />
@@ -39,9 +38,6 @@
     <ClInclude Include="..\..\..\lib\zstd_internal.h" />
     <ClInclude Include="..\..\..\lib\zstd_static.h" />
     <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="zstdlib.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8BFD8150-94D5-4BF9-8A50-7BD9929A0850}</ProjectGuid>
@@ -95,33 +91,33 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>zstdlib_x86</TargetName>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>zstdlib_x64</TargetName>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>zstdlib_x86</TargetName>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>zstdlib_x64</TargetName>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)..\..\programs\legacy;$(SolutionDir)..\..\lib\legacy;$(SolutionDir)..\..\lib;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -138,7 +134,6 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>
       <AdditionalOptions>/analyze:stacksize25000 %(AdditionalOptions)</AdditionalOptions>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -159,7 +154,6 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnablePREfast>true</EnablePREfast>
       <AdditionalOptions>/analyze:stacksize25000 %(AdditionalOptions)</AdditionalOptions>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -179,8 +173,7 @@
       <AdditionalOptions>/analyze:stacksize25000 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -205,8 +198,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <OmitFramePointers>true</OmitFramePointers>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

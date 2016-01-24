@@ -36,7 +36,17 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_
 	img->WrappedImage.Size = len;
 	return img;
 }
-
+void SanitizeRects(std::vector<SL::Remote_Access_Library::Utilities::Rect>& rects, const SL::Remote_Access_Library::Utilities::Image & img) {
+	for (auto& r : rects) {
+		if (r.right() > static_cast<int>(img.Width())) {
+			r.right(static_cast<int>(img.Width()));
+		}
+		if (r.bottom() > static_cast<int>(img.Height())) {
+			r.bottom(static_cast<int>(img.Height()));
+		}
+		std::cout << r << std::endl;
+	}
+}
 std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg)
 {
 
@@ -71,7 +81,14 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 			}
 		}
 	}
-	if (rects.size() <= 2) return rects;//make sure there is at least 2
+
+	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+	std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << counter << std::endl;
+
+	if (rects.size() <= 2) {
+		SanitizeRects(rects, newimg);
+		return rects;//make sure there is at least 2
+	}
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> outrects;
 	outrects.reserve(rects.size() / 4);
 	outrects.push_back(rects[0]);
@@ -84,7 +101,10 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 			outrects.push_back(rects[i]);
 		}
 	}	
-	if (outrects.size() <= 2) return outrects;//make sure there is at least 2
+	if (outrects.size() <= 2) 	{
+		SanitizeRects(outrects, newimg);
+		return outrects;//make sure there is at least 2
+	}
 	rects.resize(0);
 	//vertical scan
 	for (auto& or: outrects){
@@ -99,20 +119,7 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 			found->bottom(or.bottom());
 		}
 	}
-
-	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-	std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << counter << std::endl;
-	for (auto& r : rects) {
-		if (r.right() > static_cast<int>(newimg.Width())) {
-			r.right(static_cast<int>(newimg.Width()));
-		}
-		if (r.bottom() > static_cast<int>(newimg.Height())) {
-			r.bottom(static_cast<int>(newimg.Height()));
-		}
-		std::cout << r << std::endl;
-	}
-	std::cout << "Found " << rects.size() << " Rects for Dif" << std::endl;
-
+	SanitizeRects(rects, newimg);
 	return rects;
 }
 

@@ -2,6 +2,7 @@
 
 #include <string>
 class wxFrame;
+class wxScrolledWindow;
 
 namespace SL {
 	namespace Remote_Access_Library {

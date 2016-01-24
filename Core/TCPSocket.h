@@ -6,7 +6,8 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace INTERNAL {
-			class SocketImpl;
+			class TCPSocketImpl;
+			class ListinerImpl;
 		}
 		namespace Network {
 			class Packet;
@@ -18,7 +19,7 @@ namespace SL {
 				//factory to create a socket and connect to the destination address
 
 				static std::shared_ptr<ISocket> ConnectTo(const char* host, const char* port, SL::Remote_Access_Library::Network::IBaseNetworkDriver* netevents);
-				TCPSocket(std::shared_ptr<INTERNAL::SocketImpl>& impl);
+				TCPSocket(std::shared_ptr<INTERNAL::TCPSocketImpl>& impl);
 				
 				virtual ~TCPSocket();
 				//adds the data to the internal queue, does not block and returns immediately.
@@ -33,7 +34,7 @@ namespace SL {
 	
 
 			private:
-				std::shared_ptr<INTERNAL::SocketImpl> _SocketImpl;
+				std::shared_ptr<INTERNAL::TCPSocketImpl> _SocketImpl;
 
 				void do_read_header();
 				void do_write(std::shared_ptr<Network::Packet> packet);
@@ -41,6 +42,21 @@ namespace SL {
 				void do_read_body();
 				
 
+			};
+
+	
+			class Listener : public std::enable_shared_from_this<Listener> {
+			public:
+				//factory to create a listening socket
+				static std::shared_ptr<Listener> CreateListener(unsigned short port, Network::IBaseNetworkDriver* netevents);
+
+				Listener(INTERNAL::ListinerImpl* impl);
+				~Listener();
+
+				void Start();
+
+			private:
+				INTERNAL::ListinerImpl* _ListinerImpl;
 			};
 		}
 	}

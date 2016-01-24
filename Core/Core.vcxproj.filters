@@ -7,11 +7,11 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{375b01d4-71b3-4f5e-8c08-102373b6121d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Network\INTERNAL">
-      <UniqueIdentifier>{960c60e3-ba5f-43a0-b6ee-3901fbf64ded}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Server">
       <UniqueIdentifier>{581a85e1-4b37-4374-8238-60a55ffdbad6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{8d33d3f9-7cbd-4994-a8ad-8079816f8da7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
@@ -19,9 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="Listener.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
@@ -43,15 +40,6 @@
     <ClInclude Include="Shapes.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="SocketImpl.h">
-      <Filter>Network\INTERNAL</Filter>
-    </ClInclude>
-    <ClInclude Include="ListenerImpl.h">
-      <Filter>Network\INTERNAL</Filter>
-    </ClInclude>
-    <ClInclude Include="IO_Runner.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="ClientNetworkDriver.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -59,12 +47,6 @@
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="WebSocketServerNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="IBaseNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="ISocket.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="TCPSocket.h">
@@ -82,6 +64,21 @@
     <ClInclude Include="WebSocketListener.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="IBaseNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ISocket.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="IServerDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="MainWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnectWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -90,9 +87,6 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ThreadPool.cpp">
       <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="Listener.cpp">
-      <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Image.cpp">
       <Filter>Utilities</Filter>
@@ -103,13 +97,7 @@
     <ClCompile Include="Mouse.cpp">
       <Filter>Capturing</Filter>
     </ClCompile>
-    <ClCompile Include="IO_Runner.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="ServerNetworkDriver.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="IBaseNetworkDriver.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="TCPSocket.cpp">
@@ -118,14 +106,17 @@
     <ClCompile Include="WebSocket.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="SocketImpl.cpp">
-      <Filter>Network\INTERNAL</Filter>
-    </ClCompile>
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
     </ClCompile>
     <ClCompile Include="WebSocketListener.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnectWindow.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

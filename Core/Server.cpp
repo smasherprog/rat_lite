@@ -5,22 +5,24 @@
 #include "Image.h"
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
-
+#include "IUserNetworkDriver.h"
 
 using namespace std::literals;
 
 
 namespace SL {
 	namespace Remote_Access_Library {
-		class ServerImpl: public Network::IServerDriver {
+		namespace Network {
+			struct Server_Config;
+		}
+		class ServerImpl : public Network::IServerDriver {
 		public:
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
-			Network::IBaseNetworkDriver* _IBaseNetworkDriver;
+			Network::IUserNetworkDriver* _IUserNetworkDriver;
 			bool _Keepgoing;
 
-
-			ServerImpl(unsigned short port, Network::IBaseNetworkDriver* parent = nullptr) : _ServerNetworkDriver(this, port), _IBaseNetworkDriver(parent)
+			ServerImpl(Network::Server_Config& config, Network::IUserNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
 			{
 				_Keepgoing = true;
 			}
@@ -31,11 +33,11 @@ namespace SL {
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
 				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
-				if (_IBaseNetworkDriver != nullptr) _IBaseNetworkDriver->OnConnect(socket);
+				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
 			virtual void OnClose(const Network::ISocket* socket) {
 
-				if (_IBaseNetworkDriver != nullptr) _IBaseNetworkDriver->OnClose(socket);
+				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 			}
 
 			virtual void OnReceive(const Network::ISocket* socket, std::shared_ptr<Network::Packet>& packet) {
@@ -65,21 +67,21 @@ namespace SL {
 				_ServerNetworkDriver.StartNetworkProcessing();
 				while (_Keepgoing) {
 					ProcessScreen();
-					std::this_thread::sleep_for(1s);
-
+					std::this_thread::sleep_for(100ms);
 				}
+				_ServerNetworkDriver.StopNetworkProcessing();
 				return 0;
 			}
-	
+
 		};
 
 	}
 }
 
-SL::Remote_Access_Library::Server::Server(unsigned short port)
+SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Network::IUserNetworkDriver* parent)
 {
 	wxInitAllImageHandlers();
-	_ServerImpl = std::make_shared<ServerImpl>(port);
+	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }
 
 SL::Remote_Access_Library::Server::~Server()
@@ -90,5 +92,5 @@ SL::Remote_Access_Library::Server::~Server()
 int SL::Remote_Access_Library::Server::Run()
 {
 	return _ServerImpl->Run();
-	
+
 }

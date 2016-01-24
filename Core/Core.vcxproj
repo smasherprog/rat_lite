@@ -171,14 +171,17 @@
     <ClInclude Include="ConnectWindow.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
     <ClInclude Include="Commands.h" />
+    <ClInclude Include="IClientDriver.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="IServerDriver.h" />
     <ClInclude Include="ISocket.h" />
+    <ClInclude Include="IUserNetworkDriver.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="ClientNetworkDriver.h" />
     <ClInclude Include="ServerNetworkDriver.h" />
+    <ClInclude Include="Server_Config.h" />
     <ClInclude Include="Shapes.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="Server.h" />
@@ -191,6 +194,7 @@
     <ClInclude Include="WebSocketServerNetworkDriver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ClientNetworkDriver.cpp" />
     <ClCompile Include="ConnectWindow.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="MainWindow.cpp" />

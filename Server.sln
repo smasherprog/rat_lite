@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zstdlib", "zstd\visual\2013\zstdlib\zstdlib.vcxproj", "{8BFD8150-94D5-4BF9-8A50-7BD9929A0850}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libwebsockets", "libwebsockets\libwebsockets.vcxproj", "{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug static|x64 = Debug static|x64
@@ -85,26 +83,6 @@ Global
 		{8BFD8150-94D5-4BF9-8A50-7BD9929A0850}.Release|x64.Build.0 = Release|x64
 		{8BFD8150-94D5-4BF9-8A50-7BD9929A0850}.Release|x86.ActiveCfg = Release|Win32
 		{8BFD8150-94D5-4BF9-8A50-7BD9929A0850}.Release|x86.Build.0 = Release|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug static|x64.ActiveCfg = Debug|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug static|x64.Build.0 = Debug|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug static|x86.ActiveCfg = Debug|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug static|x86.Build.0 = Debug|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug|x64.ActiveCfg = Debug|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug|x64.Build.0 = Debug|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug|x86.ActiveCfg = Debug|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Debug|x86.Build.0 = Debug|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release DLL|x64.ActiveCfg = Release|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release DLL|x64.Build.0 = Release|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release DLL|x86.ActiveCfg = Release|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release DLL|x86.Build.0 = Release|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release static|x64.ActiveCfg = Release|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release static|x64.Build.0 = Release|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release static|x86.ActiveCfg = Release|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release static|x86.Build.0 = Release|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release|x64.ActiveCfg = Release|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release|x64.Build.0 = Release|x64
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release|x86.ActiveCfg = Release|Win32
-		{4AE4EAC1-0119-4EB6-978F-F49E8B1F811B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

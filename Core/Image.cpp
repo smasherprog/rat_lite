@@ -44,7 +44,7 @@ void SanitizeRects(std::vector<SL::Remote_Access_Library::Utilities::Rect>& rect
 		if (r.bottom() > static_cast<int>(img.Height())) {
 			r.bottom(static_cast<int>(img.Height()));
 		}
-		std::cout << r << std::endl;
+		//std::cout << r << std::endl;
 	}
 }
 std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg)
@@ -83,7 +83,7 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	}
 
 	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-	std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << counter << std::endl;
+	//std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << counter << std::endl;
 
 	if (rects.size() <= 2) {
 		SanitizeRects(rects, newimg);

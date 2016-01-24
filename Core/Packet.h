@@ -7,7 +7,6 @@ namespace SL {
 		namespace Network {
 
 			struct PacketHeader {
-				unsigned int ID = 0;
 				unsigned int PayloadLen = 0;
 				unsigned int UnCompressedlen = 0;
 				unsigned int Packet_Type = 0;

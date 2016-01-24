@@ -59,30 +59,31 @@ namespace SL {
 				Network::PacketHeader PacketHeader;
 				Network::SocketStats SocketStats;
 				bool Writing;
+				bool Closed;
 
 				TCPSocketImpl(boost::asio::io_service& io, Network::IBaseNetworkDriver* netevents, boost::asio::ip::tcp::socket&& s) : io_service(io), socket(std::move(s)), NetworkEvents(netevents) {
 					SocketStats = { 0 };
-					Writing = false;
+					Closed = Writing = false;
 				}
 				TCPSocketImpl(boost::asio::io_service& io, Network::IBaseNetworkDriver* netevents) : io_service(io), socket(io), NetworkEvents(netevents) {
 					SocketStats = { 0 };
-					Writing = false;
+					Closed = Writing = false;
 				}
 
-			
+
 
 				std::shared_ptr<Network::Packet> decompressPacket(Network::PacketHeader& header, std::vector<char>& buffer)
 				{
 					auto p = Network::Packet::CreatePacket(header);
 					auto dst = ZSTD_decompress(p->data(), header.UnCompressedlen, buffer.data(), header.PayloadLen);
-					if (ZSTD_isError(dst)>0) {
+					if (ZSTD_isError(dst) > 0) {
 						std::string error = ZSTD_getErrorName(dst);
 						int k = 0;
 					}
 					p->header()->PayloadLen = static_cast<unsigned int>(dst);
-					std::cout << "decompress from: " << p->header()->UnCompressedlen << " To " << p->header()->PayloadLen << std::endl;
+				//	std::cout << "decompress from: " << p->header()->UnCompressedlen << " To " << p->header()->PayloadLen << std::endl;
 					p->header()->UnCompressedlen = 0;
-				
+
 					return p;
 				}
 
@@ -97,8 +98,8 @@ namespace SL {
 					auto p = Network::Packet::CreatePacket(header);
 					p->header()->PayloadLen = static_cast<unsigned int>(ZSTD_compress(p->data(), header.PayloadLen, pack.data(), pack.header()->PayloadLen, compressionlevel));
 
-					std::cout << "compress from: " << p->header()->UnCompressedlen << " To " << p->header()->PayloadLen << std::endl;
-					assert(p->header()->PayloadLen < 1024 * 1024 * 48);//sanitfy check for packet sizes
+				//	std::cout << "compress from: " << p->header()->UnCompressedlen << " To " << p->header()->PayloadLen << std::endl;
+					//assert(p->header()->PayloadLen < 1024 * 1024 * 48);//sanitfy check for packet sizes
 					return p;
 				}
 
@@ -113,7 +114,7 @@ namespace SL {
 					return PacketHeader.PayloadLen;
 				}
 
-		
+
 				void TCPSocketImpl::PushToOutgoing(std::shared_ptr<Network::Packet>& pack)
 				{
 					SocketStats.TotalPacketSent += 1;
@@ -203,13 +204,16 @@ SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Netwo
 }
 void SL::Remote_Access_Library::Network::TCPSocket::close()
 {
-	_SocketImpl->NetworkEvents->OnClose(this);
-	try
-	{
-		_SocketImpl->socket.shutdown(boost::asio::socket_base::shutdown_send);
-		_SocketImpl->socket.close();
+	if (!_SocketImpl->Closed) {//prevent double calls
+		_SocketImpl->Closed = true;
+		_SocketImpl->NetworkEvents->OnClose(this);
+		try
+		{
+			_SocketImpl->socket.shutdown(boost::asio::socket_base::shutdown_send);
+			_SocketImpl->socket.close();
+		}
+		catch (...) {}//I dont care about exceptions when the socket is being closed!
 	}
-	catch (...) {}//I dont care about exceptions when the socket is being closed!
 }
 
 void SL::Remote_Access_Library::Network::TCPSocket::connect(const char * host, const char * port)
@@ -263,7 +267,7 @@ void SL::Remote_Access_Library::Network::TCPSocket::do_read_body() {
 	{
 		if (!ec) {
 			assert(len == _SocketImpl->get_BufferSize());
-	
+
 			_SocketImpl->NetworkEvents->OnReceive(this, _SocketImpl->get_IncomingPacket());
 			do_read_header();
 		}

@@ -5,8 +5,6 @@ struct SL::Remote_Access_Library::Network::Packet_Impl {
 	PacketHeader h;
 };
 std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Library::Network::Packet::CreatePacket(PacketHeader header) {
-	static std::atomic<unsigned int> PacketId = 0;
-	if (header.ID == 0) header.ID = PacketId++;
 	Packet_Impl p;
 	p.h = header;
 	return std::make_shared<SL::Remote_Access_Library::Network::Packet>(p);

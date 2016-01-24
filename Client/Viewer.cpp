@@ -22,7 +22,6 @@ public:
 	{
 		wxInitAllImageHandlers();
 		auto _ConnectWindow = new SL::Remote_Access_Library::UI::ConnectWindow();
-		_ConnectWindow->get_Frame()->Show();
 		return true;
 	}
 };

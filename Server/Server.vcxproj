@@ -184,9 +184,6 @@
       <Project>{c870874b-bffe-4ae9-ad8a-6f1a400381ab}</Project>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="..\libwebsockets\libwebsockets.vcxproj">
-      <Project>{4ae4eac1-0119-4eb6-978f-f49e8b1f811b}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

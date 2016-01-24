@@ -79,6 +79,15 @@
     <ClInclude Include="ConnectWindow.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="IUserNetworkDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="IClientDriver.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Server_Config.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -117,6 +126,9 @@
     </ClCompile>
     <ClCompile Include="ConnectWindow.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientNetworkDriver.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,5 @@
 #pragma once
-#include <memory>
+#include "IBaseNetworkDriver.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -7,7 +7,7 @@ namespace SL {
 			class Packet;
 			class ISocket;
 
-			class IServerDriver: public IBaseNetworkDriver {
+			class IServerDriver : public IBaseNetworkDriver {
 			public:
 				IServerDriver() {}
 				virtual ~IServerDriver() {}

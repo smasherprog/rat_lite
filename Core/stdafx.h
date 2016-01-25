@@ -26,6 +26,7 @@
 #include <condition_variable>
 #include <algorithm>
 #include <iostream>
+#include <chrono>
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"

@@ -39,7 +39,7 @@ namespace SL {
 				void ImageDif(const ISocket* socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->data();
 					auto img = Utilities::Image::CreateImage(imgrect->Height, imgrect->Width, p->data() + sizeof(Utilities::Rect), p->header()->PayloadLen - sizeof(Utilities::Rect));
-					_IClientDriver->OnReceive_Image(imgrect, img);
+					_IClientDriver->OnReceive_Image(socket, imgrect, img);
 
 				}
 			};

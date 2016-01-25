@@ -3,7 +3,7 @@
 #include "IBaseNetworkDriver.h"
 #include "Packet.h"
 #include "zstd.h"
-
+#include "ThreadPool.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -12,7 +12,9 @@ namespace SL {
 			class IO_Runner {
 			public:
 				boost::asio::io_service io_service;
-				IO_Runner() :work(io_service) {
+				Utilities::ThreadPool _ThreadPool;
+
+				IO_Runner() :work(io_service), _ThreadPool(1) {
 					io_servicethread = std::thread([this]() {
 						std::cout << "Starting io_service for Connecto Factory" << std::endl;
 						io_service.run();
@@ -52,8 +54,9 @@ namespace SL {
 			public:
 				std::vector<char> _IncomingBuffer;
 				std::deque<std::shared_ptr<Network::Packet>> _OutgoingPackets;
-				std::mutex _OutgoingPacketsLock;
+
 				boost::asio::io_service& io_service;
+				Utilities::ThreadPool& _ThreadPool;
 				boost::asio::ip::tcp::socket socket;
 				Network::IBaseNetworkDriver* NetworkEvents;
 				Network::PacketHeader PacketHeader;
@@ -61,47 +64,18 @@ namespace SL {
 				bool Writing;
 				bool Closed;
 
-				TCPSocketImpl(boost::asio::io_service& io, Network::IBaseNetworkDriver* netevents, boost::asio::ip::tcp::socket&& s) : io_service(io), socket(std::move(s)), NetworkEvents(netevents) {
+				TCPSocketImpl(Utilities::ThreadPool& tpool, boost::asio::io_service& io, Network::IBaseNetworkDriver* netevents, boost::asio::ip::tcp::socket&& s) :_ThreadPool(tpool), io_service(io), socket(std::move(s)), NetworkEvents(netevents) {
 					SocketStats = { 0 };
 					Closed = Writing = false;
 				}
-				TCPSocketImpl(boost::asio::io_service& io, Network::IBaseNetworkDriver* netevents) : io_service(io), socket(io), NetworkEvents(netevents) {
+				TCPSocketImpl(Utilities::ThreadPool& tpool, boost::asio::io_service& io, Network::IBaseNetworkDriver* netevents) :_ThreadPool(tpool), io_service(io), socket(io), NetworkEvents(netevents) {
 					SocketStats = { 0 };
 					Closed = Writing = false;
 				}
 
 
 
-				std::shared_ptr<Network::Packet> decompressPacket(Network::PacketHeader& header, std::vector<char>& buffer)
-				{
-					auto p = Network::Packet::CreatePacket(header);
-					auto dst = ZSTD_decompress(p->data(), header.UnCompressedlen, buffer.data(), header.PayloadLen);
-					if (ZSTD_isError(dst) > 0) {
-						std::string error = ZSTD_getErrorName(dst);
-						int k = 0;
-					}
-					p->header()->PayloadLen = static_cast<unsigned int>(dst);
-				//	std::cout << "decompress from: " << p->header()->UnCompressedlen << " To " << p->header()->PayloadLen << std::endl;
-					p->header()->UnCompressedlen = 0;
 
-					return p;
-				}
-
-				std::shared_ptr<Network::Packet> compressPacket(Network::Packet& pack, int compressionlevel)
-				{
-					assert(compressionlevel >= 1 && compressionlevel <= 19);
-
-					Network::PacketHeader header;
-					header.UnCompressedlen = pack.header()->PayloadLen;
-					header.PayloadLen = ZSTD_compressBound(pack.header()->PayloadLen);
-					header.Packet_Type = pack.header()->Packet_Type;
-					auto p = Network::Packet::CreatePacket(header);
-					p->header()->PayloadLen = static_cast<unsigned int>(ZSTD_compress(p->data(), header.PayloadLen, pack.data(), pack.header()->PayloadLen, compressionlevel));
-
-				//	std::cout << "compress from: " << p->header()->UnCompressedlen << " To " << p->header()->PayloadLen << std::endl;
-					//assert(p->header()->PayloadLen < 1024 * 1024 * 48);//sanitfy check for packet sizes
-					return p;
-				}
 
 				char* TCPSocketImpl::get_Buffer()
 				{
@@ -115,31 +89,6 @@ namespace SL {
 				}
 
 
-				void TCPSocketImpl::PushToOutgoing(std::shared_ptr<Network::Packet>& pack)
-				{
-					SocketStats.TotalPacketSent += 1;
-					SocketStats.TotalBytesSent += pack->header()->PayloadLen;
-					auto compack = compressPacket(*pack, 1);
-
-					SocketStats.NetworkBytesSent += compack->header()->PayloadLen;
-					std::lock_guard<std::mutex> lock(_OutgoingPacketsLock);
-					_OutgoingPackets.push_back(compack);
-				}
-				std::shared_ptr<Network::Packet> TCPSocketImpl::PopFromOutgoing()
-				{
-					std::lock_guard<std::mutex> lock(_OutgoingPacketsLock);
-					auto ret = _OutgoingPackets.back();
-					_OutgoingPackets.pop_back();
-					return ret;
-				}
-				std::shared_ptr<Network::Packet> TCPSocketImpl::get_IncomingPacket()
-				{
-
-					SocketStats.TotalPacketReceived += 1;
-					SocketStats.NetworkBytesReceived += PacketHeader.PayloadLen;
-					SocketStats.TotalBytesReceived += PacketHeader.UnCompressedlen;
-					return decompressPacket(PacketHeader, _IncomingBuffer);
-				}
 
 			};
 
@@ -148,21 +97,45 @@ namespace SL {
 }
 
 
+std::shared_ptr<SL::Remote_Access_Library::Network::Packet> decompressPacket(SL::Remote_Access_Library::Network::PacketHeader& header, std::vector<char>& buffer)
+{
+	auto p = SL::Remote_Access_Library::Network::Packet::CreatePacket(header);
+	auto dst = ZSTD_decompress(p->data(), header.UnCompressedlen, buffer.data(), header.PayloadLen);
+	if (ZSTD_isError(dst) > 0) {
+		std::string error = ZSTD_getErrorName(dst);
+		int k = 0;
+	}
+	p->header()->PayloadLen = static_cast<unsigned int>(dst);
+	p->header()->UnCompressedlen = 0;
 
-
-
-
-
-
-
-
-
-
-std::shared_ptr<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl> Create(boost::asio::io_service& io, SL::Remote_Access_Library::Network::IBaseNetworkDriver* netevents, boost::asio::ip::tcp::socket&& s) {
-	return std::make_shared<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl>(io, netevents, std::move(s));
+	return p;
 }
-std::shared_ptr<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl> Create(boost::asio::io_service& io, SL::Remote_Access_Library::Network::IBaseNetworkDriver* netevents) {
-	return std::make_shared<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl>(io, netevents);
+
+std::shared_ptr<SL::Remote_Access_Library::Network::Packet> compressPacket(SL::Remote_Access_Library::Network::Packet& pack, int compressionlevel)
+{
+	assert(compressionlevel >= 1 && compressionlevel <= 19);
+
+	SL::Remote_Access_Library::Network::PacketHeader header;
+	header.UnCompressedlen = pack.header()->PayloadLen;
+	header.PayloadLen = ZSTD_compressBound(pack.header()->PayloadLen);
+	header.Packet_Type = pack.header()->Packet_Type;
+	auto p = SL::Remote_Access_Library::Network::Packet::CreatePacket(header);
+	p->header()->PayloadLen = static_cast<unsigned int>(ZSTD_compress(p->data(), header.PayloadLen, pack.data(), pack.header()->PayloadLen, compressionlevel));
+
+	//assert(p->header()->PayloadLen < 1024 * 1024 * 48);//sanitfy check for packet sizes
+	return p;
+}
+
+
+
+
+
+
+std::shared_ptr<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl> Create(SL::Remote_Access_Library::Utilities::ThreadPool& tpool, boost::asio::io_service& io, SL::Remote_Access_Library::Network::IBaseNetworkDriver* netevents, boost::asio::ip::tcp::socket&& s) {
+	return std::make_shared<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl>(tpool, io, netevents, std::move(s));
+}
+std::shared_ptr<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl> Create(SL::Remote_Access_Library::Utilities::ThreadPool& tpool, boost::asio::io_service& io, SL::Remote_Access_Library::Network::IBaseNetworkDriver* netevents) {
+	return std::make_shared<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl>(tpool, io, netevents);
 }
 
 SL::Remote_Access_Library::Network::TCPSocket::TCPSocket(std::shared_ptr<INTERNAL::TCPSocketImpl>& impl) : _SocketImpl(impl) {
@@ -178,7 +151,7 @@ std::shared_ptr<SL::Remote_Access_Library::Network::ISocket> SL::Remote_Access_L
 	//first thread in will initialize this and start the io_service
 	static IO_Runner _io_runner;
 
-	auto socketimpl = Create(_io_runner.io_service, netevents);
+	auto socketimpl = Create(_io_runner._ThreadPool, _io_runner.io_service, netevents);
 	auto socket = std::make_shared<TCPSocket>(socketimpl);
 	socket->connect(host, port);
 	return socket;
@@ -190,14 +163,25 @@ std::shared_ptr<SL::Remote_Access_Library::Network::ISocket> SL::Remote_Access_L
 void SL::Remote_Access_Library::Network::TCPSocket::send(std::shared_ptr<Packet>& pack)
 {
 	auto self(shared_from_this());
-	_SocketImpl->PushToOutgoing(pack);
-	_SocketImpl->io_service.post([this, self]()
-	{
-		if (!_SocketImpl->Writing)
+
+	_SocketImpl->_ThreadPool.Enqueue([this, self, pack]() {
+
+		_SocketImpl->SocketStats.TotalPacketSent += 1;
+		_SocketImpl->SocketStats.TotalBytesSent += pack->header()->PayloadLen;
+		auto compack = compressPacket(*pack, 1);
+		_SocketImpl->SocketStats.NetworkBytesSent += compack->header()->PayloadLen;
+
+		_SocketImpl->io_service.post([this, self, compack]()
 		{
-			do_write_header();
-		}
+			_SocketImpl->_OutgoingPackets.push_back(compack);
+			if (!_SocketImpl->Writing)
+			{
+				Write();
+			}
+		});
 	});
+
+
 }
 SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Network::TCPSocket::get_SocketStats() const {
 	return _SocketImpl->SocketStats;
@@ -221,7 +205,7 @@ void SL::Remote_Access_Library::Network::TCPSocket::connect(const char * host, c
 	auto self(shared_from_this());
 	if (host == nullptr && port == nullptr) {
 		_SocketImpl->NetworkEvents->OnConnect(self);
-		do_read_header();
+		Read();
 	}
 	else {
 		boost::asio::ip::tcp::resolver resolver(_SocketImpl->io_service);
@@ -234,9 +218,9 @@ void SL::Remote_Access_Library::Network::TCPSocket::connect(const char * host, c
 			{
 				if (!_SocketImpl->socket.is_open()) return;
 
-				if (!ec) {
+				if (!ec && !_SocketImpl->Closed){
 					_SocketImpl->NetworkEvents->OnConnect(self);
-					do_read_header();
+					Read();
 				}
 				else close();
 			});
@@ -248,68 +232,71 @@ void SL::Remote_Access_Library::Network::TCPSocket::connect(const char * host, c
 }
 
 
-void SL::Remote_Access_Library::Network::TCPSocket::do_read_header() {
+void SL::Remote_Access_Library::Network::TCPSocket::Read() {
 	auto self(shared_from_this());
 	boost::asio::async_read(_SocketImpl->socket, boost::asio::buffer(&_SocketImpl->PacketHeader, sizeof(_SocketImpl->PacketHeader)), [self, this](boost::system::error_code ec, std::size_t len/*length*/)
 	{
-		if (!ec) {
+		if (!ec && !_SocketImpl->Closed) {
 			assert(len == sizeof(_SocketImpl->PacketHeader));
-			do_read_body();
+			auto p(_SocketImpl->get_Buffer());
+			auto size(_SocketImpl->get_BufferSize());
+
+			boost::asio::async_read(_SocketImpl->socket, boost::asio::buffer(p, size), [self, this](boost::system::error_code ec, std::size_t len/*length*/)
+			{
+				if (!ec && !_SocketImpl->Closed) {
+					assert(len == _SocketImpl->get_BufferSize());
+
+					_SocketImpl->SocketStats.TotalPacketReceived += 1;
+					_SocketImpl->SocketStats.NetworkBytesReceived += _SocketImpl->PacketHeader.PayloadLen;
+					_SocketImpl->SocketStats.TotalBytesReceived += _SocketImpl->PacketHeader.UnCompressedlen;
+					auto decpack = decompressPacket(_SocketImpl->PacketHeader, _SocketImpl->_IncomingBuffer);
+
+					_SocketImpl->_ThreadPool.Enqueue([self, this, decpack]() {
+						auto tmpreceveier(decpack);
+						if (!_SocketImpl->Closed) {
+							_SocketImpl->NetworkEvents->OnReceive(this, tmpreceveier);
+						}
+					});
+					Read();
+				}
+				else close();
+			});
+
 		}
 		else close();
 	});
 }
-void SL::Remote_Access_Library::Network::TCPSocket::do_read_body() {
-	auto self(shared_from_this());
-	auto p(_SocketImpl->get_Buffer());
-	auto size(_SocketImpl->get_BufferSize());
-	boost::asio::async_read(_SocketImpl->socket, boost::asio::buffer(p, size), [self, this](boost::system::error_code ec, std::size_t len/*length*/)
-	{
-		if (!ec) {
-			assert(len == _SocketImpl->get_BufferSize());
 
-			_SocketImpl->NetworkEvents->OnReceive(this, _SocketImpl->get_IncomingPacket());
-			do_read_header();
-		}
-		else close();
-	});
-}
-
-void SL::Remote_Access_Library::Network::TCPSocket::do_write_header() {
-	auto packet(_SocketImpl->PopFromOutgoing());
+void SL::Remote_Access_Library::Network::TCPSocket::Write() {
+	auto packet(_SocketImpl->_OutgoingPackets.front());
+	_SocketImpl->_OutgoingPackets.pop_front();//remove the packet
 	auto self(shared_from_this());
 	_SocketImpl->Writing = true;
 	boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(packet->header(), sizeof(SL::Remote_Access_Library::Network::PacketHeader)), [self, packet, this](boost::system::error_code ec, std::size_t byteswritten)
 	{
-		if (!ec)
+		if (!ec && !_SocketImpl->Closed)
 		{
 			assert(byteswritten == sizeof(_SocketImpl->PacketHeader));
-			do_write(packet);
-		}
-		else close();
-	});
-}
-
-void SL::Remote_Access_Library::Network::TCPSocket::do_write(std::shared_ptr<Network::Packet> packet) {
-	auto self(shared_from_this());
-	boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(packet->data(), packet->header()->PayloadLen), [self, packet, this](boost::system::error_code ec, std::size_t byteswritten)
-	{
-		if (!ec)
-		{
-			assert(byteswritten == packet->header()->PayloadLen);
-			_SocketImpl->_OutgoingPackets.size();
-			if (!_SocketImpl->_OutgoingPackets.empty())
+			boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(packet->data(), packet->header()->PayloadLen), [self, packet, this](boost::system::error_code ec, std::size_t byteswritten)
 			{
-				do_write_header();
-			}
-			else {
-				_SocketImpl->Writing = false;
-			}
+				if (!ec && !_SocketImpl->Closed)
+				{
+					assert(byteswritten == packet->header()->PayloadLen);
+					_SocketImpl->_OutgoingPackets.size();
+					if (!_SocketImpl->_OutgoingPackets.empty())
+					{
+						Write();
+					}
+					else {
+						_SocketImpl->Writing = false;
+					}
+				}
+				else close();
+			});
 		}
 		else close();
 	});
 }
-
 
 
 
@@ -332,7 +319,7 @@ void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::Listener> ptr
 	{
 		if (!ec)
 		{
-			auto sock = std::make_shared<SL::Remote_Access_Library::Network::TCPSocket>(std::make_shared<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl>(impl->io_service, impl->NetworkEvents_, std::move(impl->socket_)));
+			auto sock = std::make_shared<SL::Remote_Access_Library::Network::TCPSocket>(std::make_shared<SL::Remote_Access_Library::INTERNAL::TCPSocketImpl>(impl->_ThreadPool, impl->io_service, impl->NetworkEvents_, std::move(impl->socket_)));
 			sock->connect(nullptr, nullptr);
 		}
 		do_accept(ptr, impl);

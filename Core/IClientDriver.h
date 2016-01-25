@@ -14,7 +14,7 @@ namespace SL {
 			public:
 				IClientDriver() {}
 				virtual ~IClientDriver() {}
-				virtual void OnReceive_Image(Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) = 0;
+				virtual void OnReceive_Image(const Network::ISocket * socket, Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) = 0;
 			};
 		}
 	}

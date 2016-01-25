@@ -94,9 +94,6 @@
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="ThreadPool.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="Image.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>

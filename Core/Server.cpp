@@ -30,17 +30,17 @@ namespace SL {
 			virtual ~ServerImpl() {
 				_Keepgoing = false;
 			}
-			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
+			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
 				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
-			virtual void OnClose(const Network::ISocket* socket) {
+			virtual void OnClose(const Network::ISocket* socket)override {
 
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 			}
 
-			virtual void OnReceive(const Network::ISocket* socket, std::shared_ptr<Network::Packet>& packet) {
+			virtual void OnReceive(const Network::ISocket* socket, std::shared_ptr<Network::Packet>& packet)override {
 
 			}
 

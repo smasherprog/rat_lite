@@ -4,26 +4,29 @@
 #include "ClientNetworkDriver.h"
 #include "Commands.h"
 #include "ISocket.h"
-#include <mutex>
 #include <wx/rawbmp.h>
 #include "IClientDriver.h"
+
 
 namespace SL {
 	namespace Remote_Access_Library {
 
 		namespace UI {
+
 			class MainWindowImpl : public wxScrolledWindow, public Network::IClientDriver
 			{
-				std::unique_ptr<wxBitmap> _Image;
-				std::unique_ptr<wxAlphaPixelData> ImageData;
+
 				std::mutex _ImageLock;
 				Network::ClientNetworkDriver _ClientNetworkDriver;
+				std::unique_ptr<wxBitmap> Image;
+				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
+				SL::Remote_Access_Library::Network::SocketStats LastStats;
 
 			public:
 
 				MainWindowImpl(wxFrame* parent, const char*  dst_host, const char*  dst_port) : wxScrolledWindow(parent, wxID_ANY), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
-
+				
 				}
 				virtual ~MainWindowImpl() {
 					_ClientNetworkDriver.Close();
@@ -50,75 +53,43 @@ namespace SL {
 
 				void OnEraseBackGround(wxEraseEvent& ev)
 				{
-				
+
 				}
 				virtual void OnDraw(wxDC & dc) override
 				{
-		
-					if (_Image) {
-						std::lock_guard<std::mutex> lock(_ImageLock);
-						if (_Image) dc.DrawBitmap(*_Image, 0, 0, false);
-						
-					}
-		
+					std::lock_guard<std::mutex> lock(_ImageLock);
+					if (Image) dc.DrawBitmap(*Image, 0, 0, false);
 				}
 
-				virtual void OnReceive_Image(Utilities::Rect * rect, std::shared_ptr<Utilities::Image>& img) override
+				virtual void OnReceive_Image(const Network::ISocket * socket, Utilities::Rect * rect, std::shared_ptr<Utilities::Image>& img) override
 				{
-					/*if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 						_NetworkStatsTimer = std::chrono::steady_clock::now();
-						auto stats = _ReceiverNetworkDriver.get_SocketStats();
+						auto stats = socket->get_SocketStats();
 						wxString st = "Client ";
-
 						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " kbs Received ";
 						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " kbs Sent";
-						Parent->SetTitle(st);
-					}*/
-					auto stride = 32;
-					auto gennewimg = false;
-					if (_Image) {
-						if (_Image->GetHeight() < static_cast<int>(img->Height()) || _Image->GetWidth() <= static_cast<int>(img->Width())) {
-							gennewimg = true;
-						}
+						LastStats = stats;
+						static_cast<wxFrame*>(GetParent())->SetTitle(st);
 					}
-					else {//first image, just copy all the data
-						gennewimg = true;
-					}
-
-					if (gennewimg) {
-						//lock needed for image updates
+					auto ptr(std::make_unique<wxBitmap>(img->data(), img->Width(), img->Height(), 32));
+					if (!Image) {
 						{
 							std::lock_guard<std::mutex> lock(_ImageLock);
-							_Image = std::make_unique<wxBitmap>();
-							_Image->Create(img->Width(), img->Height(), stride);
-							ImageData = std::make_unique<wxAlphaPixelData>(*_Image);
-
-							auto dstrowdata = ImageData->GetPixels().m_ptr;
-							auto imgrowstride = img->Stride()*img->Width();
-							for (decltype(img->Height()) row = 0; row < img->Height(); row++) {
-								memcpy(dstrowdata, img->data() + (row*imgrowstride), imgrowstride);
-								dstrowdata += ImageData->GetRowStride();
-							}
+							Image = std::move(ptr);
 						}
 						SetScrollbars(1, 1, img->Width(), img->Height(), 0, 0);
-						Refresh(false);
 					}
-					else {//update part of the image
-						 //lock needed for image updates
-						{
-							std::lock_guard<std::mutex> lock(_ImageLock);
-							auto dstrowdata = ImageData->GetPixels().m_ptr;
-							auto imgrowstride = img->Stride()*img->Width();
-							auto dstrowstride = ImageData->GetRowStride();
+					else {
 
-							for (auto dstrow = rect->Origin.Y, srcrow = 0; dstrow < rect->bottom(); dstrow++, srcrow++) {
-								auto dst = dstrowdata + (dstrow*dstrowstride) + (rect->Origin.X * img->Stride());//move pointer
-								memcpy(dst, img->data() + (srcrow*imgrowstride), imgrowstride);
-							}
-						}
-						RefreshRect(wxRect(rect->left(), rect->top(), rect->Width, rect->Height), false);
+						wxMemoryDC memDC;
+						std::lock_guard<std::mutex> lock(_ImageLock);
+						memDC.SelectObject(*Image);
+						memDC.DrawBitmap(*ptr, wxPoint(rect->left(), rect->top()));
 
 					}
+					Refresh(false);
+
 				}
 				DECLARE_EVENT_TABLE()
 			};
@@ -136,7 +107,7 @@ wxScrolledWindow * SL::Remote_Access_Library::UI::CreateMainWindow(wxFrame * par
 {
 	//THE WXWIDGETS LIBRARY TAKES CARE OF DELETING WINDOWS... THATS WHY THERE IS NO DELETE !!!
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	auto parentframe = new wxFrame(parent, -1, title, wxPoint(50, 50), wxSize(650, 650));
+	auto parentframe = new wxFrame(parent, -1, title, wxPoint(50, 50), wxSize(900, 900));
 
 	auto _MainWindowImpl = new MainWindowImpl(parentframe, dst_host, dst_port);
 	sizer->Add(_MainWindowImpl, 1, wxALL | wxEXPAND);

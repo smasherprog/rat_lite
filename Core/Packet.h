@@ -19,8 +19,6 @@ namespace SL {
 			public:
 			
 				static std::shared_ptr<Packet> CreatePacket(PacketHeader header); 
-				template<class T> static std::shared_ptr<Packet> CreatePacket(PacketHeader header, T& commandheader, char* data, size_t len);
-	
 
 				Packet(Packet_Impl&);
 				~Packet();
@@ -32,14 +30,6 @@ namespace SL {
 				PacketHeader _PacketHeader;
 				std::unique_ptr<char[]> _Data;
 			};
-			template<class T>
-			inline std::shared_ptr<Packet> Packet::CreatePacket(PacketHeader header, T & commandheader, char * data, size_t len)
-			{
-				auto pack = Packet::CreatePacket(header);
-				memcpy(pack->data(), &commandheader, sizeof(T));
-				memcpy(pack->data() + sizeof(T), data, len);
-				return pack;
-			}
 		}
 	}
 }

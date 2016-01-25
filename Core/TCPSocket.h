@@ -36,11 +36,8 @@ namespace SL {
 			private:
 				std::shared_ptr<INTERNAL::TCPSocketImpl> _SocketImpl;
 
-				void do_read_header();
-				void do_write(std::shared_ptr<Network::Packet> packet);
-				void do_write_header();
-				void do_read_body();
-				
+				void Read();
+				void Write();
 
 			};
 

@@ -20,17 +20,19 @@ namespace SL {
 				static std::shared_ptr<Image> CreateImage(unsigned int h, unsigned int w, const char* data, size_t len);
 				static std::shared_ptr<Image_Wrapper> CreateWrappedImage(unsigned int h, unsigned int w, const char* data, size_t len);
 				static std::vector<Rect> GetDifs(const Image& oldimg, const Image& newimg);
+				static void Copy(Image& src, Rect src_rect, Image & dst, Rect dst_rect);
+
 				Image(Image_Impl&);
 				~Image();
 			
 				//pixel stride
 				unsigned int Stride() const { return 4; }
 				char* data() const { return _Data.get(); }
+				//size of the image in bytes width* height * stride
 				size_t size() const { return Size; }
 				unsigned int Height() const { return _Height; }
 				unsigned int Width() const { return _Width; }
-
-			
+	
 			};
 			//this object is used for shared_ptr alias constuctor
 			class Image_Wrapper {

@@ -2,6 +2,7 @@
 #include <memory>
 #include <functional>
 #include "ISocket.h"
+#include <future>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -19,6 +20,7 @@ namespace SL {
 				//factory to create a socket and connect to the destination address
 
 				static std::shared_ptr<ISocket> ConnectTo(const char* host, const char* port, SL::Remote_Access_Library::Network::IBaseNetworkDriver* netevents);
+		
 				TCPSocket(std::shared_ptr<INTERNAL::TCPSocketImpl>& impl);
 				
 				virtual ~TCPSocket();

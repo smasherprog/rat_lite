@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Image.h"
+#include <assert.h>
 
 struct SL::Remote_Access_Library::Utilities::Image_Impl {
 	unsigned int height;
@@ -93,34 +94,43 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	outrects.reserve(rects.size() / 4);
 	outrects.push_back(rects[0]);
 	//horizontal scan
-	for (size_t i = 1; i < rects.size() - 1;i++) {
+	for (size_t i = 1; i < rects.size() - 1; i++) {
 		if (outrects.back().right() == rects[i].left() && outrects.back().bottom() == rects[i].bottom()) {
 			outrects.back().right(rects[i].right());
 		}
 		else {
 			outrects.push_back(rects[i]);
 		}
-	}	
-	if (outrects.size() <= 2) 	{
+	}
+	if (outrects.size() <= 2) {
 		SanitizeRects(outrects, newimg);
 		return outrects;//make sure there is at least 2
 	}
 	rects.resize(0);
 	//vertical scan
-	for (auto& or: outrects){
+	for (auto& or : outrects) {
 
 		auto found = std::find_if(rbegin(rects), rend(rects), [=](const SL::Remote_Access_Library::Utilities::Rect& rec) {
-			return rec.bottom() == or.top() && rec.left() == or.left() && rec.right() == or.right();
+			return rec.bottom() == or .top() && rec.left() == or .left() && rec.right() == or .right();
 		});
 		if (found == rend(rects)) {
-			rects.push_back(or);
+			rects.push_back(or );
 		}
 		else {
-			found->bottom(or.bottom());
+			found->bottom(or .bottom());
 		}
 	}
 	SanitizeRects(rects, newimg);
 	return rects;
+}
+
+void SL::Remote_Access_Library::Utilities::Image::Copy(Image& src, Rect src_rect, Image & dst, Rect dst_rect)
+{
+	auto dst_start = (int*)dst.data();
+	auto src_start = (int*)src.data();
+	for (auto row = dst_rect.top(), src_row=0; row < dst_rect.bottom(); row++, src_row++) {
+		memcpy(dst_start + (dst.Width() * row) + dst_rect.left(), src_start + (src.Width()*src_row) + src_rect.left(), src_rect.Width*src.Stride());
+	}
 }
 
 

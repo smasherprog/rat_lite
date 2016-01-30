@@ -70,25 +70,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
+    <IncludePath>c:\wxWidgets\include\;C:\wxWidgets\include\msvc\;$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
+    <IncludePath>c:\wxWidgets\include\;C:\wxWidgets\include\msvc\;$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
+    <IncludePath>c:\wxWidgets\include\;C:\wxWidgets\include\msvc\;$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>c:\wxWidgets\include;C:\wxWidgets\include\msvc;$(SolutionDir)zstd\lib;$(SolutionDir)libwebsockets\lib\;$(SolutionDir)libwebsockets\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\$(LibraryPath)</LibraryPath>
+    <IncludePath>c:\wxWidgets\include\;C:\wxWidgets\include\msvc\;$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\wxWidgets\lib\vc_$(PlatformTarget)_lib\;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -214,6 +214,12 @@
     <ClCompile Include="WebSocketListener.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\fltk\ide\VisualC2010\fltk.lib.vcxproj">
+      <Project>{e070aafc-9d03-41a3-bc7d-30887ea0d50f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\fltk\ide\VisualC2010\fltkimages.vcxproj">
+      <Project>{6e8e1663-b88d-4454-adf2-279666a93306}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\zstd\visual\2013\zstdlib\zstdlib.vcxproj">
       <Project>{8bfd8150-94d5-4bf9-8a50-7bd9929a0850}</Project>
     </ProjectReference>

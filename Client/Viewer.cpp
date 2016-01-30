@@ -2,33 +2,21 @@
 //
 
 #include "stdafx.h"
+#include <FL\Fl.H>
 
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
-#include <wx/wx.h>
-#endif
-#include <functional>
 #include "..\Core\ConnectWindow.h"
 
-class Viewer : public wxApp {
+int main(int argc, char **argv) {
+	Fl::args(argc, argv);
+	Fl::get_system_colors();
+	Fl::visual(FL_RGB);
+	SL::Remote_Access_Library::UI::ConnectWindow c;
+	c.Init();
+	Fl::lock();
+	while (Fl::wait() > 0) {
+		if (Fl::thread_message()) {
 
-public:
-
-	Viewer() {}
-
-	virtual ~Viewer() {}
-
-	virtual bool OnInit() override
-	{
-		wxInitAllImageHandlers();
-		auto _ConnectWindow = new SL::Remote_Access_Library::UI::ConnectWindow();
-		return true;
+		}
 	}
-};
-
-
-
-
-//main entry point for this application, this is a wxWixgets implementation. The macro expands to the correct entry point for each platform. 
-//On Windows it expands to int WinMain(){} It calls the Oninit Function defined in the class specified
-wxIMPLEMENT_APP(Viewer);
+	return 0;
+}

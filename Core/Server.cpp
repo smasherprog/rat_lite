@@ -80,7 +80,7 @@ namespace SL {
 
 SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Network::IUserNetworkDriver* parent)
 {
-	wxInitAllImageHandlers();
+
 	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }
 

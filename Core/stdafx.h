@@ -10,11 +10,9 @@
 #define NOMINMAX 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
-
-
 #endif
 
-#include <boost/asio.hpp>
+
 #include <thread>
 #include <memory>
 #include <atomic>
@@ -27,14 +25,8 @@
 #include <algorithm>
 #include <iostream>
 #include <chrono>
+#include <string>
 
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
-#include "wx/platform.h"
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
 
 
 // TODO: reference additional headers your program requires here

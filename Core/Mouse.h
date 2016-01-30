@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include "Shapes.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -8,8 +9,6 @@ namespace SL {
 		}
 		namespace Capturing {
 	
-			struct MousePoint { int x, y; };
-			MousePoint GetMousePosition();
 			const std::shared_ptr<Utilities::Image> CaptureMouse();
 		}
 	}

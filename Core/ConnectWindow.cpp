@@ -1,57 +1,78 @@
 #include "stdafx.h"
 #include "ConnectWindow.h"
 #include "MainWindow.h"
+#include <FL\Fl.H>
+#include <FL\Fl_Window.H>
+#include <FL\Fl_Input.H>
+#include <FL\Fl_Button.H>
+#include "TCPSocket.h"
+#include <FL/fl_ask.H>
+
+
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
-			class ConnectWindowImpl : public wxFrame
-			{
-				wxScrolledWindow* _MainWindow;
+			class ConnectWindowImpl {
 			public:
-				ConnectWindowImpl()
-					: wxFrame(NULL, wxID_ANY, "Connect to host", wxPoint(wxID_ANY, wxID_ANY), wxSize(340, 150))
-				{
-					auto panel = new wxPanel(this, wxID_ANY);
-
-					auto vbox = new wxBoxSizer(wxVERTICAL);
-					auto hbox1 = new wxBoxSizer(wxHORIZONTAL);
-					auto m_serverLabel = new wxStaticText(panel, wxID_ANY, wxT("Server: "));
-					hbox1->Add(m_serverLabel, 0);
-
-					m_serverEntry = new wxTextCtrl(panel, wxID_ANY);
-					hbox1->Add(m_serverEntry, 1);
-					vbox->Add(hbox1, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 10);
+				Fl_Window* cWindow = nullptr;
+				Fl_Input* bInput = nullptr;
+				Fl_Button* connectbtn = nullptr;
+				std::string Host, Port;
+				std::unique_ptr<MainWindow> _MainWindow;
+				ConnectWindowImpl() {
 
 
-					wxBoxSizer *hbox3 = new wxBoxSizer(wxHORIZONTAL);
-					auto newid = wxWindow::NewControlId();
-					auto m_buttonLogin = new wxButton(panel, newid, wxT("Connect"));
-					hbox3->Add(m_buttonLogin);
-					Connect(newid, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(SL::Remote_Access_Library::UI::ConnectWindowImpl::OnConnect));
-
-					auto m_buttonQuit = new wxButton(panel, wxID_EXIT, ("Quit"));
-					hbox3->Add(m_buttonQuit);
-					vbox->Add(hbox3, 0, wxALIGN_RIGHT | wxTOP | wxRIGHT | wxBOTTOM, 10);
-
-					panel->SetSizer(vbox);
-					Centre();
 
 				}
-				virtual ~ConnectWindowImpl() {
-					//THE WXWIDGETS LIBRARY TAKES CARE OF DELETING WINDOWS... THATS WHY THERE IS NO DELETE !!!
-				}
 
-				void OnConnect(wxCommandEvent & event)
-				{
-					if (m_serverEntry->IsEmpty()) wxMessageBox(wxT("Server must not be emmpty!"), wxT("Warning!"), wxICON_WARNING);
-					else {
-						//THE WXWIDGETS LIBRARY TAKES CARE OF DELETING WINDOWS... THATS WHY THERE IS NO DELETE !!!
-						_MainWindow = CreateMainWindow(this, "RDP Window", m_serverEntry->GetValue().c_str(), "6000");
+				static void Failed_to_reach_host(void* userdata) {
+					auto ptr = ((ConnectWindowImpl*)userdata);
+					std::string msg = std::string(ptr->bInput->value()) + std::string(" could not be resolved");
+					fl_alert(msg.c_str());
+					ptr->ActivateWidgets();
+				}
+				static void DoConnect(void* userdata) {
+					auto ptr = ((ConnectWindowImpl*)userdata);
+					ptr->ActivateWidgets();
+					ptr->_MainWindow = std::make_unique<MainWindow>(ptr->Host.c_str(), ptr->Port.c_str() );
+				}
+				static void try_connect(std::string host, ConnectWindowImpl* ptr) {
+					auto portspecified = host.find_last_of(':');
+					ptr->Port = "6000";
+					if (portspecified != host.npos) {
+						ptr->Port = host.substr(portspecified + 1, host.size() - (portspecified - 1));
+						ptr->Host = host.substr(0, portspecified);
 					}
+					Fl::awake(DoConnect, ptr);
 				}
 
-				wxTextCtrl* m_serverEntry;
+				void ActivateWidgets() {
+					bInput->activate();
+					connectbtn->activate();
+					connectbtn->label("Connect");
+				}
+				static void try_connect_frm(Fl_Widget* o, void* userdata) {
+					auto ptr = ((ConnectWindowImpl*)userdata);
+					std::string host = ptr->bInput->value();
+					ptr->connectbtn->label("Connecting . . .");
+					ptr->bInput->deactivate();
+					ptr->connectbtn->deactivate();
+					std::thread th([host, ptr]() { try_connect(host, ptr); });
+					th.detach();
+				}
+
+				void Init() {
+
+					cWindow = new Fl_Window(400, 420, 300, 50, "Connect to Host");
+					bInput = new Fl_Input(50, 0, 150, 30, "Host: ");
+					//bInput->callback(try_connect_frm, this);
+					connectbtn = new Fl_Button(200, 0, 80, 30, "Connect");
+					connectbtn->callback(try_connect_frm, this);
+					cWindow->end();
+					cWindow->show();
+
+				}
 
 			};
 
@@ -59,8 +80,17 @@ namespace SL {
 	}
 }
 
+
 SL::Remote_Access_Library::UI::ConnectWindow::ConnectWindow()
 {
-	auto impl = new ConnectWindowImpl();
-	impl->Show();
+	_ConnectWindowImpl = new ConnectWindowImpl();
+
+}
+SL::Remote_Access_Library::UI::ConnectWindow::~ConnectWindow()
+{
+	delete _ConnectWindowImpl;
+}
+void SL::Remote_Access_Library::UI::ConnectWindow::Init()
+{
+	if (_ConnectWindowImpl) _ConnectWindowImpl->Init();
 }

@@ -1,18 +1,16 @@
 #pragma once
-#include <memory>
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
-
-			class ConnectWindow 
-			{
+			class ConnectWindowImpl;
+			class ConnectWindow {
+				ConnectWindowImpl* _ConnectWindowImpl = nullptr;
 			public:
 				ConnectWindow();
-	
+				~ConnectWindow();
+				void Init();
 			};
-
-
 		}
 	}
 }

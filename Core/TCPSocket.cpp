@@ -4,6 +4,7 @@
 #include "Packet.h"
 #include "zstd.h"
 #include "ThreadPool.h"
+#include <boost/asio.hpp>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -14,7 +15,7 @@ namespace SL {
 				boost::asio::io_service io_service;
 				Utilities::ThreadPool _ThreadPool;
 
-				IO_Runner() :work(io_service), _ThreadPool(1) {
+				IO_Runner() :work(io_service), _ThreadPool(1) { //MUST BE 1, otherwise calls can be interleaved when sendiing and receiving
 					io_servicethread = std::thread([this]() {
 						std::cout << "Starting io_service for Connecto Factory" << std::endl;
 						io_service.run();
@@ -120,9 +121,17 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Packet> compressPacket(SL::R
 	header.PayloadLen = ZSTD_compressBound(pack.header()->PayloadLen);
 	header.Packet_Type = pack.header()->Packet_Type;
 	auto p = SL::Remote_Access_Library::Network::Packet::CreatePacket(header);
-	p->header()->PayloadLen = static_cast<unsigned int>(ZSTD_compress(p->data(), header.PayloadLen, pack.data(), pack.header()->PayloadLen, compressionlevel));
+
+
+	auto start = std::chrono::steady_clock::now();
+	p->header()->PayloadLen = static_cast<unsigned int>(ZSTD_compress(p->data(), header.PayloadLen, pack.data(), pack.header()->PayloadLen, 3));
+	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+	std::cout << "It took " << elapsed.count() << " milliseconds compare run compress " << p->header()->PayloadLen << std::endl;
+
+
 
 	//assert(p->header()->PayloadLen < 1024 * 1024 * 48);//sanitfy check for packet sizes
+
 	return p;
 }
 
@@ -158,19 +167,15 @@ std::shared_ptr<SL::Remote_Access_Library::Network::ISocket> SL::Remote_Access_L
 }
 
 
-
-
 void SL::Remote_Access_Library::Network::TCPSocket::send(std::shared_ptr<Packet>& pack)
 {
 	auto self(shared_from_this());
 
 	_SocketImpl->_ThreadPool.Enqueue([this, self, pack]() {
-
 		_SocketImpl->SocketStats.TotalPacketSent += 1;
 		_SocketImpl->SocketStats.TotalBytesSent += pack->header()->PayloadLen;
 		auto compack = compressPacket(*pack, 1);
 		_SocketImpl->SocketStats.NetworkBytesSent += compack->header()->PayloadLen;
-
 		_SocketImpl->io_service.post([this, self, compack]()
 		{
 			_SocketImpl->_OutgoingPackets.push_back(compack);
@@ -218,7 +223,8 @@ void SL::Remote_Access_Library::Network::TCPSocket::connect(const char * host, c
 			{
 				if (!_SocketImpl->socket.is_open()) return;
 
-				if (!ec && !_SocketImpl->Closed){
+				if (!ec && !_SocketImpl->Closed) {
+
 					_SocketImpl->NetworkEvents->OnConnect(self);
 					Read();
 				}
@@ -244,6 +250,7 @@ void SL::Remote_Access_Library::Network::TCPSocket::Read() {
 			boost::asio::async_read(_SocketImpl->socket, boost::asio::buffer(p, size), [self, this](boost::system::error_code ec, std::size_t len/*length*/)
 			{
 				if (!ec && !_SocketImpl->Closed) {
+		
 					assert(len == _SocketImpl->get_BufferSize());
 
 					_SocketImpl->SocketStats.TotalPacketReceived += 1;

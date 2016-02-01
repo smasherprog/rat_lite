@@ -22,7 +22,7 @@ namespace SL {
 			class ThreadPool {
 			public:
 				// the constructor just launches some amount of workers
-				ThreadPool(int threads_n = 2) : stop(false)
+				ThreadPool(int threads_n = 1) : stop(false)
 				{
 					this->workers.reserve(threads_n);
 					for (; threads_n; --threads_n)

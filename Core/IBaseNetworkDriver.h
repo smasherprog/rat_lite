@@ -12,8 +12,8 @@ namespace SL {
 				IBaseNetworkDriver() {}
 				virtual ~IBaseNetworkDriver() {}
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) = 0;
-				virtual void OnReceive(const ISocket* socket, std::shared_ptr<Packet>& packet) = 0;
-				virtual void OnClose(const ISocket* socket) = 0;
+				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet) = 0;
+				virtual void OnClose(const std::shared_ptr<ISocket>& socket) = 0;
 			};
 		}
 	}

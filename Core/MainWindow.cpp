@@ -60,12 +60,12 @@ namespace SL {
 					std::cout << "MainWindowImpl::OnConnect " << std::endl;
 				}
 
-				virtual void OnReceive(const Network::ISocket * socket, std::shared_ptr<Network::Packet>& packet) override
+				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet) override
 				{
 
 				}
 
-				virtual void OnClose(const Network::ISocket * socket) override
+				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) override
 				{
 					if (!_BeingClosed) Fl::delete_widget(this);
 					_BeingClosed = true;
@@ -74,7 +74,7 @@ namespace SL {
 				static void awakenredraw(void* data) {
 					((MainWindowImpl*)data)->redraw();
 				}
-				virtual void OnReceive_Image(const Network::ISocket * socket, Utilities::Rect * rect, std::shared_ptr<Utilities::Image>& img) override
+				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect * rect, std::shared_ptr<Utilities::Image>& img) override
 				{
 					if (!_MyCanvas->_Image) {
 						_MyCanvas->_Image = img;

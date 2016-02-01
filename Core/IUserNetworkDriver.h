@@ -11,9 +11,9 @@ namespace SL {
 			public:
 				IUserNetworkDriver() {}
 				virtual ~IUserNetworkDriver() {}
-				virtual void OnConnect(const std::weak_ptr<ISocket>& socket) = 0;
-				virtual void OnReceive(const ISocket* socket, Packet& packet) = 0;
-				virtual void OnClose(const ISocket* socket) = 0;
+				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) = 0;
+				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, Packet& packet) = 0;
+				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) = 0;
 			};
 		}
 	}

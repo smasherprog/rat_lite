@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <functional>
 #include "SocketStats.h"
 
 namespace SL {
@@ -10,7 +9,6 @@ namespace SL {
 			//this class is async so all calls return immediately and are later executed
 			class ISocket : public std::enable_shared_from_this<ISocket> {
 			public:
-				
 
 				virtual ~ISocket() { }
 				//adds the data to the internal queue, does not block and returns immediately.
@@ -20,7 +18,7 @@ namespace SL {
 
 				//Get the statstics for this socket
 				virtual SocketStats get_SocketStats() const = 0;
-			
+
 
 			};
 		}

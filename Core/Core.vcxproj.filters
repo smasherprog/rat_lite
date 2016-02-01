@@ -16,6 +16,9 @@
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="WEb">
+      <UniqueIdentifier>{7279f241-ad1e-4f43-b7f4-eb750c7c471b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
@@ -88,6 +91,21 @@
     <ClInclude Include="Server_Config.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="IO_Runner.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPListener.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationDirectory.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpServer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpSocket.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Packet.cpp">
@@ -127,8 +145,25 @@
     <ClCompile Include="ClientNetworkDriver.cpp">
       <Filter>Network</Filter>
     </ClCompile>
+    <ClCompile Include="IO_Runner.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPListener.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="ApplicationDirectory.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpServer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpSocket.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="index.html">
+      <Filter>WEb</Filter>
+    </None>
   </ItemGroup>
 </Project>

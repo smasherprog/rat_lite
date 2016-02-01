@@ -6,6 +6,7 @@
 #include "IClientDriver.h"
 #include "Image.h"
 #include "Packet.h"
+#include "IO_Runner.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -13,18 +14,21 @@ namespace SL {
 
 			class ClientNetworkDriverImpl : public IBaseNetworkDriver {
 				IClientDriver* _IClientDriver;
-				std::shared_ptr<Network::ISocket> _Socket;
+				std::shared_ptr<Network::TCPSocket> _Socket;
+				std::unique_ptr<IO_Runner> _IO_Runner;
 
 			public:
-				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r) {
-					_Socket = SL::Remote_Access_Library::Network::TCPSocket::ConnectTo(dst_host, dst_port, this);
+				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _IO_Runner(std::make_unique<IO_Runner>()){
+				
+					_Socket = SL::Remote_Access_Library::Network::TCPSocket::Create(this, dst_host, dst_port, _IO_Runner->get_io_service());
+
 				}
 
 				virtual ~ClientNetworkDriverImpl() { _Socket->close(); }
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnConnect(socket); }
-				virtual void OnClose(const ISocket* socket) override { _IClientDriver->OnClose(socket); }
+				virtual void OnClose(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnClose(socket); }
 
-				virtual void OnReceive(const ISocket* socket, std::shared_ptr<Packet>& p) override {
+				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override {
 
 					switch (p->header()->Packet_Type) {
 					case static_cast<unsigned int>(Commands::PACKET_TYPES::IMAGEDIF) :
@@ -36,7 +40,7 @@ namespace SL {
 					}
 
 				}
-				void ImageDif(const ISocket* socket, std::shared_ptr<Packet>& p) {
+				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->data();
 					auto img = Utilities::Image::CreateImage(imgrect->Height, imgrect->Width, p->data() + sizeof(Utilities::Rect), p->header()->PayloadLen - sizeof(Utilities::Rect));
 					_IClientDriver->OnReceive_Image(socket, imgrect, img);

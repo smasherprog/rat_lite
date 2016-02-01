@@ -35,12 +35,12 @@ namespace SL {
 				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
-			virtual void OnClose(const Network::ISocket* socket)override {
+			virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket)override {
 
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 			}
 
-			virtual void OnReceive(const Network::ISocket* socket, std::shared_ptr<Network::Packet>& packet)override {
+			virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
 
 			}
 

@@ -10,6 +10,9 @@ Cross-platform
 <li>
 Performance 
 </li>
+<li>
+Extendable 
+</li>
 </ul>
 <h3>How to get started:</h3>
 <ul>

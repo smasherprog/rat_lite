@@ -7,6 +7,7 @@
 #include "Image.h"
 #include "Packet.h"
 #include "IO_Runner.h"
+#include "turbojpeg.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -16,7 +17,7 @@ namespace SL {
 				IClientDriver* _IClientDriver;
 				std::shared_ptr<Network::TCPSocket> _Socket;
 				std::unique_ptr<IO_Runner> _IO_Runner;
-
+		
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _IO_Runner(std::make_unique<IO_Runner>()){
 				
@@ -40,9 +41,28 @@ namespace SL {
 					}
 
 				}
+
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->data();
-					auto img = Utilities::Image::CreateImage(imgrect->Height, imgrect->Width, p->data() + sizeof(Utilities::Rect), p->header()->PayloadLen - sizeof(Utilities::Rect));
+					auto compfree = [](void* handle) {tjDestroy(handle); };
+					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
+				
+					int jpegSubsamp = 0;
+					auto outwidth = 0;
+					auto outheight = 0;
+		
+					auto src = (unsigned char*)(p->data() + sizeof(Utilities::Rect));
+
+					if (tjDecompressHeader2(_jpegDecompressor.get(), src, p->header()->PayloadLen - sizeof(Utilities::Rect), &outwidth, &outheight, &jpegSubsamp) == -1) {
+						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+					}
+					auto img = Utilities::Image::CreateImage(outheight, outwidth);
+
+					if (tjDecompress2(_jpegDecompressor.get(), src, p->header()->PayloadLen - sizeof(Utilities::Rect), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_BGRX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+					}
+
+
 					_IClientDriver->OnReceive_Image(socket, imgrect, img);
 
 				}

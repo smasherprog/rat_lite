@@ -9,12 +9,12 @@ namespace SL {
 				class HttpServerImpl;
 			}
 			class IBaseNetworkDriver;
-			class HttpServer {
+			class HttpListener {
 				INTERNAL::HttpServerImpl* _HttpServerImpl;
 			public:
 
-				HttpServer(IBaseNetworkDriver* netevent, void* io_service);
-				~HttpServer();
+				HttpListener(IBaseNetworkDriver* netevent, void* io_service);
+				~HttpListener();
 				void Start();
 				void Stop();
 

@@ -7,20 +7,37 @@
 
 
 #ifdef _WIN32
+
+
 #define NOMINMAX 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
 #if defined _DEBUG || defined DEBUG
+#if _DLL
 #pragma comment(lib, "libeay32MDd")
 #pragma comment(lib,"ssleay32MDd")
+#pragma comment(lib,"turbojpeg")
+#else 
+#pragma comment(lib, "libeay32MTd")
+#pragma comment(lib,"ssleay32MTd")
+#pragma comment(lib,"turbojpeg-static")
+#endif
+
 #else
-#pragma comment(lib,"libeay32MD")
+#if _DLL
+#pragma comment(lib, "libeay32MD")
 #pragma comment(lib,"ssleay32MD")
+#pragma comment(lib,"turbojpeg")
+#else 
+#pragma comment(lib, "libeay32MT")
+#pragma comment(lib,"ssleay32MT")
+#pragma comment(lib,"turbojpeg-static")
+#endif
 #endif
 
 #endif
 
-
+#include <stdio.h>
 #include <thread>
 #include <memory>
 #include <atomic>

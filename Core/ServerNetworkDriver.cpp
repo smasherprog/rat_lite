@@ -10,18 +10,19 @@
 #include "IO_Runner.h"
 #include "ThreadPool.h"
 #include "TCPListener.h"
-#include "HttpServer.h"
+#include "HttpListener.h"
+#include "turbojpeg.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
-	
+
 
 				std::shared_ptr<Network::TCPListener> _TCPListener;
 				std::shared_ptr<Network::WebSocketListener> _WebSocketListener;
-				std::unique_ptr<HttpServer> _HttptListener;
+				std::unique_ptr<HttpListener> _HttptListener;
 
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				Utilities::ThreadPool _SendPool, _ReceivePool;
@@ -30,6 +31,7 @@ namespace SL {
 				std::vector<std::shared_ptr<Network::ISocket>> _Clients;
 				std::mutex _ClientsLock;
 				Server_Config _Config;
+				std::vector<char> _CompressBuffer;
 
 			public:
 				ServerNetworkDriverImpl(Server_Config& config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
@@ -62,11 +64,11 @@ namespace SL {
 				}
 
 				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img) {
-					
-					socket->send(GenerateDifs(r, img));
+
+					socket->send(ExtractImageRect(r, img));
 				}
 				void Send(Utilities::Rect& r, const Utilities::Image & img) {
-					SendToAll(GenerateDifs(r, img));
+					SendToAll(ExtractImageRect(r, img));
 				}
 
 				void SendToAll(std::shared_ptr<Network::Packet>& packet) {
@@ -84,20 +86,20 @@ namespace SL {
 
 				void Start() {
 					Stop();
-					
+
 					_IO_Runner = std::make_unique<IO_Runner>();
 					_TCPListener = Network::TCPListener::Create(_Config.TCPListenPort, _IO_Runner->get_io_service(), [=](void* socket) {
 						SL::Remote_Access_Library::Network::TCPSocket::Create(this, socket);
 					});
 
 					if (_Config.WebSocketListenPort > 0) {
-						_HttptListener = std::make_unique<HttpServer>(this, _IO_Runner->get_io_service());
-					//	_WebSocketListener = Network::WebSocketListener::CreateListener(_Config.WebSocketListenPort, this);
+						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service());
+						//	_WebSocketListener = Network::WebSocketListener::CreateListener(_Config.WebSocketListenPort, this);
 					}
 
 
 					_HttptListener->Start();
-					_TCPListener->Start(); 
+					_TCPListener->Start();
 					//_WebSocketListener->Start();
 					int k = 0;
 				}
@@ -111,22 +113,42 @@ namespace SL {
 					_TCPListener.reset();//destroy the listener
 					_WebSocketListener.reset();
 				}
-				std::shared_ptr<Packet> GenerateDifs(SL::Remote_Access_Library::Utilities::Rect& r, const SL::Remote_Access_Library::Utilities::Image & img) {
-					PacketHeader header;
-					header.Packet_Type = static_cast<unsigned int>(Commands::PACKET_TYPES::IMAGEDIF);
-					header.PayloadLen = sizeof(Utilities::Rect) + (r.Width * r.Height* img.Stride());
-					auto p = Packet::CreatePacket(header);
-					auto start = p->data();
-					memcpy(start, &r, sizeof(Utilities::Rect));
-					start += sizeof(Utilities::Rect);
+				void ExtractImageRect(Utilities::Rect r, const Utilities::Image & img, std::vector<char>& outbuffer) {
 
+					auto srcbuf = outbuffer.data();
 					for (auto row = r.Origin.Y; row < r.bottom(); row++) {
 
 						auto startcopy = img.data() + (row*img.Stride()*img.Width());//advance rows
 						startcopy += r.Origin.X*img.Stride();//advance columns
-						memcpy(start, startcopy, r.Width*img.Stride());
-						start += r.Width*img.Stride();
+						memcpy(srcbuf, startcopy, r.Width*img.Stride());
+						srcbuf += r.Width*img.Stride();
 					}
+
+				}
+				std::shared_ptr<Packet> ExtractImageRect(SL::Remote_Access_Library::Utilities::Rect& r, const SL::Remote_Access_Library::Utilities::Image & img) {
+					auto compfree = [](void* handle) {tjDestroy(handle); };
+					auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
+					auto set = TJSAMP_420;
+					auto maxsize = tjBufSize(r.Width, r.Height, TJSAMP_420);
+					auto _jpegSize = maxsize;
+
+					_CompressBuffer.reserve(r.Width* r.Height*Utilities::Image::DefaultStride());
+					ExtractImageRect(r, img, _CompressBuffer);
+
+					auto srcbuf = (unsigned char*)_CompressBuffer.data();
+					PacketHeader header;
+					header.Packet_Type = static_cast<unsigned int>(Commands::PACKET_TYPES::IMAGEDIF);
+					header.PayloadLen = sizeof(Utilities::Rect) + maxsize;
+					auto p = Packet::CreatePacket(header);
+					auto dst = (unsigned char*)p->data();
+					memcpy(dst, &r, sizeof(Utilities::Rect));
+					dst += sizeof(Utilities::Rect);
+
+
+					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_BGRX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+						std::cout<<"Err msg "<< tjGetErrorStr()<<std::endl;
+					}
+					p->header()->PayloadLen = sizeof(Utilities::Rect) + _jpegSize;//adjust the correct size
 					return p;
 				}
 			};

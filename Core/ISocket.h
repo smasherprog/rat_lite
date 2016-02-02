@@ -18,8 +18,7 @@ namespace SL {
 
 				//Get the statstics for this socket
 				virtual SocketStats get_SocketStats() const = 0;
-
-
+		
 			};
 		}
 	}

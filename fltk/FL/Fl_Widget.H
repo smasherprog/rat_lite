@@ -573,7 +573,7 @@ public:
       \param[in] cb new callback
       \param[in] p user data
    */
-  void callback(Fl_Callback1*cb, long p=0) {callback_=(Fl_Callback*)cb; user_data_=(void*)p;}
+  void callback(Fl_Callback1*cb, size_t p=0) {callback_=(Fl_Callback*)cb; user_data_=(void*)p;}
 
   /** Gets the user data for this widget.
       Gets the current user data (void *) argument that is passed to the callback function.
@@ -595,7 +595,7 @@ public:
       \todo The user data value must be implemented using \em intptr_t or similar
       to avoid 64-bit machine incompatibilities.
    */
-  void argument(long v) {user_data_ = (void*)v;}
+  void argument(size_t v) {user_data_ = (void*)v;}
 
   /** Returns the conditions under which the callback is called.
 
@@ -845,7 +845,7 @@ public:
       \param[in] arg call the callback with \p arg as the user data argument
       \see callback()
    */
-  void do_callback(Fl_Widget* o,long arg) {do_callback(o,(void*)arg);}
+  void do_callback(Fl_Widget* o,size_t arg) {do_callback(o,(void*)arg);}
 
   // Causes a widget to invoke its callback function with arbitrary arguments.
   // Documentation and implementation in Fl_Widget.cxx

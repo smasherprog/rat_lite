@@ -100,10 +100,10 @@
     <ClInclude Include="ApplicationDirectory.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="HttpServer.h">
+    <ClInclude Include="HttpSocket.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="HttpSocket.h">
+    <ClInclude Include="HttpListener.h">
       <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
@@ -154,10 +154,10 @@
     <ClCompile Include="ApplicationDirectory.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="HttpServer.cpp">
+    <ClCompile Include="HttpSocket.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="HttpSocket.cpp">
+    <ClCompile Include="HttpListener.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

@@ -70,25 +70,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo64\lib;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)zstd\lib\;c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo64\lib;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIBWIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
@@ -115,7 +115,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIBWIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
@@ -134,7 +134,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -170,7 +170,7 @@
   <ItemGroup>
     <ClInclude Include="ApplicationDirectory.h" />
     <ClInclude Include="ConnectWindow.h" />
-    <ClInclude Include="HttpServer.h" />
+    <ClInclude Include="HttpListener.h" />
     <ClInclude Include="HttpSocket.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
     <ClInclude Include="Commands.h" />
@@ -202,7 +202,7 @@
     <ClCompile Include="ApplicationDirectory.cpp" />
     <ClCompile Include="ClientNetworkDriver.cpp" />
     <ClCompile Include="ConnectWindow.cpp" />
-    <ClCompile Include="HttpServer.cpp" />
+    <ClCompile Include="HttpListener.cpp" />
     <ClCompile Include="HttpSocket.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IO_Runner.cpp" />

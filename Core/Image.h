@@ -26,7 +26,9 @@ namespace SL {
 				~Image();
 			
 				//pixel stride
-				unsigned int Stride() const { return 4; }
+
+				static unsigned int DefaultStride() { return 4; }
+				unsigned int Stride() const { return DefaultStride(); }
 				char* data() const { return _Data.get(); }
 				//size of the image in bytes width* height * stride
 				size_t size() const { return Size; }

@@ -129,7 +129,7 @@
       <PreprocessorDefinitions>ZSTD_DLL_EXPORT=0;ZSTD_HEAPMODE=0;ZSTD_LEGACY_SUPPORT=0;WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <EnablePREfast>true</EnablePREfast>
@@ -150,7 +150,7 @@
       <PreprocessorDefinitions>ZSTD_DLL_EXPORT=0;ZSTD_HEAPMODE=0;ZSTD_LEGACY_SUPPORT=0;WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnablePREfast>true</EnablePREfast>
       <AdditionalOptions>/analyze:stacksize25000 %(AdditionalOptions)</AdditionalOptions>
@@ -171,7 +171,7 @@
       <PreprocessorDefinitions>ZSTD_DLL_EXPORT=0;ZSTD_HEAPMODE=0;ZSTD_LEGACY_SUPPORT=0;WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
       <AdditionalOptions>/analyze:stacksize25000 %(AdditionalOptions)</AdditionalOptions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>

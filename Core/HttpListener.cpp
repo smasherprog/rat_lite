@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "HttpServer.h"
+#include "HttpListener.h"
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include "ApplicationDirectory.h"
@@ -55,22 +55,22 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::HttpServer::HttpServer(IBaseNetworkDriver* netevent, void *io_service)
+SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, void *io_service)
 {
 	_HttpServerImpl = new INTERNAL::HttpServerImpl(netevent, io_service);
 }
 
-SL::Remote_Access_Library::Network::HttpServer::~HttpServer()
+SL::Remote_Access_Library::Network::HttpListener::~HttpListener()
 {
 	delete _HttpServerImpl;
 }
 
-void SL::Remote_Access_Library::Network::HttpServer::Start()
+void SL::Remote_Access_Library::Network::HttpListener::Start()
 {
 	_HttpServerImpl->Start();
 }
 
-void SL::Remote_Access_Library::Network::HttpServer::Stop()
+void SL::Remote_Access_Library::Network::HttpListener::Stop()
 {
 	_HttpServerImpl->Stop();
 }

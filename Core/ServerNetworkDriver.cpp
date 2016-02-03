@@ -89,7 +89,7 @@ namespace SL {
 
 					_IO_Runner = std::make_unique<IO_Runner>();
 					_TCPListener = Network::TCPListener::Create(_Config.TCPListenPort, _IO_Runner->get_io_service(), [=](void* socket) {
-						SL::Remote_Access_Library::Network::TCPSocket::Create(this, socket);
+						std::make_shared<TCPSocket>(this, socket)->connect(nullptr, nullptr);
 					});
 
 					if (_Config.WebSocketListenPort > 0) {
@@ -166,12 +166,12 @@ SL::Remote_Access_Library::Network::ServerNetworkDriver::~ServerNetworkDriver()
 }
 
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::StartNetworkProcessing()
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::Start()
 {
 	_ServerNetworkDriverImpl->Start();
 }
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::StopNetworkProcessing()
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::Stop()
 {
 	_ServerNetworkDriverImpl->Stop();
 }

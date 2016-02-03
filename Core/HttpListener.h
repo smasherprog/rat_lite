@@ -1,7 +1,7 @@
 #pragma once
 
 
-
+namespace boost { namespace asio { class io_service; } }
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -13,11 +13,13 @@ namespace SL {
 				INTERNAL::HttpServerImpl* _HttpServerImpl;
 			public:
 
-				HttpListener(IBaseNetworkDriver* netevent, void* io_service);
+				HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short listenport=8080);	
+				HttpListener(const HttpListener&) = delete;
+				HttpListener& operator=(const HttpListener&) = delete;
 				~HttpListener();
 				void Start();
 				void Stop();
-
+			
 			};
 		}
 	}

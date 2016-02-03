@@ -17,8 +17,11 @@ namespace SL {
 				ClientNetworkDriver(IClientDriver* r, const char* dst_host, const char* dst_port);
 				virtual ~ClientNetworkDriver();
 
-				//call this to ensure all network processing have stopped for this instance. This is good pratice before destroying the object to prevent callbacks from firing 
-				void Close();
+				//after creating ServerNetworkDriver, Start() must be called to start the network processessing
+				void Start();
+				//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
+				void Stop();
+
 			};
 		}
 	}

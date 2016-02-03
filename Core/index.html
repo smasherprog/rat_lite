@@ -1,8 +1,50 @@
-<html>
-    <head>
-        <title>Simple-Web-Server html-file</title>
-    </head>
-    <body>
-        This is the content of index.html
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Simple-Web-Server html-file</title>
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+</head>
+
+<body>
+    <script>
+        $(document).ready(function () {
+            if ("WebSocket" in window) {
+
+                var canvas = document.getElementById("canvas");
+                var ctx = canvas.getContext("2d");
+                // Let us open a web socket
+                var ws = new WebSocket("ws://localhost:9998/echo");
+
+                ws.onopen = function () {
+
+                    $('#logsection').append('Socket Opened');
+        
+                };
+
+                ws.onmessage = function (evt) {
+                    var received_msg = evt.data;
+                    $('#logsection').append(received_msg + ' bytes of Data Received');
+              
+                };
+
+                ws.onclose = function () {
+                    $('#logsection').append('Connection is closed...');
+                };
+            }
+
+            else {
+                // The browser doesn't support WebSocket
+                alert("WebSocket NOT supported by your Browser!");
+            }
+        });
+
+    </script>
+
+    <canvas></canvas>
+
+    
+    <div id="logsection">
+
+    </div>
+</body>
 </html>

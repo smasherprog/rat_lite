@@ -5,7 +5,6 @@
 #include "Image.h"
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
-#include "IUserNetworkDriver.h"
 
 using namespace std::literals;
 
@@ -19,10 +18,10 @@ namespace SL {
 		public:
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
-			Network::IUserNetworkDriver* _IUserNetworkDriver;
+			Network::IBaseNetworkDriver* _IUserNetworkDriver;
 			bool _Keepgoing;
 
-			ServerImpl(Network::Server_Config& config, Network::IUserNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
+			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
 			{
 				_Keepgoing = true;
 			}
@@ -64,12 +63,12 @@ namespace SL {
 			}
 
 			int Run() {
-				_ServerNetworkDriver.StartNetworkProcessing();
+				_ServerNetworkDriver.Start();
 				while (_Keepgoing) {
 					ProcessScreen();
 					std::this_thread::sleep_for(100ms);
 				}
-				_ServerNetworkDriver.StopNetworkProcessing();
+				_ServerNetworkDriver.Stop();
 				return 0;
 			}
 
@@ -78,9 +77,8 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Network::IUserNetworkDriver* parent)
+SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Network::IBaseNetworkDriver* parent)
 {
-
 	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }
 

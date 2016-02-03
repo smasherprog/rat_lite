@@ -29,6 +29,7 @@ namespace SL {
 			};
 			class MainWindowImpl : public Fl_Double_Window, public Network::IClientDriver
 			{
+			public:
 				MyCanvas* _MyCanvas;
 				//Fl_RGB_Image* _Fl_RGB_Image = nullptr;
 				Fl_Scroll* _Fl_Scroll = nullptr;
@@ -39,7 +40,7 @@ namespace SL {
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				SL::Remote_Access_Library::Network::SocketStats LastStats;
 				bool _BeingClosed = false;
-			public:
+
 
 				MainWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
@@ -53,7 +54,7 @@ namespace SL {
 				}
 				virtual ~MainWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;
-					_ClientNetworkDriver.Close();
+					_ClientNetworkDriver.Stop();
 				}
 				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override
 				{
@@ -83,9 +84,9 @@ namespace SL {
 					else {
 						Utilities::Image::Copy(*img, Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width()), *_MyCanvas->_Image, *rect);
 					}
-			
+
 					Fl::awake(awakenredraw, this);
-					
+
 					/*			if (std::chrno::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 									_NetworkStatsTimer = std::chrono::steady_clock::now();
 									auto stats = socket->get_SocketStats();
@@ -106,6 +107,7 @@ namespace SL {
 
 SL::Remote_Access_Library::UI::MainWindow::MainWindow(const char * dst_host, const char * dst_port) {
 	_MainWindowImpl = new MainWindowImpl(dst_host, dst_port);
+	_MainWindowImpl->_ClientNetworkDriver.Start();
 }
 
 SL::Remote_Access_Library::UI::MainWindow::~MainWindow() {

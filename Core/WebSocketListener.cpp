@@ -1,52 +1,68 @@
 #include "stdafx.h"
 #include "WebSocketListener.h"
-
-#include <memory>
+#include "TCPListener.h"
+#include "WebSocket.h"
+#include "IBaseNetworkDriver.h"
+#include "Packet.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 			namespace INTERNAL {
-				class WebSocketListinerImpl {
-			
-					Network::IBaseNetworkDriver * _IBaseNetworkDriver;
+				class WebSocketListinerImpl : public IBaseNetworkDriver {
 				public:
-					WebSocketListinerImpl(unsigned short port, Network::IBaseNetworkDriver *n) : _IBaseNetworkDriver(n) {
-
+					std::shared_ptr<TCPListener> _TCPListener;
+					IBaseNetworkDriver* _IBaseNetworkDriver;
+					boost::asio::io_service& _io_service;
+					unsigned short _Listenport;
+					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short port) : _io_service(io_service), _IBaseNetworkDriver(netevent), _Listenport(port) { }
+					virtual ~WebSocketListinerImpl() {
+						Stop();
 					}
-					~WebSocketListinerImpl() {
-					
-					}
 
+					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
+						std::cout << "websocket OnConnect" << std::endl;
+					}
+					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
+						std::cout << "websocket OnReceive" << std::endl;
+					}
+					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
+						std::cout << "websocket Close" << std::endl;
+					}
 					void Start() {
-			
-		
+						_TCPListener = TCPListener::Create(_Listenport, _io_service, [this](void* socket) {
+							std::make_shared<WebSocket>(this, socket)->connect(nullptr, nullptr);
+						});
+						_TCPListener->Start();
 					}
+					void Stop() {
+						_TCPListener->Stop();
+					}
+
 				};
 			}
 		}
 	}
 }
-std::shared_ptr<SL::Remote_Access_Library::Network::WebSocketListener> SL::Remote_Access_Library::Network::WebSocketListener::CreateListener(unsigned short port, Network::IBaseNetworkDriver * netevents)
-{
-	return std::make_shared<WebSocketListener>(new INTERNAL::WebSocketListinerImpl(port, netevents));
-}
 
-SL::Remote_Access_Library::Network::WebSocketListener::WebSocketListener(INTERNAL::WebSocketListinerImpl* impl) :_ListinerImpl(impl)
+
+SL::Remote_Access_Library::Network::WebSocketListener::WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short listenport)
 {
+	_WebSocketListinerImpl = new INTERNAL::WebSocketListinerImpl(netevent, io_service, listenport);
 }
 
 SL::Remote_Access_Library::Network::WebSocketListener::~WebSocketListener()
 {
-	Stop();
+	delete _WebSocketListinerImpl;
 }
 
 void SL::Remote_Access_Library::Network::WebSocketListener::Start()
 {
-	if (!_ListinerImpl) _ListinerImpl = new INTERNAL::WebSocketListinerImpl(_ListenPort, _IBaseNetworkDriver);
-	_ListinerImpl->Start();
+	_WebSocketListinerImpl->Start();
 }
+
 void SL::Remote_Access_Library::Network::WebSocketListener::Stop()
 {
-	delete _ListinerImpl;
+	_WebSocketListinerImpl->Stop();
 }
+

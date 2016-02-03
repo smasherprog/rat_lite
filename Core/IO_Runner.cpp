@@ -50,9 +50,9 @@ void SL::Remote_Access_Library::Network::IO_Runner::Stop()
 	delete _IO_RunnerImpl;
 }
 
-void* SL::Remote_Access_Library::Network::IO_Runner::get_io_service()
+boost::asio::io_service& SL::Remote_Access_Library::Network::IO_Runner::get_io_service()
 {
-	return &_IO_RunnerImpl->io_service;
+	return _IO_RunnerImpl->io_service;
 }
 
 

@@ -17,15 +17,24 @@ namespace SL {
 				IClientDriver* _IClientDriver;
 				std::shared_ptr<Network::TCPSocket> _Socket;
 				std::unique_ptr<IO_Runner> _IO_Runner;
-		
+				std::string _dst_host, _dst_port;
 			public:
-				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _IO_Runner(std::make_unique<IO_Runner>()){
-				
-					_Socket = SL::Remote_Access_Library::Network::TCPSocket::Create(this, dst_host, dst_port, _IO_Runner->get_io_service());
+				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r),  _dst_host(dst_host), _dst_port(dst_port) {
 
 				}
-
-				virtual ~ClientNetworkDriverImpl() { _Socket->close(); }
+				void Start() {
+					Stop();
+					_IO_Runner = std::move(std::make_unique<IO_Runner>());
+					_Socket = std::make_shared<TCPSocket>(this, _IO_Runner->get_io_service());
+					_Socket->connect(_dst_host.c_str(), _dst_port.c_str());
+				}
+				void Stop() {
+					if (_Socket) _Socket->close();
+					if (_IO_Runner) _IO_Runner->Stop();
+				}
+				virtual ~ClientNetworkDriverImpl() {
+					Stop();
+				}
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnConnect(socket); }
 				virtual void OnClose(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnClose(socket); }
 
@@ -46,11 +55,11 @@ namespace SL {
 					auto imgrect = (Utilities::Rect*)p->data();
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
-				
+
 					int jpegSubsamp = 0;
 					auto outwidth = 0;
 					auto outheight = 0;
-		
+
 					auto src = (unsigned char*)(p->data() + sizeof(Utilities::Rect));
 
 					if (tjDecompressHeader2(_jpegDecompressor.get(), src, p->header()->PayloadLen - sizeof(Utilities::Rect), &outwidth, &outheight, &jpegSubsamp) == -1) {
@@ -81,10 +90,15 @@ SL::Remote_Access_Library::Network::ClientNetworkDriver::ClientNetworkDriver(ICl
 
 SL::Remote_Access_Library::Network::ClientNetworkDriver::~ClientNetworkDriver()
 {
-	Close();
+	Stop();
 }
 
-void SL::Remote_Access_Library::Network::ClientNetworkDriver::Close()
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::Start()
 {
-	_ClientNetworkDriverImpl.reset();
+	_ClientNetworkDriverImpl->Start();
+}
+
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::Stop()
+{
+	_ClientNetworkDriverImpl->Stop();
 }

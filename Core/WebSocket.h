@@ -1,34 +1,32 @@
 #pragma once
 #include <memory>
-#include <functional>
-#include "ISocket.h"
+#include "TCPSocket.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace INTERNAL {
-			class WebSocketSocketImpl;
-		}
 		namespace Network {
+			namespace INTERNAL {
+				class WebSocketSocketImpl;
+			}
 			class Packet;
 			class IBaseNetworkDriver;
 
 			//this class is async so all calls return immediately and are later executed
-			class WebSocket : public ISocket {
-				std::shared_ptr<INTERNAL::WebSocketSocketImpl> _SocketImpl;
+			class WebSocket : public TCPSocket {
+
 			public:
-
-			
-				WebSocket(std::shared_ptr<INTERNAL::WebSocketSocketImpl>& impl);
-		
+				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
+				WebSocket(IBaseNetworkDriver* netevents, void* socket);
 				virtual ~WebSocket();
-				//adds the data to the internal queue, does not block and returns immediately.
-				virtual void send(std::shared_ptr<Packet>& pack) override;
-				//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
-				virtual void close() override;
-		
-				virtual SocketStats get_SocketStats() const override;
 
-				
+			private:
+				INTERNAL::WebSocketSocketImpl* _WebSocketSocketImpl;
+				virtual void readheader()  override;
+				virtual void readbody() override;
+				virtual void writeheader() override;
+
+				virtual std::shared_ptr<Packet> decompress(PacketHeader& header, char* buffer) override;
+				virtual std::shared_ptr<Packet> compress(std::shared_ptr<Packet>& packet)  override;
 			};
 		}
 	}

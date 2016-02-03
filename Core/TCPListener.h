@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <functional>
+namespace boost { namespace asio { class io_service; } }
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -12,7 +13,7 @@ namespace SL {
 			class TCPListener : public std::enable_shared_from_this<TCPListener> {
 			public:
 				//factory for listener creation
-				static std::shared_ptr<TCPListener> Create(unsigned short port, void* io_service, std::function<void(void*)> onaccept);
+				static std::shared_ptr<TCPListener> Create(unsigned short port, boost::asio::io_service& io_service, std::function<void(void*)> onaccept);
 				//Must use static factory TCPListener::Create to create a listener
 				TCPListener(INTERNAL::Listiner_DataImpl* data);
 				~TCPListener();

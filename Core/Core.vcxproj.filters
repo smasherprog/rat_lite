@@ -16,7 +16,7 @@
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
     </Filter>
-    <Filter Include="WEb">
+    <Filter Include="wwwroot">
       <UniqueIdentifier>{7279f241-ad1e-4f43-b7f4-eb750c7c471b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -81,9 +81,6 @@
     </ClInclude>
     <ClInclude Include="ConnectWindow.h">
       <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="IUserNetworkDriver.h">
-      <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="IClientDriver.h">
       <Filter>Network</Filter>
@@ -163,7 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="index.html">
-      <Filter>WEb</Filter>
+      <Filter>wwwroot</Filter>
     </None>
   </ItemGroup>
 </Project>

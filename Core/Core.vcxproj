@@ -179,7 +179,6 @@
     <ClInclude Include="IO_Runner.h" />
     <ClInclude Include="IServerDriver.h" />
     <ClInclude Include="ISocket.h" />
-    <ClInclude Include="IUserNetworkDriver.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Packet.h" />
@@ -237,6 +236,7 @@
   <ItemGroup>
     <None Include="index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

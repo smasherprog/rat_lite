@@ -49,9 +49,9 @@ void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::TCPListener> 
 	});
 }
 
-std::shared_ptr<SL::Remote_Access_Library::Network::TCPListener> SL::Remote_Access_Library::Network::TCPListener::Create(unsigned short port, void* io_service, std::function<void(void*)> onaccept)
+std::shared_ptr<SL::Remote_Access_Library::Network::TCPListener> SL::Remote_Access_Library::Network::TCPListener::Create(unsigned short port, boost::asio::io_service& io_service, std::function<void(void*)> onaccept)
 {
-	return std::make_shared<TCPListener>(new INTERNAL::Listiner_DataImpl(port, *(boost::asio::io_service*)io_service, onaccept));
+	return std::make_shared<TCPListener>(new INTERNAL::Listiner_DataImpl(port, io_service, onaccept));
 }
 SL::Remote_Access_Library::Network::TCPListener::TCPListener(INTERNAL::Listiner_DataImpl* data) : _Listiner_DataImpl(data), _ListinerImpl(nullptr)
 {

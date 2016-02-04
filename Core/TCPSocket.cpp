@@ -16,7 +16,6 @@ namespace SL {
 				public:
 					std::vector<char> _IncomingBuffer;
 					std::deque<std::shared_ptr<Network::Packet>> _OutgoingPackets;
-					std::shared_ptr<Network::Packet> _WritingPacket;
 
 					boost::asio::ip::tcp::socket socket;
 					Network::IBaseNetworkDriver* NetworkEvents;
@@ -24,15 +23,16 @@ namespace SL {
 					Network::SocketStats SocketStats;
 
 					bool Closed;
+					bool Writing;
 
 					TCPSocketImpl(Network::IBaseNetworkDriver* netevents, boost::asio::ip::tcp::socket& s) : socket(std::move(s)), NetworkEvents(netevents) {
 
 						SocketStats = { 0 };
-						Closed = false;
+						Writing = Closed = false;
 					}
 					TCPSocketImpl(Network::IBaseNetworkDriver* netevents, boost::asio::io_service& io) : socket(io), NetworkEvents(netevents) {
 						SocketStats = { 0 };
-						Closed = false;
+						Writing = Closed = false;
 					}
 
 					char* TCPSocketImpl::get_Buffer()
@@ -79,12 +79,13 @@ void SL::Remote_Access_Library::Network::TCPSocket::send(std::shared_ptr<Packet>
 	_SocketImpl->SocketStats.NetworkBytesSent += compack->header()->PayloadLen;
 	_SocketImpl->socket.get_io_service().post([this, self, compack]()
 	{
+
 		_SocketImpl->_OutgoingPackets.push_back(compack);
-		if (!_SocketImpl->_WritingPacket)
+		if (!_SocketImpl->Writing)
 		{
-			_SocketImpl->_WritingPacket = _SocketImpl->_OutgoingPackets.front();
+			auto pac = _SocketImpl->_OutgoingPackets.front();
 			_SocketImpl->_OutgoingPackets.pop_front();//remove the packet
-			writeheader();
+			writeheader(pac);
 		}
 	});
 }
@@ -104,6 +105,18 @@ void SL::Remote_Access_Library::Network::TCPSocket::close()
 		}
 		catch (...) {}//I dont care about exceptions when the socket is being closed!
 	}
+}
+
+bool SL::Remote_Access_Library::Network::TCPSocket::closed() const
+{
+	return _SocketImpl->Closed || !_SocketImpl->socket.is_open();
+}
+
+void SL::Remote_Access_Library::Network::TCPSocket::handshake()
+{
+	auto self(shared_from_this());
+	_SocketImpl->NetworkEvents->OnConnect(self);
+	readheader();
 }
 
 void SL::Remote_Access_Library::Network::TCPSocket::readheader()
@@ -141,35 +154,35 @@ void SL::Remote_Access_Library::Network::TCPSocket::readbody()
 	});
 }
 
-void SL::Remote_Access_Library::Network::TCPSocket::writeheader()
+void SL::Remote_Access_Library::Network::TCPSocket::writeheader(std::shared_ptr<Packet> pack)
 {
 	auto self(shared_from_this());
-	boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(_SocketImpl->_WritingPacket->header(), sizeof(SL::Remote_Access_Library::Network::PacketHeader)), [self, this](boost::system::error_code ec, std::size_t byteswritten)
+	boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(pack->header(), sizeof(SL::Remote_Access_Library::Network::PacketHeader)), [self, this, pack](boost::system::error_code ec, std::size_t byteswritten)
 	{
 		if (!ec && !_SocketImpl->Closed)
 		{
 			assert(byteswritten == sizeof(_SocketImpl->PacketHeader));
-			writebody();
+			writebody(pack);
 		}
 		else close();
 	});
 }
 
-void SL::Remote_Access_Library::Network::TCPSocket::writebody()
+void SL::Remote_Access_Library::Network::TCPSocket::writebody(std::shared_ptr<Packet> pack)
 {
 	auto self(shared_from_this());
-	boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(_SocketImpl->_WritingPacket->data(), _SocketImpl->_WritingPacket->header()->PayloadLen), [self, this](boost::system::error_code ec, std::size_t byteswritten)
+	boost::asio::async_write(_SocketImpl->socket, boost::asio::buffer(pack->data(), pack->header()->PayloadLen), [self, this, pack](boost::system::error_code ec, std::size_t byteswritten)
 	{
 		if (!ec && !_SocketImpl->Closed)
 		{
-			assert(byteswritten == _SocketImpl->_WritingPacket->header()->PayloadLen);
+			assert(byteswritten == pack->header()->PayloadLen);
 			if (!_SocketImpl->_OutgoingPackets.empty()) {
-				_SocketImpl->_WritingPacket = _SocketImpl->_OutgoingPackets.front();
+				auto opack = _SocketImpl->_OutgoingPackets.front();
 				_SocketImpl->_OutgoingPackets.pop_front();//remove the packet
-				writeheader();
+				writeheader(opack);
 			}
 			else {
-				_SocketImpl->_WritingPacket.reset();//release packet
+				_SocketImpl->Writing = false;
 			}
 		}
 		else close();
@@ -200,20 +213,24 @@ std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Li
 	return p;
 }
 
+boost::asio::ip::tcp::socket& SL::Remote_Access_Library::Network::TCPSocket::get_socket() const
+{
+	return _SocketImpl->socket;
+}
+
 
 void SL::Remote_Access_Library::Network::TCPSocket::connect(const char * host, const char * port)
 {
-	auto self(shared_from_this());
 	if (host == nullptr && port == nullptr) {
-		_SocketImpl->NetworkEvents->OnConnect(self);
-		readheader();
+		handshake();
 	}
 	else {
 		boost::asio::ip::tcp::resolver resolver(_SocketImpl->socket.get_io_service());
 		boost::asio::ip::tcp::resolver::query query(host, port);
-
+		auto self(shared_from_this());
 		try
 		{
+
 			auto endpoint = resolver.resolve(query);
 			boost::asio::async_connect(_SocketImpl->socket, endpoint, [self, this](boost::system::error_code ec, boost::asio::ip::tcp::resolver::iterator)
 			{

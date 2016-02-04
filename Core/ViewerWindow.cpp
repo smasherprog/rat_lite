@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "MainWindow.h"
+#include "ViewerWindow.h"
 #include "Image.h"
 #include "ClientNetworkDriver.h"
 #include "Commands.h"
@@ -11,6 +11,7 @@
 #include <FL\Fl_Box.H>
 #include <FL\Fl_Scroll.H>
 #include <FL\Fl_RGB_Image.H>
+
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -27,7 +28,7 @@ namespace SL {
 
 				}
 			};
-			class MainWindowImpl : public Fl_Double_Window, public Network::IClientDriver
+			class ViewerWindowImpl : public Fl_Double_Window, public Network::IClientDriver
 			{
 			public:
 				MyCanvas* _MyCanvas;
@@ -38,11 +39,10 @@ namespace SL {
 
 
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
-				SL::Remote_Access_Library::Network::SocketStats LastStats;
+				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
 
-
-				MainWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
+				ViewerWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
 
@@ -52,7 +52,7 @@ namespace SL {
 					resizable(_MyCanvas);
 					show();
 				}
-				virtual ~MainWindowImpl() {
+				virtual ~ViewerWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;
 					_ClientNetworkDriver.Stop();
 				}
@@ -73,7 +73,7 @@ namespace SL {
 				}
 
 				static void awakenredraw(void* data) {
-					((MainWindowImpl*)data)->redraw();
+					((ViewerWindowImpl*)data)->redraw();
 				}
 				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect * rect, std::shared_ptr<Utilities::Image>& img) override
 				{
@@ -87,15 +87,15 @@ namespace SL {
 
 					Fl::awake(awakenredraw, this);
 
-					/*			if (std::chrno::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
-									_NetworkStatsTimer = std::chrono::steady_clock::now();
-									auto stats = socket->get_SocketStats();
-									wxString st = "Client ";
-									st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " kbs Received ";
-									st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " kbs Sent";
-									LastStats = stats;
-									static_cast<wxFrame*>(GetParent())->SetTitle(st);
-								}*/
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
+						_NetworkStatsTimer = std::chrono::steady_clock::now();
+						auto stats = socket->get_SocketStats();
+						std::string st = "Client ";
+						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " Kbs Received ";
+						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " Kbs Sent";
+						LastStats = stats;
+						label(st.c_str());
+					}
 
 				}
 			};
@@ -105,10 +105,10 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::UI::MainWindow::MainWindow(const char * dst_host, const char * dst_port) {
-	_MainWindowImpl = new MainWindowImpl(dst_host, dst_port);
-	_MainWindowImpl->_ClientNetworkDriver.Start();
+SL::Remote_Access_Library::UI::ViewerWindow::ViewerWindow(const char * dst_host, const char * dst_port) {
+	_ViewerWindowImpl = new ViewerWindowImpl(dst_host, dst_port);
+	_ViewerWindowImpl->_ClientNetworkDriver.Start();
 }
 
-SL::Remote_Access_Library::UI::MainWindow::~MainWindow() {
+SL::Remote_Access_Library::UI::ViewerWindow::~ViewerWindow() {
 }

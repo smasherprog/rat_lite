@@ -94,14 +94,14 @@ namespace SL {
 
 					if (_Config.WebSocketListenPort > 0) {
 						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service());
-						//	_WebSocketListener = Network::WebSocketListener::CreateListener(_Config.WebSocketListenPort, this);
+						_WebSocketListener = std::make_unique<WebSocketListener>(this, _IO_Runner->get_io_service());
 					}
 
 
 					_HttptListener->Start();
 					_TCPListener->Start();
-					//_WebSocketListener->Start();
-					int k = 0;
+					_WebSocketListener->Start();
+		
 				}
 				void Stop() {
 					_IO_Runner.reset();
@@ -129,7 +129,7 @@ namespace SL {
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
 					auto set = TJSAMP_420;
-					auto maxsize = tjBufSize(r.Width, r.Height, TJSAMP_420);
+					auto maxsize = std::max(tjBufSize(r.Width, r.Height, TJSAMP_420), static_cast<unsigned long>(r.Width *r.Height* Utilities::Image::DefaultStride()));
 					auto _jpegSize = maxsize;
 
 					_CompressBuffer.reserve(r.Width* r.Height*Utilities::Image::DefaultStride());

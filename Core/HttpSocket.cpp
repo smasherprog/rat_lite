@@ -60,10 +60,9 @@ namespace SL {
 
 				class HttpSocketImpl {
 				public:
-					HttpSocketImpl(boost::asio::ip::tcp::socket& s) : socket(s) {}
+	
 					boost::asio::streambuf _IncomingBuffer;
 					http_headers Header;
-					boost::asio::ip::tcp::socket& socket;
 				};
 
 			}
@@ -74,8 +73,9 @@ namespace SL {
 
 SL::Remote_Access_Library::Network::HttpSocket::HttpSocket(IBaseNetworkDriver * netevents, void* socket) : TCPSocket(netevents, socket)
 {
+
 	std::cout << "HttpSocket()" << std::endl;
-	_HttpSocketImpl = new INTERNAL::HttpSocketImpl(*((boost::asio::ip::tcp::socket*)socket));
+	_HttpSocketImpl = new INTERNAL::HttpSocketImpl();
 }
 
 SL::Remote_Access_Library::Network::HttpSocket::~HttpSocket()
@@ -89,7 +89,7 @@ SL::Remote_Access_Library::Network::HttpSocket::~HttpSocket()
 void SL::Remote_Access_Library::Network::HttpSocket::readheader()
 {
 	auto self(shared_from_this());
-	boost::asio::async_read_until(_HttpSocketImpl->socket, _HttpSocketImpl->_IncomingBuffer, "\r\n\r\n", [this, self](const boost::system::error_code ec, std::size_t s)
+	boost::asio::async_read_until(get_socket(), _HttpSocketImpl->_IncomingBuffer, "\r\n\r\n", [this, self](const boost::system::error_code ec, std::size_t s)
 	{
 		if (!ec) {
 			size_t num_additional_bytes = _HttpSocketImpl->_IncomingBuffer.size() - s;
@@ -111,7 +111,10 @@ void SL::Remote_Access_Library::Network::HttpSocket::readheader()
 				std::cout << "done" << std::endl;
 			}
 		}
-		else close();
+		else {
+			std::cout << "Server: Error in connection. " << "Error: " << ec << ", error message: " << ec.message() << std::endl;
+			close();
+		}
 	});
 }
 
@@ -120,10 +123,10 @@ void SL::Remote_Access_Library::Network::HttpSocket::readbody()
 	//nothing for now
 }
 
-void SL::Remote_Access_Library::Network::HttpSocket::writeheader()
+void SL::Remote_Access_Library::Network::HttpSocket::writeheader(std::shared_ptr<Packet> pack)
 {
 	//skip the header writing and go straight to writing the payload
-	writebody();
+	writebody(pack);
 }
 
 std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Library::Network::HttpSocket::decompress(PacketHeader& header, char * buffer)

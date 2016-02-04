@@ -170,6 +170,7 @@
   <ItemGroup>
     <ClInclude Include="ApplicationDirectory.h" />
     <ClInclude Include="ConnectWindow.h" />
+    <ClInclude Include="crypto.hpp" />
     <ClInclude Include="HttpListener.h" />
     <ClInclude Include="HttpSocket.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
@@ -179,7 +180,7 @@
     <ClInclude Include="IO_Runner.h" />
     <ClInclude Include="IServerDriver.h" />
     <ClInclude Include="ISocket.h" />
-    <ClInclude Include="MainWindow.h" />
+    <ClInclude Include="ViewerWindow.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="ClientNetworkDriver.h" />
@@ -205,7 +206,7 @@
     <ClCompile Include="HttpSocket.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IO_Runner.cpp" />
-    <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="ViewerWindow.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Screen.cpp" />

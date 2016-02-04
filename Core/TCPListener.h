@@ -23,7 +23,9 @@ namespace SL {
 
 				//no copy allowed
 				TCPListener(const TCPListener&) = delete;
+				TCPListener(TCPListener&&) = delete;
 				//no copy allowed
+				TCPListener& operator=(TCPListener&&) = delete;
 				TCPListener& operator=(const TCPListener&) = delete;
 			private:
 				INTERNAL::ListinerImpl* _ListinerImpl;

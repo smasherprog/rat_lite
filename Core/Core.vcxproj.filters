@@ -19,6 +19,15 @@
     <Filter Include="wwwroot">
       <UniqueIdentifier>{7279f241-ad1e-4f43-b7f4-eb750c7c471b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network\Socket">
+      <UniqueIdentifier>{188948fc-5d34-4575-a9d3-a71b8874d246}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Listener">
+      <UniqueIdentifier>{76275ea7-aa5e-4ba7-bb07-8de9f16ca40c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Driver">
+      <UniqueIdentifier>{514daf98-3c44-4f3b-a56f-1dae42a01c74}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Packet.h">
@@ -43,41 +52,11 @@
     <ClInclude Include="Shapes.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ClientNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="ServerNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="WebSocketServerNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="TCPSocket.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="WebSocket.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="SocketStats.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Server.h">
       <Filter>Server</Filter>
-    </ClInclude>
-    <ClInclude Include="WebSocketListener.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="IBaseNetworkDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="ISocket.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="IServerDriver.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="MainWindow.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="ConnectWindow.h">
       <Filter>UI</Filter>
@@ -91,17 +70,50 @@
     <ClInclude Include="IO_Runner.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="TCPListener.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="ApplicationDirectory.h">
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="HttpSocket.h">
-      <Filter>Network</Filter>
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="ISocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPListener.h">
+      <Filter>Network\Listener</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketListener.h">
+      <Filter>Network\Listener</Filter>
     </ClInclude>
     <ClInclude Include="HttpListener.h">
-      <Filter>Network</Filter>
+      <Filter>Network\Listener</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="IBaseNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServerNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="IServerDriver.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewerWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="crypto.hpp">
+      <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -118,44 +130,44 @@
     <ClCompile Include="Mouse.cpp">
       <Filter>Capturing</Filter>
     </ClCompile>
-    <ClCompile Include="ServerNetworkDriver.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="TCPSocket.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="WebSocket.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
-    </ClCompile>
-    <ClCompile Include="WebSocketListener.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="MainWindow.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="ConnectWindow.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="ClientNetworkDriver.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="IO_Runner.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="TCPListener.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="ApplicationDirectory.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="HttpSocket.cpp">
-      <Filter>Network</Filter>
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocket.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPSocket.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPListener.cpp">
+      <Filter>Network\Listener</Filter>
+    </ClCompile>
+    <ClCompile Include="WebSocketListener.cpp">
+      <Filter>Network\Listener</Filter>
     </ClCompile>
     <ClCompile Include="HttpListener.cpp">
-      <Filter>Network</Filter>
+      <Filter>Network\Listener</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientNetworkDriver.cpp">
+      <Filter>Network\Driver</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerNetworkDriver.cpp">
+      <Filter>Network\Driver</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewerWindow.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

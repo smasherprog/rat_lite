@@ -16,6 +16,7 @@ namespace SL {
 				virtual void send(std::shared_ptr<Packet>& pack) = 0;
 				//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
 				virtual void close() = 0;
+				virtual bool closed() const = 0;
 
 				//Get the statstics for this socket
 				virtual SocketStats get_SocketStats() const = 0;
@@ -23,10 +24,12 @@ namespace SL {
 				virtual void connect(const char* host, const char* port) = 0;
 
 			protected:
+				//called before OnConnect Called
+				virtual void handshake() = 0;
 				virtual void readheader() = 0;
 				virtual void readbody() = 0;
-				virtual void writeheader() = 0;
-				virtual void writebody() = 0;
+				virtual void writeheader(std::shared_ptr<Packet> outboundpacket) = 0;
+				virtual void writebody(std::shared_ptr<Packet> outboundpacket) = 0;
 				virtual std::shared_ptr<Packet> decompress(PacketHeader& header, char* buffer) = 0;
 				virtual std::shared_ptr<Packet> compress(std::shared_ptr<Packet>& packet) = 0;
 			};

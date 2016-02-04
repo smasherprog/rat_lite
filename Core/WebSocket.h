@@ -21,12 +21,16 @@ namespace SL {
 
 			private:
 				INTERNAL::WebSocketSocketImpl* _WebSocketSocketImpl;
+
+				virtual void handshake()  override;
 				virtual void readheader()  override;
 				virtual void readbody() override;
-				virtual void writeheader() override;
+				virtual void writeheader(std::shared_ptr<Packet> packet) override;
 
 				virtual std::shared_ptr<Packet> decompress(PacketHeader& header, char* buffer) override;
 				virtual std::shared_ptr<Packet> compress(std::shared_ptr<Packet>& packet)  override;
+
+				void parse_handshake();
 			};
 		}
 	}

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ConnectWindow.h"
-#include "MainWindow.h"
+#include "ViewerWindow.h"
 #include <FL\Fl.H>
 #include <FL\Fl_Window.H>
 #include <FL\Fl_Input.H>
@@ -19,7 +19,7 @@ namespace SL {
 				Fl_Input* bInput = nullptr;
 				Fl_Button* connectbtn = nullptr;
 				std::string Host, Port;
-				std::unique_ptr<MainWindow> _MainWindow;
+				std::unique_ptr<ViewerWindow> _MainWindow;
 				ConnectWindowImpl() {
 
 
@@ -35,7 +35,7 @@ namespace SL {
 				static void DoConnect(void* userdata) {
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					ptr->ActivateWidgets();
-					ptr->_MainWindow = std::make_unique<MainWindow>(ptr->Host.c_str(), ptr->Port.c_str() );
+					ptr->_MainWindow = std::make_unique<ViewerWindow>(ptr->Host.c_str(), ptr->Port.c_str());
 				}
 				static void try_connect(std::string host, ConnectWindowImpl* ptr) {
 					auto portspecified = host.find_last_of(':');

@@ -14,7 +14,11 @@ namespace SL {
 			public:
 
 				HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short listenport=8080);	
+				//no copy allowed
 				HttpListener(const HttpListener&) = delete;
+				HttpListener(HttpListener&&) = delete;
+				//no copy allowed
+				HttpListener& operator=(HttpListener&&) = delete;
 				HttpListener& operator=(const HttpListener&) = delete;
 				~HttpListener();
 				void Start();

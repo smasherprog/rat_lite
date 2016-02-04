@@ -2,8 +2,8 @@
 #include <memory>
 #include "ISocket.h"
 #include <vector>
+#include <boost\asio.hpp>
 
-namespace boost { namespace asio { class io_service; } }
 namespace SL {
 	namespace Remote_Access_Library {
 
@@ -29,22 +29,25 @@ namespace SL {
 				virtual void send(std::shared_ptr<Packet>& pack) override;
 				//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
 				virtual void close() override;
+				virtual bool closed() const override;
 
 				//pending packets which are queued up and waiting to be sent
 				virtual SocketStats get_SocketStats() const override;
 				//calling connected with a host and port will attempt an async connection returns immediatly and executes the OnConnect Callback when connected. If connection fails, the OnClose callback is called
 				virtual void connect(const char* host, const char* port) override;
+
 			protected:
 
 				INTERNAL::TCPSocketImpl* _SocketImpl;
+				virtual void handshake()  override;
 				virtual void readheader()  override;
 				virtual void readbody() override;
-				virtual void writeheader() override;
-				virtual void writebody() override;
+				virtual void writeheader(std::shared_ptr<Packet> packet) override;
+				virtual void writebody(std::shared_ptr<Packet> packet) override;
 				virtual std::shared_ptr<Packet> decompress(PacketHeader& header, char* buffer) override;
 				virtual std::shared_ptr<Packet> compress(std::shared_ptr<Packet>& packet)  override;
 		
-
+				boost::asio::ip::tcp::socket& get_socket() const;
 			};
 		}
 	}

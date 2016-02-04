@@ -16,6 +16,9 @@ namespace SL {
 				WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short listenport = 8081);
 				~WebSocketListener();
 				WebSocketListener(const WebSocketListener&) = delete;
+				WebSocketListener(WebSocketListener&&) = delete;
+				//no copy allowed
+				WebSocketListener& operator=(WebSocketListener&&) = delete;
 				WebSocketListener& operator=(const WebSocketListener&) = delete;
 
 				void Start();

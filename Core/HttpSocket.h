@@ -2,6 +2,7 @@
 #include <memory>
 #include "TCPSocket.h"
 
+
 namespace SL {
 	namespace Remote_Access_Library {
 
@@ -27,7 +28,7 @@ namespace SL {
 
 				virtual void readheader()  override;
 				virtual void readbody() override;
-				virtual void writeheader() override;
+				virtual void writeheader(std::shared_ptr<Packet> pack) override;
 
 				virtual std::shared_ptr<Packet> decompress(PacketHeader& header, char* buffer) override;
 				virtual std::shared_ptr<Packet> compress(std::shared_ptr<Packet>& packet)  override;

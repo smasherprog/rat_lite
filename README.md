@@ -13,6 +13,12 @@ Performance
 <li>
 Extendable 
 </li>
+<li>
+Security
+</li>
+<li>
+Latest c++ standards: c++ 14 
+</li>
 </ul>
 <h3>How to get started:</h3>
 <ul>

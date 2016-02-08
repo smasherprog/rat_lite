@@ -17,7 +17,7 @@ Extendable
 Security
 </li>
 <li>
-Latest c++ standards: c++ 14 
+Latest standards: c++ 14 
 </li>
 </ul>
 <h3>How to get started:</h3>

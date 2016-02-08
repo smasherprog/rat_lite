@@ -30,7 +30,6 @@ namespace SL {
 				virtual Packet compress(Packet& packet)  override;
 				virtual Packet decompress(Packet& packet)  override;
 
-				void parse_handshake();
 			};
 		}
 	}

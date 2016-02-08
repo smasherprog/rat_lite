@@ -10,21 +10,21 @@
         $(document).ready(function () {
             if ("WebSocket" in window) {
 
-               // var canvas = document.getElementById("canvas");
-               // var ctx = canvas.getContext("2d");
+                // var canvas = document.getElementById("canvas");
+                // var ctx = canvas.getContext("2d");
                 // Let us open a web socket
                 var ws = new WebSocket("ws://127.0.0.1:8081/echo");
 
                 ws.onopen = function () {
 
                     $('#logsection').append('Socket Opened');
-        
+
                 };
 
                 ws.onmessage = function (evt) {
                     var received_msg = evt.data;
-                    $('#logsection').append(' bytes of Data Received');
-              
+                    $('#logsection').append(' bytes of Data Received<br/>');
+                    $('#logsection').append(received_msg);
                 };
 
                 ws.onclose = function () {
@@ -43,8 +43,7 @@
     <canvas></canvas>
 
     
-    <div id="logsection">
+    <div id="logsection"></div>
 
-    </div>
 </body>
 </html>

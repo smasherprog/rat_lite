@@ -168,5 +168,8 @@
     <None Include="index.html">
       <Filter>wwwroot</Filter>
     </None>
+    <None Include="favicon.ico">
+      <Filter>wwwroot</Filter>
+    </None>
   </ItemGroup>
 </Project>

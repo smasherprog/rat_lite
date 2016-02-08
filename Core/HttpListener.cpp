@@ -27,21 +27,28 @@ namespace SL {
 
 					}
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
+
 						auto searchpath = executable_path(nullptr);
 						auto exeindex = searchpath.find_last_of('\\');
 						if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
 						if (exeindex == searchpath.npos) return socket->send(Get404Page());
-						socket->send(GetIndexPage(searchpath.substr(0, exeindex)));
 
+						auto requestedpath = packet->Header[HTTP_PATH];
+						if (requestedpath.find_last_of(".ico") != std::string::npos) {
+							socket->send(GetFavIcon(searchpath.substr(0, exeindex)));
+						}
+						else {
+							socket->send(GetIndexPage(searchpath.substr(0, exeindex)));
+						}
 						std::cout << "HTTP OnReceive" << std::endl;
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
 						std::cout << "HTTP Close" << std::endl;
 					}
-					
+
 					Packet GetIndexPage(std::string path) {
 						path = path + "\\index.html";
-						std::ifstream file(path.c_str());
+						std::ifstream file(path.c_str(), std::ios::binary);
 						if (file.is_open()) {
 							file.seekg(0, std::ios_base::end);
 							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), file.tellg());
@@ -54,11 +61,27 @@ namespace SL {
 							return pack;
 						}
 						else return Get404Page();
+					}
+					Packet GetFavIcon(std::string path) {
+						path = path + "\\favicon.ico";
+						std::ifstream file(path.c_str(), std::ios::binary);
+						if (file.is_open()) {
+							file.seekg(0, std::ios_base::end);
+							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), file.tellg());
+							file.seekg(0);//goto begining
+							file.read(pack.Payload, pack.Payload_Length);
+							std::string rd(pack.Payload, pack.Payload_Length);
+							pack.Header[HTTP_STATUSCODE] = "200 OK";
+							pack.Header[HTTP_VERSION] = "HTTP/1.1";
+							pack.Header[HTTP_CONTENTTYPE] = "image/vnd.microsoft.icon";
+							return pack;
+						}
+						else return Get404Page();
 
 					}
 					Packet Get404Page() {
 
-						std::string sHTML ="<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
+						std::string sHTML = "<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
 						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), sHTML.size());
 						std::copy(begin(sHTML), end(sHTML), pack.Payload);
 						pack.Header[HTTP_STATUSCODE] = "404 Not Found";

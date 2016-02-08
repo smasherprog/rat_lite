@@ -43,6 +43,7 @@ void SL::Remote_Access_Library::Network::TCPListener::do_accept() {
 		if (!ec)
 		{
 			_ListinerImpl->onaccept((void*)&(_ListinerImpl->socket_));
+			do_accept();
 		}
 		else if (ec != boost::asio::error::operation_aborted) {
 			do_accept();

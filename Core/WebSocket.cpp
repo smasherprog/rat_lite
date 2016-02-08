@@ -14,16 +14,49 @@ namespace SL {
 				public:
 					WebSocketSocketImpl(IBaseNetworkDriver* nets) : NetworkEvents(nets) {}
 					boost::asio::streambuf _IncomingBuffer;
-					std::vector<unsigned char> _OutGoingBuffer;
-
-
+					boost::asio::streambuf _OutGoingBuffer;
 					IBaseNetworkDriver* NetworkEvents;
 
-					std::string method, path, http_version;
-					std::unordered_map<std::string, std::string> header;
+					std::unordered_map<std::string, std::string> Header;
 
-					size_t _IncomingContentLength;
+					unsigned int _IncomingContentLength;
 					unsigned char _fin_rsv_opcode;
+
+
+
+					void parse_handshake()
+					{
+						std::istream stream(&_IncomingBuffer);
+						std::string line;
+						getline(stream, line);
+						size_t method_end;
+						if ((method_end = line.find(' ')) != std::string::npos) {
+							size_t path_end;
+							if ((path_end = line.find(' ', method_end + 1)) != std::string::npos) {
+								Header[HTTP_METHOD] = line.substr(0, method_end);
+								Header[HTTP_PATH] = line.substr(method_end + 1, path_end - method_end - 1);
+								if ((path_end + 6) < line.size())
+									Header[HTTP_VERSION] = line.substr(path_end + 6, line.size() - (path_end + 6) - 1);
+								else
+									Header[HTTP_VERSION] = "1.1";
+
+								getline(stream, line);
+								size_t param_end;
+								while ((param_end = line.find(':')) != std::string::npos) {
+									size_t value_start = param_end + 1;
+									if ((value_start) < line.size()) {
+										if (line[value_start] == ' ')
+											value_start++;
+										if (value_start < line.size())
+											Header.insert(std::make_pair(line.substr(0, param_end), line.substr(value_start, line.size() - value_start - 1)));
+									}
+									getline(stream, line);
+								}
+							}
+						}
+
+					}
+
 				};
 
 			}
@@ -48,13 +81,13 @@ void SL::Remote_Access_Library::Network::WebSocket::handshake()
 	auto self(shared_from_this());
 	boost::asio::async_read_until(get_socket(), _WebSocketSocketImpl->_IncomingBuffer, "\r\n\r\n", [this, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
 		if (!ec) {
-			parse_handshake();
+			_WebSocketSocketImpl->parse_handshake();
 
-			if (_WebSocketSocketImpl->header.count("Sec-WebSocket-Key") == 0) return close();//close socket and get out malformed
+			if (_WebSocketSocketImpl->Header.count("Sec-WebSocket-Key") == 0) return close();//close socket and get out malformed
 			auto write_buffer(std::make_shared<boost::asio::streambuf>());
 			std::ostream handshake(write_buffer.get());
 
-			auto sha1 = Crypto::SHA1(_WebSocketSocketImpl->header["Sec-WebSocket-Key"] + ws_magic_string);
+			auto sha1 = Crypto::SHA1(_WebSocketSocketImpl->Header["Sec-WebSocket-Key"] + ws_magic_string);
 			handshake << "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
 			handshake << "Upgrade: websocket\r\n";
 			handshake << "Connection: Upgrade\r\n";
@@ -75,39 +108,6 @@ void SL::Remote_Access_Library::Network::WebSocket::handshake()
 		}
 	});
 }
-void SL::Remote_Access_Library::Network::WebSocket::parse_handshake()
-{
-	std::istream stream(&_WebSocketSocketImpl->_IncomingBuffer);
-	std::string line;
-	getline(stream, line);
-	size_t method_end;
-	if ((method_end = line.find(' ')) != std::string::npos) {
-		size_t path_end;
-		if ((path_end = line.find(' ', method_end + 1)) != std::string::npos) {
-			_WebSocketSocketImpl->method = line.substr(0, method_end);
-			_WebSocketSocketImpl->path = line.substr(method_end + 1, path_end - method_end - 1);
-			if ((path_end + 6) < line.size())
-				_WebSocketSocketImpl->http_version = line.substr(path_end + 6, line.size() - (path_end + 6) - 1);
-			else
-				_WebSocketSocketImpl->http_version = "1.1";
-
-			getline(stream, line);
-			size_t param_end;
-			while ((param_end = line.find(':')) != std::string::npos) {
-				size_t value_start = param_end + 1;
-				if ((value_start) < line.size()) {
-					if (line[value_start] == ' ')
-						value_start++;
-					if (value_start < line.size())
-						_WebSocketSocketImpl->header.insert(std::make_pair(line.substr(0, param_end), line.substr(value_start, line.size() - value_start - 1)));
-				}
-				getline(stream, line);
-			}
-		}
-	}
-
-}
-
 
 void SL::Remote_Access_Library::Network::WebSocket::readheader()
 {
@@ -191,8 +191,8 @@ void SL::Remote_Access_Library::Network::WebSocket::readbody()
 			mask.resize(4);
 			raw_message_data.read((char*)&mask[0], 4);
 
-			auto packet(std::make_shared<Packet>(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), _WebSocketSocketImpl->_IncomingContentLength, std::move(_WebSocketSocketImpl->header)));
-			_WebSocketSocketImpl->header.clear();//reset after move
+			auto packet(std::make_shared<Packet>(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), _WebSocketSocketImpl->_IncomingContentLength, std::move(_WebSocketSocketImpl->Header)));
+			_WebSocketSocketImpl->Header.clear();//reset after move
 			auto startpack = packet->Payload;
 			for (size_t c = 0; c < _WebSocketSocketImpl->_IncomingContentLength; c++) {
 				startpack[c] = (raw_message_data.get() ^ mask[c % 4]);
@@ -233,35 +233,34 @@ void SL::Remote_Access_Library::Network::WebSocket::readbody()
 void SL::Remote_Access_Library::Network::WebSocket::writeheader(std::shared_ptr<Packet> packet)
 {
 	auto self(shared_from_this());
-	_WebSocketSocketImpl->_OutGoingBuffer.resize(0);
+	std::ostream header_stream(&_WebSocketSocketImpl->_OutGoingBuffer);
+	
 	///fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
-	_WebSocketSocketImpl->_OutGoingBuffer.push_back(130);
+	header_stream.put(129);
 	size_t length = packet->Payload_Length;
 	if (length >= 126) {
 		int num_bytes;
 		if (length > 0xffff) {
 			num_bytes = 8;
-			_WebSocketSocketImpl->_OutGoingBuffer.push_back(127);
+			header_stream.put(127);
 		}
 		else {
 			num_bytes = 2;
-			_WebSocketSocketImpl->_OutGoingBuffer.push_back(126);
+			header_stream.put(126);
 		}
 
 		for (int c = num_bytes - 1; c >= 0; c--) {
-			_WebSocketSocketImpl->_OutGoingBuffer.push_back((length >> (8 * c)) % 256);
+			header_stream.put((length >> (8 * c)) % 256);
 		}
 	}
 	else {
-		_WebSocketSocketImpl->_OutGoingBuffer.push_back(static_cast<unsigned char>(length));
+		header_stream.put(static_cast<unsigned char>(length));
 	}
-	auto p(_WebSocketSocketImpl->_OutGoingBuffer.data());
-	auto size(_WebSocketSocketImpl->_OutGoingBuffer.size());
-	boost::asio::async_write(get_socket(), boost::asio::buffer(p, size), [self, this, packet](boost::system::error_code ec, std::size_t byteswritten)
+
+	boost::asio::async_write(get_socket(), _WebSocketSocketImpl->_OutGoingBuffer, [self, this, packet](boost::system::error_code ec, std::size_t byteswritten)
 	{
 		if (!ec && !closed())
 		{
-			assert(byteswritten == _WebSocketSocketImpl->_OutGoingBuffer.size());
 			writebody(packet);
 		}
 		else close();

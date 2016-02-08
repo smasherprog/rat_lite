@@ -22,6 +22,10 @@ namespace SL {
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 						std::cout << "websocket OnConnect" << std::endl;
+						std::string msg = "Hello From Websocket Server";
+						Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), msg.size());
+						memcpy(p.Payload, msg.c_str(), msg.size());
+						socket->send(p);
 					}
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
 						std::cout << "websocket OnReceive" << std::endl;

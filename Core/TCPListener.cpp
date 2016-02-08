@@ -16,7 +16,6 @@ namespace SL {
 						acceptor_(io_service, endpoint),
 						socket_(io_service) {}
 					~ListinerImpl() {
-						socket_.close();
 						acceptor_.close();
 					}
 					boost::asio::ip::tcp::acceptor acceptor_;
@@ -37,18 +36,22 @@ namespace SL {
 
 
 
-void do_accept(std::shared_ptr<SL::Remote_Access_Library::Network::TCPListener> ptr, SL::Remote_Access_Library::Network::INTERNAL::ListinerImpl* impl) {
-
-	impl->acceptor_.async_accept(impl->socket_, [ptr, impl](boost::system::error_code ec)
+void SL::Remote_Access_Library::Network::TCPListener::do_accept() {
+	auto self(shared_from_this());
+	_ListinerImpl->acceptor_.async_accept(_ListinerImpl->socket_, [self, this](boost::system::error_code ec)
 	{
 		if (!ec)
 		{
-			impl->onaccept((void*)&(impl->socket_));
+			_ListinerImpl->onaccept((void*)&(_ListinerImpl->socket_));
 		}
-		do_accept(ptr, impl);
+		else if (ec != boost::asio::error::operation_aborted) {
+			do_accept();
+		}
+		else {
+			std::cout << "Exiting asyncaccept" << std::endl;
+		}
 	});
 }
-
 std::shared_ptr<SL::Remote_Access_Library::Network::TCPListener> SL::Remote_Access_Library::Network::TCPListener::Create(unsigned short port, boost::asio::io_service& io_service, std::function<void(void*)> onaccept)
 {
 	return std::make_shared<TCPListener>(new INTERNAL::Listiner_DataImpl(port, io_service, onaccept));
@@ -58,17 +61,19 @@ SL::Remote_Access_Library::Network::TCPListener::TCPListener(INTERNAL::Listiner_
 
 }
 SL::Remote_Access_Library::Network::TCPListener::~TCPListener() {
-	delete _Listiner_DataImpl;
 	Stop();
+	delete _Listiner_DataImpl;
+	_Listiner_DataImpl = nullptr;
 }
 void SL::Remote_Access_Library::Network::TCPListener::Start() {
 	if (!_ListinerImpl) _ListinerImpl = new INTERNAL::ListinerImpl(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), _Listiner_DataImpl->_ListenPort), _Listiner_DataImpl->_io_service, _Listiner_DataImpl->onaccept);
-	do_accept(shared_from_this(), _ListinerImpl);
+	do_accept();
 }
 
 void SL::Remote_Access_Library::Network::TCPListener::Stop()
 {
 	delete _ListinerImpl;
+	_ListinerImpl = nullptr;
 }
 
 

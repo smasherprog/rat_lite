@@ -174,7 +174,7 @@
     <ClInclude Include="HttpListener.h" />
     <ClInclude Include="HttpSocket.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
-    <ClInclude Include="Commands.h" />
+    <ClInclude Include="Packet.h" />
     <ClInclude Include="IClientDriver.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="IO_Runner.h" />
@@ -182,7 +182,6 @@
     <ClInclude Include="ISocket.h" />
     <ClInclude Include="ViewerWindow.h" />
     <ClInclude Include="Mouse.h" />
-    <ClInclude Include="Packet.h" />
     <ClInclude Include="ClientNetworkDriver.h" />
     <ClInclude Include="ServerNetworkDriver.h" />
     <ClInclude Include="Server_Config.h" />
@@ -208,7 +207,6 @@
     <ClCompile Include="IO_Runner.cpp" />
     <ClCompile Include="ViewerWindow.cpp" />
     <ClCompile Include="Mouse.cpp" />
-    <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="ServerNetworkDriver.cpp" />

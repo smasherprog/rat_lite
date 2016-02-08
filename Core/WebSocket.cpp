@@ -12,9 +12,9 @@ namespace SL {
 
 				class WebSocketSocketImpl {
 				public:
-					WebSocketSocketImpl(IBaseNetworkDriver* nets):  NetworkEvents(nets) {}
+					WebSocketSocketImpl(IBaseNetworkDriver* nets) : NetworkEvents(nets) {}
 					boost::asio::streambuf _IncomingBuffer;
-					std::vector<char> _OutGoingBuffer;
+					std::vector<unsigned char> _OutGoingBuffer;
 
 
 					IBaseNetworkDriver* NetworkEvents;
@@ -191,10 +191,9 @@ void SL::Remote_Access_Library::Network::WebSocket::readbody()
 			mask.resize(4);
 			raw_message_data.read((char*)&mask[0], 4);
 
-			PacketHeader msg;
-			msg.PayloadLen = static_cast<unsigned int>(_WebSocketSocketImpl->_IncomingContentLength);
-			auto packet = Packet::CreatePacket(msg);
-			auto startpack = packet->data();
+			auto packet(std::make_shared<Packet>(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), _WebSocketSocketImpl->_IncomingContentLength, std::move(_WebSocketSocketImpl->header)));
+			_WebSocketSocketImpl->header.clear();//reset after move
+			auto startpack = packet->Payload;
 			for (size_t c = 0; c < _WebSocketSocketImpl->_IncomingContentLength; c++) {
 				startpack[c] = (raw_message_data.get() ^ mask[c % 4]);
 			}
@@ -237,7 +236,7 @@ void SL::Remote_Access_Library::Network::WebSocket::writeheader(std::shared_ptr<
 	_WebSocketSocketImpl->_OutGoingBuffer.resize(0);
 	///fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
 	_WebSocketSocketImpl->_OutGoingBuffer.push_back(130);
-	size_t length = packet->header()->PayloadLen;
+	size_t length = packet->Payload_Length;
 	if (length >= 126) {
 		int num_bytes;
 		if (length > 0xffff) {
@@ -271,17 +270,19 @@ void SL::Remote_Access_Library::Network::WebSocket::writeheader(std::shared_ptr<
 
 }
 
-std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Library::Network::WebSocket::decompress(PacketHeader & header, char * buffer)
+//these just make copies for now
+SL::Remote_Access_Library::Network::Packet SL::Remote_Access_Library::Network::WebSocket::compress(Packet & packet)
 {
-	//no decompression yet
-	auto p = SL::Remote_Access_Library::Network::Packet::CreatePacket(header);
-	memcpy(p->data(), buffer, header.PayloadLen);
-	p->header()->UnCompressedlen = 0;
+	Packet p(packet.Packet_Type, packet.Payload_Length);
+	memcpy(p.Payload, packet.Payload, packet.Payload_Length);
+	p.Header = packet.Header;
 	return p;
 }
-
-std::shared_ptr<SL::Remote_Access_Library::Network::Packet> SL::Remote_Access_Library::Network::WebSocket::compress(std::shared_ptr<Packet>& packet)
+//these just make copies for now
+SL::Remote_Access_Library::Network::Packet SL::Remote_Access_Library::Network::WebSocket::decompress(Packet & packet)
 {
-	return packet;//no compression yet
+	Packet p(packet.Packet_Type, packet.Payload_Length);
+	memcpy(p.Payload, packet.Payload, packet.Payload_Length);
+	p.Header = packet.Header;
+	return p;
 }
-

@@ -3,9 +3,8 @@
 #include "ApplicationDirectory.h"
 #include "TCPListener.h"
 #include "HttpSocket.h"
-#include "IBaseNetworkDriver.h"
 #include "Packet.h"
-
+#include "IBaseNetworkDriver.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -24,50 +23,47 @@ namespace SL {
 					}
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-						auto htmlfile = executable_path(nullptr);
-						auto exeindex = htmlfile.find_last_of('\\');
-						if (exeindex == htmlfile.npos) exeindex = htmlfile.find_last_of('/');
-						if (exeindex == htmlfile.npos) return socket->send(Get404Page());
-						socket->send(GetIndexPage(htmlfile.substr(0, exeindex)));
-
+						std::cout << "HTTP OnConnect" << std::endl;
 
 					}
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
+						auto searchpath = executable_path(nullptr);
+						auto exeindex = searchpath.find_last_of('\\');
+						if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
+						if (exeindex == searchpath.npos) return socket->send(Get404Page());
+						socket->send(GetIndexPage(searchpath.substr(0, exeindex)));
+
 						std::cout << "HTTP OnReceive" << std::endl;
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
 						std::cout << "HTTP Close" << std::endl;
 					}
-					std::shared_ptr<Packet> GetIndexPage(std::string path) {
+					
+					Packet GetIndexPage(std::string path) {
 						path = path + "\\index.html";
 						std::ifstream file(path.c_str());
 						if (file.is_open()) {
-							std::string sHTML((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-							std::string secondpart = "HTTP/1.1 200 OK\r\n";
-							secondpart += "content-type: text/html\r\n";
-							secondpart += "content-length: " + std::to_string(sHTML.length()) + "\r\n\r\n";
-							secondpart += sHTML;
-							PacketHeader h;
-							h.PayloadLen =static_cast<unsigned int>( sHTML.size());
-							auto pack = Packet::CreatePacket(h);
-							memcpy(pack->data(), sHTML.c_str(), sHTML.size());
+							file.seekg(0, std::ios_base::end);
+							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), file.tellg());
+							file.seekg(0);//goto begining
+							file.read(pack.Payload, pack.Payload_Length);
+							std::string rd(pack.Payload, pack.Payload_Length);
+							pack.Header[HTTP_STATUSCODE] = "200 OK";
+							pack.Header[HTTP_VERSION] = "HTTP/1.1";
+							pack.Header[HTTP_CONTENTTYPE] = "text/html";
 							return pack;
 						}
 						else return Get404Page();
 
 					}
-					std::shared_ptr<Packet> Get404Page() {
+					Packet Get404Page() {
 
-						std::string sHTML =
-							"<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
-						std::string secondpart = "HTTP/1.1 404 Not Found\r\n";
-						secondpart += "content-type: text/html\r\n";
-						secondpart += "content-length: " + std::to_string(sHTML.length()) + "\r\n\r\n";
-						secondpart += sHTML;
-						PacketHeader h;
-						h.PayloadLen = static_cast<unsigned int>(sHTML.size());
-						auto pack = Packet::CreatePacket(h);
-						memcpy(pack->data(), sHTML.c_str(), sHTML.size());
+						std::string sHTML ="<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
+						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), sHTML.size());
+						std::copy(begin(sHTML), end(sHTML), pack.Payload);
+						pack.Header[HTTP_STATUSCODE] = "404 Not Found";
+						pack.Header[HTTP_VERSION] = "HTTP/1.1";
+						pack.Header[HTTP_CONTENTTYPE] = "text/html";
 						return pack;
 					}
 					void Start() {

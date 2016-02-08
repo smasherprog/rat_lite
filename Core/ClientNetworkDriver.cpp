@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "ClientNetworkDriver.h"
 #include "TCPSocket.h"
-#include "Commands.h"
 #include "Shapes.h"
 #include "IClientDriver.h"
 #include "Image.h"
@@ -40,8 +39,8 @@ namespace SL {
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override {
 
-					switch (p->header()->Packet_Type) {
-					case static_cast<unsigned int>(Commands::PACKET_TYPES::IMAGEDIF) :
+					switch (p->Packet_Type) {
+					case PACKET_TYPES::IMAGEDIF:
 						ImageDif(socket, p);
 						break;
 					default:
@@ -52,7 +51,7 @@ namespace SL {
 				}
 
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					auto imgrect = (Utilities::Rect*)p->data();
+					auto imgrect = (Utilities::Rect*)p->Payload;
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
 
@@ -60,14 +59,14 @@ namespace SL {
 					auto outwidth = 0;
 					auto outheight = 0;
 
-					auto src = (unsigned char*)(p->data() + sizeof(Utilities::Rect));
+					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
 
-					if (tjDecompressHeader2(_jpegDecompressor.get(), src, p->header()->PayloadLen - sizeof(Utilities::Rect), &outwidth, &outheight, &jpegSubsamp) == -1) {
+					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
 						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
 					}
 					auto img = Utilities::Image::CreateImage(outheight, outwidth);
 
-					if (tjDecompress2(_jpegDecompressor.get(), src, p->header()->PayloadLen - sizeof(Utilities::Rect), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_BGRX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_BGRX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
 					}
 

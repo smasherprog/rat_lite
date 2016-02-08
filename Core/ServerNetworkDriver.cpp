@@ -64,19 +64,18 @@ namespace SL {
 				}
 
 				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img) {
-
-					socket->send(ExtractImageRect(r, img));
+					socket->send(std::move(ExtractImageRect(r, img)));
 				}
 				void Send(Utilities::Rect& r, const Utilities::Image & img) {
 					SendToAll(ExtractImageRect(r, img));
 				}
 
-				void SendToAll(std::shared_ptr<Network::Packet>& packet) {
+				void SendToAll(Network::Packet& packet) {
 					for (auto& c : GetClients()) {
 						c->send(packet);
 					}
 				}
-				void SendToAll(std::vector<std::shared_ptr<Network::Packet>>& packets) {
+				void SendToAll(std::vector<Network::Packet>& packets) {
 					for (auto& c : GetClients()) {
 						for (auto& p : packets) {
 							c->send(p);
@@ -101,17 +100,19 @@ namespace SL {
 					_HttptListener->Start();
 					_TCPListener->Start();
 					_WebSocketListener->Start();
-		
+
 				}
 				void Stop() {
-					_IO_Runner.reset();
 					{
 						std::lock_guard<std::mutex> lock(_ClientsLock);
 						_Clients.clear();//destroy all clients
 					}
+	
 					_HttptListener.reset();
-					_TCPListener.reset();//destroy the listener
+					_TCPListener.reset();
 					_WebSocketListener.reset();
+					_IO_Runner.reset();
+
 				}
 				void ExtractImageRect(Utilities::Rect r, const Utilities::Image & img, std::vector<char>& outbuffer) {
 
@@ -125,7 +126,7 @@ namespace SL {
 					}
 
 				}
-				std::shared_ptr<Packet> ExtractImageRect(SL::Remote_Access_Library::Utilities::Rect& r, const SL::Remote_Access_Library::Utilities::Image & img) {
+				Packet ExtractImageRect(SL::Remote_Access_Library::Utilities::Rect& r, const SL::Remote_Access_Library::Utilities::Image & img) {
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
 					auto set = TJSAMP_420;
@@ -136,19 +137,17 @@ namespace SL {
 					ExtractImageRect(r, img, _CompressBuffer);
 
 					auto srcbuf = (unsigned char*)_CompressBuffer.data();
-					PacketHeader header;
-					header.Packet_Type = static_cast<unsigned int>(Commands::PACKET_TYPES::IMAGEDIF);
-					header.PayloadLen = sizeof(Utilities::Rect) + maxsize;
-					auto p = Packet::CreatePacket(header);
-					auto dst = (unsigned char*)p->data();
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::IMAGEDIF), sizeof(Utilities::Rect) + maxsize);
+
+					auto dst = (unsigned char*)p.Payload;
 					memcpy(dst, &r, sizeof(Utilities::Rect));
 					dst += sizeof(Utilities::Rect);
 
 
 					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_BGRX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						std::cout<<"Err msg "<< tjGetErrorStr()<<std::endl;
+						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
 					}
-					p->header()->PayloadLen = sizeof(Utilities::Rect) + _jpegSize;//adjust the correct size
+					p.Payload_Length = sizeof(Utilities::Rect) + _jpegSize;//adjust the correct size
 					return p;
 				}
 			};

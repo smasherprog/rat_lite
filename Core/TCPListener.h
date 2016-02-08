@@ -30,6 +30,7 @@ namespace SL {
 			private:
 				INTERNAL::ListinerImpl* _ListinerImpl;
 				INTERNAL::Listiner_DataImpl* _Listiner_DataImpl;
+				void do_accept();
 
 			};
 		}

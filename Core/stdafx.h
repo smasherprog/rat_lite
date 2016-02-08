@@ -9,6 +9,8 @@
 #ifdef _WIN32
 
 
+
+
 #define NOMINMAX 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
@@ -21,6 +23,8 @@
 #pragma comment(lib, "libeay32MTd")
 #pragma comment(lib,"ssleay32MTd")
 #pragma comment(lib,"turbojpeg-static")
+
+
 #endif
 
 #else
@@ -54,5 +58,8 @@
 #include <sstream>
 #include <fstream>
 #include <unordered_map>
+#include <algorithm>
+#include <numeric>
 
-// TODO: reference additional headers your program requires here
+
+

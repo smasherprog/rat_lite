@@ -2,7 +2,7 @@
 #include "ViewerWindow.h"
 #include "Image.h"
 #include "ClientNetworkDriver.h"
-#include "Commands.h"
+#include "Packet.h"
 #include "ISocket.h"
 #include "IClientDriver.h"
 #include <FL\Fl.H>

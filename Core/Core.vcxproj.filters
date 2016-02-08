@@ -30,15 +30,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Packet.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ThreadPool.h">
       <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="Commands.h">
-      <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Image.h">
       <Filter>Utilities</Filter>
@@ -60,9 +54,6 @@
     </ClInclude>
     <ClInclude Include="ConnectWindow.h">
       <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="IClientDriver.h">
-      <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Server_Config.h">
       <Filter>Network</Filter>
@@ -106,20 +97,23 @@
     <ClInclude Include="WebSocketServerNetworkDriver.h">
       <Filter>Network\Driver</Filter>
     </ClInclude>
-    <ClInclude Include="IServerDriver.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
     <ClInclude Include="ViewerWindow.h">
       <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="crypto.hpp">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="IServerDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="IClientDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Packet.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Image.cpp">
       <Filter>Utilities</Filter>

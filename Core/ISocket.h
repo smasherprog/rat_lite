@@ -18,7 +18,7 @@ namespace SL {
 				virtual void send(Packet& pack) = 0;
 				//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
 				virtual void close() = 0;
-				virtual bool closed() const = 0;
+				virtual bool closed() = 0;
 
 				//Get the statstics for this socket
 				virtual SocketStats get_SocketStats() const = 0;

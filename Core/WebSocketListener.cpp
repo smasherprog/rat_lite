@@ -11,7 +11,7 @@ namespace SL {
 			namespace INTERNAL {
 				class WebSocketListinerImpl : public IBaseNetworkDriver {
 				public:
-					std::shared_ptr<TCPListener> _TCPListener;
+					std::shared_ptr<TCPListener<socket, WebSocket<socket>>> _TCPListener;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
 					unsigned short _Listenport;
@@ -23,7 +23,7 @@ namespace SL {
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 						std::cout << "websocket OnConnect" << std::endl;
 						std::string msg = "Hello From Websocket Server";
-						Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), msg.size());
+						Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), static_cast<unsigned int>(msg.size()));
 						memcpy(p.Payload, msg.c_str(), msg.size());
 						socket->send(p);
 					}
@@ -34,15 +34,12 @@ namespace SL {
 						std::cout << "websocket Close" << std::endl;
 					}
 					void Start() {
-						_TCPListener = TCPListener::Create(_Listenport, _io_service, [this](void* socket) {
-							std::make_shared<WebSocket>(this, socket)->connect(nullptr, nullptr);
-						});
+						_TCPListener = std::make_shared<TCPListener<socket, WebSocket<socket>>>(this, _Listenport, _io_service);
 						_TCPListener->Start();
 					}
 					void Stop() {
-						_TCPListener->Stop();
+						_TCPListener.reset();
 					}
-
 				};
 			}
 		}

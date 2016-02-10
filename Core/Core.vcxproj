@@ -180,6 +180,7 @@
     <ClInclude Include="IO_Runner.h" />
     <ClInclude Include="IServerDriver.h" />
     <ClInclude Include="ISocket.h" />
+    <ClInclude Include="SocketImpl.h" />
     <ClInclude Include="ViewerWindow.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="ClientNetworkDriver.h" />
@@ -202,23 +203,20 @@
     <ClCompile Include="ClientNetworkDriver.cpp" />
     <ClCompile Include="ConnectWindow.cpp" />
     <ClCompile Include="HttpListener.cpp" />
-    <ClCompile Include="HttpSocket.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IO_Runner.cpp" />
+    <ClCompile Include="SocketImpl.cpp" />
     <ClCompile Include="ViewerWindow.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="ServerNetworkDriver.cpp" />
-    <ClCompile Include="TCPListener.cpp" />
-    <ClCompile Include="TCPSocket.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="WebSocket.cpp" />
     <ClCompile Include="WebSocketListener.cpp" />
   </ItemGroup>
   <ItemGroup>

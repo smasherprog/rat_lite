@@ -19,8 +19,7 @@ namespace SL {
 
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
 
-
-				std::shared_ptr<Network::TCPListener> _TCPListener;
+				std::shared_ptr<TCPListener<socket, TCPSocket<socket>>> _TCPListener;
 				std::shared_ptr<Network::WebSocketListener> _WebSocketListener;
 				std::unique_ptr<HttpListener> _HttptListener;
 
@@ -35,8 +34,7 @@ namespace SL {
 
 			public:
 				ServerNetworkDriverImpl(Server_Config& config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
-
-
+				
 				}
 				virtual ~ServerNetworkDriverImpl() {
 					Stop();
@@ -87,9 +85,7 @@ namespace SL {
 					Stop();
 
 					_IO_Runner = std::make_unique<IO_Runner>();
-					_TCPListener = Network::TCPListener::Create(_Config.TCPListenPort, _IO_Runner->get_io_service(), [=](void* socket) {
-						std::make_shared<TCPSocket>(this, socket)->connect(nullptr, nullptr);
-					});
+					_TCPListener = std::make_shared<TCPListener<socket, TCPSocket<socket>>>(this, _Config.TCPListenPort, _IO_Runner->get_io_service());
 
 					if (_Config.WebSocketListenPort > 0) {
 						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service());
@@ -107,7 +103,7 @@ namespace SL {
 						std::lock_guard<std::mutex> lock(_ClientsLock);
 						_Clients.clear();//destroy all clients
 					}
-	
+
 					_HttptListener.reset();
 					_TCPListener.reset();
 					_WebSocketListener.reset();

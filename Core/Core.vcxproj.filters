@@ -112,6 +112,9 @@
     <ClInclude Include="IClientDriver.h">
       <Filter>Network\Driver</Filter>
     </ClInclude>
+    <ClInclude Include="SocketImpl.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -136,18 +139,6 @@
     <ClCompile Include="ApplicationDirectory.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="HttpSocket.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
-    <ClCompile Include="WebSocket.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
-    <ClCompile Include="TCPSocket.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
-    <ClCompile Include="TCPListener.cpp">
-      <Filter>Network\Listener</Filter>
-    </ClCompile>
     <ClCompile Include="WebSocketListener.cpp">
       <Filter>Network\Listener</Filter>
     </ClCompile>
@@ -162,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="ViewerWindow.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="SocketImpl.cpp">
+      <Filter>Network\Socket</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

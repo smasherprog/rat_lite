@@ -13,7 +13,7 @@ namespace SL {
 
 				class HttpServerImpl : public IBaseNetworkDriver {
 				public:
-					std::shared_ptr<TCPListener> _TCPListener;
+					std::shared_ptr<TCPListener<socket, HttpSocket<socket>>> _TCPListener;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
 					unsigned short _Listenport;
@@ -51,7 +51,7 @@ namespace SL {
 						std::ifstream file(path.c_str(), std::ios::binary);
 						if (file.is_open()) {
 							file.seekg(0, std::ios_base::end);
-							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), file.tellg());
+							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(file.tellg()));
 							file.seekg(0);//goto begining
 							file.read(pack.Payload, pack.Payload_Length);
 							std::string rd(pack.Payload, pack.Payload_Length);
@@ -67,7 +67,7 @@ namespace SL {
 						std::ifstream file(path.c_str(), std::ios::binary);
 						if (file.is_open()) {
 							file.seekg(0, std::ios_base::end);
-							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), file.tellg());
+							Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(file.tellg()));
 							file.seekg(0);//goto begining
 							file.read(pack.Payload, pack.Payload_Length);
 							std::string rd(pack.Payload, pack.Payload_Length);
@@ -82,7 +82,7 @@ namespace SL {
 					Packet Get404Page() {
 
 						std::string sHTML = "<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
-						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), sHTML.size());
+						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(sHTML.size()));
 						std::copy(begin(sHTML), end(sHTML), pack.Payload);
 						pack.Header[HTTP_STATUSCODE] = "404 Not Found";
 						pack.Header[HTTP_VERSION] = "HTTP/1.1";
@@ -90,17 +90,13 @@ namespace SL {
 						return pack;
 					}
 					void Start() {
-						_TCPListener = TCPListener::Create(_Listenport, _io_service, [this](void* socket) {
-							std::make_shared<HttpSocket>(this, socket)->connect(nullptr, nullptr);
-						});
+						_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _Listenport, _io_service);
 						_TCPListener->Start();
 					}
 					void Stop() {
-						_TCPListener->Stop();
+						_TCPListener.reset();
 					}
-
 				};
-
 			}
 		}
 	}

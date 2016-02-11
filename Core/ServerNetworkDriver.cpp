@@ -20,14 +20,14 @@ namespace SL {
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
 
 				std::shared_ptr<TCPListener<socket, TCPSocket<socket>>> _TCPListener;
-				std::shared_ptr<Network::WebSocketListener> _WebSocketListener;
+				std::shared_ptr<WebSocketListener> _WebSocketListener;
 				std::unique_ptr<HttpListener> _HttptListener;
 
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				Utilities::ThreadPool _SendPool, _ReceivePool;
 				IServerDriver* _IServerDriver;
 
-				std::vector<std::shared_ptr<Network::ISocket>> _Clients;
+				std::vector<std::shared_ptr<ISocket>> _Clients;
 				std::mutex _ClientsLock;
 				Server_Config _Config;
 				std::vector<char> _CompressBuffer;
@@ -44,19 +44,19 @@ namespace SL {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
 					_Clients.push_back(socket);
 				}
-				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket)override {
+				virtual void OnClose(const std::shared_ptr<ISocket>& socket)override {
 					_IServerDriver->OnClose(socket);
 					std::lock_guard<std::mutex> lock(_ClientsLock);
-					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [socket](const std::shared_ptr<Network::ISocket>& p) { return p == socket; }), _Clients.end());
+					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [socket](const std::shared_ptr<ISocket>& p) { return p == socket; }), _Clients.end());
 				}
 
-				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Packet>& p) override
+				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override
 				{
 					_IServerDriver->OnReceive(socket, p);//pass up the chain
 				}
 
 
-				std::vector<std::shared_ptr<Network::ISocket>> GetClients() {
+				std::vector<std::shared_ptr<ISocket>> GetClients() {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
 					return _Clients;
 				}
@@ -68,12 +68,12 @@ namespace SL {
 					SendToAll(ExtractImageRect(r, img));
 				}
 
-				void SendToAll(Network::Packet& packet) {
+				void SendToAll(Packet& packet) {
 					for (auto& c : GetClients()) {
 						c->send(packet);
 					}
 				}
-				void SendToAll(std::vector<Network::Packet>& packets) {
+				void SendToAll(std::vector<Packet>& packets) {
 					for (auto& c : GetClients()) {
 						for (auto& p : packets) {
 							c->send(p);
@@ -122,7 +122,7 @@ namespace SL {
 					}
 
 				}
-				Packet ExtractImageRect(SL::Remote_Access_Library::Utilities::Rect& r, const SL::Remote_Access_Library::Utilities::Image & img) {
+				Packet ExtractImageRect(Utilities::Rect& r, const Utilities::Image & img) {
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
 					auto set = TJSAMP_420;

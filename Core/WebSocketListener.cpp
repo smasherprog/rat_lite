@@ -22,16 +22,16 @@ namespace SL {
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 						std::cout << "websocket OnConnect" << std::endl;
-						std::string msg = "Hello From Websocket Server";
-						Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), static_cast<unsigned int>(msg.size()));
-						memcpy(p.Payload, msg.c_str(), msg.size());
-						socket->send(p);
+						_IBaseNetworkDriver->OnConnect(socket);
+
 					}
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
 						std::cout << "websocket OnReceive" << std::endl;
+						_IBaseNetworkDriver->OnReceive(socket, packet);
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
 						std::cout << "websocket Close" << std::endl;
+						_IBaseNetworkDriver->OnClose(socket);
 					}
 					void Start() {
 						_TCPListener = std::make_shared<TCPListener<socket, WebSocket<socket>>>(this, _Listenport, _io_service);

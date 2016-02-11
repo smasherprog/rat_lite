@@ -29,7 +29,7 @@ namespace SL {
 				width += w;
 				height = std::max(height, h);
 			}
-		
+
 			static auto desktopdc(RAIIHDC(CreateDCA("DISPLAY", NULL, NULL, NULL)));
 			static auto capturedc(RAIIHDC(CreateCompatibleDC(desktopdc.get())));
 			static auto capturebmp(RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), width, height)));
@@ -38,7 +38,7 @@ namespace SL {
 
 			// Selecting an object into the specified DC 
 			auto originalBmp = SelectObject(capturedc.get(), capturebmp.get());
-		
+
 			auto retimg(Utilities::Image::CreateWrappedImage(height, width));
 
 			if (BitBlt(capturedc.get(), 0, 0, width, height, desktopdc.get(), left, top, SRCCOPY | CAPTUREBLT) == FALSE) {
@@ -59,11 +59,11 @@ namespace SL {
 			bmpInfo.bmiHeader.biSizeImage = ((width * bmpInfo.bmiHeader.biBitCount + 31) / 32) * 4 * height;
 
 			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->WrappedImage.data(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
-	
+
 			SelectObject(capturedc.get(), originalBmp);
 			struct utrgba {
 				unsigned char r, g, b, a;
-			};	
+			};
 			auto startdata = (utrgba*)retimg->WrappedImage.data();
 			for (auto r = 0; r < height; r++) {
 				for (auto c = 0; c < width; c++) {
@@ -78,11 +78,23 @@ namespace SL {
 			return retimg;
 		}
 
-
 #elif __APPLE__
+#include "TargetConditionals.h"
+#if TARGET_IPHONE_SIMULATOR
+		// iOS Simulator
+#elif TARGET_OS_IPHONE
+		// iOS device
+#elif TARGET_OS_MAC
+		// Other kinds of Mac OS
+#else
+#   error "Unknown Apple platform"
+#endif
+
 #error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
-#elif __linux
+#elif __linux__
 #error Linux specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
+#elif __ANDROID__
+#error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #endif
 
 

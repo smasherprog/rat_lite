@@ -78,9 +78,22 @@ namespace SL {
 
 
 #elif __APPLE__
-	#error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
-#elif __linux
-#error Linux specific implementation  of CaptureMouse has not been written yet. You can help out by writing it!
+#include "TargetConditionals.h"
+#if TARGET_IPHONE_SIMULATOR
+		// iOS Simulator
+#elif TARGET_OS_IPHONE
+		// iOS device
+#elif TARGET_OS_MAC
+		// Other kinds of Mac OS
+#else
+#   error "Unknown Apple platform"
+#endif
+
+#error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
+#elif __linux__
+#error Linux specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
+#elif __ANDROID__
+#error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #endif
 
 

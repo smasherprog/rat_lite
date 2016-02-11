@@ -143,6 +143,7 @@ namespace SL {
 							else {
 								//If ping
 								if ((_fin_rsv_opcode & 0x0f) == 9) {
+									std::cout << "PING RECIVED" << std::endl;
 									auto write_buffer(std::make_shared<boost::asio::streambuf>());
 									std::ostream outbuf(write_buffer.get());
 									outbuf.put(_fin_rsv_opcode + 1);
@@ -173,17 +174,19 @@ namespace SL {
 					std::ostream header_stream(write_buffer.get());
 
 					///fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
-					header_stream.put((char)129);
+					header_stream.put(130);
 					size_t length = packet->Payload_Length;
 					if (length >= 126) {
 						int num_bytes;
 						if (length > 0xffff) {
 							num_bytes = 8;
 							header_stream.put(127);
+							std::cout << "writing 8 data" << length << std::endl;
 						}
 						else {
 							num_bytes = 2;
 							header_stream.put(126);
+							std::cout << "writing 2 data" << length << std::endl;
 						}
 
 						for (int c = num_bytes - 1; c >= 0; c--) {
@@ -191,6 +194,7 @@ namespace SL {
 						}
 					}
 					else {
+						std::cout << "writing 1 data" << length << std::endl;
 						header_stream.put(static_cast<unsigned char>(length));
 					}
 

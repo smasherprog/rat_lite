@@ -7,14 +7,38 @@
 
 <body>
     <script>
+        function _arrayBufferToBase64(buffer) {
+            var binary = '';
+            var bytes = new Uint8Array(buffer, 16);
+            var len = bytes.byteLength;
+            $('#logsection').append('<br/>'+(len +16));
+            for (var i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+        function draw2(imgData, coords) {
+            "use strict";
+            $('#logsection').append('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+
+            var img = new Image();
+            img.src = "data:image/jpeg;base64," + _arrayBufferToBase64(imgData);
+            img.onload = function () {
+                ctx.drawImage(img, coords.X, coords.Y);
+            };
+            img.onerror = function (stuff) {
+                console.log("Img Onerror:", stuff);
+            };
+
+        }
+        var receivedone = false;
         $(document).ready(function () {
             if ("WebSocket" in window) {
 
-                // var canvas = document.getElementById("canvas");
-                // var ctx = canvas.getContext("2d");
-                // Let us open a web socket
                 var ws = new WebSocket("ws://127.0.0.1:8081/echo");
-
+                ws.binaryType = 'arraybuffer';
                 ws.onopen = function () {
 
                     $('#logsection').append('Socket Opened');
@@ -22,9 +46,20 @@
                 };
 
                 ws.onmessage = function (evt) {
-                    var received_msg = evt.data;
-                    $('#logsection').append(' bytes of Data Received<br/>');
-                    $('#logsection').append(received_msg);
+                 
+                        receivedone = true;
+                        var data = new DataView(evt.data);
+
+                        var imagerect = {
+                            X: data.getInt32(0, true),
+                            Y: data.getInt32(4, true),
+                            Width: data.getInt32(8, true),
+                            Height: data.getInt32(12, true)
+                        }
+                        draw2(evt.data, imagerect);
+                    
+                   
+
                 };
 
                 ws.onclose = function () {
@@ -40,9 +75,7 @@
 
     </script>
 
-    <canvas></canvas>
-
-    
+    <canvas id="myCanvas" height="1080" width="3840"></canvas>
     <div id="logsection"></div>
 
 </body>

@@ -5,7 +5,7 @@
 Simple code
 </li>
 <li>
-Cross-platform
+Cross-platform:Win, Linux, (all)Web Browsers, Andriod, IOS(Probably not IOS, but maybe)
 </li>
 <li>
 Performance 

@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "SocketStats.h"
+#include <string>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -17,7 +18,7 @@ namespace SL {
 				//adds the data to the internal queue, does not block and returns immediately. Library takes a COPY of the packet
 				virtual void send(Packet& pack) = 0;
 				//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
-				virtual void close() = 0;
+				virtual void close(std::string reason) = 0;
 				virtual bool closed() = 0;
 
 				//Get the statstics for this socket

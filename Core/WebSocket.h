@@ -2,6 +2,7 @@
 #include <memory>
 #include "TCPSocket.h"
 #include "crypto.hpp"
+#include "HttpHeader.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -9,6 +10,11 @@ namespace SL {
 
 			//this class is async so all calls return immediately and are later executed
 			template<typename T>class WebSocket : public TCPSocket<T> {
+
+				unsigned char _readheaderbuffer2[2];
+				unsigned char _readheaderbuffer8[8];
+
+				unsigned char _writeheaderbuffer[sizeof(char) + sizeof(char) + sizeof(unsigned long long)];
 
 			public:
 				explicit WebSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket(netevents, socket) {}
@@ -21,190 +27,191 @@ namespace SL {
 
 			private:
 				const std::string ws_magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+				void parse_header() {
 
+				}
 				virtual void handshake()  override {
 
 					auto self(shared_from_this());
-					boost::asio::async_read_until(_socket, _SocketImpl.get_IncomingStreamBuffer(), "\r\n\r\n", [this, self](const boost::system::error_code& ec, size_t s/*bytes_transferred*/) {
+					std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
+
+					boost::asio::async_read_until(_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
-							_SocketImpl.parse_header("1.1", s);
-							if (_SocketImpl.get_Header().count("Sec-WebSocket-Key") == 0) return close();//close socket and get out malformed
+
+							auto beforesize = read_buffer->size();
+							std::istream stream(read_buffer.get());
+							_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
+
+							if (_SocketImpl.Header.count("Sec-WebSocket-Key") == 0) return close("handshake async_read_until Sec-WebSocket-Key not present");//close socket and get out malformed
 							auto write_buffer(std::make_shared<boost::asio::streambuf>());
 							std::ostream handshake(write_buffer.get());
-							auto sha1 = Crypto::SHA1(_SocketImpl.get_Header()["Sec-WebSocket-Key"] + ws_magic_string);
+
 							handshake << "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
 							handshake << "Upgrade: websocket\r\n";
 							handshake << "Connection: Upgrade\r\n";
-							handshake << "Sec-WebSocket-Accept: " << Crypto::Base64::encode(sha1) << "\r\n";
-							handshake << "\r\n";
-							boost::asio::async_write(_socket, *write_buffer, [this, self, write_buffer](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+							handshake << "Sec-WebSocket-Accept: " << Crypto::Base64::encode(Crypto::SHA1(_SocketImpl.Header["Sec-WebSocket-Key"] + ws_magic_string)) << "\r\n\r\n";
+							boost::asio::async_write(_socket, *write_buffer, [this, self, write_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
 									_SocketImpl.get_Driver()->OnConnect(self);
 									readheader();
+
 								}
 								else {
-									close();
+									close(std::string("handshake async_write ") + ec.message());
 								}
 							});
 						}
 						else {
-							close();
+							close(std::string("handshake async_read_until ") + ec.message());
 						}
 					});
 				}
 				virtual void readheader()  override {
 
 					auto self(shared_from_this());
-					boost::asio::async_read(_socket, _SocketImpl.get_IncomingStreamBuffer(), boost::asio::transfer_exactly(2), [this, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+					boost::asio::async_read(_socket, boost::asio::buffer(_readheaderbuffer2, sizeof(_readheaderbuffer2)), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
-
-							std::istream stream(&_SocketImpl.get_IncomingStreamBuffer());
-
-							unsigned char first_bytes[2];
-						
-							stream.read((char*)&first_bytes[0], 2);
-
-							_fin_rsv_opcode = first_bytes[0];
+							_SocketImpl.ReadPacketHeader.Payload_Length = 0;
+							_recv_fin_rsv_opcode = _readheaderbuffer2[0];
 							//Close connection if unmasked message from client (protocol error)
-							if (first_bytes[1] < 128) return close();
-							_IncomingContentLength = (first_bytes[1] & 127);
+							if (_readheaderbuffer2[1] < 128) return send_close(1002, "Closing connection because mask was not received");
 
-							if (_IncomingContentLength == 126) {
+							if (_SocketImpl.ReadPacketHeader.Payload_Length == 126) {
 								//2 next bytes is the size of content
-								boost::asio::async_read(_socket, _SocketImpl.get_IncomingStreamBuffer(), boost::asio::transfer_exactly(2), [this, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+								boost::asio::async_read(_socket, boost::asio::buffer(_readheaderbuffer2, sizeof(_readheaderbuffer2)), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 									if (!ec) {
-										std::istream stream(&_SocketImpl.get_IncomingStreamBuffer());
-
-										unsigned char length_bytes[2];
-										stream.read((char*)&length_bytes[0], 2);
-
-										_IncomingContentLength = 0;
-										int num_bytes = 2;
-										for (int c = 0; c < num_bytes; c++)
-											_IncomingContentLength += length_bytes[c] << (8 * (num_bytes - 1 - c));
+										for (int c = 0; c < 2; c++) {
+											_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer2[c] << (8 * (2 - 1 - c));
+										}
 										readbody();
 									}
 									else {
-										close();
+										return close(std::string("readheader async_read ") + ec.message());
 									}
 								});
 							}
-							else if (_IncomingContentLength == 127) {
+							else if (_SocketImpl.ReadPacketHeader.Payload_Length == 127) {
 								//8 next bytes is the size of content
-								boost::asio::async_read(_socket, _SocketImpl.get_IncomingStreamBuffer(), boost::asio::transfer_exactly(8), [this, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+								boost::asio::async_read(_socket, boost::asio::buffer(_readheaderbuffer8, sizeof(_readheaderbuffer8)), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 									if (!ec) {
-										std::istream stream(&_SocketImpl.get_IncomingStreamBuffer());
-
-										unsigned char length_bytes[8];
-										stream.read((char*)&length_bytes[0], 8);
-
-										_IncomingContentLength = 0;
-										int num_bytes = 8;
-										for (int c = 0; c < num_bytes; c++)
-											_IncomingContentLength += length_bytes[c] << (8 * (num_bytes - 1 - c));
+										for (int c = 0; c < 8; c++) {
+											_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer2[c] << (8 * (8 - 1 - c));
+										}
 										readbody();
 									}
 									else {
-										close();
+										close(std::string("readheader async_read ") + ec.message());
 									}
 								});
 							}
 							else {
+								std::cout << "readheader " << (int)_recv_fin_rsv_opcode << "  " << _SocketImpl.ReadPacketHeader.Payload_Length << std::endl;
+								_SocketImpl.ReadPacketHeader.Payload_Length = _readheaderbuffer2[1] & 127;
 								readbody();
 							}
 						}
 						else {
-							close();
+							close(std::string("readheader async_read ") + ec.message());
 						}
 					});
 				}
 				virtual void readbody() override {
 
 					auto self(shared_from_this());
-					boost::asio::async_read(_socket, _SocketImpl.get_IncomingStreamBuffer(), boost::asio::transfer_exactly(4 + _IncomingContentLength), [this, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+					_SocketImpl.ReadPacketHeader.Payload_Length += 4;//always 4 more because of the mask
+					auto p(_SocketImpl.get_ReadBuffer());
+					auto size(_SocketImpl.get_ReadBufferSize());
+					boost::asio::async_read(_socket, boost::asio::buffer(p, size), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
-							std::istream raw_message_data(&_SocketImpl.get_IncomingStreamBuffer());
 
-							//Read mask
-							unsigned char mask[4];
-							raw_message_data.read((char*)&mask[0], 4);
+							auto packet(std::make_shared<Packet>(std::move(_SocketImpl.GetNextReadPacket())));
+							packet->Packet_Type = static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_BINARY);
+							auto mask = reinterpret_cast<unsigned char*>(packet->Payload);
 
-							auto packet(std::make_shared<Packet>(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_MSG), _IncomingContentLength, std::move(_SocketImpl.get_Header())));
-							_SocketImpl.get_Header().clear();//reset after move
-							auto startpack = packet->Payload;
-							for (size_t c = 0; c < _IncomingContentLength; c++) {
-								startpack[c] = (raw_message_data.get() ^ mask[c % 4]);
+							auto startpack = packet->Payload + 4;
+							for (size_t c = 0; c < packet->Payload_Length - 4; c++) {
+								startpack[c] ^= mask[c % 4];
 							}
 
 							//If connection close
-							if ((_fin_rsv_opcode & 0x0f) == 8) {
-								return close();
+							if ((_recv_fin_rsv_opcode & 0x0f) == 8) {
+								int status = 0;
+								if (bytes_transferred >= 2) {
+									unsigned char byte1 = startpack[0];
+									unsigned char byte2 = startpack[1];
+									status = (byte1 << 8) + byte2;
+								}
+								std::string msg(startpack + 2);
+								send_close(status, msg);
+								return  close("readheader (_recv_fin_rsv_opcode & 0x0f) == 8 " + msg);
+							} else if ((_recv_fin_rsv_opcode & 0x0f) == 9) {//ping
+								std::cout << "PING RECIVED" << std::endl;
+								Packet pingpacket(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_PING));
+								send(pingpacket);
 							}
 							else {
-								//If ping
-								if ((_fin_rsv_opcode & 0x0f) == 9) {
-									std::cout << "PING RECIVED" << std::endl;
-									auto write_buffer(std::make_shared<boost::asio::streambuf>());
-									std::ostream outbuf(write_buffer.get());
-									outbuf.put(_fin_rsv_opcode + 1);
-									outbuf.put(0);
-									boost::asio::async_write(_socket, *write_buffer, [this, self, write_buffer](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
-										if (!ec) {
-											readheader();
-										}
-										else {
-											close();
-										}
-									});
-								}
-								else {
-									_SocketImpl.get_Driver()->OnReceive(self, packet);
-								}
-								readheader();
+								_SocketImpl.get_Driver()->OnReceive(self, packet);
 							}
 						}
 						else {
-							close();
+							close(std::string("readheader async_read ") + ec.message());
 						}
 					});
 				}
 				virtual void writeheader(std::shared_ptr<Packet> packet) override {
-					auto self(shared_from_this());
-					auto write_buffer(std::make_shared<boost::asio::streambuf>());
-					std::ostream header_stream(write_buffer.get());
 
+					unsigned char* p(_writeheaderbuffer);
 					///fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
-					header_stream.put(130);
+					switch (packet->Packet_Type) {
+					case(PACKET_TYPES::WEBSOCKET_PING) :
+						*p++ = 0x1A;
+						break;
+					case(PACKET_TYPES::WEBSOCKET_TEXT) :
+						*p++ = 129;
+						break;
+					case(PACKET_TYPES::WEBSOCKET_CLOSE) :
+						*p++ = 136;
+						break;
+					default://default is binary
+						*p++ = 130;
+						break;
+					}
 					size_t length = packet->Payload_Length;
 					if (length >= 126) {
-						int num_bytes;
 						if (length > 0xffff) {
-							num_bytes = 8;
-							header_stream.put(127);
+							*p++ = 127;
+							auto s = static_cast<unsigned long long>(length);
+							for (int c = sizeof(s) - 1; c >= 0; c--) {
+								*p++ = (length >> (8 * c)) % 256;
+							}
+							//p += sizeof(s);
 							std::cout << "writing 8 data" << length << std::endl;
 						}
 						else {
-							num_bytes = 2;
-							header_stream.put(126);
+							*p++ = 126;
+							auto s = static_cast<unsigned short int>(length);
+							for (int c = sizeof(s) - 1; c >= 0; c--) {
+								*p++ = (length >> (8 * c)) % 256;
+							}
 							std::cout << "writing 2 data" << length << std::endl;
-						}
-
-						for (int c = num_bytes - 1; c >= 0; c--) {
-							header_stream.put((length >> (8 * c)) % 256);
 						}
 					}
 					else {
 						std::cout << "writing 1 data" << length << std::endl;
-						header_stream.put(static_cast<unsigned char>(length));
+						*p++ = static_cast<unsigned char>(length);
 					}
-
-					boost::asio::async_write(_socket, *write_buffer, [self, this, packet, write_buffer](boost::system::error_code ec, std::size_t byteswritten)
+					auto self(shared_from_this());
+					auto size(p - _writeheaderbuffer);
+					p = _writeheaderbuffer;
+					for (auto i = 0; i < size; i++) std::cout << (int)p[i] << " ";
+					std::cout << std::endl;
+					boost::asio::async_write(_socket, boost::asio::buffer(p, size), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
 						{
 							writebody(packet);
 						}
-						else close();
+						else close(std::string("writeheader async_write ") + ec.message());
 					});
 
 				}
@@ -220,11 +227,19 @@ namespace SL {
 					p.Header = packet.Header;
 					return p;
 				}
+				void send_close(int status_code, std::string reason) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_CLOSE), static_cast<unsigned int>(2 + reason.size()));
+					*(unsigned short int*)p.Payload = htons(status_code);
+					memcpy(p.Payload + 2, reason.c_str(), reason.size());
+					send(p);
+					auto self(shared_from_this());
+					_socket.get_io_service().post([this, self]()
+					{
+						close("send_close");//close this socket after the send has completed
+					});
+				}
+				unsigned char _recv_fin_rsv_opcode = 0;
 
-
-				unsigned int _IncomingContentLength = 0;
-				unsigned char _fin_rsv_opcode = 0;
-				
 			};
 		}
 	}

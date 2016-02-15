@@ -5,6 +5,7 @@
 #include "HttpSocket.h"
 #include "Packet.h"
 #include "IBaseNetworkDriver.h"
+#include "HttpHeader.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -33,20 +34,21 @@ namespace SL {
 						if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
 						if (exeindex == searchpath.npos) return socket->send(Get404Page());
 
-						auto requestedpath = packet->Header[HTTP_PATH];
+						auto requestedpath = packet->Header[HttpHeader::HTTP_PATH];
 						if (requestedpath.find_last_of(".ico") != std::string::npos) {
 							socket->send(GetFavIcon(searchpath.substr(0, exeindex)));
 						}
 						else {
 							socket->send(GetIndexPage(searchpath.substr(0, exeindex)));
 						}
-						std::cout << "HTTP OnReceive" << std::endl;
+					
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
 						std::cout << "HTTP Close" << std::endl;
 					}
 
 					Packet GetIndexPage(std::string path) {
+						std::cout << "HTTP OnReceive GetIndexPage" << std::endl;
 						path = path + "\\index.html";
 						std::ifstream file(path.c_str(), std::ios::binary);
 						if (file.is_open()) {
@@ -55,14 +57,15 @@ namespace SL {
 							file.seekg(0);//goto begining
 							file.read(pack.Payload, pack.Payload_Length);
 							std::string rd(pack.Payload, pack.Payload_Length);
-							pack.Header[HTTP_STATUSCODE] = "200 OK";
-							pack.Header[HTTP_VERSION] = "HTTP/1.1";
-							pack.Header[HTTP_CONTENTTYPE] = "text/html";
+							pack.Header[HttpHeader::HTTP_STATUSCODE] = "200 OK";
+							pack.Header[HttpHeader::HTTP_VERSION] = "HTTP/1.1";
+							pack.Header[HttpHeader::HTTP_CONTENTTYPE] = "text/html";
 							return pack;
 						}
 						else return Get404Page();
 					}
 					Packet GetFavIcon(std::string path) {
+						std::cout << "HTTP OnReceive favicon" << std::endl;
 						path = path + "\\favicon.ico";
 						std::ifstream file(path.c_str(), std::ios::binary);
 						if (file.is_open()) {
@@ -71,22 +74,22 @@ namespace SL {
 							file.seekg(0);//goto begining
 							file.read(pack.Payload, pack.Payload_Length);
 							std::string rd(pack.Payload, pack.Payload_Length);
-							pack.Header[HTTP_STATUSCODE] = "200 OK";
-							pack.Header[HTTP_VERSION] = "HTTP/1.1";
-							pack.Header[HTTP_CONTENTTYPE] = "image/vnd.microsoft.icon";
+							pack.Header[HttpHeader::HTTP_STATUSCODE] = "200 OK";
+							pack.Header[HttpHeader::HTTP_VERSION] = "HTTP/1.1";
+							pack.Header[HttpHeader::HTTP_CONTENTTYPE] = "image/vnd.microsoft.icon";
 							return pack;
 						}
 						else return Get404Page();
 
 					}
 					Packet Get404Page() {
-
+						std::cout << "HTTP OnReceive Get404Page" << std::endl;
 						std::string sHTML = "<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
 						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(sHTML.size()));
 						std::copy(begin(sHTML), end(sHTML), pack.Payload);
-						pack.Header[HTTP_STATUSCODE] = "404 Not Found";
-						pack.Header[HTTP_VERSION] = "HTTP/1.1";
-						pack.Header[HTTP_CONTENTTYPE] = "text/html";
+						pack.Header[HttpHeader::HTTP_STATUSCODE] = "404 Not Found";
+						pack.Header[HttpHeader::HTTP_VERSION] = "HTTP/1.1";
+						pack.Header[HttpHeader::HTTP_CONTENTTYPE] = "text/html";
 						return pack;
 					}
 					void Start() {

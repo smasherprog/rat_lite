@@ -115,6 +115,9 @@
     <ClInclude Include="SocketImpl.h">
       <Filter>Network\Socket</Filter>
     </ClInclude>
+    <ClInclude Include="HttpHeader.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -155,6 +158,9 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="SocketImpl.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpHeader.cpp">
       <Filter>Network\Socket</Filter>
     </ClCompile>
   </ItemGroup>

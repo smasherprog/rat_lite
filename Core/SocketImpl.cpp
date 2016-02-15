@@ -6,7 +6,7 @@ SL::Remote_Access_Library::Network::SocketImpl::SocketImpl(boost::asio::io_servi
 	read_deadline_.expires_at(boost::posix_time::pos_infin);
 	write_deadline_.expires_at(boost::posix_time::pos_infin);
 	_SocketStats = { 0 };
-	Writing = Closed = false;
+	Writing =Closed = false;
 
 }
 
@@ -23,59 +23,6 @@ void SL::Remote_Access_Library::Network::SocketImpl::StartWriteTimer(int seconds
 }
 
 
-void SL::Remote_Access_Library::Network::SocketImpl::parse_header(std::string defaultheaderversion, size_t bytesread)
-{
-	std::string line;
-	std::istream stream(&_IncomingStreamBuffer);
-	std::getline(stream, line);
-	size_t method_end;
-	if ((method_end = line.find(' ')) != std::string::npos) {
-		size_t path_end;
-		if ((path_end = line.find(' ', method_end + 1)) != std::string::npos) {
-			Header[HTTP_METHOD] = line.substr(0, method_end);
-			Header[HTTP_PATH] = line.substr(method_end + 1, path_end - method_end - 1);
-			if ((path_end + 6) < line.size())
-				Header[HTTP_VERSION] = line.substr(path_end + 6, line.size() - (path_end + 6) - 1);
-			else
-				Header[HTTP_VERSION] = defaultheaderversion;
-
-			getline(stream, line);
-			size_t param_end;
-			while ((param_end = line.find(':')) != std::string::npos) {
-				size_t value_start = param_end + 1;
-				if ((value_start) < line.size()) {
-					if (line[value_start] == ' ')
-						value_start++;
-					if (value_start < line.size())
-						Header.insert(std::make_pair(line.substr(0, param_end), line.substr(value_start, line.size() - value_start - 1)));
-				}
-
-				getline(stream, line);
-			}
-		}
-	}
-	const auto it = Header.find(HTTP_CONTENTLENGTH);
-	ReadPacketHeader.Payload_Length = 0;
-	if (it != Header.end()) {
-		try {
-			ReadPacketHeader.Payload_Length = static_cast<unsigned int>(stoull(it->second));
-		}
-		catch (const std::exception &e) {
-			std::cout << e.what() << std::endl;
-		}
-	}
-	auto ExtraBytesRead = static_cast<unsigned int>(_IncomingStreamBuffer.size() - bytesread);
-	if (ReadPacketHeader.Payload_Length > ExtraBytesRead) ReadPacketHeader.Payload_Length -= ExtraBytesRead;
-	_IncomingBuffer.assign(std::istreambuf_iterator<char>(stream), {});
-}
-
-
-
-std::unordered_map<std::string, std::string>& SL::Remote_Access_Library::Network::SocketImpl::get_Header()
-{
-	return Header;
-}
-
 SL::Remote_Access_Library::Network::IBaseNetworkDriver* SL::Remote_Access_Library::Network::SocketImpl::get_Driver() const
 {
 	return _IBaseNetworkDriver;
@@ -84,11 +31,6 @@ SL::Remote_Access_Library::Network::IBaseNetworkDriver* SL::Remote_Access_Librar
 SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Network::SocketImpl::get_Socketstats() const
 {
 	return _SocketStats;
-}
-
-boost::asio::streambuf & SL::Remote_Access_Library::Network::SocketImpl::get_IncomingStreamBuffer()
-{
-	return _IncomingStreamBuffer;
 }
 
 

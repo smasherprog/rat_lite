@@ -171,6 +171,7 @@
     <ClInclude Include="ApplicationDirectory.h" />
     <ClInclude Include="ConnectWindow.h" />
     <ClInclude Include="crypto.hpp" />
+    <ClInclude Include="HttpHeader.h" />
     <ClInclude Include="HttpListener.h" />
     <ClInclude Include="HttpSocket.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
@@ -202,6 +203,7 @@
     <ClCompile Include="ApplicationDirectory.cpp" />
     <ClCompile Include="ClientNetworkDriver.cpp" />
     <ClCompile Include="ConnectWindow.cpp" />
+    <ClCompile Include="HttpHeader.cpp" />
     <ClCompile Include="HttpListener.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IO_Runner.cpp" />

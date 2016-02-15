@@ -8,6 +8,7 @@
 #include <boost/asio/ssl.hpp>
 #include "zstd.h"
 #include "SocketImpl.h"
+#include <string>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -31,7 +32,7 @@ namespace SL {
 				explicit TCPSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) : _socket(io_service), _SocketImpl(io_service, netevents) { }
 
 				virtual ~TCPSocket() {
-					close();
+					close("~TCPSocket");
 				}
 
 
@@ -46,6 +47,7 @@ namespace SL {
 						_SocketImpl.AddOutgoingPacket(compack, beforesize);
 						if (!_SocketImpl.writing())
 						{
+							_SocketImpl.writing(true);
 							writeexpire_from_now(30);
 							writeheader(_SocketImpl.GetNextWritePacket());
 						}
@@ -55,7 +57,8 @@ namespace SL {
 				virtual bool closed() override {
 					return _SocketImpl.closed(_socket.lowest_layer());
 				}
-				virtual void close() override {
+				virtual void close(std::string reason) override {
+					std::cout << "Closing socket: " << reason << std::endl;
 					if (_SocketImpl.closed(_socket.lowest_layer())) return;
 					_SocketImpl.get_Driver()->OnClose(shared_from_this());
 					_SocketImpl.close(_socket.lowest_layer());
@@ -74,17 +77,17 @@ namespace SL {
 							boost::asio::ip::tcp::resolver resolver(_socket.get_io_service());
 							boost::asio::ip::tcp::resolver::query query(host, port);
 							auto endpoint = resolver.resolve(query);
-							boost::asio::async_connect(_socket, endpoint, [self, this](boost::system::error_code ec, boost::asio::ip::tcp::resolver::iterator)
+							boost::asio::async_connect(_socket, endpoint, [self, this](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator)
 							{
 								if (!closed()) {
 									_SocketImpl.get_Driver()->OnConnect(self);
 									readheader();
 								}
-								else close();
+								else close(std::string("async_connect ") + ec.message());
 							});
 						}
-						catch (...) {
-							close();
+						catch (std::exception ex) {
+							close(std::string("async_connect ") + ex.what());
 						}
 					}
 
@@ -103,13 +106,13 @@ namespace SL {
 				virtual void readheader()  override {
 					readexpire_from_now(30);
 					auto self(shared_from_this());
-					boost::asio::async_read(_socket, boost::asio::buffer(&_SocketImpl.ReadPacketHeader, sizeof(_SocketImpl.ReadPacketHeader)), [self, this](boost::system::error_code ec, std::size_t len/*length*/)
+					boost::asio::async_read(_socket, boost::asio::buffer(&_SocketImpl.ReadPacketHeader, sizeof(_SocketImpl.ReadPacketHeader)), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
 						if (!ec && !closed()) {
 							assert(len == sizeof(_SocketImpl.ReadPacketHeader));
 							readbody();
 						}
-						else close();
+						else close(std::string("readheader async_read ") + ec.message());
 					});
 				}
 				virtual void readbody() override {
@@ -117,34 +120,40 @@ namespace SL {
 					auto self(shared_from_this());
 					auto p(_SocketImpl.get_ReadBuffer());
 					auto size(_SocketImpl.get_ReadBufferSize());
-					boost::asio::async_read(_socket, boost::asio::buffer(p, size), [self, this](boost::system::error_code ec, std::size_t len/*length*/)
+					if (size == 0) {
+						_SocketImpl.get_Driver()->OnReceive(self, std::make_shared<Packet>(std::move(decompress(_SocketImpl.GetNextReadPacket()))));
+						return readheader();
+					}
+					boost::asio::async_read(_socket, boost::asio::buffer(p, size), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
 						if (!ec && !closed()) {
 							assert(len == _SocketImpl.get_ReadBufferSize());
 							_SocketImpl.get_Driver()->OnReceive(self, std::make_shared<Packet>(std::move(decompress(_SocketImpl.GetNextReadPacket()))));
 							readheader();
 						}
-						else close();
+						else close(std::string("readbody async_read ") + ec.message());
 					});
 				}
 				virtual void writeheader(std::shared_ptr<Packet> packet) override {
 					auto self(shared_from_this());
-					boost::asio::async_write(_socket, boost::asio::buffer(&_SocketImpl.WritePacketHeader, sizeof(_SocketImpl.WritePacketHeader)), [self, this, packet](boost::system::error_code ec, std::size_t byteswritten)
+					boost::asio::async_write(_socket, boost::asio::buffer(&_SocketImpl.WritePacketHeader, sizeof(_SocketImpl.WritePacketHeader)), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
 						{
 							assert(byteswritten == sizeof(_SocketImpl.WritePacketHeader));
 							writebody(packet);
 						}
-						else close();
+						else close(std::string("writeheader async_write ") + ec.message());
 					});
 				}
 				virtual void writebody(std::shared_ptr<Packet> packet) override {
+
 					auto self(shared_from_this());
-					boost::asio::async_write(_socket, boost::asio::buffer(packet->Payload, packet->Payload_Length), [self, this, packet](boost::system::error_code ec, std::size_t byteswritten)
+					boost::asio::async_write(_socket, boost::asio::buffer(packet->Payload, packet->Payload_Length), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
-						if (!ec && !_SocketImpl.closed(_socket.lowest_layer()))
+						if (!ec && !closed())
 						{
+							std::cout << "writebody " << byteswritten << std::endl;
 							assert(byteswritten == packet->Payload_Length);
 							if (!_SocketImpl.OutGoingBuffer_empty()) {
 								writeheader(_SocketImpl.GetNextWritePacket());
@@ -154,7 +163,7 @@ namespace SL {
 							}
 							writeexpire_from_now(30);
 						}
-						else close();
+						else close(std::string("writebody async_write ") + ec.message());
 					});
 				}
 
@@ -185,7 +194,7 @@ namespace SL {
 					auto self(shared_from_this());
 					_SocketImpl.StartReadTimer(seconds);
 					if (seconds >= 0) {
-						_SocketImpl.get_read_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close(); });
+						_SocketImpl.get_read_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close("readexpire_from_now "); });
 					}
 				}
 
@@ -195,11 +204,9 @@ namespace SL {
 					auto self(shared_from_this());
 					_SocketImpl.StartWriteTimer(seconds);
 					if (seconds >= 0) {
-						_SocketImpl.get_write_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close(); });
+						_SocketImpl.get_write_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close("writeexpire_from_now "); });
 					}
 				}
-
-		
 			};
 		};
 	};

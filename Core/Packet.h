@@ -5,7 +5,10 @@ namespace SL {
 
 			enum class PACKET_TYPES : unsigned int {
 				INVALID,
-				WEBSOCKET_MSG,
+				WEBSOCKET_TEXT,
+				WEBSOCKET_BINARY,
+				WEBSOCKET_CLOSE,
+				WEBSOCKET_PING,
 				HTTP_MSG,
 				IMAGEDIF,
 				MOUSEEVENT,
@@ -14,14 +17,7 @@ namespace SL {
 				LAST_PACKET_TYPE
 			};
 			//used in the header for http/websocket requests
-			const auto HTTP_METHOD = "Method";
-			const auto HTTP_PATH = "Path";
-			const auto HTTP_VERSION = "Http_Version";
-			const auto HTTP_STATUSCODE = "Http_StatusCode";
-			const auto HTTP_CONTENTLENGTH = "Content-Length";
-			const auto HTTP_CONTENTTYPE = "Content-Type";
-			const auto HTTP_ENDLINE = "\r\n";
-			const auto HTTP_KEYVALUEDELIM = ": ";
+
 
 			class Packet {
 				//no copy allowed

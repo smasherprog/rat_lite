@@ -30,8 +30,8 @@ namespace SL {
 					{
 						if (!ec)
 						{
-							boost::asio::ip::tcp::no_delay option(true);
-							_socket.set_option(option);
+							//boost::asio::ip::tcp::no_delay option(true);
+							//_socket.set_option(option);
 							std::make_shared<DERIVED_BASESOCKET>(_driver, _socket)->connect(nullptr, nullptr);
 							Start();
 						}
@@ -73,8 +73,8 @@ namespace SL {
 					{	
 						if (!ec)
 						{
-							boost::asio::ip::tcp::no_delay option(true);
-							_socket.set_option(option);
+							//boost::asio::ip::tcp::no_delay option(true);
+							//_socket.set_option(option);
 							_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, this](const boost::system::error_code& ec) {
 								if (!ec) {
 									std::make_shared<DERIVED_BASESOCKET>(_driver, _socket)->connect(nullptr, nullptr);

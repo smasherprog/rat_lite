@@ -28,7 +28,7 @@ namespace SL {
 					_Socket->connect(_dst_host.c_str(), _dst_port.c_str());
 				}
 				void Stop() {
-					if (_Socket) _Socket->close();
+					if (_Socket) _Socket->close("Stopping Listener");
 					if (_IO_Runner) _IO_Runner->Stop();
 				}
 				virtual ~ClientNetworkDriverImpl() {

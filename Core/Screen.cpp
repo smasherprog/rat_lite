@@ -120,7 +120,7 @@ namespace SL {
 							_Image.reset();
 							auto start = std::chrono::steady_clock::now();
 							_Image = CaptureDesktopImage();
-							std::cout << "It took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() << " milliseconds to CaptureDesktopImage() " << std::endl;
+							//std::cout << "It took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() << " milliseconds to CaptureDesktopImage() " << std::endl;
 						});
 					}
 				}

@@ -36,5 +36,5 @@ Latest standards: c++ 14
 <h3>LICENSE:</h3>
 <p>https://tldrlegal.com/license/mit-license</p>
 <p>
-<img src="https://github.com/smasherprog/Remote_Access_Library/blob/master/showing.jpg"/>
+<img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/showing.jpg" target="_blank"/>
 </p>

@@ -61,13 +61,36 @@ namespace SL {
 					return _Clients;
 				}
 
-				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img) {
-					socket->send(std::move(ExtractImageRect(r, img)));
-				}
-				void Send(Utilities::Rect& r, const Utilities::Image & img) {
-					SendToAll(ExtractImageRect(r, img));
+				void Send(ISocket* socket, const Utilities::Image & img) {
+					Utilities::Rect r(Utilities::Point(0, 0),  img.Height(), img.Width());
+					auto p(ExtractImageRect(r, img));
+					p.Packet_Type = static_cast<unsigned int>(PACKET_TYPES::IMAGE);
+					if(socket==nullptr)	SendToAll(p);
+					else socket->send(p);
 				}
 
+				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img) {
+					if (socket == nullptr) SendToAll(ExtractImageRect(r, img));
+					else socket->send(ExtractImageRect(r, img));
+				}
+				void SendMouse(ISocket * socket, const Utilities::Image & img) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(img.size() + sizeof(Utilities::Point)));
+					auto ptr = (Utilities::Point*)p.Payload;
+					ptr->X = img.Width();
+					ptr->Y = img.Height();
+					memcpy(p.Payload + sizeof(Utilities::Point), img.data(), img.size());
+					if (socket == nullptr) SendToAll(p);
+					else socket->send(p);
+				}
+				void SendMouse(ISocket * socket, const Utilities::Point & pt) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSELOCATION), static_cast<unsigned int>(sizeof(Utilities::Point)));
+					auto ptr = (Utilities::Point*)p.Payload;
+					ptr->X = pt.X;
+					ptr->Y = pt.Y;
+					if (socket == nullptr) SendToAll(p);
+					else socket->send(p);
+				}
+			
 				void SendToAll(Packet& packet) {
 					for (auto& c : GetClients()) {
 						c->send(packet);
@@ -172,14 +195,26 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::Stop()
 	_ServerNetworkDriverImpl->Stop();
 }
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(Utilities::Rect & r, const Utilities::Image & img)
-{
-	_ServerNetworkDriverImpl->Send(r, img);
-}
+
 void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img)
 {
 	_ServerNetworkDriverImpl->Send(socket, r, img);
 }
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * socket, const Utilities::Image & img)
+{
+	_ServerNetworkDriverImpl->Send(socket, img);
+}
+
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Image & img)
+{
+	_ServerNetworkDriverImpl->SendMouse(socket, img);
+}
+
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Point & pt)
+{
+	_ServerNetworkDriverImpl->SendMouse(socket, pt);
+}
+
 std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>> SL::Remote_Access_Library::Network::ServerNetworkDriver::GetClients()
 {
 	return _ServerNetworkDriverImpl->GetClients();

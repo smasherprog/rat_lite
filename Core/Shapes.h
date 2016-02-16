@@ -41,10 +41,12 @@ namespace SL {
 					return true;
 				}
 			};
-			
 			inline bool operator==(const Point& p1, const Point& p2) {
 				return p1.X == p2.X && p1.Y == p2.Y;
-			}	
+			}
+			inline bool operator!=(const Point& p1, const Point& p2) {
+				return !(p1==p2);
+			}
 			inline bool operator==(const Rect& p1, const Rect& p2) {
 				return p1.Origin == p2.Origin && p1.Height == p2.Height && p1.Width == p2.Width;
 			}

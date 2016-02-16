@@ -2,66 +2,163 @@
 <html lang="en">
 <head>
     <title>Simple-Web-Server html-file</title>
-    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+
 </head>
 
 <body>
     <script>
-        function _arrayBufferToBase64(buffer) {
-            var binary = '';
-            var bytes = new Uint8Array(buffer, 16);
-            var len = bytes.byteLength;
-            //$('#logsection').append('<br/>' + (len + 16));
-            for (var i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
+        var packetheadersize = 12;//12 bytes
+        var rectsize = 16;//16 bytes
+        var pointsize = 8;//16 bytes
+        function ClientDriver() {
+            var self = this;
+            self.Cursor = document.getElementById("mousecanvas").getContext("2d").createImageData(32, 32);
+            self._ClientNetworkDriver = new ClientNetworkDriver(self);
+            self._ClientNetworkDriver.start("ws://127.0.0.1:8081/echo");
+            self.OnReceive_MouseImage = function (point, img) {
+                "use strict";
+                //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
+                var elem = document.getElementById("mousecanvas");
+                elem.width = point.X;
+                elem.height = point.Y;
+
+                self.Cursor = document.getElementById("mousecanvas").getContext("2d").createImageData(point.X, point.Y);
+                for (var i = 0; i < self.Cursor.data.length; i += 4) {
+                    self.Cursor.data[i + 0] = img[i + 0];
+                    self.Cursor.data[i + 1] = img[i + 1];
+                    self.Cursor.data[i + 2] = img[i + 2];
+                    self.Cursor.data[i + 3] = img[i + 3];
+                }
+                document.getElementById("mousecanvas").getContext("2d").putImageData(self.Cursor, 0, 0);
             }
-            return window.btoa(binary);
+            self.OnReceive_MouseLocation = function (point) {
+                document.getElementById("mousecanvas").style.top = point.Y + "px";
+                document.getElementById("mousecanvas").style.left = point.X + "px";
+            }
+            self.OnReceive_Image = function (img) {
+                "use strict";
+                //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
+
+                var i = new Image();
+                i.src = "data:image/jpeg;base64," + img;
+                i.onload = function () {
+                    var elem = document.getElementById("myCanvas");
+                    elem.width = i.width;
+                    elem.height = i.height;
+                    elem.getContext("2d").drawImage(i, 0, 0);
+                    // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
+                };
+                i.onerror = function (stuff) {
+                    console.log("Img Onerror:", stuff);
+                };
+            }
+            self.OnReceive_ImageDif = function (rect, img) {
+                "use strict";
+                //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
+                var i = new Image();
+                i.src = "data:image/jpeg;base64," + img
+                i.onload = function () {
+                    document.getElementById("myCanvas").getContext("2d").drawImage(i, rect.X, rect.Y);
+                    // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
+                };
+                i.onerror = function (stuff) {
+                    console.log("Img Onerror:", stuff);
+                };
+            }
         }
-        function draw2(imgData, coords) {
-            "use strict";
-            //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
-            var canvas = document.getElementById("myCanvas");
-            var ctx = canvas.getContext("2d");
 
-            var img = new Image();
-            img.src = "data:image/jpeg;base64," + _arrayBufferToBase64(imgData);
-            img.onload = function () {
-                ctx.drawImage(img, coords.X, coords.Y);
-               // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
-            };
-            img.onerror = function (stuff) {
-                console.log("Img Onerror:", stuff);
-            };
+        function ClientNetworkDriver(p) {
+            var self = this;
+            self.Parent = p;
 
-        }
+            self.start = function (url) {
 
-        $(document).ready(function () {
-            if ("WebSocket" in window) {
-
-                var ws = new WebSocket("ws://127.0.0.1:8081/echo");
-                ws.binaryType = 'arraybuffer';
-                ws.onopen = function () {
-
-                    $('#logsection').append('Socket Opened');
-
+                self.socket = new WebSocket(url);
+                self.socket.binaryType = 'arraybuffer';
+                self.socket.onopen = function () {
+                    console.log('Socket Opened');
                 };
 
-                ws.onmessage = function (evt) {
+
+                self.onreceiveimage = function (data, currentoffset) {
+                    var d = new DataView(data, currentoffset);
+                    var imagerect = {
+                        X: d.getInt32(0, true),
+                        Y: d.getInt32(4, true),
+                        Width: d.getInt32(8, true),
+                        Height: d.getInt32(12, true)
+                    }//rect isnt needed here
+                    self.Parent.OnReceive_Image(_arrayBufferToBase64(new Uint8Array(data, currentoffset + rectsize)));
+                }
+                self.onreceiveimagedif = function (data, currentoffset) {
+                    var d = new DataView(data, currentoffset);
+                    var imagerect = {
+                        X: d.getInt32(0, true),
+                        Y: d.getInt32(4, true),
+                        Width: d.getInt32(8, true),
+                        Height: d.getInt32(12, true)
+                    }
+                    self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(new Uint8Array(data, currentoffset + rectsize)));
+                }
+                self.onreceivemouseimage = function (data, currentoffset) {
+                    var d = new DataView(data, currentoffset);
+                    var imagepoint = {
+                        X: d.getInt32(0, true),
+                        Y: d.getInt32(4, true)
+                    }
+                    self.Parent.OnReceive_MouseImage(imagepoint, new Uint8Array(data, currentoffset + pointsize));
+                }
+                self.onreceivemouselocation = function (data, currentoffset) {
+                    var d = new DataView(data, currentoffset);
+                    var imagepoint = {
+                        X: d.getInt32(0, true),
+                        Y: d.getInt32(4, true)
+                    }
+                    self.Parent.OnReceive_MouseLocation(imagepoint);
+                }
+
+                self.socket.onclose = function () {
+                    console.log('Connection is closed...');
+                };
+                function _arrayBufferToBase64(buffer) {
+                    var binary = '';
+                    var bytes = new Uint8Array(buffer, 16);
+                    var len = bytes.byteLength;
+                    //$('#logsection').append('<br/>' + (len + 16));
+                    for (var i = 0; i < len; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    return window.btoa(binary);
+                }
+
+                self.socket.onmessage = function (evt) {
 
                     var data = new DataView(evt.data);
-                    var imagerect = {
-                        X: data.getInt32(0, true),
-                        Y: data.getInt32(4, true),
-                        Width: data.getInt32(8, true),
-                        Height: data.getInt32(12, true)
-                    }
-                    draw2(evt.data, imagerect);
-                };
+                    var packetheader = {
+                        Packet_Type: data.getInt32(0, true),
+                        Payload_Length: data.getInt32(4, true),
+                        UncompressedLength: data.getInt32(8, true)//this is unused for websockets
+                    };
+                    switch (packetheader.Packet_Type) {
+                        case (4)://this is an image
+                            self.onreceiveimage(evt.data, packetheadersize);
+                            break;
+                        case (5)://this is an imagedif
+                            self.onreceiveimagedif(evt.data, packetheadersize);
+                            break;
+                        case (6)://this is a mouse image
+                            self.onreceivemouseimage(evt.data, packetheadersize);
+                            break;
+                        case (7)://this is a mouse location update
+                            self.onreceivemouselocation(evt.data, packetheadersize);
+                            break;
+                        default:
+                            console.log('received unknown packet type: ' + packetheader.Packet_Type)
+                            break;
+                    };
 
-                ws.onclose = function () {
-                    $('#logsection').append('Connection is closed...');
                 };
-                ws.onclose = function (event) {
+                self.socket.onclose = function (event) {
                     var reason;
                     // See http://tools.ietf.org/html/rfc6455#section-7.4.1
                     if (event.code == 1000)
@@ -93,11 +190,20 @@
                     else
                         reason = "Unknown reason";
 
-                    $('#logsection').append(event.code + 'The connection was closed for reason: ' + reason);
+                    //  $('#logsection').append(event.code + 'The connection was closed for reason: ' + reason);
                 };
-                ws.onerror = function (evt) {
-                    $('#logsection').append('The following error occurred: ' + evt.data);
+                self.socket.onerror = function (evt) {
+                    //  $('#logsection').append('The following error occurred: ' + evt.data);
                 }
+            }
+        };
+
+
+        var SL_Client;
+        document.addEventListener("DOMContentLoaded", function (event) {
+            if ("WebSocket" in window) {
+                SL_Client = new ClientDriver();
+
             }
 
             else {
@@ -107,9 +213,11 @@
         });
 
     </script>
+    <div style="position: relative;">
+        <canvas id="myCanvas" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+        <canvas id="mousecanvas" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+    </div>
 
-    <canvas id="myCanvas" height="1080" width="3840"></canvas>
-    <div id="logsection"></div>
 
 </body>
 </html>

@@ -5,12 +5,13 @@ namespace SL {
 
 			enum class PACKET_TYPES : unsigned int {
 				INVALID,
-				WEBSOCKET_TEXT,
-				WEBSOCKET_BINARY,
 				WEBSOCKET_CLOSE,
 				WEBSOCKET_PING,
 				HTTP_MSG,
+				IMAGE,
 				IMAGEDIF,
+				MOUSEIMAGE,
+				MOUSELOCATION,
 				MOUSEEVENT,
 				KEYEVENT,
 				//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
@@ -33,7 +34,7 @@ namespace SL {
 			public:
 				Packet(unsigned int packet_type) : Packet_Type(packet_type), Payload(nullptr), _owns_Payload(true) {}
 				Packet(unsigned int packet_type, unsigned int payloadsize) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(new char[payloadsize]), _owns_Payload(true) {}
-				Packet(unsigned int packet_type, unsigned int payloadsize, char* buf, bool take_ownership = true) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(std::move(buf)), _owns_Payload(take_ownership) {}
+				Packet(unsigned int packet_type, unsigned int payloadsize, char* buf, bool take_ownership = true) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(buf), _owns_Payload(take_ownership) {}
 				Packet(unsigned int packet_type, unsigned int payloadsize, std::unordered_map<std::string, std::string>&& header, char* buf, bool take_ownership = true) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(buf), _owns_Payload(take_ownership), Header(std::move(header)) {}
 				Packet(unsigned int packet_type, unsigned int payloadsize, std::unordered_map<std::string, std::string>&& header) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(new char[payloadsize]), _owns_Payload(true), Header(std::move(header)) {}
 				Packet(Packet&& other) {

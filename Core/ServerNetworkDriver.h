@@ -6,6 +6,7 @@ namespace SL {
 		namespace Utilities {
 			class Image;
 			class Rect;
+			class Point;
 		}
 		namespace Network {
 			class ServerNetworkDriverImpl;
@@ -25,9 +26,11 @@ namespace SL {
 				//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
 				void Stop();
 
-				void Send(Utilities::Rect& r, const Utilities::Image & img);
 				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img);
-
+				void Send(ISocket* socket, const Utilities::Image & img);
+				void SendMouse(ISocket* socket, const Utilities::Image & img);
+				void SendMouse(ISocket* socket, const Utilities::Point & pt);
+				
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();
 
 			};

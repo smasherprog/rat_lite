@@ -105,7 +105,6 @@ namespace SL {
 								});
 							}
 							else {
-								std::cout << "readheader " << (int)_recv_fin_rsv_opcode << "  " << _SocketImpl.ReadPacketHeader.Payload_Length << std::endl;
 								_SocketImpl.ReadPacketHeader.Payload_Length = _readheaderbuffer2[1] & 127;
 								readbody();
 							}
@@ -125,7 +124,7 @@ namespace SL {
 						if (!ec) {
 
 							auto packet(std::make_shared<Packet>(std::move(_SocketImpl.GetNextReadPacket())));
-							packet->Packet_Type = static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_BINARY);
+							packet->Packet_Type = 0;
 							auto mask = reinterpret_cast<unsigned char*>(packet->Payload);
 
 							auto startpack = packet->Payload + 4;
@@ -162,21 +161,20 @@ namespace SL {
 
 					unsigned char* p(_writeheaderbuffer);
 					///fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
+					unsigned int extralength = 0;
 					switch (packet->Packet_Type) {
 					case(PACKET_TYPES::WEBSOCKET_PING) :
 						*p++ = 0x1A;
-						break;
-					case(PACKET_TYPES::WEBSOCKET_TEXT) :
-						*p++ = 129;
 						break;
 					case(PACKET_TYPES::WEBSOCKET_CLOSE) :
 						*p++ = 136;
 						break;
 					default://default is binary
 						*p++ = 130;
+						extralength += sizeof(_SocketImpl.WritePacketHeader);
 						break;
 					}
-					size_t length = packet->Payload_Length;
+					size_t length = packet->Payload_Length + extralength;
 					if (length >= 126) {
 						if (length > 0xffff) {
 							*p++ = 127;
@@ -184,8 +182,6 @@ namespace SL {
 							for (int c = sizeof(s) - 1; c >= 0; c--) {
 								*p++ = (length >> (8 * c)) % 256;
 							}
-							//p += sizeof(s);
-							std::cout << "writing 8 data" << length << std::endl;
 						}
 						else {
 							*p++ = 126;
@@ -193,23 +189,28 @@ namespace SL {
 							for (int c = sizeof(s) - 1; c >= 0; c--) {
 								*p++ = (length >> (8 * c)) % 256;
 							}
-							std::cout << "writing 2 data" << length << std::endl;
 						}
 					}
 					else {
-						std::cout << "writing 1 data" << length << std::endl;
 						*p++ = static_cast<unsigned char>(length);
 					}
+
 					auto self(shared_from_this());
 					auto size(p - _writeheaderbuffer);
 					p = _writeheaderbuffer;
-					for (auto i = 0; i < size; i++) std::cout << (int)p[i] << " ";
-					std::cout << std::endl;
+
+
 					boost::asio::async_write(_socket, boost::asio::buffer(p, size), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
 						{
-							writebody(packet);
+							if (packet->Packet_Type == static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_CLOSE) ||
+								packet->Packet_Type == static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_PING)) {// in this case, there is only a payload
+								TCPSocket::writebody(packet);//write payload
+							}
+							else {
+								TCPSocket::writeheader(packet);//call base
+							}
 						}
 						else close(std::string("writeheader async_write ") + ec.message());
 					});

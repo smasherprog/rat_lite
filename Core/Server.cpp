@@ -5,6 +5,7 @@
 #include "Image.h"
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
+#include <FL\Fl.H>
 
 using namespace std::literals;
 
@@ -16,13 +17,15 @@ namespace SL {
 		}
 		class ServerImpl : public Network::IServerDriver {
 		public:
-			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
+			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen, LastMouse;
+			Utilities::Point LastMousePosition;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
 			bool _Keepgoing;
 
-			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
+			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), LastMousePosition(0, 0)
 			{
+	
 				_Keepgoing = true;
 			}
 
@@ -30,8 +33,10 @@ namespace SL {
 				_Keepgoing = false;
 			}
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
-				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
-				_ServerNetworkDriver.Send(socket.get(), Utilities::Rect(Utilities::Point(0, 0), newimg->Height(), newimg->Width()), *newimg);
+				auto newimg  = SL::Remote_Access_Library::Capturing::CaptureDesktop();
+				_ServerNetworkDriver.Send(socket.get(), *newimg);
+				newimg = SL::Remote_Access_Library::Capturing::CaptureMouse();
+				_ServerNetworkDriver.SendMouse(socket.get(), *newimg);
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
 			virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket)override {
@@ -47,25 +52,52 @@ namespace SL {
 			{
 				if (!LastScreen) {//first screen send all!
 					LastScreen = SL::Remote_Access_Library::Capturing::CaptureDesktop();
-					_ServerNetworkDriver.Send(Utilities::Rect(Utilities::Point(0, 0), LastScreen->Height(), LastScreen->Width()), *LastScreen);
+					_ServerNetworkDriver.Send(nullptr, *LastScreen);
 				}
 				else {//compare and send all difs along
 					auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 					if (newimg->data() != LastScreen->data()) {
 
 						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *newimg)) {
-							_ServerNetworkDriver.Send(r, *newimg);
+							_ServerNetworkDriver.Send(nullptr, r, *newimg);
 						}
-
 						LastScreen = newimg;//swap
 					}
 				}
 			}
-
+			void ProcessMouse()
+			{
+				if (!LastMouse) {//first screen send all!
+					LastMouse = SL::Remote_Access_Library::Capturing::CaptureMouse();
+					_ServerNetworkDriver.SendMouse(nullptr, *LastMouse);
+				}
+				else {//compare and send 
+					auto newimg = SL::Remote_Access_Library::Capturing::CaptureMouse();
+					if (newimg->size() == LastMouse->size()) {
+						if (memcmp(newimg->data(), LastMouse->data(), LastMouse->size()) != 0) {
+							_ServerNetworkDriver.SendMouse(nullptr, *newimg);
+							LastMouse = newimg;//swap
+						}
+					}
+					else {
+						_ServerNetworkDriver.SendMouse(nullptr, *newimg);
+						LastMouse = newimg;//swap
+					}
+					
+					Utilities::Point p1;
+				
+					Fl::get_mouse(p1.X, p1.Y);
+					if (p1 != LastMousePosition) {
+						_ServerNetworkDriver.SendMouse(nullptr, p1);
+						LastMousePosition = p1;
+					}
+				}
+			}
 			int Run() {
 				_ServerNetworkDriver.Start();
 				while (_Keepgoing) {
 					ProcessScreen();
+					ProcessMouse();
 					std::this_thread::sleep_for(100ms);
 				}
 				_ServerNetworkDriver.Stop();

@@ -48,6 +48,7 @@ void SL::Remote_Access_Library::Network::IO_Runner::Start()
 void SL::Remote_Access_Library::Network::IO_Runner::Stop()
 {
 	delete _IO_RunnerImpl;
+	_IO_RunnerImpl = nullptr;
 }
 
 boost::asio::io_service& SL::Remote_Access_Library::Network::IO_Runner::get_io_service()

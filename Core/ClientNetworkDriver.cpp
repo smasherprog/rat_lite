@@ -18,7 +18,7 @@ namespace SL {
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				std::string _dst_host, _dst_port;
 			public:
-				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r),  _dst_host(dst_host), _dst_port(dst_port) {
+				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _dst_host(dst_host), _dst_port(dst_port) {
 
 				}
 				void Start() {
@@ -40,8 +40,17 @@ namespace SL {
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override {
 
 					switch (p->Packet_Type) {
-					case PACKET_TYPES::IMAGEDIF:
+					case static_cast<unsigned int>(PACKET_TYPES::IMAGE) :
+						Image(socket, p);
+						break;
+					case static_cast<unsigned int>(PACKET_TYPES::IMAGEDIF) :
 						ImageDif(socket, p);
+						break;
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE) :
+						MouseImage(socket, p);
+						break;
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSELOCATION) :
+						MouseLocation(socket, p);
 						break;
 					default:
 						_IClientDriver->OnReceive(socket, p);//pass up the chain
@@ -49,16 +58,20 @@ namespace SL {
 					}
 
 				}
-
+				void MouseLocation(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					auto pos = (Utilities::Point*)p->Payload;
+					_IClientDriver->OnReceive_MouseLocation(socket, *pos);
+				}
+				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					auto pos = (Utilities::Point*)p->Payload;
+					_IClientDriver->OnReceive_MouseImage(socket, Utilities::Image::CreateImage(pos->Y, pos->X, p->Payload + sizeof(Utilities::Point), p->Payload_Length - sizeof(Utilities::Point)));
+				}
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
 
-					int jpegSubsamp = 0;
-					auto outwidth = 0;
-					auto outheight = 0;
-
+					int jpegSubsamp(0), outwidth(0), outheight(0);
 					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
 
 					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
@@ -66,12 +79,28 @@ namespace SL {
 					}
 					auto img = Utilities::Image::CreateImage(outheight, outwidth);
 
-					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_BGRX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
 					}
+					_IClientDriver->OnReceive_ImageDif(socket, imgrect, img);
 
+				}
+				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					auto imgrect = (Utilities::Rect*)p->Payload;
+					auto compfree = [](void* handle) {tjDestroy(handle); };
+					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
+					int jpegSubsamp(0), outwidth(0), outheight(0);
+					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
 
-					_IClientDriver->OnReceive_Image(socket, imgrect, img);
+					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
+						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+					}
+					auto img = Utilities::Image::CreateImage(outheight, outwidth);
+
+					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+					}
+					_IClientDriver->OnReceive_Image(socket, img);
 
 				}
 			};

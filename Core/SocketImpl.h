@@ -8,7 +8,7 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
-			struct PacketHeaderWrapper {
+			struct PacketHeader {
 				unsigned int Packet_Type;
 				unsigned int Payload_Length;
 				unsigned int UncompressedLength;
@@ -62,8 +62,8 @@ namespace SL {
 
 				std::vector<char> _IncomingBuffer;
 	
-				PacketHeaderWrapper WritePacketHeader;
-				PacketHeaderWrapper ReadPacketHeader;
+				PacketHeader WritePacketHeader;
+				PacketHeader ReadPacketHeader;
 				std::unordered_map<std::string, std::string> Header;
 
 			};

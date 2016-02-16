@@ -116,14 +116,11 @@ namespace SL {
 					});
 				}
 				virtual void readbody() override {
+
 					readexpire_from_now(30);
 					auto self(shared_from_this());
 					auto p(_SocketImpl.get_ReadBuffer());
 					auto size(_SocketImpl.get_ReadBufferSize());
-					if (size == 0) {
-						_SocketImpl.get_Driver()->OnReceive(self, std::make_shared<Packet>(std::move(decompress(_SocketImpl.GetNextReadPacket()))));
-						return readheader();
-					}
 					boost::asio::async_read(_socket, boost::asio::buffer(p, size), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
 						if (!ec && !closed()) {
@@ -135,7 +132,8 @@ namespace SL {
 					});
 				}
 				virtual void writeheader(std::shared_ptr<Packet> packet) override {
-					auto self(shared_from_this());
+					writeexpire_from_now(30);
+					auto self(shared_from_this()); 
 					boost::asio::async_write(_socket, boost::asio::buffer(&_SocketImpl.WritePacketHeader, sizeof(_SocketImpl.WritePacketHeader)), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
@@ -147,13 +145,13 @@ namespace SL {
 					});
 				}
 				virtual void writebody(std::shared_ptr<Packet> packet) override {
-
+					writeexpire_from_now(30);
 					auto self(shared_from_this());
 					boost::asio::async_write(_socket, boost::asio::buffer(packet->Payload, packet->Payload_Length), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
 						{
-							std::cout << "writebody " << byteswritten << std::endl;
+							
 							assert(byteswritten == packet->Payload_Length);
 							if (!_SocketImpl.OutGoingBuffer_empty()) {
 								writeheader(_SocketImpl.GetNextWritePacket());
@@ -161,7 +159,6 @@ namespace SL {
 							else {
 								_SocketImpl.writing(false);
 							}
-							writeexpire_from_now(30);
 						}
 						else close(std::string("writebody async_write ") + ec.message());
 					});

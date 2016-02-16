@@ -41,9 +41,14 @@ namespace SL {
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
-
+				static void window_cb(Fl_Widget *widget, void *)
+				{
+					auto wnd = (ViewerWindowImpl*)widget;
+					wnd->Close();
+				}
 				ViewerWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
+					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
 
 					_MyCanvas = new MyCanvas(0, 0, 900, 700, nullptr);
@@ -51,6 +56,7 @@ namespace SL {
 					end();
 					resizable(_MyCanvas);
 					show();
+
 				}
 				virtual ~ViewerWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;
@@ -68,23 +74,27 @@ namespace SL {
 
 				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) override
 				{
-					if (!_BeingClosed) Fl::delete_widget(this);
+					Close();
+				}
+				void Close() {
+					if (!_BeingClosed) {
+						Fl::delete_widget(this);
+						//this->hide();
+					}
 					_BeingClosed = true;
 				}
-
 				static void awakenredraw(void* data) {
 					((ViewerWindowImpl*)data)->redraw();
 				}
-				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect * rect, std::shared_ptr<Utilities::Image>& img) override
+				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
 				{
-					if (!_MyCanvas->_Image) {
-						_MyCanvas->_Image = img;
-						_MyCanvas->resize(0, 0, img->Width(), img->Height());
-					}
-					else {
-						Utilities::Image::Copy(*img, Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width()), *_MyCanvas->_Image, *rect);
-					}
+					_MyCanvas->_Image = img;
+					_MyCanvas->resize(0, 0, img->Width(), img->Height());
+					Fl::awake(awakenredraw, this);
 
+				}
+				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) override {
+					Utilities::Image::Copy(*img, Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width()), *_MyCanvas->_Image, *rect);
 					Fl::awake(awakenredraw, this);
 
 					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
@@ -96,6 +106,16 @@ namespace SL {
 						LastStats = stats;
 						label(st.c_str());
 					}
+
+				}
+
+				// Inherited via IClientDriver
+				virtual void OnReceive_MouseLocation(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point & pos) override
+				{
+
+				}
+				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
+				{
 
 				}
 			};

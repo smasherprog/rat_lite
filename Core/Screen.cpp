@@ -5,6 +5,8 @@
 #include <FL/Fl.H>
 
 
+
+using namespace std::literals;
 #define DESKTOPCAPTURERATE 100
 #define DESKTOPWAITCAPTURERATE 20ms
 
@@ -90,7 +92,11 @@ namespace SL {
 
 #error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #elif __linux__
-#error Linux specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
+
+		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
+		{
+           return std::make_shared<Utilities::Image_Wrapper>(); 
+        }
 #elif __ANDROID__
 #error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #endif

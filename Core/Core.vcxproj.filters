@@ -28,6 +28,9 @@
     <Filter Include="Network\Driver">
       <UniqueIdentifier>{514daf98-3c44-4f3b-a56f-1dae42a01c74}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Compression">
+      <UniqueIdentifier>{f1fabd8f-0c85-405d-8b96-5aef9153d5ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -118,6 +121,48 @@
     <ClInclude Include="HttpHeader.h">
       <Filter>Network\Socket</Filter>
     </ClInclude>
+    <ClInclude Include="zstd_buffered_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd_internal.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="bitstream.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="error.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="error_private.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="error_public.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="fse.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="fse_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="huff0.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="huff0_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd_buffered.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="mem.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -162,6 +207,21 @@
     </ClCompile>
     <ClCompile Include="HttpHeader.cpp">
       <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="fse.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="huff0.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="zstd_buffered.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="zstd_compress.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="zstd_decompress.c">
+      <Filter>Compression</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

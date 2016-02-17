@@ -4,11 +4,8 @@
 #include "ThreadPool.h"
 #include <FL/Fl.H>
 
-
-
-using namespace std::literals;
 #define DESKTOPCAPTURERATE 100
-#define DESKTOPWAITCAPTURERATE 20ms
+#define DESKTOPWAITCAPTURERATE 20
 
 namespace SL {
 	namespace Remote_Access_Library {

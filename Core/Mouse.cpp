@@ -2,11 +2,10 @@
 #include "Image.h"
 #include "Mouse.h"
 #include "ThreadPool.h"
-#include <FL\Fl.H>
+#include <FL/Fl.H>
 
-using namespace std::literals;
 #define MOUSECAPTURERATE 30
-#define MOUSEWAITCAPTURERATE 10ms
+#define MOUSEWAITCAPTURERATE 10
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -127,7 +126,7 @@ namespace SL {
 						return std::shared_ptr<Utilities::Image>(tmpimage, &tmpimage->WrappedImage);
 					}
 					else { //wait for an image to become available. This should only happen on the first call to this function
-						std::this_thread::sleep_for(MOUSEWAITCAPTURERATE);
+						std::this_thread::sleep_for(std::chrono::milliseconds(MOUSEWAITCAPTURERATE));
 					}
 				}
 			}

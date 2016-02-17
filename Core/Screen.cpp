@@ -2,11 +2,9 @@
 #include "Screen.h"
 #include "Image.h"
 #include "ThreadPool.h"
-#include <FL\Fl.H>
+#include <FL/Fl.H>
 
 
-
-using namespace std::literals;
 #define DESKTOPCAPTURERATE 100
 #define DESKTOPWAITCAPTURERATE 20ms
 
@@ -130,7 +128,7 @@ namespace SL {
 						return std::shared_ptr<Utilities::Image>(tmpimage, &tmpimage->WrappedImage);
 					}
 					else { //wait for an image to become available. This should only happen on the first call to this function
-						std::this_thread::sleep_for(DESKTOPWAITCAPTURERATE);
+						std::this_thread::sleep_for(std::chrono::milliseconds(DESKTOPWAITCAPTURERATE));
 					}
 				}
 			}

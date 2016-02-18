@@ -38,7 +38,7 @@ namespace SL {
 					boost::asio::async_read_until(_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
 
-							auto beforesize = read_buffer->size();
+						
 							std::istream stream(read_buffer.get());
 							_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
 
@@ -180,14 +180,14 @@ namespace SL {
 							*p++ = 127;
 							auto s = static_cast<unsigned long long>(length);
 							for (int c = sizeof(s) - 1; c >= 0; c--) {
-								*p++ = (length >> (8 * c)) % 256;
+								*p++ = (s >> (8 * c)) % 256;
 							}
 						}
 						else {
 							*p++ = 126;
 							auto s = static_cast<unsigned short int>(length);
 							for (int c = sizeof(s) - 1; c >= 0; c--) {
-								*p++ = (length >> (8 * c)) % 256;
+								*p++ = (s >> (8 * c)) % 256;
 							}
 						}
 					}
@@ -230,7 +230,7 @@ namespace SL {
 				}
 				void send_close(int status_code, std::string reason) {
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_CLOSE), static_cast<unsigned int>(2 + reason.size()));
-					*(unsigned short int*)p.Payload = htons(status_code);
+					*(unsigned short int*)p.Payload = htons(static_cast<unsigned short int>(status_code));
 					memcpy(p.Payload + 2, reason.c_str(), reason.size());
 					send(p);
 					auto self(shared_from_this());

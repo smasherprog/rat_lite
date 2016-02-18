@@ -1,4 +1,8 @@
 #pragma once
+#include <memory>
+#include <unordered_map>
+#include <string>
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {

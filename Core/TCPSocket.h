@@ -125,7 +125,9 @@ namespace SL {
 					{
 						if (!ec && !closed()) {
 							assert(len == _SocketImpl.get_ReadBufferSize());
-							_SocketImpl.get_Driver()->OnReceive(self, std::make_shared<Packet>(std::move(decompress(_SocketImpl.GetNextReadPacket()))));
+							auto pac(_SocketImpl.GetNextReadPacket());
+							auto spac(std::make_shared<Packet>(std::move(decompress(pac))));
+							_SocketImpl.get_Driver()->OnReceive(self, spac);
 							readheader();
 						}
 						else close(std::string("readbody async_read ") + ec.message());
@@ -188,21 +190,21 @@ namespace SL {
 				void readexpire_from_now(int seconds)
 				{
 					return;//DONT USE THIS YET
-					auto self(shared_from_this());
+				/*	auto self(shared_from_this());
 					_SocketImpl.StartReadTimer(seconds);
 					if (seconds >= 0) {
 						_SocketImpl.get_read_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close("readexpire_from_now "); });
-					}
+					}*/
 				}
 
 				void writeexpire_from_now(int seconds)
 				{
 					return;//DONT USE THIS YET
-					auto self(shared_from_this());
+			/*		auto self(shared_from_this());
 					_SocketImpl.StartWriteTimer(seconds);
 					if (seconds >= 0) {
 						_SocketImpl.get_write_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close("writeexpire_from_now "); });
-					}
+					}*/
 				}
 			};
 		};

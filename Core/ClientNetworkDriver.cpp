@@ -64,7 +64,8 @@ namespace SL {
 				}
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto pos = (Utilities::Point*)p->Payload;
-					_IClientDriver->OnReceive_MouseImage(socket, Utilities::Image::CreateImage(pos->Y, pos->X, p->Payload + sizeof(Utilities::Point), p->Payload_Length - sizeof(Utilities::Point)));
+					auto img(Utilities::Image::CreateImage(pos->Y, pos->X, p->Payload + sizeof(Utilities::Point), p->Payload_Length - sizeof(Utilities::Point)));
+					_IClientDriver->OnReceive_MouseImage(socket, img);
 				}
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;
@@ -86,7 +87,7 @@ namespace SL {
 
 				}
 				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					auto imgrect = (Utilities::Rect*)p->Payload;
+				
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
 					int jpegSubsamp(0), outwidth(0), outheight(0);

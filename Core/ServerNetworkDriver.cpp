@@ -70,8 +70,9 @@ namespace SL {
 				}
 
 				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img) {
-					if (socket == nullptr) SendToAll(ExtractImageRect(r, img));
-					else socket->send(ExtractImageRect(r, img));
+					auto p(ExtractImageRect(r, img));
+					if (socket == nullptr) SendToAll(p);
+					else socket->send(p);
 				}
 				void SendMouse(ISocket * socket, const Utilities::Image & img) {
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(img.size() + sizeof(Utilities::Point)));

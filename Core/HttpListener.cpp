@@ -32,14 +32,19 @@ namespace SL {
 						auto searchpath = executable_path(nullptr);
 						auto exeindex = searchpath.find_last_of('\\');
 						if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
-						if (exeindex == searchpath.npos) return socket->send(Get404Page());
+						if (exeindex == searchpath.npos) {
+							auto p(Get404Page());
+							return socket->send(p);
+						}
 
 						auto requestedpath = packet->Header[HttpHeader::HTTP_PATH];
 						if (requestedpath.find_last_of(".ico") != std::string::npos) {
-							socket->send(GetFavIcon(searchpath.substr(0, exeindex)));
+							auto p(GetFavIcon(searchpath.substr(0, exeindex)));
+							return socket->send(p);
 						}
 						else {
-							socket->send(GetIndexPage(searchpath.substr(0, exeindex)));
+							auto p(GetIndexPage(searchpath.substr(0, exeindex)));
+							return socket->send(p);
 						}
 					
 					}

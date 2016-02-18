@@ -88,11 +88,14 @@ namespace SL {
 #   error "Unknown Apple platform"
 #endif
 
-#error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
+#error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
 #elif __linux__
-#error Linux specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
+		std::shared_ptr<Utilities::Image_Wrapper> CaptureMouse()
+		{
+			return Utilities::Image::CreateWrappedImage(0, 0);
+	}
 #elif __ANDROID__
-#error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
+#error Andriod specific implementation  of CaptureMouse has not been written yet. You can help out by writing it!
 #endif
 
 

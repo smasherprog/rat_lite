@@ -92,7 +92,7 @@ namespace SL {
 
 		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
 		{
-           return std::make_shared<Utilities::Image_Wrapper>(); 
+			return Utilities::Image::CreateWrappedImage(0, 0);
         }
 #elif __ANDROID__
 #error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!

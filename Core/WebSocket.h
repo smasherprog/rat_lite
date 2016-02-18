@@ -17,9 +17,9 @@ namespace SL {
 				unsigned char _writeheaderbuffer[sizeof(char) + sizeof(char) + sizeof(unsigned long long)];
 
 			public:
-				explicit WebSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket(netevents, socket) {}
+				explicit WebSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket<T>(netevents, socket) {}
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
-				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket(netevents, io_service) {}
+				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
 				virtual ~WebSocket() {
 
 				}
@@ -32,7 +32,7 @@ namespace SL {
 				}
 				virtual void handshake()  override {
 
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
 
 					boost::asio::async_read_until(_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
@@ -68,7 +68,7 @@ namespace SL {
 				}
 				virtual void readheader()  override {
 
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					boost::asio::async_read(_socket, boost::asio::buffer(_readheaderbuffer2, sizeof(_readheaderbuffer2)), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
 							_SocketImpl.ReadPacketHeader.Payload_Length = 0;
@@ -116,7 +116,7 @@ namespace SL {
 				}
 				virtual void readbody() override {
 
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					_SocketImpl.ReadPacketHeader.Payload_Length += 4;//always 4 more because of the mask
 					auto p(_SocketImpl.get_ReadBuffer());
 					auto size(_SocketImpl.get_ReadBufferSize());
@@ -163,10 +163,10 @@ namespace SL {
 					///fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
 					unsigned int extralength = 0;
 					switch (packet->Packet_Type) {
-					case(PACKET_TYPES::WEBSOCKET_PING) :
+					case(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_PING)) :
 						*p++ = 0x1A;
 						break;
-					case(PACKET_TYPES::WEBSOCKET_CLOSE) :
+					case(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_CLOSE)) :
 						*p++ = 136;
 						break;
 					default://default is binary
@@ -195,7 +195,7 @@ namespace SL {
 						*p++ = static_cast<unsigned char>(length);
 					}
 
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					auto size(p - _writeheaderbuffer);
 					p = _writeheaderbuffer;
 
@@ -233,7 +233,7 @@ namespace SL {
 					*(unsigned short int*)p.Payload = htons(static_cast<unsigned short int>(status_code));
 					memcpy(p.Payload + 2, reason.c_str(), reason.size());
 					send(p);
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					_socket.get_io_service().post([this, self]()
 					{
 						close("send_close");//close this socket after the send has completed

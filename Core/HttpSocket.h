@@ -10,9 +10,9 @@ namespace SL {
 			//this class is async so all calls return immediately and are later executed
 			template<typename T>class HttpSocket : public TCPSocket<T> {
 			public:
-				explicit HttpSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket(netevents, socket) {}
+				explicit HttpSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket<T>(netevents, socket) {}
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
-				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket(netevents, io_service) {}
+				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
 				virtual ~HttpSocket() {
 
 				}
@@ -22,7 +22,7 @@ namespace SL {
 
 
 				virtual void readheader()  override {
-					auto self(shared_from_this());	
+					auto self(this->shared_from_this());	
 					std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
 					boost::asio::async_read_until(_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const boost::system::error_code& ec, std::size_t s)
 					{
@@ -74,7 +74,7 @@ namespace SL {
 					os << HttpHeader::HTTP_CONTENTLENGTH << HttpHeader::HTTP_KEYVALUEDELIM << std::to_string(pack->Payload_Length) << HttpHeader::HTTP_ENDLINE;
 					os << HttpHeader::HTTP_ENDLINE;//marks the end of the header
 
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					boost::asio::async_write(_socket, *outpackbuff, [self, this, outpackbuff, pack](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())

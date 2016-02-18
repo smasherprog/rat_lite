@@ -25,7 +25,7 @@ namespace SL {
 					_acceptor.close();
 				}
 				void Start() {
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					_acceptor.async_accept(_socket, [self, this](boost::system::error_code ec)
 					{
 						if (!ec)
@@ -68,7 +68,7 @@ namespace SL {
 				
 				}
 				void Start() {
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					_acceptor.async_accept(_socket.lowest_layer(), [self, this](boost::system::error_code ec)
 					{	
 						if (!ec)

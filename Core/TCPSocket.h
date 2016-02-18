@@ -39,7 +39,7 @@ namespace SL {
 
 				//adds the data to the internal queue, does not block and returns immediately.
 				virtual void send(Packet& pack) override {
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					auto compack(std::make_shared<Packet>(std::move(compress(pack))));
 					auto beforesize = pack.Payload_Length;
 					_socket.get_io_service().post([this, self, compack, beforesize]()
@@ -60,14 +60,14 @@ namespace SL {
 				virtual void close(std::string reason) override {
 					std::cout << "Closing socket: " << reason << std::endl;
 					if (_SocketImpl.closed(_socket.lowest_layer())) return;
-					_SocketImpl.get_Driver()->OnClose(shared_from_this());
+					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());
 					_SocketImpl.close(_socket.lowest_layer());
 				}
 				//pending packets which are queued up and waiting to be sent
 				virtual SocketStats get_SocketStats() const override { return _SocketImpl.get_Socketstats(); }
 				//calling connected with a host and port will attempt an async connection returns immediatly and executes the OnConnect Callback when connected. If connection fails, the OnClose callback is called
 				virtual void connect(const char* host, const char* port) override {
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					if (host == nullptr && port == nullptr) {
 						handshake();
 					}
@@ -99,13 +99,13 @@ namespace SL {
 
 
 				virtual void handshake()  override {
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					_SocketImpl.get_Driver()->OnConnect(self);
 					readheader();
 				}
 				virtual void readheader()  override {
 					readexpire_from_now(30);
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					boost::asio::async_read(_socket, boost::asio::buffer(&_SocketImpl.ReadPacketHeader, sizeof(_SocketImpl.ReadPacketHeader)), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
 						if (!ec && !closed()) {
@@ -118,7 +118,7 @@ namespace SL {
 				virtual void readbody() override {
 
 					readexpire_from_now(30);
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					auto p(_SocketImpl.get_ReadBuffer());
 					auto size(_SocketImpl.get_ReadBufferSize());
 					boost::asio::async_read(_socket, boost::asio::buffer(p, size), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
@@ -135,7 +135,7 @@ namespace SL {
 				}
 				virtual void writeheader(std::shared_ptr<Packet> packet) override {
 					writeexpire_from_now(30);
-					auto self(shared_from_this()); 
+					auto self(this->shared_from_this()); 
 					boost::asio::async_write(_socket, boost::asio::buffer(&_SocketImpl.WritePacketHeader, sizeof(_SocketImpl.WritePacketHeader)), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
@@ -148,7 +148,7 @@ namespace SL {
 				}
 				virtual void writebody(std::shared_ptr<Packet> packet) override {
 					writeexpire_from_now(30);
-					auto self(shared_from_this());
+					auto self(this->shared_from_this());
 					boost::asio::async_write(_socket, boost::asio::buffer(packet->Payload, packet->Payload_Length), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
@@ -190,7 +190,7 @@ namespace SL {
 				void readexpire_from_now(int seconds)
 				{
 					return;//DONT USE THIS YET
-				/*	auto self(shared_from_this());
+				/*	auto self(this->shared_from_this());
 					_SocketImpl.StartReadTimer(seconds);
 					if (seconds >= 0) {
 						_SocketImpl.get_read_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close("readexpire_from_now "); });
@@ -200,7 +200,7 @@ namespace SL {
 				void writeexpire_from_now(int seconds)
 				{
 					return;//DONT USE THIS YET
-			/*		auto self(shared_from_this());
+			/*		auto self(this->shared_from_this());
 					_SocketImpl.StartWriteTimer(seconds);
 					if (seconds >= 0) {
 						_SocketImpl.get_write_deadline_timer().async_wait([this, self](boost::system::error_code ec) {  if (ec != boost::asio::error::operation_aborted) close("writeexpire_from_now "); });

@@ -121,10 +121,34 @@
     <ClInclude Include="HttpHeader.h">
       <Filter>Network\Socket</Filter>
     </ClInclude>
-    <ClInclude Include="zstd_buffered_static.h">
+    <ClInclude Include="huff0.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="huff0_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="mem.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zbuff.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zbuff_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zdict.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zdict_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd.h">
       <Filter>Compression</Filter>
     </ClInclude>
     <ClInclude Include="zstd_internal.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="zstd_opt.h">
       <Filter>Compression</Filter>
     </ClInclude>
     <ClInclude Include="zstd_static.h">
@@ -133,7 +157,7 @@
     <ClInclude Include="bitstream.h">
       <Filter>Compression</Filter>
     </ClInclude>
-    <ClInclude Include="error.h">
+    <ClInclude Include="divsufsort.h">
       <Filter>Compression</Filter>
     </ClInclude>
     <ClInclude Include="error_private.h">
@@ -146,21 +170,6 @@
       <Filter>Compression</Filter>
     </ClInclude>
     <ClInclude Include="fse_static.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="huff0.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="huff0_static.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstd.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="zstd_buffered.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="mem.h">
       <Filter>Compression</Filter>
     </ClInclude>
   </ItemGroup>
@@ -208,19 +217,25 @@
     <ClCompile Include="HttpHeader.cpp">
       <Filter>Network\Socket</Filter>
     </ClCompile>
-    <ClCompile Include="fse.c">
+    <ClCompile Include="zbuff.c">
       <Filter>Compression</Filter>
     </ClCompile>
-    <ClCompile Include="huff0.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="zstd_buffered.c">
+    <ClCompile Include="zdict.c">
       <Filter>Compression</Filter>
     </ClCompile>
     <ClCompile Include="zstd_compress.c">
       <Filter>Compression</Filter>
     </ClCompile>
     <ClCompile Include="zstd_decompress.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="divsufsort.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="fse.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="huff0.c">
       <Filter>Compression</Filter>
     </ClCompile>
   </ItemGroup>
@@ -231,5 +246,6 @@
     <None Include="favicon.ico">
       <Filter>wwwroot</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -91,7 +91,7 @@ namespace SL {
 						std::cout << "HTTP OnReceive Get404Page" << std::endl;
 						std::string sHTML = "<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
 						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(sHTML.size()));
-						std::copy(begin(sHTML), end(sHTML), pack.Payload);
+						memcpy(pack.Payload, sHTML.c_str(), sHTML.size());
 						pack.Header[HttpHeader::HTTP_STATUSCODE] = "404 Not Found";
 						pack.Header[HttpHeader::HTTP_VERSION] = "HTTP/1.1";
 						pack.Header[HttpHeader::HTTP_CONTENTTYPE] = "text/html";

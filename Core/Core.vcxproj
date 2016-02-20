@@ -70,24 +70,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
+    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
+    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo64\include;$(IncludePath)</IncludePath>
+    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo64\lib;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;$(SolutionDir)fltk\;c:\boost\;C:\libjpeg-turbo64\include;$(IncludePath)</IncludePath>
+    <IncludePath>c:\OpenSSL-Win$(PlatformArchitecture)\include\;c:\boost\;C:\libjpeg-turbo\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\boost\lib$(PlatformArchitecture)-msvc-$(MSBuildToolsVersion);c:\OpenSSL-Win$(PlatformArchitecture)\lib\VC;C:\libjpeg-turbo64\lib;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
@@ -96,7 +96,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIBWIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>
@@ -113,7 +113,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIBWIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>
@@ -132,7 +132,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>
@@ -153,7 +153,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE=1;_CRT_NON_CONFORMING_SWPRINTFS=1;_SCL_SECURE_NO_WARNINGS=1;__WXMSW__;NDEBUG;_UNICODE;_WINDOWS;NOPCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>
@@ -172,7 +172,7 @@
     <ClInclude Include="bitstream.h" />
     <ClInclude Include="ConnectWindow.h" />
     <ClInclude Include="crypto.hpp" />
-    <ClInclude Include="error.h" />
+    <ClInclude Include="divsufsort.h" />
     <ClInclude Include="error_private.h" />
     <ClInclude Include="error_public.h" />
     <ClInclude Include="fse.h" />
@@ -207,16 +207,25 @@
     <ClInclude Include="WebSocket.h" />
     <ClInclude Include="WebSocketListener.h" />
     <ClInclude Include="WebSocketServerNetworkDriver.h" />
+    <ClInclude Include="zbuff.h" />
+    <ClInclude Include="zbuff_static.h" />
+    <ClInclude Include="zdict.h" />
+    <ClInclude Include="zdict_static.h" />
     <ClInclude Include="zstd.h" />
-    <ClInclude Include="zstd_buffered.h" />
-    <ClInclude Include="zstd_buffered_static.h" />
     <ClInclude Include="zstd_internal.h" />
+    <ClInclude Include="zstd_opt.h" />
     <ClInclude Include="zstd_static.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ApplicationDirectory.cpp" />
     <ClCompile Include="ClientNetworkDriver.cpp" />
     <ClCompile Include="ConnectWindow.cpp" />
+    <ClCompile Include="divsufsort.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="fse.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -246,7 +255,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="WebSocketListener.cpp" />
-    <ClCompile Include="zstd_buffered.c">
+    <ClCompile Include="zbuff.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="zdict.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -266,14 +281,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\fltk\ide\VisualC2010\fltk.lib.vcxproj">
-      <Project>{e070aafc-9d03-41a3-bc7d-30887ea0d50f}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\fltk\ide\VisualC2010\fltkimages.vcxproj">
-      <Project>{6e8e1663-b88d-4454-adf2-279666a93306}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
@@ -281,6 +288,7 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="favicon.ico">
@@ -292,5 +300,13 @@
     </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\fltk.1.3.3.2\build\native\fltk.targets" Condition="Exists('..\packages\fltk.1.3.3.2\build\native\fltk.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\fltk.1.3.3.2\build\native\fltk.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fltk.1.3.3.2\build\native\fltk.targets'))" />
+  </Target>
 </Project>

@@ -16,7 +16,7 @@
             self.Cursor = document.getElementById("mousecanvas").getContext("2d").createImageData(32, 32);
             self._ClientNetworkDriver = new ClientNetworkDriver(self);
             self._ClientNetworkDriver.start("ws://127.0.0.1:8081/echo");
-            self.OnReceive_MouseImage = function (point, img) {
+            self.OnReceive_MouseImage = function (point, imgarray) {
                 "use strict";
                 //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                 var elem = document.getElementById("mousecanvas");
@@ -26,10 +26,10 @@
                     var img = document.getElementById("mousecanvas").getContext("2d").createImageData(point.X, point.Y);
                     self.Cursor = img;
                     for (var i = 0; i < self.Cursor.data.length; i += 4) {
-                        self.Cursor.data[i + 0] = img[i + 0];
-                        self.Cursor.data[i + 1] = img[i + 1];
-                        self.Cursor.data[i + 2] = img[i + 2];
-                        self.Cursor.data[i + 3] = img[i + 3];
+                        self.Cursor.data[i + 0] = imgarray[i + 0];
+                        self.Cursor.data[i + 1] = imgarray[i + 1];
+                        self.Cursor.data[i + 2] = imgarray[i + 2];
+                        self.Cursor.data[i + 3] = imgarray[i + 3];
                     }
                     document.getElementById("mousecanvas").getContext("2d").putImageData(self.Cursor, 0, 0);
                 } catch(e){
@@ -93,7 +93,7 @@
                         Width: arr[2],
                         Height: arr[3]
                     }
-                    self.Parent.OnReceive_Image(_arrayBufferToBase64(new Uint8Array(data.slice(rectsize).buffer)));
+                    self.Parent.OnReceive_Image(_arrayBufferToBase64(data, rectsize));
                 }
                 self.onreceiveimagedif = function (data) {
                     var arr = new Int32Array(data.slice(0, rectsize).buffer);
@@ -103,7 +103,7 @@
                         Width: arr[2],
                         Height: arr[3]
                     }
-                    self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(new Uint8Array(data.slice(rectsize).buffer)));
+                    self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(data, rectsize));
                 }
                 self.onreceivemouseimage = function (data) {
                     var arr = new Int32Array(data.slice(0, pointsize).buffer);
@@ -111,7 +111,7 @@
                         X: arr[0],
                         Y: arr[1]
                     }
-                    self.Parent.OnReceive_MouseImage(imagepoint, new Uint8Array(data, pointsize));
+                    self.Parent.OnReceive_MouseImage(imagepoint, new Uint8Array(data.slice(pointsize).buffer));
                 }
                 self.onreceivemouselocation = function (data) {
                     var arr = new Int32Array(data.slice(0, pointsize).buffer);
@@ -125,11 +125,10 @@
                 self.socket.onclose = function () {
                     console.log('Connection is closed...');
                 };
-                function _arrayBufferToBase64(buffer) {
+                function _arrayBufferToBase64(buffer, offset) {
                     var binary = '';
                     var len = buffer.byteLength;
-                    //$('#logsection').append('<br/>' + (len + 16));
-                    for (var i = 0; i < len; i++) {
+                    for (var i = offset; i < len; i++) {
                         binary += String.fromCharCode(buffer[i]);
                     }
                     return window.btoa(binary);
@@ -158,7 +157,10 @@
                     if (_ZSTD_isError(decompressedsize) > 0) {
                         console.log('zstd error' + _ZSTD_getErrorName(decompressedsize));
                     }
-                  
+                    var t1 = performance.now();
+                    //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
+                    console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
+                    t0 = performance.now();
                     switch (packetheader.Packet_Type) {
                         case (4)://this is an image
                             self.onreceiveimage(dstbuff);
@@ -180,7 +182,7 @@
                     self.TotalMemoryUsed -= packetheader.UncompressedLength;
                     Module._free(srcPtr);
                     self.TotalMemoryUsed -= packetheader.Payload_Length;
-                    var t1 = performance.now();
+                    t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
                     console.log("took " + (t1 - t0) + " milliseconds to process the receive loop")
                 };

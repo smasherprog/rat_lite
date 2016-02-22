@@ -79,6 +79,8 @@ namespace SL {
 					auto ptr = (Utilities::Point*)p.Payload;
 					ptr->X = img.Width();
 					ptr->Y = img.Height();
+					std::vector<char> test;
+					test.resize(img.size());
 					memcpy(p.Payload + sizeof(Utilities::Point), img.data(), img.size());
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);

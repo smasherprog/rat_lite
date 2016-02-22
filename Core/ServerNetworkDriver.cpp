@@ -112,7 +112,8 @@ namespace SL {
 					_TCPListener = std::make_shared<TCPListener<socket, TCPSocket<socket>>>(this, _Config.TCPListenPort, _IO_Runner->get_io_service());
 
 					if (_Config.WebSocketListenPort > 0) {
-						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service());
+
+						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service(), _Config.WWWRoot);
 						_WebSocketListener = std::make_unique<WebSocketListener>(this, _IO_Runner->get_io_service());
 					}
 

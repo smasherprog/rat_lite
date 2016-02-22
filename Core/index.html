@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
     <title>Simple-Web-Server html-file</title>
-
+    <script src="zstd.js"></script>
 </head>
 
 <body>
     <script>
+       
         var packetheadersize = 12;//12 bytes
         var rectsize = 16;//16 bytes
         var pointsize = 8;//16 bytes
@@ -21,15 +22,19 @@
                 var elem = document.getElementById("mousecanvas");
                 elem.width = point.X;
                 elem.height = point.Y;
-
-                self.Cursor = document.getElementById("mousecanvas").getContext("2d").createImageData(point.X, point.Y);
-                for (var i = 0; i < self.Cursor.data.length; i += 4) {
-                    self.Cursor.data[i + 0] = img[i + 0];
-                    self.Cursor.data[i + 1] = img[i + 1];
-                    self.Cursor.data[i + 2] = img[i + 2];
-                    self.Cursor.data[i + 3] = img[i + 3];
+                try{
+                    var img = document.getElementById("mousecanvas").getContext("2d").createImageData(point.X, point.Y);
+                    self.Cursor = img;
+                    for (var i = 0; i < self.Cursor.data.length; i += 4) {
+                        self.Cursor.data[i + 0] = img[i + 0];
+                        self.Cursor.data[i + 1] = img[i + 1];
+                        self.Cursor.data[i + 2] = img[i + 2];
+                        self.Cursor.data[i + 3] = img[i + 3];
+                    }
+                    document.getElementById("mousecanvas").getContext("2d").putImageData(self.Cursor, 0, 0);
+                } catch(e){
+                    console.log(e.message);
                 }
-                document.getElementById("mousecanvas").getContext("2d").putImageData(self.Cursor, 0, 0);
             }
             self.OnReceive_MouseLocation = function (point) {
                 document.getElementById("mousecanvas").style.top = point.Y + "px";
@@ -70,9 +75,9 @@
         function ClientNetworkDriver(p) {
             var self = this;
             self.Parent = p;
-
+            self.TotalMemoryUsed = 0;
             self.start = function (url) {
-
+              
                 self.socket = new WebSocket(url);
                 self.socket.binaryType = 'arraybuffer';
                 self.socket.onopen = function () {
@@ -80,39 +85,39 @@
                 };
 
 
-                self.onreceiveimage = function (data, currentoffset) {
-                    var d = new DataView(data, currentoffset);
+                self.onreceiveimage = function (data) {
+                    var arr = new Int32Array(data.slice(0, rectsize).buffer);
                     var imagerect = {
-                        X: d.getInt32(0, true),
-                        Y: d.getInt32(4, true),
-                        Width: d.getInt32(8, true),
-                        Height: d.getInt32(12, true)
-                    }//rect isnt needed here
-                    self.Parent.OnReceive_Image(_arrayBufferToBase64(new Uint8Array(data, currentoffset + rectsize)));
+                        X: arr[0],
+                        Y: arr[1],
+                        Width: arr[2],
+                        Height: arr[3]
+                    }
+                    self.Parent.OnReceive_Image(_arrayBufferToBase64(new Uint8Array(data.slice(rectsize).buffer)));
                 }
-                self.onreceiveimagedif = function (data, currentoffset) {
-                    var d = new DataView(data, currentoffset);
+                self.onreceiveimagedif = function (data) {
+                    var arr = new Int32Array(data.slice(0, rectsize).buffer);
                     var imagerect = {
-                        X: d.getInt32(0, true),
-                        Y: d.getInt32(4, true),
-                        Width: d.getInt32(8, true),
-                        Height: d.getInt32(12, true)
+                        X: arr[0],
+                        Y: arr[1],
+                        Width: arr[2],
+                        Height: arr[3]
                     }
-                    self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(new Uint8Array(data, currentoffset + rectsize)));
+                    self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(new Uint8Array(data.slice(rectsize).buffer)));
                 }
-                self.onreceivemouseimage = function (data, currentoffset) {
-                    var d = new DataView(data, currentoffset);
+                self.onreceivemouseimage = function (data) {
+                    var arr = new Int32Array(data.slice(0, pointsize).buffer);
                     var imagepoint = {
-                        X: d.getInt32(0, true),
-                        Y: d.getInt32(4, true)
+                        X: arr[0],
+                        Y: arr[1]
                     }
-                    self.Parent.OnReceive_MouseImage(imagepoint, new Uint8Array(data, currentoffset + pointsize));
+                    self.Parent.OnReceive_MouseImage(imagepoint, new Uint8Array(data, pointsize));
                 }
-                self.onreceivemouselocation = function (data, currentoffset) {
-                    var d = new DataView(data, currentoffset);
+                self.onreceivemouselocation = function (data) {
+                    var arr = new Int32Array(data.slice(0, pointsize).buffer);
                     var imagepoint = {
-                        X: d.getInt32(0, true),
-                        Y: d.getInt32(4, true)
+                        X: arr[0],
+                        Y: arr[1]
                     }
                     self.Parent.OnReceive_MouseLocation(imagepoint);
                 }
@@ -122,41 +127,62 @@
                 };
                 function _arrayBufferToBase64(buffer) {
                     var binary = '';
-                    var bytes = new Uint8Array(buffer, 16);
-                    var len = bytes.byteLength;
+                    var len = buffer.byteLength;
                     //$('#logsection').append('<br/>' + (len + 16));
                     for (var i = 0; i < len; i++) {
-                        binary += String.fromCharCode(bytes[i]);
+                        binary += String.fromCharCode(buffer[i]);
                     }
                     return window.btoa(binary);
                 }
 
                 self.socket.onmessage = function (evt) {
-
+                    var t0 = performance.now();
+       
                     var data = new DataView(evt.data);
                     var packetheader = {
                         Packet_Type: data.getInt32(0, true),
                         Payload_Length: data.getInt32(4, true),
-                        UncompressedLength: data.getInt32(8, true)//this is unused for websockets
+                        UncompressedLength: data.getInt32(8, true)
                     };
+
+                    var srcPtr = Module._malloc(packetheader.Payload_Length);
+                    self.TotalMemoryUsed += packetheader.Payload_Length;
+                    var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, packetheader.Payload_Length);
+                    srcbuff.set(new Uint8Array(evt.data, packetheadersize));
+                  
+                    var dsttr = Module._malloc(packetheader.UncompressedLength);
+                    self.TotalMemoryUsed += packetheader.UncompressedLength;
+                    var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, packetheader.UncompressedLength);
+
+                    var decompressedsize = _ZSTD_decompress(dstbuff.byteOffset, packetheader.UncompressedLength, srcbuff.byteOffset, packetheader.Payload_Length);
+                    if (_ZSTD_isError(decompressedsize) > 0) {
+                        console.log('zstd error' + _ZSTD_getErrorName(decompressedsize));
+                    }
+                  
                     switch (packetheader.Packet_Type) {
                         case (4)://this is an image
-                            self.onreceiveimage(evt.data, packetheadersize);
+                            self.onreceiveimage(dstbuff);
                             break;
                         case (5)://this is an imagedif
-                            self.onreceiveimagedif(evt.data, packetheadersize);
+                            self.onreceiveimagedif(dstbuff);
                             break;
                         case (6)://this is a mouse image
-                            self.onreceivemouseimage(evt.data, packetheadersize);
+                            self.onreceivemouseimage(dstbuff);
                             break;
                         case (7)://this is a mouse location update
-                            self.onreceivemouselocation(evt.data, packetheadersize);
+                            self.onreceivemouselocation(dstbuff);
                             break;
                         default:
                             console.log('received unknown packet type: ' + packetheader.Packet_Type)
                             break;
                     };
-
+                    Module._free(dsttr);
+                    self.TotalMemoryUsed -= packetheader.UncompressedLength;
+                    Module._free(srcPtr);
+                    self.TotalMemoryUsed -= packetheader.Payload_Length;
+                    var t1 = performance.now();
+                    //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
+                    console.log("took " + (t1 - t0) + " milliseconds to process the receive loop")
                 };
                 self.socket.onclose = function (event) {
                     var reason;

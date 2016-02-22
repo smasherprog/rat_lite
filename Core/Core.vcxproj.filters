@@ -172,6 +172,9 @@
     <ClInclude Include="fse_static.h">
       <Filter>Compression</Filter>
     </ClInclude>
+    <ClInclude Include="MediaTypes.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -238,6 +241,9 @@
     <ClCompile Include="huff0.c">
       <Filter>Compression</Filter>
     </ClCompile>
+    <ClCompile Include="MediaTypes.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="index.html">
@@ -247,5 +253,11 @@
       <Filter>wwwroot</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="zstd.js">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="zstd.js.mem">
+      <Filter>wwwroot</Filter>
+    </None>
   </ItemGroup>
 </Project>

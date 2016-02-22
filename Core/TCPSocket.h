@@ -155,6 +155,7 @@ namespace SL {
 						{
 							
 							assert(byteswritten == packet->Payload_Length);
+							
 							if (!_SocketImpl.OutGoingBuffer_empty()) {
 								writeheader(_SocketImpl.GetNextWritePacket());
 							}

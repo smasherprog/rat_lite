@@ -183,6 +183,7 @@
     <ClInclude Include="huff0.h" />
     <ClInclude Include="huff0_static.h" />
     <ClInclude Include="IBaseNetworkDriver.h" />
+    <ClInclude Include="MediaTypes.h" />
     <ClInclude Include="mem.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="IClientDriver.h" />
@@ -242,6 +243,7 @@
     </ClCompile>
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="IO_Runner.cpp" />
+    <ClCompile Include="MediaTypes.cpp" />
     <ClCompile Include="SocketImpl.cpp" />
     <ClCompile Include="ViewerWindow.cpp" />
     <ClCompile Include="Mouse.cpp" />
@@ -289,6 +291,20 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </None>
     <None Include="packages.config" />
+    <None Include="zstd.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="zstd.js.mem">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+	</None>
   </ItemGroup>
   <ItemGroup>
     <None Include="favicon.ico">

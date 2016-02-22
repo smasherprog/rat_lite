@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -9,6 +11,7 @@ namespace SL {
 				unsigned short WebSocketTLSListenPort;
 				unsigned short HttpListenPort;
 				unsigned short HttpTLSListenPort;
+				std::string WWWRoot;//this is where files are issued out for the webserver
 			};
 		}
 	}

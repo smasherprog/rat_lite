@@ -38,7 +38,7 @@
  * in memory stack (0), or in memory heap (1, requires malloc())
  */
 #ifndef ZSTD_HEAPMODE
-#  define ZSTD_HEAPMODE 1
+#  define ZSTD_HEAPMODE 0
 #endif
 
 /*!

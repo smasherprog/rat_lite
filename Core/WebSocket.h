@@ -216,12 +216,6 @@ namespace SL {
 					});
 
 				}
-				virtual Packet compress(Packet& packet)  override {
-					Packet p(packet.Packet_Type, packet.Payload_Length);
-					memcpy(p.Payload, packet.Payload, packet.Payload_Length);
-					p.Header = packet.Header;
-					return p;
-				}
 				virtual Packet decompress(Packet& packet)  override {
 					Packet p(packet.Packet_Type, packet.Payload_Length);
 					memcpy(p.Payload, packet.Payload, packet.Payload_Length);

@@ -74,12 +74,9 @@ namespace SL {
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
-				void SendMouse(ISocket * socket, const Utilities::Image & img) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(img.size() + sizeof(Utilities::Point)));
-					auto ptr = (Utilities::Point*)p.Payload;
-					ptr->X = img.Width();
-					ptr->Y = img.Height();
-					memcpy(p.Payload + sizeof(Utilities::Point), img.data(), img.size());
+				void SendMouse(ISocket * socket,  unsigned int mousetype) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(sizeof(mousetype)));
+					memcpy(p.Payload, &mousetype, sizeof(mousetype));
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
@@ -207,9 +204,9 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * soc
 	_ServerNetworkDriverImpl->Send(socket, img);
 }
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Image & img)
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, unsigned int mousetype)
 {
-	_ServerNetworkDriverImpl->SendMouse(socket, img);
+	_ServerNetworkDriverImpl->SendMouse(socket, mousetype);
 }
 
 void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Point & pt)

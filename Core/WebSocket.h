@@ -215,7 +215,7 @@ namespace SL {
 						else close(std::string("writeheader async_write ") + ec.message());
 					});
 
-				}
+				}			
 				virtual Packet decompress(Packet& packet)  override {
 					Packet p(packet.Packet_Type, packet.Payload_Length);
 					memcpy(p.Payload, packet.Payload, packet.Payload_Length);

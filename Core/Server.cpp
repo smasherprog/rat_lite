@@ -17,7 +17,8 @@ namespace SL {
 		}
 		class ServerImpl : public Network::IServerDriver {
 		public:
-			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen, LastMouse;
+			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
+			unsigned int _LastMouse = 0xffffffff;
 			Utilities::Point LastMousePosition;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
@@ -25,7 +26,7 @@ namespace SL {
 
 			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), LastMousePosition(0, 0)
 			{
-	
+
 				_Keepgoing = true;
 			}
 
@@ -33,10 +34,10 @@ namespace SL {
 				_Keepgoing = false;
 			}
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
-				auto newimg  = SL::Remote_Access_Library::Capturing::CaptureDesktop();
+				auto newimg = SL::Remote_Access_Library::Capturing::CaptureDesktop();
 				_ServerNetworkDriver.Send(socket.get(), *newimg);
-				newimg = SL::Remote_Access_Library::Capturing::CaptureMouse();
-				_ServerNetworkDriver.SendMouse(socket.get(), *newimg);
+				_LastMouse = SL::Remote_Access_Library::Capturing::GetShownMouseCursor();
+				_ServerNetworkDriver.SendMouse(socket.get(), _LastMouse);
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
 			virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket)override {
@@ -67,30 +68,18 @@ namespace SL {
 			}
 			void ProcessMouse()
 			{
-				if (!LastMouse) {//first screen send all!
-					LastMouse = SL::Remote_Access_Library::Capturing::CaptureMouse();
-					_ServerNetworkDriver.SendMouse(nullptr, *LastMouse);
+
+				auto newimg = SL::Remote_Access_Library::Capturing::GetShownMouseCursor();
+				if (newimg != _LastMouse) {
+					_ServerNetworkDriver.SendMouse(nullptr, newimg);
+					_LastMouse = newimg;
 				}
-				else {//compare and send 
-					auto newimg = SL::Remote_Access_Library::Capturing::CaptureMouse();
-					if (newimg->size() == LastMouse->size()) {
-						if (memcmp(newimg->data(), LastMouse->data(), LastMouse->size()) != 0) {
-							_ServerNetworkDriver.SendMouse(nullptr, *newimg);
-							LastMouse = newimg;//swap
-						}
-					}
-					else {
-						_ServerNetworkDriver.SendMouse(nullptr, *newimg);
-						LastMouse = newimg;//swap
-					}
-					
-					Utilities::Point p1;
-				
-					Fl::get_mouse(p1.X, p1.Y);
-					if (p1 != LastMousePosition) {
-						_ServerNetworkDriver.SendMouse(nullptr, p1);
-						LastMousePosition = p1;
-					}
+
+				Utilities::Point p1;
+				Fl::get_mouse(p1.X, p1.Y);
+				if (p1 != LastMousePosition) {
+					_ServerNetworkDriver.SendMouse(nullptr, p1);
+					LastMousePosition = p1;
 				}
 			}
 			int Run() {

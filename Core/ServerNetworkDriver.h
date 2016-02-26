@@ -28,7 +28,7 @@ namespace SL {
 
 				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img);
 				void Send(ISocket* socket, const Utilities::Image & img);
-				void SendMouse(ISocket* socket, const Utilities::Image & img);
+				void SendMouse(ISocket* socket, unsigned int mousetype);
 				void SendMouse(ISocket* socket, const Utilities::Point & pt);
 				
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();

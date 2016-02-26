@@ -259,5 +259,37 @@
     <None Include="zstd.js.mem">
       <Filter>wwwroot</Filter>
     </None>
+    <None Include="arrow.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="cross.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="help.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="ne-resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="ns-resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="nw-resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="text.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="wait.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="we-resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="hand.png">
+      <Filter>wwwroot</Filter>
+    </Image>
   </ItemGroup>
 </Project>

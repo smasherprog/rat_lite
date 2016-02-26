@@ -9,7 +9,6 @@
 #include <FL/fl_ask.H>
 
 
-
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
@@ -21,9 +20,7 @@ namespace SL {
 				std::string Host, Port;
 				std::unique_ptr<ViewerWindow> _MainWindow;
 				ConnectWindowImpl() {
-
-
-
+		
 				}
 
 				static void Failed_to_reach_host(void* userdata) {

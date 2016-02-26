@@ -70,6 +70,10 @@ namespace SL {
 									pack.Header[HttpHeader::HTTP_STATUSCODE] = "200 OK";
 									pack.Header[HttpHeader::HTTP_VERSION] = "HTTP/1.1";
 									pack.Header[HttpHeader::HTTP_CONTENTTYPE] = Utilities::GetMimeType(path);
+									auto ext = p.extension();
+									if (ext == ".png" || ext == ".jpg") {
+										pack.Header[HttpHeader::HTTP_CACHECONTROL] = "max-age=3600";//set a longer cache timeout for images
+									}
 									return pack;
 								}
 

@@ -7,36 +7,71 @@
 
 <body>
     <script>
-       
+        var baseurl = '';
+       var Fl_Cursor = {
+           FL_CURSOR_DEFAULT    :  0, /**< the default cursor, usually an arrow. */
+           FL_CURSOR_ARROW      : 35, /**< an arrow pointer. */
+           FL_CURSOR_CROSS      : 66, /**< crosshair. */
+           FL_CURSOR_WAIT       : 76, /**< busy indicator (e.g. hourglass). */
+           FL_CURSOR_INSERT     : 77, /**< I-beam. */
+           FL_CURSOR_HAND       : 31, /**< pointing hand. */
+           FL_CURSOR_HELP       : 47, /**< question mark pointer. */
+           FL_CURSOR_MOVE       : 27, /**< 4-pointed arrow or hand. */
+
+           /* Resize indicators */
+           FL_CURSOR_NS         : 78, /**< up/down resize. */
+           FL_CURSOR_WE         : 79, /**< left/right resize. */
+           FL_CURSOR_NWSE       : 80, /**< diagonal resize. */
+           FL_CURSOR_NESW       : 81, /**< diagonal resize. */
+           FL_CURSOR_N          : 70, /**< upwards resize. */
+           FL_CURSOR_NE         : 69, /**< upwards, right resize. */
+           FL_CURSOR_E          : 49, /**< rightwards resize. */
+           FL_CURSOR_SE         :  8, /**< downwards, right resize. */
+           FL_CURSOR_S          :  9, /**< downwards resize. */
+           FL_CURSOR_SW         :  7, /**< downwards, left resize. */
+           FL_CURSOR_W          : 36, /**< leftwards resize. */
+           FL_CURSOR_NW         : 68, /**< upwards, left resize. */
+
+           FL_CURSOR_NONE       : 255,  /**< invisible. */
+           properties: {
+                0:   {name: "arrow.png", value: 0},
+                35: { name: "arrow.png", value: 35 },
+                66:  {name: "cross.png", value: 66},
+                76:  {name: "wait.png", value: 76},
+                77:  { name: "text.png", value: 77 },
+                31: { name: "hand.png", value: 31 },
+                47: { name: "help.png", value: 47 },
+                27: { name: "hand.png", value: 27 },
+                78: { name: "ns_resize.png", value: 78 },
+                79: { name: "we_resize.png", value: 79 },
+                80: { name: "nw_resize.png", value: 80 },
+                81: { name: "ne_resize.png", value: 81 },
+                70: { name: "ns_resize.png", value: 70 },
+                69: { name: "we_resize.png", value: 69 },
+                49: { name: "we_resize.png", value: 49 },
+                8: { name: "nw_resize.png", value: 8 },
+                9: { name: "ns_resize.png", value: 9 },
+                7: { name: "ne_resize.png", value: 7 },
+                36: { name: "we_resize.png", value: 36 },
+                68: { name: "we_resize.png", value: 68 },
+                255: { name: "none", value: 255 },
+           }
+       };
+
         var packetheadersize = 12;//12 bytes
         var rectsize = 16;//16 bytes
         var pointsize = 8;//16 bytes
         function ClientDriver() {
             var self = this;
-            self.Cursor = document.getElementById("mousecanvas").getContext("2d").createImageData(32, 32);
+            self.Cursor = Fl_Cursor.FL_CURSOR_ARROW;
             self._ClientNetworkDriver = new ClientNetworkDriver(self);
             self._ClientNetworkDriver.start("ws://127.0.0.1:8081/echo");
-            self.OnReceive_MouseImage = function (point, imgarray) {
-                "use strict";
-                //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
-                var elem = document.getElementById("mousecanvas");
-                elem.width = point.X;
-                elem.height = point.Y;
-                try{
-                    var img = document.getElementById("mousecanvas").getContext("2d").createImageData(point.X, point.Y);
-                    self.Cursor = img;
-                    for (var i = 0; i < self.Cursor.data.length; i += 4) {
-                        self.Cursor.data[i + 0] = imgarray[i + 0];
-                        self.Cursor.data[i + 1] = imgarray[i + 1];
-                        self.Cursor.data[i + 2] = imgarray[i + 2];
-                        self.Cursor.data[i + 3] = imgarray[i + 3];
-                    }
-                    document.getElementById("mousecanvas").getContext("2d").putImageData(self.Cursor, 0, 0);
-                } catch(e){
-                    console.log(e.message);
-                }
+            self.OnReceive_MouseImage = function (imgtype) {
+                self.Cursor = imgtype;
+                document.getElementById("mousecanvas").src = Fl_Cursor.properties[imgtype].name;
             }
             self.OnReceive_MouseLocation = function (point) {
+
                 document.getElementById("mousecanvas").style.top = point.Y + "px";
                 document.getElementById("mousecanvas").style.left = point.X + "px";
             }
@@ -77,7 +112,7 @@
             self.Parent = p;
             self.TotalMemoryUsed = 0;
             self.start = function (url) {
-              
+
                 self.socket = new WebSocket(url);
                 self.socket.binaryType = 'arraybuffer';
                 self.socket.onopen = function () {
@@ -107,11 +142,7 @@
                 }
                 self.onreceivemouseimage = function (data) {
                     var arr = new Int32Array(data.slice(0, pointsize).buffer);
-                    var imagepoint = {
-                        X: arr[0],
-                        Y: arr[1]
-                    }
-                    self.Parent.OnReceive_MouseImage(imagepoint, new Uint8Array(data.slice(pointsize).buffer));
+                    self.Parent.OnReceive_MouseImage(arr[0]);
                 }
                 self.onreceivemouselocation = function (data) {
                     var arr = new Int32Array(data.slice(0, pointsize).buffer);
@@ -136,7 +167,7 @@
 
                 self.socket.onmessage = function (evt) {
                     var t0 = performance.now();
-       
+
                     var data = new DataView(evt.data);
                     var packetheader = {
                         Packet_Type: data.getInt32(0, true),
@@ -148,7 +179,7 @@
                     self.TotalMemoryUsed += packetheader.Payload_Length;
                     var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, packetheader.Payload_Length);
                     srcbuff.set(new Uint8Array(evt.data, packetheadersize));
-                  
+
                     var dsttr = Module._malloc(packetheader.UncompressedLength);
                     self.TotalMemoryUsed += packetheader.UncompressedLength;
                     var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, packetheader.UncompressedLength);
@@ -225,13 +256,11 @@
                 }
             }
         };
-
-
         var SL_Client;
         document.addEventListener("DOMContentLoaded", function (event) {
             if ("WebSocket" in window) {
-                SL_Client = new ClientDriver();
-
+               SL_Client = new ClientDriver();
+  
             }
 
             else {
@@ -241,9 +270,10 @@
         });
 
     </script>
+
     <div style="position: relative;">
         <canvas id="myCanvas" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
-        <canvas id="mousecanvas" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+        <img id="mousecanvas" style="position: absolute; left: 0; top: 0; z-index: 1;" />
     </div>
 
 

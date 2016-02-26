@@ -114,9 +114,9 @@ namespace SL {
 				{
 
 				}
-				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
+				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, unsigned int mousetype) override
 				{
-
+				
 				}
 			};
 

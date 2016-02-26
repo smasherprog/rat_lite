@@ -63,9 +63,7 @@ namespace SL {
 					_IClientDriver->OnReceive_MouseLocation(socket, *pos);
 				}
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					auto pos = (Utilities::Point*)p->Payload;
-					auto img(Utilities::Image::CreateImage(pos->Y, pos->X, p->Payload + sizeof(Utilities::Point), p->Payload_Length - sizeof(Utilities::Point)));
-					_IClientDriver->OnReceive_MouseImage(socket, img);
+					_IClientDriver->OnReceive_MouseImage(socket, *((unsigned int*)p->Payload));
 				}
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;

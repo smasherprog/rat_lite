@@ -89,10 +89,20 @@ namespace SL {
 
 #error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #elif __linux__
-
+#include <gtk/gtk.h>
 		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
 		{
-			return Utilities::Image::CreateWrappedImage(0, 0);
+ 
+            auto root_window = gdk_get_default_root_window();
+            if(root_window==nullptr) return Utilities::Image::CreateWrappedImage(0, 0);
+            int height, width, left, top;
+            gdk_window_get_geometry(root_window, &left, &top, &width, &height);
+                
+            auto screenshot = gdk_pixbuf_get_from_window(root_window, left, top, width, height);
+			auto px= Utilities::Image::CreateWrappedImage(height, width, (const char*)gdk_pixbuf_read_pixels(screenshot), gdk_pixbuf_get_byte_length(screenshot));
+            g_object_unref(screenshot);
+            return px;
+            
         }
 #elif __ANDROID__
 #error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
@@ -119,7 +129,7 @@ namespace SL {
 						_Timer = std::chrono::steady_clock::now();
 						_ThreadPool.Enqueue([this]() {
 							_Image.reset();
-							auto start = std::chrono::steady_clock::now();
+							//auto start = std::chrono::steady_clock::now();
 							_Image = CaptureDesktopImage();
 							//std::cout << "It took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() << " milliseconds to CaptureDesktopImage() " << std::endl;
 						});

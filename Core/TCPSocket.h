@@ -189,6 +189,7 @@ namespace SL {
 
 				void readexpire_from_now(int seconds)
 				{
+					UNUSED(seconds);
 					return;//DONT USE THIS YET
 				/*	auto self(this->shared_from_this());
 					_SocketImpl.StartReadTimer(seconds);
@@ -198,7 +199,8 @@ namespace SL {
 				}
 
 				void writeexpire_from_now(int seconds)
-				{
+				{	
+					UNUSED(seconds);
 					return;//DONT USE THIS YET
 			/*		auto self(this->shared_from_this());
 					_SocketImpl.StartWriteTimer(seconds);

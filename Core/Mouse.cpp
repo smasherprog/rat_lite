@@ -87,14 +87,16 @@ namespace SL {
 #include <gtk/gtk.h>
 			MouseInfo GetCursorInfo()
 			{
-
+                MouseInfo info;
+            
 				info.MouseType = Fl_Cursor::FL_CURSOR_ARROW;
 				info.Pos = Utilities::Point(0, 0);
 				auto rootwnd = gdk_get_default_root_window();
 				if (rootwnd == NULL) return info;
 				auto m_cursor = gdk_window_get_cursor(rootwnd);
 				if (m_cursor == NULL) return info;
-				switch (m_cursor->cursor - type) {
+                auto curtype = gdk_cursor_get_cursor_type(m_cursor);
+				switch (curtype) {
 				case GDK_CIRCLE:
 					info.MouseType = Fl_Cursor::FL_CURSOR_WAIT;
 					break;
@@ -108,36 +110,35 @@ namespace SL {
 				case GDK_HAND2:
 					info.MouseType = Fl_Cursor::FL_CURSOR_HAND;
 					break;
-				case 32651:
+				case GDK_QUESTION_ARROW:
 					info.MouseType = Fl_Cursor::FL_CURSOR_HELP;
 					break;
-				case 32513:
+				case GDK_XTERM:
 					info.MouseType = Fl_Cursor::FL_CURSOR_INSERT;
 					break;
-				case 32643:
+				case GDK_BOTTOM_LEFT_CORNER:
+                case GDK_TOP_RIGHT_CORNER:
 					info.MouseType = Fl_Cursor::FL_CURSOR_NESW;
 					break;
-				case 32645:
+                case GDK_SB_V_DOUBLE_ARROW:
 					info.MouseType = Fl_Cursor::FL_CURSOR_NS;
 					break;
-				case 32642:
+				case GDK_BOTTOM_RIGHT_CORNER:
+                case GDK_TOP_LEFT_CORNER:
 					info.MouseType = Fl_Cursor::FL_CURSOR_NWSE;
 					break;
-				case 32644:
+				case GDK_SB_H_DOUBLE_ARROW:
 					info.MouseType = Fl_Cursor::FL_CURSOR_WE;
 					break;
-				case 32516:
+				case GDK_SB_UP_ARROW:
+                case GDK_TOP_SIDE:
 					info.MouseType = Fl_Cursor::FL_CURSOR_N;
 					break;
 				default:
 					info.MouseType = Fl_Cursor::FL_CURSOR_ARROW;
 					break;
 				}
-
-
-
 				return info;
-			}
 			}
 #elif __ANDROID__
 #error Andriod specific implementation  of CaptureMouse has not been written yet. You can help out by writing it!

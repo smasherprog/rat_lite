@@ -6,9 +6,6 @@
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
 
-using namespace std::literals;
-
-
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -45,7 +42,8 @@ namespace SL {
 			}
 
 			virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
-
+				UNUSED(socket);
+				UNUSED(packet);
 			}
 
 			void ProcessScreen()
@@ -79,8 +77,8 @@ namespace SL {
 				_ServerNetworkDriver.Start();
 				while (_Keepgoing) {
 					ProcessScreen();
-					ProcessMouse();
-					std::this_thread::sleep_for(100ms);
+					ProcessMouse();;
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				}
 				_ServerNetworkDriver.Stop();
 				return 0;

@@ -34,11 +34,11 @@ namespace SL {
 					Payload = nullptr;
 				}
 			public:
-				Packet(unsigned int packet_type) : Packet_Type(packet_type), Payload(nullptr), _owns_Payload(true) {}
-				Packet(unsigned int packet_type, unsigned int payloadsize) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(new char[payloadsize]), _owns_Payload(true) {}
-				Packet(unsigned int packet_type, unsigned int payloadsize, char* buf, bool take_ownership = true) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(buf), _owns_Payload(take_ownership) {}
-				Packet(unsigned int packet_type, unsigned int payloadsize, std::unordered_map<std::string, std::string>&& header, char* buf, bool take_ownership = true) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(buf), _owns_Payload(take_ownership), Header(std::move(header)) {}
-				Packet(unsigned int packet_type, unsigned int payloadsize, std::unordered_map<std::string, std::string>&& header) : Packet_Type(packet_type), Payload_Length(payloadsize), Payload(new char[payloadsize]), _owns_Payload(true), Header(std::move(header)) {}
+				Packet(unsigned int packet_type) : _owns_Payload(true), Packet_Type(packet_type), Payload(nullptr) {}
+				Packet(unsigned int packet_type, unsigned int payloadsize) : _owns_Payload(true),Packet_Type(packet_type), Payload_Length(payloadsize), Payload(new char[payloadsize]){}
+				Packet(unsigned int packet_type, unsigned int payloadsize, char* buf, bool take_ownership = true) : _owns_Payload(take_ownership), Packet_Type(packet_type), Payload_Length(payloadsize), Payload(buf) {}
+				Packet(unsigned int packet_type, unsigned int payloadsize, std::unordered_map<std::string, std::string>&& header, char* buf, bool take_ownership = true) : _owns_Payload(take_ownership), Packet_Type(packet_type), Payload_Length(payloadsize), Payload(buf), Header(std::move(header)) {}
+				Packet(unsigned int packet_type, unsigned int payloadsize, std::unordered_map<std::string, std::string>&& header) :_owns_Payload(true), Packet_Type(packet_type), Payload_Length(payloadsize), Payload(new char[payloadsize]), Header(std::move(header)) {}
 				Packet(Packet&& other) {
 					operator=(std::move(other));
 				}

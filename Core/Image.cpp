@@ -24,6 +24,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 {
 	assert(h*w * 4 == len);
 	auto img = CreateImage(h, w);
+	
 	memcpy(img->data(), data, len);
 	img->Size = len;
 	return img;
@@ -63,14 +64,12 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	rects.reserve(48);
 	auto oldimg_ptr = (const int*)oldimg.data();
 	auto newimg_ptr = (const int*)newimg.data();
-	auto counter = 0;
 
+	for (decltype(oldimg.Height()) row = 0; row < oldimg.Height(); row += maxdist) {
+		for (decltype(oldimg.Width()) col = 0; col < oldimg.Width(); col += maxdist) {
 
-	for (int row = 0; row < oldimg.Height(); row += maxdist) {
-		for (int col = 0; col < oldimg.Width(); col += maxdist) {
-
-			for (int y = row; y < maxdist + row && y < oldimg.Height(); y++) {
-				for (int x = col; x < maxdist + col&& x < oldimg.Width(); x++) {
+			for (decltype(row) y = row; y < maxdist + row && y < oldimg.Height(); y++) {
+				for (decltype(col) x = col; x < maxdist + col&& x < oldimg.Width(); x++) {
 					auto old = oldimg_ptr[y*oldimg.Width() + x];
 					auto ne = newimg_ptr[y*newimg.Width() + x];
 					if (ne != old) {
@@ -83,8 +82,8 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 		}
 	}
 
-	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-	//std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << counter << std::endl;
+	//auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+	//std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << std::endl;
 
 	if (rects.size() <= 2) {
 		SanitizeRects(rects, newimg);
@@ -108,16 +107,16 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	}
 	rects.resize(0);
 	//vertical scan
-	for (auto& or : outrects) {
+	for (auto& otrect : outrects) {
 
 		auto found = std::find_if(rbegin(rects), rend(rects), [=](const SL::Remote_Access_Library::Utilities::Rect& rec) {
-			return rec.bottom() == or .top() && rec.left() == or .left() && rec.right() == or .right();
+			return rec.bottom() == otrect.top() && rec.left() == otrect.left() && rec.right() == otrect.right();
 		});
 		if (found == rend(rects)) {
-			rects.push_back(or );
+			rects.push_back(otrect);
 		}
 		else {
-			found->bottom(or .bottom());
+			found->bottom(otrect.bottom());
 		}
 	}
 	SanitizeRects(rects, newimg);

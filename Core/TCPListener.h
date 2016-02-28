@@ -17,8 +17,8 @@ namespace SL {
 
 				//MUST BE an std::shared_ptr otherwise it will crash
 				TCPListener(IBaseNetworkDriver* driver, unsigned short port, boost::asio::io_service& io_service) :
-					_acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-					_socket(io_service), _driver(driver){
+					_driver(driver), _acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+					_socket(io_service){
 
 				}
 				~TCPListener() {
@@ -59,8 +59,8 @@ namespace SL {
 
 				//MUST BE an std::shared_ptr otherwise it will crash
 				TCPListener(IBaseNetworkDriver* driver, unsigned short port, boost::asio::io_service& io_service) :
-					_acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-					_socket(io_service, _context), _context(boost::asio::ssl::context::tlsv12), _driver(driver) {
+					_driver(driver), _acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+					_socket(io_service, _context), _context(boost::asio::ssl::context::tlsv12) {
 
 				}
 				~TCPListener() {

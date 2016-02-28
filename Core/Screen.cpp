@@ -89,7 +89,8 @@ namespace SL {
 
 #error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #elif __linux__
-#include <gtk/gtk.h>
+
+		#include <gtk/gtk.h>
 		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
 		{
  

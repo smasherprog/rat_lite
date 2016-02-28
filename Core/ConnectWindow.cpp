@@ -50,6 +50,7 @@ namespace SL {
 					connectbtn->label("Connect");
 				}
 				static void try_connect_frm(Fl_Widget* o, void* userdata) {
+					UNUSED(o);
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					std::string host = ptr->bInput->value();
 					ptr->connectbtn->label("Connecting . . .");

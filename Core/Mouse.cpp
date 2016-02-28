@@ -84,7 +84,7 @@ namespace SL {
 
 #error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
 #elif __linux__
-#include <gtk/gtk.h>
+			#include <gtk/gtk.h>
 			MouseInfo GetCursorInfo()
 			{
                 MouseInfo info;

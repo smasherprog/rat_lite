@@ -15,7 +15,8 @@ namespace SL {
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
 					unsigned short _Listenport;
-					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short port) : _io_service(io_service), _IBaseNetworkDriver(netevent), _Listenport(port) { }
+					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short port) :
+						_IBaseNetworkDriver(netevent),_io_service(io_service), _Listenport(port) { }
 					virtual ~WebSocketListinerImpl() {
 						Stop();
 					}

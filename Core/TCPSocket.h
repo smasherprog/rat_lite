@@ -32,7 +32,7 @@ namespace SL {
 				explicit TCPSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) : _socket(io_service), _SocketImpl(io_service, netevents) { }
 
 				virtual ~TCPSocket() {
-					close("~TCPSocket");
+					close_Socket("~TCPSocket");
 				}
 
 
@@ -57,7 +57,7 @@ namespace SL {
 				virtual bool closed() override {
 					return _SocketImpl.closed(_socket.lowest_layer());
 				}
-				virtual void close(std::string reason) override {
+				virtual void close_Socket(std::string reason) override {
 					std::cout << "Closing socket: " << reason << std::endl;
 					if (_SocketImpl.closed(_socket.lowest_layer())) return;
 					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());
@@ -82,11 +82,11 @@ namespace SL {
 								if (!closed()) {
 									handshake();
 								}
-								else close(std::string("async_connect ") + ec.message());
+								else close_Socket(std::string("async_connect ") + ec.message());
 							});
 						}
 						catch (std::exception ex) {
-							close(std::string("async_connect ") + ex.what());
+							close_Socket(std::string("async_connect ") + ex.what());
 						}
 					}
 
@@ -111,7 +111,7 @@ namespace SL {
 							assert(len == sizeof(_SocketImpl.ReadPacketHeader));
 							readbody();
 						}
-						else close(std::string("readheader async_read ") + ec.message());
+						else close_Socket(std::string("readheader async_read ") + ec.message());
 					});
 				}
 				virtual void readbody() override {
@@ -129,7 +129,7 @@ namespace SL {
 							_SocketImpl.get_Driver()->OnReceive(self, spac);
 							readheader();
 						}
-						else close(std::string("readbody async_read ") + ec.message());
+						else close_Socket(std::string("readbody async_read ") + ec.message());
 					});
 				}
 				virtual void writeheader(std::shared_ptr<Packet> packet) override {
@@ -142,7 +142,7 @@ namespace SL {
 							assert(byteswritten == sizeof(_SocketImpl.WritePacketHeader));
 							writebody(packet);
 						}
-						else close(std::string("writeheader async_write ") + ec.message());
+						else close_Socket(std::string("writeheader async_write ") + ec.message());
 					});
 				}
 				virtual void writebody(std::shared_ptr<Packet> packet) override {
@@ -162,7 +162,7 @@ namespace SL {
 								_SocketImpl.writing(false);
 							}
 						}
-						else close(std::string("writebody async_write ") + ec.message());
+						else close_Socket(std::string("writebody async_write ") + ec.message());
 					});
 				}
 

@@ -2,9 +2,9 @@
 //
 
 #include "stdafx.h"
-#include "..\Core\Server.h"
-#include "..\Core\Server_Config.h"
-#include "..\Core\ApplicationDirectory.h"
+#include "../Core/Server.h"
+#include "../Core/Server_Config.h"
+#include "../Core/ApplicationDirectory.h"
 #include <string>
 #include <assert.h>
 

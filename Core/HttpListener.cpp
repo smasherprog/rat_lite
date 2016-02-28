@@ -20,7 +20,8 @@ namespace SL {
 					boost::asio::io_service& _io_service;
 					unsigned short _Listenport;
 					std::string WWWRoot;//this is the search folder for files.. EVERYTHING WILL BE ISSUED OUT IN THE FOLDER SO BE CAREFUL!
-					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short port, std::string wwwroot) : _io_service(io_service), _IBaseNetworkDriver(netevent), _Listenport(port), WWWRoot(wwwroot) {
+					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short port, std::string wwwroot) :
+						_IBaseNetworkDriver(netevent),_io_service(io_service),  _Listenport(port), WWWRoot(wwwroot) {
 						if (WWWRoot.back() == '/' || WWWRoot.back() == '\\') {
 							WWWRoot.pop_back();
 						}
@@ -30,11 +31,13 @@ namespace SL {
 					}
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
+						UNUSED(socket);
 						std::cout << "HTTP OnConnect" << std::endl;
 
 					}
 					//below will need to be moved out into its own class, but for now this is faster
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
+						UNUSED(socket);
 						auto requestedpath = packet->Header[HttpHeader::HTTP_PATH];
 						//sanitize path below. SImple for right now, 
 						std::transform(begin(requestedpath), end(requestedpath), begin(requestedpath), [](const char& elem) {
@@ -43,11 +46,12 @@ namespace SL {
 							}
 							else return '_';
 						});
-
-						return socket->send(GetContent(requestedpath));
+						auto sendpack(GetContent(requestedpath));
+						return socket->send(sendpack);
 
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
+						UNUSED(socket);
 						std::cout << "HTTP Close" << std::endl;
 					}
 					Packet GetContent(std::string path) {

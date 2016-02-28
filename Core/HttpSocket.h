@@ -22,34 +22,35 @@ namespace SL {
 
 
 				virtual void readheader()  override {
+					
 					auto self(this->shared_from_this());	
 					std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
-					boost::asio::async_read_until(_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const boost::system::error_code& ec, std::size_t s)
+					boost::asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const boost::system::error_code& ec, std::size_t s)
 					{
 						if (!ec) {
 							auto beforesize = read_buffer->size();
 							std::istream stream(read_buffer.get());
-							_SocketImpl.Header = std::move(HttpHeader::Parse("1.0", stream));
+							this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.0", stream));
 
-							const auto it = _SocketImpl.Header.find(HttpHeader::HTTP_CONTENTLENGTH);
-							_SocketImpl.ReadPacketHeader.Payload_Length = 0;
-							if (it != _SocketImpl.Header.end()) {
+							const auto it = this->_SocketImpl.Header.find(HttpHeader::HTTP_CONTENTLENGTH);
+							this->_SocketImpl.ReadPacketHeader.Payload_Length = 0;
+							if (it != this->_SocketImpl.Header.end()) {
 								try {
-									_SocketImpl.ReadPacketHeader.Payload_Length = static_cast<unsigned int>(stoull(it->second));
+									this->_SocketImpl.ReadPacketHeader.Payload_Length = static_cast<unsigned int>(stoull(it->second));
 								}
 								catch (const std::exception &e) {
 									std::cout << e.what() << std::endl;
 								}
 							}
 							auto extrabytesread = static_cast<unsigned int>(beforesize - s);
-							if (_SocketImpl.ReadPacketHeader.Payload_Length > extrabytesread) _SocketImpl.ReadPacketHeader.Payload_Length -= extrabytesread;
+							if (this->_SocketImpl.ReadPacketHeader.Payload_Length > extrabytesread) this->_SocketImpl.ReadPacketHeader.Payload_Length -= extrabytesread;
 							if (extrabytesread > 0) {
-								_SocketImpl._IncomingBuffer.assign(std::istreambuf_iterator<char>(stream), {});
+								this->_SocketImpl._IncomingBuffer.assign(std::istreambuf_iterator<char>(stream), {});
 							}
-							readbody();
+							this->readbody();
 						}
 						else {
-							close(std::string("readheader async_read_until ") + ec.message());
+							this->close_Socket(std::string("readheader async_read_until ") + ec.message());
 						}
 					});
 				}
@@ -75,13 +76,14 @@ namespace SL {
 					os << HttpHeader::HTTP_ENDLINE;//marks the end of the header
 
 					auto self(this->shared_from_this());
-					boost::asio::async_write(_socket, *outpackbuff, [self, this, outpackbuff, pack](const boost::system::error_code& ec, std::size_t byteswritten)
+					boost::asio::async_write(this->_socket, *outpackbuff, [self, outpackbuff, pack, this](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
-						if (!ec && !closed())
-						{
-							writebody(pack);
+						UNUSED(byteswritten);
+						if (!ec && !this->closed())
+						{				
+							this->writebody(pack);
 						}
-						else close(std::string("writeheader async_write ") + ec.message());
+						else this->close_Socket(std::string("writeheader async_write ") + ec.message());
 					});
 				}
 				virtual Packet compress(Packet& packet)  override {

@@ -64,16 +64,19 @@ namespace SL {
 				}
 				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override
 				{
+					UNUSED(socket);
 					std::cout << "MainWindowImpl::OnConnect " << std::endl;
 				}
 
 				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet) override
 				{
-
+					UNUSED(socket);
+					UNUSED(packet);
 				}
 
 				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) override
 				{
+					UNUSED(socket);
 					Close();
 				}
 				void Close() {
@@ -88,6 +91,7 @@ namespace SL {
 				}
 				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
 				{
+					UNUSED(socket);
 					_MyCanvas->_Image = img;
 					_MyCanvas->resize(0, 0, img->Width(), img->Height());
 					Fl::awake(awakenredraw, this);

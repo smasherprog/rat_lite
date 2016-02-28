@@ -207,7 +207,6 @@
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="WebSocket.h" />
     <ClInclude Include="WebSocketListener.h" />
-    <ClInclude Include="WebSocketServerNetworkDriver.h" />
     <ClInclude Include="zbuff.h" />
     <ClInclude Include="zbuff_static.h" />
     <ClInclude Include="zdict.h" />

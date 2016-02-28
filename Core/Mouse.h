@@ -1,8 +1,14 @@
 #pragma once
+#include "Shapes.h"
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Capturing {
-			unsigned int GetShownMouseCursor();
+			struct MouseInfo {
+				unsigned int MouseType;
+				Utilities::Point Pos;
+			};
+			MouseInfo GetCursorInfo();
 		}
 	}
 }

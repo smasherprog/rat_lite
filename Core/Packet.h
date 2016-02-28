@@ -14,9 +14,7 @@ namespace SL {
 				HTTP_MSG,
 				IMAGE,
 				IMAGEDIF,
-				MOUSEIMAGE,
-				MOUSELOCATION,
-				MOUSEEVENT,
+				MOUSEINFO,
 				KEYEVENT,
 				//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
 				LAST_PACKET_TYPE

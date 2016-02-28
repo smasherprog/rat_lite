@@ -97,9 +97,6 @@
     <ClInclude Include="ServerNetworkDriver.h">
       <Filter>Network\Driver</Filter>
     </ClInclude>
-    <ClInclude Include="WebSocketServerNetworkDriver.h">
-      <Filter>Network\Driver</Filter>
-    </ClInclude>
     <ClInclude Include="ViewerWindow.h">
       <Filter>UI</Filter>
     </ClInclude>

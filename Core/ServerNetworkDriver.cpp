@@ -12,6 +12,7 @@
 #include "TCPListener.h"
 #include "HttpListener.h"
 #include "turbojpeg.h"
+#include "Mouse.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -74,17 +75,9 @@ namespace SL {
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
-				void SendMouse(ISocket * socket,  unsigned int mousetype) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(sizeof(mousetype)));
-					memcpy(p.Payload, &mousetype, sizeof(mousetype));
-					if (socket == nullptr) SendToAll(p);
-					else socket->send(p);
-				}
-				void SendMouse(ISocket * socket, const Utilities::Point & pt) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSELOCATION), static_cast<unsigned int>(sizeof(Utilities::Point)));
-					auto ptr = (Utilities::Point*)p.Payload;
-					ptr->X = pt.X;
-					ptr->Y = pt.Y;
+				void Send(ISocket* socket, Capturing::MouseInfo mouseinfo) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEINFO), static_cast<unsigned int>(sizeof(mouseinfo)));
+					memcpy(p.Payload, &mouseinfo, sizeof(mouseinfo));
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
@@ -204,15 +197,11 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * soc
 	_ServerNetworkDriverImpl->Send(socket, img);
 }
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, unsigned int mousetype)
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * socket, Capturing::MouseInfo& mousetype)
 {
-	_ServerNetworkDriverImpl->SendMouse(socket, mousetype);
+	_ServerNetworkDriverImpl->Send(socket, mousetype);
 }
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Point & pt)
-{
-	_ServerNetworkDriverImpl->SendMouse(socket, pt);
-}
 
 std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>> SL::Remote_Access_Library::Network::ServerNetworkDriver::GetClients()
 {

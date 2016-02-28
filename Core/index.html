@@ -66,14 +66,11 @@
             self.Cursor = Fl_Cursor.FL_CURSOR_ARROW;
             self._ClientNetworkDriver = new ClientNetworkDriver(self);
             self._ClientNetworkDriver.start("ws://127.0.0.1:8081/echo");
-            self.OnReceive_MouseImage = function (imgtype) {
-                self.Cursor = imgtype;
-                document.getElementById("mousecanvas").src = Fl_Cursor.properties[imgtype].name;
-            }
-            self.OnReceive_MouseLocation = function (point) {
-
-                document.getElementById("mousecanvas").style.top = point.Y + "px";
-                document.getElementById("mousecanvas").style.left = point.X + "px";
+            self.OnReceive_MouseInfo = function (mouseinfo) {
+                self.Cursor = mouseinfo.Mouse_Type;
+                document.getElementById("mousecanvas").style.top = mouseinfo.Y + "px";
+                document.getElementById("mousecanvas").style.left = mouseinfo.X + "px";
+                document.getElementById("mousecanvas").src = Fl_Cursor.properties[mouseinfo.Mouse_Type].name;
             }
             self.OnReceive_Image = function (img) {
                 "use strict";
@@ -140,17 +137,14 @@
                     }
                     self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(data, rectsize));
                 }
-                self.onreceivemouseimage = function (data) {
+                self.onreceivemouseinfo = function (data) {
                     var arr = new Int32Array(data.slice(0, pointsize).buffer);
-                    self.Parent.OnReceive_MouseImage(arr[0]);
-                }
-                self.onreceivemouselocation = function (data) {
-                    var arr = new Int32Array(data.slice(0, pointsize).buffer);
-                    var imagepoint = {
-                        X: arr[0],
-                        Y: arr[1]
+                    var mouseinfo = {
+                        Mouse_Type: arr[0],
+                        X: arr[1],
+                        Y: arr[2]
                     }
-                    self.Parent.OnReceive_MouseLocation(imagepoint);
+                    self.Parent.OnReceive_MouseInfo(mouseinfo);
                 }
 
                 self.socket.onclose = function () {
@@ -200,11 +194,9 @@
                             self.onreceiveimagedif(dstbuff);
                             break;
                         case (6)://this is a mouse image
-                            self.onreceivemouseimage(dstbuff);
+                            self.onreceivemouseinfo(dstbuff);
                             break;
-                        case (7)://this is a mouse location update
-                            self.onreceivemouselocation(dstbuff);
-                            break;
+               
                         default:
                             console.log('received unknown packet type: ' + packetheader.Packet_Type)
                             break;

@@ -7,6 +7,7 @@
 #include "Packet.h"
 #include "IO_Runner.h"
 #include "turbojpeg.h"
+#include "Mouse.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -46,11 +47,8 @@ namespace SL {
 					case static_cast<unsigned int>(PACKET_TYPES::IMAGEDIF) :
 						ImageDif(socket, p);
 						break;
-					case static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE) :
-						MouseImage(socket, p);
-						break;
-					case static_cast<unsigned int>(PACKET_TYPES::MOUSELOCATION) :
-						MouseLocation(socket, p);
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSEINFO) :
+						MouseInfo(socket, p);
 						break;
 					default:
 						_IClientDriver->OnReceive(socket, p);//pass up the chain
@@ -58,12 +56,9 @@ namespace SL {
 					}
 
 				}
-				void MouseLocation(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					auto pos = (Utilities::Point*)p->Payload;
-					_IClientDriver->OnReceive_MouseLocation(socket, *pos);
-				}
-				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					_IClientDriver->OnReceive_MouseImage(socket, *((unsigned int*)p->Payload));
+
+				void MouseInfo(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					_IClientDriver->OnReceive_MouseInfo(socket, (Capturing::MouseInfo*)p->Payload);
 				}
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;

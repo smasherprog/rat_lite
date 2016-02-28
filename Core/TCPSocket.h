@@ -80,8 +80,7 @@ namespace SL {
 							boost::asio::async_connect(_socket, endpoint, [self, this](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator)
 							{
 								if (!closed()) {
-									_SocketImpl.get_Driver()->OnConnect(self);
-									readheader();
+									handshake();
 								}
 								else close(std::string("async_connect ") + ec.message());
 							});

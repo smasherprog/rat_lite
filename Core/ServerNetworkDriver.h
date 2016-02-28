@@ -8,6 +8,9 @@ namespace SL {
 			class Rect;
 			class Point;
 		}
+		namespace Capturing {
+			struct MouseInfo;
+		}
 		namespace Network {
 			class ServerNetworkDriverImpl;
 			class IServerDriver;
@@ -28,8 +31,7 @@ namespace SL {
 
 				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img);
 				void Send(ISocket* socket, const Utilities::Image & img);
-				void SendMouse(ISocket* socket, unsigned int mousetype);
-				void SendMouse(ISocket* socket, const Utilities::Point & pt);
+				void Send(ISocket* socket, Capturing::MouseInfo& mouseinfo);
 				
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();
 

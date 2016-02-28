@@ -11,7 +11,7 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_RGB_Image.H>
-
+#include "Mouse.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -110,13 +110,9 @@ namespace SL {
 				}
 
 				// Inherited via IClientDriver
-				virtual void OnReceive_MouseLocation(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point & pos) override
+				virtual void OnReceive_MouseInfo(const std::shared_ptr<Network::ISocket>& socket, Capturing::MouseInfo* mouseinfo) override
 				{
 
-				}
-				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, unsigned int mousetype) override
-				{
-				
 				}
 			};
 

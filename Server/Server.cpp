@@ -1,5 +1,3 @@
-// Client.cpp : Defines the entry point for the console application.
-//
 
 #include "stdafx.h"
 #include "../Core/Server.h"
@@ -7,9 +5,11 @@
 #include "../Core/ApplicationDirectory.h"
 #include <string>
 #include <assert.h>
+#include <iostream>
 
 int main()
 {
+	std::cout<<"starting "<<std::endl;
 	SL::Remote_Access_Library::Network::Server_Config config;
 	config.TCPListenPort = 6000;//listen on port 600 for tcp connections
 	config.WebSocketListenPort = 6001;// listen for websockets
@@ -24,8 +24,5 @@ int main()
 	assert(exeindex != std::string::npos);
 	SL::Remote_Access_Library::Server s(config);
 	return s.Run();
-
-
-
 }
 

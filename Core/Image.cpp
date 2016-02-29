@@ -52,7 +52,7 @@ void SanitizeRects(std::vector<SL::Remote_Access_Library::Utilities::Rect>& rect
 std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg)
 {
 
-	auto start = std::chrono::steady_clock::now();
+	//auto start = std::chrono::steady_clock::now();
 
 
 #define maxdist 128

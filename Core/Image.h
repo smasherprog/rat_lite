@@ -17,8 +17,8 @@ namespace SL {
 				//Use this to generate new images!
 				static std::shared_ptr<Image> CreateImage(unsigned int h, unsigned int w);
 				static std::shared_ptr<Image_Wrapper> CreateWrappedImage(unsigned int h, unsigned int w);
-				static std::shared_ptr<Image> CreateImage(unsigned int h, unsigned int w, const char* data, size_t len);
-				static std::shared_ptr<Image_Wrapper> CreateWrappedImage(unsigned int h, unsigned int w, const char* data, size_t len);
+				static std::shared_ptr<Image> CreateImage(unsigned int h, unsigned int w, const char* data, size_t pixel_stride);
+				static std::shared_ptr<Image_Wrapper> CreateWrappedImage(unsigned int h, unsigned int w, const char* data, size_t pixel_stride);
 				static std::vector<Rect> GetDifs(const Image& oldimg, const Image& newimg);
 				static void Copy(Image& src, Rect src_rect, Image & dst, Rect dst_rect);
 

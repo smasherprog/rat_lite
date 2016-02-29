@@ -20,22 +20,46 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_
 	i.width = w;
 	return std::shared_ptr<Image_Wrapper>(new Image_Wrapper(i));
 }
-std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::CreateImage(unsigned int h, unsigned int w, const char * data, size_t len)
+std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::CreateImage(unsigned int h, unsigned int w, const char * data, size_t pixel_stride)
 {
-	assert(h*w * 4 == len);
-	auto img = CreateImage(h, w);
+	assert(pixel_stride==3 || pixel_stride==4);
 	
-	memcpy(img->data(), data, len);
-	img->Size = len;
+	auto img = CreateImage(h, w);
+	img->Size = h*w*img->Stride();
+	if(pixel_stride==4){
+		memcpy(img->data(), data, img->Size);
+	}else {
+		auto dst = (unsigned int*)img->data();
+		auto src = (unsigned int*)data;
+		for(auto i=0;i<h*w; i++){
+			dst[i] = (src[i]&0xffff00) | 0x000000ff;
+		}
+	}
+	
 	return img;
 }
 
-std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(unsigned int h, unsigned int w, const char * data, size_t len)
+std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(unsigned int h, unsigned int w, const char * data, size_t pixel_stride)
 {
-	assert(h*w * 4 == len);
+	assert(pixel_stride==3 || pixel_stride==4);
+	
 	auto img = CreateWrappedImage(h, w);
-	memcpy(img->WrappedImage.data(), data, len);
-	img->WrappedImage.Size = len;
+	img->WrappedImage.Size = h*w*img->WrappedImage.Stride();
+	if(pixel_stride==4){
+		memcpy(img->WrappedImage.data(), data, img->WrappedImage.Size);
+	}else {
+		auto dst = img->WrappedImage.data();
+		auto src = data;
+		for(auto i=0;i<h*w; i+=4){
+			dst[i +0] = src[0] ;
+			dst[i +1] = src[1] ;
+			dst[i +2] = src[2] ;
+			dst[i +3] = 255 ;
+			src+=pixel_stride;
+		}
+	}
+	
+	
 	return img;
 }
 void SanitizeRects(std::vector<SL::Remote_Access_Library::Utilities::Rect>& rects, const SL::Remote_Access_Library::Utilities::Image & img) {

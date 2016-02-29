@@ -5,11 +5,17 @@
 #include "../Core/ApplicationDirectory.h"
 #include <string>
 #include <assert.h>
-#include <iostream>
 
-int main()
+#if __linux__
+	#include <gtk/gtk.h>
+#endif
+int main(int argc, char **argv)
 {
-	std::cout<<"starting "<<std::endl;
+		
+#if __linux__
+	gdk_init(&argc, &argv);
+#endif
+	
 	SL::Remote_Access_Library::Network::Server_Config config;
 	config.TCPListenPort = 6000;//listen on port 600 for tcp connections
 	config.WebSocketListenPort = 6001;// listen for websockets

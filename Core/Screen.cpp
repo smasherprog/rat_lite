@@ -100,7 +100,7 @@ namespace SL {
             gdk_window_get_geometry(root_window, &left, &top, &width, &height);
                 
             auto screenshot = gdk_pixbuf_get_from_window(root_window, left, top, width, height);
-			auto px= Utilities::Image::CreateWrappedImage(height, width, (const char*)gdk_pixbuf_read_pixels(screenshot), gdk_pixbuf_get_byte_length(screenshot));
+			auto px= Utilities::Image::CreateWrappedImage(height, width, (const char*)gdk_pixbuf_read_pixels(screenshot), gdk_pixbuf_get_n_channels(screenshot));
             g_object_unref(screenshot);
             return px;
             
@@ -130,9 +130,9 @@ namespace SL {
 						_Timer = std::chrono::steady_clock::now();
 						_ThreadPool.Enqueue([this]() {
 							_Image.reset();
-							//auto start = std::chrono::steady_clock::now();
+							auto start = std::chrono::steady_clock::now();
 							_Image = CaptureDesktopImage();
-							//std::cout << "It took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() << " milliseconds to CaptureDesktopImage() " << std::endl;
+							std::cout << "It took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() << " milliseconds to CaptureDesktopImage() " << std::endl;
 						});
 					}
 				}

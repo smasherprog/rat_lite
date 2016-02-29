@@ -19,7 +19,7 @@ std::string executable_path_fallback(const char *argv0)
 	return p.make_preferred().string();
 }
 
-#if (BOOST_OS_CYGWIN || BOOST_OS_WINDOWS) // {
+#if (_WIN32) // {
 
 #  include <Windows.h>
 
@@ -33,10 +33,14 @@ std::string executable_path(const char *argv0)
 	}
 	return buf;
 }
-
-#elif (BOOST_OS_MACOS) // } {
-
-#  include <mach-o/dyld.h>
+#elif __APPLE__
+#include "TargetConditionals.h"
+#if TARGET_IPHONE_SIMULATOR
+		// iOS Simulator
+#elif TARGET_OS_IPHONE
+		// iOS device
+#elif TARGET_OS_MAC
+#include <mach-o/dyld.h>
 
 std::string executable_path(const char *argv0)
 {
@@ -52,56 +56,11 @@ std::string executable_path(const char *argv0)
 		boost::filesystem::canonical(buf, boost::filesystem::current_path(), ec));
 	return p.make_preferred().string();
 }
+#else
+#   error "Unknown Apple platform"
+#endif
 
-#elif (BOOST_OS_SOLARIS) // } {
-
-#  include <stdlib.h>
-
-std::string executable_path(const char *argv0)
-{
-	std::string ret = getexecname();
-	if (ret.empty())
-	{
-		return executable_path_fallback(argv0);
-	}
-	boost::filesystem::path p(ret);
-	if (!p.has_root_directory())
-	{
-		boost::system::error_code ec;
-		p = boost::filesystem::canonical(
-			p, boost::filesystem::current_path(), ec);
-		ret = p.make_preferred().string();
-	}
-	return ret;
-}
-
-#elif (BOOST_OS_BSD) // } {
-
-#  include <sys/sysctl.h>
-
-std::string executable_path(const char *argv0)
-{
-	int mib[4] = { 0 };
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_PATHNAME;
-	mib[3] = -1;
-	char buf[1024] = { 0 };
-	size_t size = sizeof(buf);
-	sysctl(mib, 4, buf, &size, NULL, 0);
-	if (size == 0 || size == sizeof(buf))
-	{
-		return executable_path_fallback(argv0);
-	}
-	std::string path(buf, size);
-	boost::system::error_code ec;
-	boost::filesystem::path p(
-		boost::filesystem::canonical(
-			path, boost::filesystem::current_path(), ec));
-	return p.make_preferred().string();
-}
-
-#elif (BOOST_OS_LINUX) // } {
+#elif (__linux__) // } {
 
 #  include <unistd.h>
 

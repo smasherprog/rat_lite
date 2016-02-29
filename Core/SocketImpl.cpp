@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "SocketImpl.h"
 
-SL::Remote_Access_Library::Network::SocketImpl::SocketImpl(boost::asio::io_service & io_service, Network::IBaseNetworkDriver * netevents) : _IBaseNetworkDriver(netevents), read_deadline_(io_service), write_deadline_(io_service) {
+SL::Remote_Access_Library::Network::SocketImpl::SocketImpl(boost::asio::io_service & io_service, Network::IBaseNetworkDriver * netevents) : 
+ read_deadline_(io_service), write_deadline_(io_service), _IBaseNetworkDriver(netevents){
 
 	read_deadline_.expires_at(boost::posix_time::pos_infin);
 	write_deadline_.expires_at(boost::posix_time::pos_infin);
-	_SocketStats = { 0 };
+	memset(&_SocketStats, 0, sizeof(_SocketStats));
 	Writing =Closed = false;
 
 }

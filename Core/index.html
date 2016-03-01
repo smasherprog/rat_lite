@@ -138,7 +138,7 @@
                     self.Parent.OnReceive_ImageDif(imagerect, _arrayBufferToBase64(data, rectsize));
                 }
                 self.onreceivemouseinfo = function (data) {
-                    var arr = new Int32Array(data.slice(0, pointsize).buffer);
+                    var arr = new Int32Array(data.slice(0, 4*3).buffer);
                     var mouseinfo = {
                         Mouse_Type: arr[0],
                         X: arr[1],

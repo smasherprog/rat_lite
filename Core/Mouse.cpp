@@ -84,18 +84,26 @@ namespace SL {
 
 #error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
 #elif __linux__
-			#include <gtk/gtk.h>
+			#include <X11/Xlib.h>
 			MouseInfo GetCursorInfo()
 			{
                 MouseInfo info;
-            
+			
+				auto display = XOpenDisplay(NULL);
+				auto root = DefaultRootWindow(display);
+			
+				// Get the mouse cursor position
+				int x, y, root_x, root_y = 0;
+				unsigned int mask = 0;
+				Window child_win, root_win;
+				XQueryPointer(display, root, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
+				
+				XCloseDisplay(display);
+
 				info.MouseType = Fl_Cursor::FL_CURSOR_ARROW;
-				info.Pos = Utilities::Point(0, 0);
-				auto rootwnd = gdk_get_default_root_window();
-				if (rootwnd == NULL) return info;
-				auto m_cursor = gdk_window_get_cursor(rootwnd);
-				if (m_cursor == NULL) return info;
-                auto curtype = gdk_cursor_get_cursor_type(m_cursor);
+				info.Pos = Utilities::Point(x, y);
+				
+			/*
 				switch (curtype) {
 				case GDK_CIRCLE:
 					info.MouseType = Fl_Cursor::FL_CURSOR_WAIT;
@@ -137,7 +145,7 @@ namespace SL {
 				default:
 					info.MouseType = Fl_Cursor::FL_CURSOR_ARROW;
 					break;
-				}
+				}*/
 				return info;
 			}
 #elif __ANDROID__

@@ -3,7 +3,7 @@
 #include "Image.h"
 #include "ThreadPool.h"
 #include <FL/Fl.H>
-
+#include <assert.h>
 #define DESKTOPCAPTURERATE 100
 #define DESKTOPWAITCAPTURERATE 20
 
@@ -90,18 +90,69 @@ namespace SL {
 #error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #elif __linux__
 
-		#include <gtk/gtk.h>
+
+
+	#include <X11/X.h>
+	#include <X11/Xlib.h>
+	#include <X11/Xlibint.h>
+	#include <X11/Xutil.h>
+	#include <sys/shm.h>
+	#include <X11/extensions/XShm.h>
+
 		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
 		{
- 
-            auto root_window = gdk_get_default_root_window();
+			auto display = XOpenDisplay(NULL);
+			auto root = DefaultRootWindow(display);
+			auto screen = XDefaultScreen(display);
+			auto visual = DefaultVisual(display, screen);
+			auto depth = DefaultDepth(display, screen);
+			  
+			XWindowAttributes gwa;
+			XGetWindowAttributes(display, root , &gwa);
+			auto width = gwa.width;
+			auto height = gwa.height;
+			   
+			XShmSegmentInfo shminfo;
+			auto image = XShmCreateImage(display,visual, depth,ZPixmap, NULL, &shminfo, width, height);
+			shminfo.shmid = shmget(IPC_PRIVATE, image->bytes_per_line * image->height, IPC_CREAT|0777);
+			
+			shminfo.readOnly = False;
+			shminfo.shmaddr = image->data = (char*)shmat(shminfo.shmid, 0, 0);
+		
+			XShmAttach(display,&shminfo);
+
+			XShmGetImage(display,root,image,0,0,AllPlanes);
+
+			XShmDetach(display,&shminfo);
+   
+			auto px= Utilities::Image::CreateWrappedImage(height, width);
+			assert(image->bits_per_pixel==32);//this should always be true... Ill write a case where it isnt, but for now it should be
+			struct utrgba {
+				unsigned char r, g, b, a;
+			};
+			auto startdata = (utrgba*)px->WrappedImage.data();
+			auto src = (utrgba*)shminfo.shmaddr;
+			for (auto r = 0; r < height; r++) {
+				for (auto c = 0; c < width; c++) {
+					auto& tmp = startdata[c + r*width] = src[c + r*width];
+					auto tmpr = tmp.r;
+					tmp.r = tmp.b;
+					tmp.b = tmpr;
+				}
+			}
+			XDestroyImage(image);
+			shmdt (shminfo.shmaddr);
+			shmctl (shminfo.shmid, IPC_RMID, 0);
+			XCloseDisplay(display);
+			
+/*            auto root_window = gdk_get_default_root_window();
             if(root_window==nullptr) return Utilities::Image::CreateWrappedImage(0, 0);
             int height, width, left, top;
             gdk_window_get_geometry(root_window, &left, &top, &width, &height);
                 
             auto screenshot = gdk_pixbuf_get_from_window(root_window, left, top, width, height);
 			auto px= Utilities::Image::CreateWrappedImage(height, width, (const char*)gdk_pixbuf_read_pixels(screenshot), gdk_pixbuf_get_n_channels(screenshot));
-            g_object_unref(screenshot);
+            g_object_unref(screenshot);*/
             return px;
             
         }

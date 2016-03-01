@@ -58,7 +58,7 @@ namespace SL {
 			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->WrappedImage.data(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
 
 			SelectObject(capturedc.get(), originalBmp);
-			struct utrgba {
+		/*	struct utrgba {
 				unsigned char r, g, b, a;
 			};
 			auto startdata = (utrgba*)retimg->WrappedImage.data();
@@ -69,7 +69,7 @@ namespace SL {
 					tmp.r = tmp.b;
 					tmp.b = tmpr;
 				}
-			}
+			}*/
 			//Sanity check to ensure the data is correct
 			//SaveBMP(bmpInfo.bmiHeader, SL::Screen_Capture::getData(blk), "c:\\users\\scott\\desktop\\one.bmp");
 			return retimg;

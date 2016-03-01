@@ -125,21 +125,9 @@ namespace SL {
 
 			XShmDetach(display,&shminfo);
    
-			auto px= Utilities::Image::CreateWrappedImage(height, width);
+			auto px= Utilities::Image::CreateWrappedImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel/8);
 			assert(image->bits_per_pixel==32);//this should always be true... Ill write a case where it isnt, but for now it should be
-			struct utrgba {
-				unsigned char r, g, b, a;
-			};
-			auto startdata = (utrgba*)px->WrappedImage.data();
-			auto src = (utrgba*)shminfo.shmaddr;
-			for (auto r = 0; r < height; r++) {
-				for (auto c = 0; c < width; c++) {
-					auto& tmp = startdata[c + r*width] = src[c + r*width];
-					auto tmpr = tmp.r;
-					tmp.r = tmp.b;
-					tmp.b = tmpr;
-				}
-			}
+			
 			XDestroyImage(image);
 			shmdt (shminfo.shmaddr);
 			shmctl (shminfo.shmid, IPC_RMID, 0);

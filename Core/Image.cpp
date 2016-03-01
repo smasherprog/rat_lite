@@ -29,15 +29,12 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 	if(pixel_stride==4){
 		memcpy(img->data(), data, img->Size);
 	}else {
-		auto dst = img->data();
+		auto dst = (unsigned int*)img->data();
 		auto src = data;
 		for(decltype(h*w) i=0;i<h*w; i++){
-			dst[0] = src[0] ;
-			dst[1] = src[1] ;
-			dst[2] = src[2] ;
-			dst[3] = 255 ;
-			src+=3;
-			dst+=4;
+			auto srcdata = *((unsigned int*)src);
+			*dst++ = (srcdata & 0xffffff00) | 0x000000ff;
+			src += 3;
 		}
 	}
 	
@@ -56,12 +53,9 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_
 		auto dst = img->WrappedImage.data();
 		auto src = data;
 		for(decltype(h*w) i=0;i<h*w; i++){
-			dst[0] = src[0] ;
-			dst[1] = src[1] ;
-			dst[2] = src[2] ;
-			dst[3] = 255 ;
-			src+=3;
-			dst+=4;
+			auto srcdata = *((unsigned int*)src);
+			*dst++ = (srcdata & 0xffffff00) | 0x000000ff;
+			src += 3;
 		}
 	}
 	

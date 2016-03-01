@@ -64,7 +64,6 @@ namespace SL {
 			}
 			inline auto Distance(const Point& p1, const Point& p2) { return sqrt(SquaredDistance(p1, p2)); }
 			
-			//inline unsigned int SquaredDistance(const Point& p, const Rect& r) { return SquaredDistance(p, r.Center()); }
 			inline auto Distance(const Point& p, const Rect& r) { return Distance(p, r.Center()); }
 			inline std::ostream& operator<<(std::ostream& os, const Point& p)
 			{

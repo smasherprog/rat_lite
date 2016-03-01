@@ -155,7 +155,7 @@ namespace SL {
 					dst += sizeof(Utilities::Rect);
 
 
-					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_RGBX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_BGRX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
 					}
 				//	std::cout << "Sending " << r << std::endl;

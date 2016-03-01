@@ -41,6 +41,7 @@ namespace SL {
 						ptr->Port = host.substr(portspecified + 1, host.size() - (portspecified - 1));
 						ptr->Host = host.substr(0, portspecified);
 					}
+					else ptr->Host = host;
 					Fl::awake(DoConnect, ptr);
 				}
 

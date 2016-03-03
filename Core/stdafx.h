@@ -15,11 +15,10 @@
 #if _DLL
 #pragma comment(lib, "libeay32MDd")
 #pragma comment(lib,"ssleay32MDd")
-#pragma comment(lib,"turbojpeg")
+
 #else 
 #pragma comment(lib, "libeay32MTd")
 #pragma comment(lib,"ssleay32MTd")
-#pragma comment(lib,"turbojpeg-static")
 
 
 #endif
@@ -28,11 +27,11 @@
 #if _DLL
 #pragma comment(lib, "libeay32MD")
 #pragma comment(lib,"ssleay32MD")
-#pragma comment(lib,"turbojpeg")
+
 #else 
 #pragma comment(lib, "libeay32MT")
 #pragma comment(lib,"ssleay32MT")
-#pragma comment(lib,"turbojpeg-static")
+
 #endif
 #endif
 

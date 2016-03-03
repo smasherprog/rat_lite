@@ -5,11 +5,11 @@
 #include "../Core/ApplicationDirectory.h"
 #include <string>
 #include <assert.h>
-
+#include <stdio.h>
 
 int main(int argc, char **argv)
 {
-		
+
 	SL::Remote_Access_Library::Network::Server_Config config;
 	config.TCPListenPort = 6000;//listen on port 600 for tcp connections
 	config.WebSocketListenPort = 6001;// listen for websockets

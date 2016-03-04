@@ -68,7 +68,7 @@ namespace SL {
 					case FL_RELEASE:
 					case FL_DRAG:
 					case FL_MOVE:
-						return handle_mouse(e, Fl::event_button(), Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Fl::event_x(), Fl::event_y());
 						break;
 					case FL_FOCUS:
 						_HasFocus = true;
@@ -79,8 +79,8 @@ namespace SL {
 					};
 					return Fl_Window::handle(e);
 				}
-				int handle_mouse(int event, int button, int x, int y) {
-					_ClientNetworkDriver.
+				void handle_mouse(int event, int button, int x, int y) {
+				
 				}
 				virtual ~ViewerWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;

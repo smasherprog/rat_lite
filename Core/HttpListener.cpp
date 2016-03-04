@@ -79,7 +79,13 @@ namespace SL {
 									struct tm buf;
 									char buffer[80];
 									memset(buffer, 0, sizeof(buffer));
+									#if _WIN32
 									gmtime_s(&buf, &t);
+									#else 
+									gmtime_r(&t, &buf);
+									#endif
+									
+									
 									strftime(buffer, 80, "%a, %d %b %G %R GMT", &buf);
 									pack.Header[HttpHeader::HTTP_LASTMODIFIED] = buffer;
 									auto ext = p.extension();

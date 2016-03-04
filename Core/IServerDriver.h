@@ -11,7 +11,6 @@ namespace SL {
 			public:
 				IServerDriver() {}
 				virtual ~IServerDriver() {}
-
 			};
 		}
 	}

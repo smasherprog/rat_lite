@@ -17,6 +17,7 @@ namespace SL {
 
 			int Run();
 
+
 		private:
 			std::shared_ptr<ServerImpl> _ServerImpl;
 			

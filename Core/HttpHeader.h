@@ -14,6 +14,8 @@ namespace SL {
 				const auto HTTP_CONTENTLENGTH = "Content-Length";
 				const auto HTTP_CONTENTTYPE = "Content-Type";
 				const auto HTTP_CACHECONTROL = "Cache-Control";
+				const auto HTTP_LASTMODIFIED = "Last-Modified";
+				
 				const auto HTTP_ENDLINE = "\r\n";
 				const auto HTTP_KEYVALUEDELIM = ": ";
 

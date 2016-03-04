@@ -172,6 +172,9 @@
     <ClInclude Include="MediaTypes.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Network_Structs.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />

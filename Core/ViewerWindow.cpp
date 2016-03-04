@@ -41,6 +41,8 @@ namespace SL {
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
+				bool _HasFocus = false;
+
 				static void window_cb(Fl_Widget *widget, void *)
 				{
 					auto wnd = (ViewerWindowImpl*)widget;
@@ -57,6 +59,28 @@ namespace SL {
 					resizable(_MyCanvas);
 					show();
 
+				}
+
+				virtual int handle(int e) override {
+					switch (e) {
+
+					case FL_PUSH:
+					case FL_RELEASE:
+					case FL_DRAG:
+					case FL_MOVE:
+						return handle_mouse(e, Fl::event_button(), Fl::event_x(), Fl::event_y());
+						break;
+					case FL_FOCUS:
+						_HasFocus = true;
+						break;
+					case FL_UNFOCUS:
+						_HasFocus = false;
+						break;
+					};
+					return Fl_Window::handle(e);
+				}
+				int handle_mouse(int event, int button, int x, int y) {
+					_ClientNetworkDriver.
 				}
 				virtual ~ViewerWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;

@@ -185,6 +185,7 @@
     <ClInclude Include="IBaseNetworkDriver.h" />
     <ClInclude Include="MediaTypes.h" />
     <ClInclude Include="mem.h" />
+    <ClInclude Include="Network_Structs.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="IClientDriver.h" />
     <ClInclude Include="Image.h" />

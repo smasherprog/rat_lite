@@ -144,7 +144,6 @@ namespace SL {
 										for (int c = 0; c < 2; c++) {
 											this->_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer2[c] << (8 * (2 - 1 - c));
 										}
-										TCPSocket::readbody
 										readbody();
 									}
 									else {
@@ -203,6 +202,15 @@ namespace SL {
 							}
 							else if ((_recv_fin_rsv_opcode & 0x0f) == 9) {//ping
 								std::cout << "PING RECIVED" << std::endl;
+							
+								auto pingreponse(std::make_shared<char[]>(2));
+								auto p(pingreponse->get())
+								*p++ = 0x1A;
+								*p++ = 0;
+								boost::asio::async_write(this->_socket, boost::asio::buffer(p, 2), [self, this, pingreponse](const boost::system::error_code& ec, std::size_t )
+								{
+									if (ec) this->close_Socket(std::string("ping send failed ") + ec.message());
+								});
 								Packet pingpacket(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_PING));
 								this->send(pingpacket);
 							}

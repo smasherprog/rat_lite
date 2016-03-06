@@ -67,11 +67,15 @@ namespace SL {
 				virtual SocketStats get_SocketStats() const override { return _SocketImpl.get_Socketstats(); }
 				//calling connected with a host and port will attempt an async connection returns immediatly and executes the OnConnect Callback when connected. If connection fails, the OnClose callback is called
 				virtual void connect(const char* host, const char* port) override {
+					_SocketImpl.Host = host !=nullptr ? host : "";
+					_SocketImpl.Port = port != nullptr ? port : "";
 					auto self(this->shared_from_this());
 					if (host == nullptr && port == nullptr) {
+						_SocketImpl.Server = true;
 						handshake();
 					}
 					else {
+						_SocketImpl.Server = false;
 						try
 						{
 							boost::asio::ip::tcp::resolver resolver(_socket.get_io_service());

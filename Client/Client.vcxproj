@@ -181,6 +181,9 @@
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{c870874b-bffe-4ae9-ad8a-6f1a400381ab}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Desktop_UI\Desktop_UI.vcxproj">
+      <Project>{d5e2652c-a744-40c8-91c5-ac669d23dae0}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

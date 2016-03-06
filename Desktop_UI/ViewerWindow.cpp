@@ -1,17 +1,17 @@
 #include "stdafx.h"
 #include "ViewerWindow.h"
-#include "Image.h"
-#include "ClientNetworkDriver.h"
-#include "Packet.h"
-#include "ISocket.h"
-#include "IClientDriver.h"
+#include "../Core/Image.h"
+#include "../Core/ClientNetworkDriver.h"
+#include "../Core/Packet.h"
+#include "../Core/ISocket.h"
+#include "../Core/IClientDriver.h"
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_RGB_Image.H>
-#include "Mouse.h"
+#include "../Core/Mouse.h"
 
 namespace SL {
 	namespace Remote_Access_Library {

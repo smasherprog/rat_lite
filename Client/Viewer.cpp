@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include <FL\Fl.H>
 
-#include "..\Core\ConnectWindow.h"
+#include "..\Desktop_UI\ConnectWindow.h"
 
 int main(int argc, char **argv) {
 	Fl::args(argc, argv);

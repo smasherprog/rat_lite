@@ -3,6 +3,7 @@
 #include "TCPSocket.h"
 #include "crypto.hpp"
 #include "HttpHeader.h"
+#include <random>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -30,8 +31,52 @@ namespace SL {
 				void parse_header() {
 
 				}
-				virtual void handshake()  override {
+				void sendHandshake() {
+					std::shared_ptr<boost::asio::streambuf> write_buffer(new boost::asio::streambuf);
+					auto self(this->shared_from_this());
+					std::ostream request(write_buffer.get());
 
+					request << "GET /rdpenpoint/ HTTP/1.1" << "\r\n";
+					request << "Host: " << this->_SocketImpl.Host << "\r\n";
+					request << "Upgrade: websocket\r\n";
+					request << "Connection: Upgrade\r\n";
+
+					//Make random 16-byte nonce
+					std::string nonce;
+					nonce.resize(16);
+					std::uniform_int_distribution<unsigned short> dist(0, 255);
+					std::random_device rd;
+					for (int c = 0; c<16; c++)
+						nonce[c] = static_cast<unsigned char>(dist(rd));
+
+					std::string nonce_base64 = Crypto::Base64::encode(nonce);
+					request << HttpHeader::HTTP_SECWEBSOCKETKEY << HttpHeader::HTTP_KEYVALUEDELIM << nonce_base64 << HttpHeader::HTTP_ENDLINE;
+					request << "Sec-WebSocket-Version: 13"<< HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
+					std::shared_ptr<std::string> accept_sha1(new std::string(Crypto::SHA1(nonce_base64 + ws_magic_string)));
+					boost::asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+						if (!ec) {
+							std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
+							boost::asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, read_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
+								if (!ec) {
+									std::istream stream(read_buffer.get());
+									this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
+									if (Crypto::Base64::decode(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETACCEPT]) == *accept_sha1) {
+										this->_SocketImpl.get_Driver()->OnConnect(self);
+										readheader();
+									}
+									else {
+										this->close_Socket(std::string("WebSocket handshake failed ") + ec.message());
+									}
+								}
+							});
+						}
+						else {
+							this->close_Socket(std::string("Failed sending handshake ") + ec.message());
+						}
+					});
+
+				}
+				void receivehandshake() {
 					auto self(this->shared_from_this());
 					std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
 
@@ -39,18 +84,19 @@ namespace SL {
 						UNUSED(bytes_transferred);
 						if (!ec) {
 
-						
+
 							std::istream stream(read_buffer.get());
 							this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
-
-							if (this->_SocketImpl.Header.count("Sec-WebSocket-Key") == 0) return this->close_Socket("handshake async_read_until Sec-WebSocket-Key not present");//close socket and get out malformed
+							
+							if (this->_SocketImpl.Header.count(HttpHeader::HTTP_SECWEBSOCKETKEY) == 0) return this->close_Socket("handshake async_read_until Sec-WebSocket-Key not present");//close socket and get out malformed
 							auto write_buffer(std::make_shared<boost::asio::streambuf>());
 							std::ostream handshake(write_buffer.get());
 
 							handshake << "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
 							handshake << "Upgrade: websocket\r\n";
 							handshake << "Connection: Upgrade\r\n";
-							handshake << "Sec-WebSocket-Accept: " << Crypto::Base64::encode(Crypto::SHA1(this->_SocketImpl.Header["Sec-WebSocket-Key"] + ws_magic_string)) << "\r\n\r\n";
+
+							handshake << HttpHeader::HTTP_SECWEBSOCKETACCEPT << HttpHeader::HTTP_KEYVALUEDELIM << Crypto::Base64::encode(Crypto::SHA1(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETKEY] + ws_magic_string)) << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 							boost::asio::async_write(this->_socket, *write_buffer, [this, self, write_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
 								UNUSED(bytes_transferred);
 								if (!ec) {
@@ -68,6 +114,12 @@ namespace SL {
 						}
 					});
 				}
+
+				virtual void handshake()  override {
+					if (this->_SocketImpl.Server) receivehandshake();
+					else sendHandshake();
+
+				}
 				virtual void readheader()  override {
 					auto self(this->shared_from_this());
 					boost::asio::async_read(this->_socket, boost::asio::buffer(_readheaderbuffer2, sizeof(_readheaderbuffer2)), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
@@ -76,7 +128,13 @@ namespace SL {
 							this->_SocketImpl.ReadPacketHeader.Payload_Length = 0;
 							_recv_fin_rsv_opcode = _readheaderbuffer2[0];
 							//Close connection if unmasked message from client (protocol error)
-							if (_readheaderbuffer2[1] < 128) return send_close(1002, "Closing connection because mask was not received");
+							if (this->_SocketImpl.Server) {
+								if (_readheaderbuffer2[1] < 128) return send_close(1002, "Closing connection because mask was not received");
+							}
+							else {
+								if (_readheaderbuffer2[1] >= 128) return send_close(1002, "Closing connection because the message was masked");
+							}
+							this->_SocketImpl.ReadPacketHeader.Payload_Length = (_readheaderbuffer2[1] & 127);
 
 							if (this->_SocketImpl.ReadPacketHeader.Payload_Length == 126) {
 								//2 next bytes is the size of content
@@ -86,6 +144,7 @@ namespace SL {
 										for (int c = 0; c < 2; c++) {
 											this->_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer2[c] << (8 * (2 - 1 - c));
 										}
+										TCPSocket::readbody
 										readbody();
 									}
 									else {
@@ -121,39 +180,47 @@ namespace SL {
 				virtual void readbody() override {
 
 					auto self(this->shared_from_this());
-					this->_SocketImpl.ReadPacketHeader.Payload_Length += 4;//always 4 more because of the mask
+
+					this->_SocketImpl.ReadPacketHeader.Payload_Length += this->_SocketImpl.Server ? 4 : 0;//if this is a server, it receives 4 extra bytes
+
 					auto p(this->_SocketImpl.get_ReadBuffer());
 					auto size(this->_SocketImpl.get_ReadBufferSize());
 					boost::asio::async_read(this->_socket, boost::asio::buffer(p, size), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
 						if (!ec) {
-
 							auto packet(std::make_shared<Packet>(std::move(this->_SocketImpl.GetNextReadPacket())));
-							packet->Packet_Type = 0;
-							auto mask = reinterpret_cast<unsigned char*>(packet->Payload);
-
-							auto startpack = packet->Payload + 4;
-							for (size_t c = 0; c < packet->Payload_Length - 4; c++) {
-								startpack[c] ^= mask[c % 4];
-							}
-
 							//If connection close
 							if ((_recv_fin_rsv_opcode & 0x0f) == 8) {
 								int status = 0;
 								if (bytes_transferred >= 2) {
-									unsigned char byte1 = startpack[0];
-									unsigned char byte2 = startpack[1];
+									unsigned char byte1 = packet->Payload[0];
+									unsigned char byte2 = packet->Payload[1];
 									status = (byte1 << 8) + byte2;
 								}
-								std::string msg(startpack + 2);
+								std::string msg(packet->Payload + 2);
 								send_close(status, msg);
 								return this->close_Socket("readheader (_recv_fin_rsv_opcode & 0x0f) == 8 " + msg);
-							} else if ((_recv_fin_rsv_opcode & 0x0f) == 9) {//ping
+							}
+							else if ((_recv_fin_rsv_opcode & 0x0f) == 9) {//ping
 								std::cout << "PING RECIVED" << std::endl;
 								Packet pingpacket(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_PING));
 								this->send(pingpacket);
 							}
 							else {
+								
+								
+								if (this->_SocketImpl.Server) {
+									//servers receive data masked, so it needs to be unmasked
+									unsigned char mask[4];
+									memcpy(mask, packet->Payload, sizeof(mask));
+									auto startpack = packet->Payload;
+									for (size_t c = 0; c < packet->Payload_Length - sizeof(mask); c++) {
+										startpack[c] = startpack[c+ sizeof(mask)] ^ mask[c % sizeof(mask)];
+									}
+									packet->Payload_Length -= sizeof(mask);//adjust the size of the packet correctly
+								}
+
+
 								this->_SocketImpl.get_Driver()->OnReceive(self, packet);
 							}
 						}
@@ -221,7 +288,7 @@ namespace SL {
 						else this->close_Socket(std::string("writeheader async_write ") + ec.message());
 					});
 
-				}			
+				}
 				virtual Packet decompress(Packet& packet)  override {
 					Packet p(packet.Packet_Type, packet.Payload_Length);
 					memcpy(p.Payload, packet.Payload, packet.Payload_Length);
@@ -234,9 +301,10 @@ namespace SL {
 					memcpy(p.Payload + 2, reason.c_str(), reason.size());
 					this->send(p);
 					auto self(this->shared_from_this());
-					this->_socket.get_io_service().post([this, self]()
+					this->_socket.get_io_service().post([this, self, reason]()
 					{
-						this->close_Socket("send_close");//close this socket after the send has completed
+
+						this->close_Socket(reason + "send_close");//close this socket after the send has completed
 					});
 				}
 				unsigned char _recv_fin_rsv_opcode = 0;

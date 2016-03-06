@@ -5,9 +5,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Button.H>
-#include "TCPSocket.h"
 #include <FL/fl_ask.H>
-
 
 namespace SL {
 	namespace Remote_Access_Library {

@@ -15,6 +15,8 @@ namespace SL {
 				const auto HTTP_CONTENTTYPE = "Content-Type";
 				const auto HTTP_CACHECONTROL = "Cache-Control";
 				const auto HTTP_LASTMODIFIED = "Last-Modified";
+				const auto HTTP_SECWEBSOCKETKEY = "Sec-WebSocket-Key";
+				const auto HTTP_SECWEBSOCKETACCEPT = "Sec-WebSocket-Accept";
 				
 				const auto HTTP_ENDLINE = "\r\n";
 				const auto HTTP_KEYVALUEDELIM = ": ";

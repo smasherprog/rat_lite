@@ -65,7 +65,7 @@
             var self = this;
             self.Cursor = Fl_Cursor.FL_CURSOR_ARROW;
             self._ClientNetworkDriver = new ClientNetworkDriver(self);
-            self._ClientNetworkDriver.start("ws://"+window.location.hostname+":8081/echo");
+            self._ClientNetworkDriver.start("ws://"+window.location.hostname+":6001/echo");
             self.OnReceive_MouseInfo = function (mouseinfo) {
                 self.Cursor = mouseinfo.Mouse_Type;
                 document.getElementById("mousecanvas").style.top = mouseinfo.Y + "px";

@@ -34,7 +34,7 @@ namespace SL {
 				}
 				static void try_connect(std::string host, ConnectWindowImpl* ptr) {
 					auto portspecified = host.find_last_of(':');
-					ptr->Port = "6000";
+					ptr->Port = "6001";
 					if (portspecified != host.npos) {
 						ptr->Port = host.substr(portspecified + 1, host.size() - (portspecified - 1));
 						ptr->Host = host.substr(0, portspecified);

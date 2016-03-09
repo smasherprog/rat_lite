@@ -187,13 +187,13 @@
                     console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                     t0 = performance.now();
                     switch (packetheader.Packet_Type) {
-                        case (4)://this is an image
+                        case (2)://this is an image
                             self.onreceiveimage(dstbuff);
                             break;
-                        case (5)://this is an imagedif
+                        case (3)://this is an imagedif
                             self.onreceiveimagedif(dstbuff);
                             break;
-                        case (6)://this is a mouse image
+                        case (4)://this is a mouse image
                             self.onreceivemouseinfo(dstbuff);
                             break;
                

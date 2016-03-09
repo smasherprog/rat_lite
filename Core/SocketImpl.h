@@ -21,8 +21,6 @@ namespace SL {
 				
 				std::deque<OutgoingPacket> _OutgoingPackets;
 				SocketStats _SocketStats;
-				
-
 
 				boost::asio::deadline_timer read_deadline_;
 				boost::asio::deadline_timer write_deadline_;

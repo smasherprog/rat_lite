@@ -253,28 +253,25 @@
     <None Include="help.png">
       <Filter>wwwroot</Filter>
     </None>
-    <None Include="ne-resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="ns-resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="nw-resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
     <None Include="text.png">
       <Filter>wwwroot</Filter>
     </None>
     <None Include="wait.png">
       <Filter>wwwroot</Filter>
     </None>
-    <None Include="we-resize.png">
+    <None Include="we-resize.png" />
+    <None Include="we_resize.png" />
+    <None Include="hand.png">
       <Filter>wwwroot</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="hand.png">
+    <None Include="ne_resize.png">
       <Filter>wwwroot</Filter>
-    </Image>
+    </None>
+    <None Include="ns_resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="nw_resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
   </ItemGroup>
 </Project>

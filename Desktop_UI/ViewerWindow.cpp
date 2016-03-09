@@ -122,6 +122,7 @@ namespace SL {
 
 				}
 				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) override {
+					if (!_MyCanvas->_Image) return;
 					Utilities::Image::Copy(*img, Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width()), *_MyCanvas->_Image, *rect);
 					Fl::awake(awakenredraw, this);
 

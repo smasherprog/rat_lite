@@ -71,9 +71,23 @@ namespace SL {
 									file.seekg(0);//goto begining
 									file.read(pack.Payload, pack.Payload_Length);
 									std::string rd(pack.Payload, pack.Payload_Length);
+
 									pack.Header[HttpHeader::HTTP_STATUSCODE] = "200 OK";
 									pack.Header[HttpHeader::HTTP_VERSION] = "HTTP/1.1";
 									pack.Header[HttpHeader::HTTP_CONTENTTYPE] = Utilities::GetMimeType(path);
+									std::time_t t = boost::filesystem::last_write_time(path);
+									struct tm buf;
+									char buffer[80];
+									memset(buffer, 0, sizeof(buffer));
+									#if _WIN32
+									gmtime_s(&buf, &t);
+									#else 
+									gmtime_r(&t, &buf);
+									#endif
+									
+									
+									strftime(buffer, 80, "%a, %d %b %G %R GMT", &buf);
+									pack.Header[HttpHeader::HTTP_LASTMODIFIED] = buffer;
 									auto ext = p.extension();
 									if (ext == ".png" || ext == ".jpg") {
 										pack.Header[HttpHeader::HTTP_CACHECONTROL] = "max-age=3600";//set a longer cache timeout for images

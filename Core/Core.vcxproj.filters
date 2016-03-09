@@ -10,9 +10,6 @@
     <Filter Include="Server">
       <UniqueIdentifier>{581a85e1-4b37-4374-8238-60a55ffdbad6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UI">
-      <UniqueIdentifier>{8d33d3f9-7cbd-4994-a8ad-8079816f8da7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
     </Filter>
@@ -55,9 +52,6 @@
     <ClInclude Include="Server.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="ConnectWindow.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="Server_Config.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -96,9 +90,6 @@
     </ClInclude>
     <ClInclude Include="ServerNetworkDriver.h">
       <Filter>Network\Driver</Filter>
-    </ClInclude>
-    <ClInclude Include="ViewerWindow.h">
-      <Filter>UI</Filter>
     </ClInclude>
     <ClInclude Include="crypto.hpp">
       <Filter>Utilities</Filter>
@@ -172,6 +163,9 @@
     <ClInclude Include="MediaTypes.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Network_Structs.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -186,9 +180,6 @@
     </ClCompile>
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
-    </ClCompile>
-    <ClCompile Include="ConnectWindow.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="IO_Runner.cpp">
       <Filter>Network</Filter>
@@ -207,9 +198,6 @@
     </ClCompile>
     <ClCompile Include="ServerNetworkDriver.cpp">
       <Filter>Network\Driver</Filter>
-    </ClCompile>
-    <ClCompile Include="ViewerWindow.cpp">
-      <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="SocketImpl.cpp">
       <Filter>Network\Socket</Filter>
@@ -265,28 +253,25 @@
     <None Include="help.png">
       <Filter>wwwroot</Filter>
     </None>
-    <None Include="ne-resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="ns-resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="nw-resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
     <None Include="text.png">
       <Filter>wwwroot</Filter>
     </None>
     <None Include="wait.png">
       <Filter>wwwroot</Filter>
     </None>
-    <None Include="we-resize.png">
+    <None Include="we-resize.png" />
+    <None Include="we_resize.png" />
+    <None Include="hand.png">
       <Filter>wwwroot</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="hand.png">
+    <None Include="ne_resize.png">
       <Filter>wwwroot</Filter>
-    </Image>
+    </None>
+    <None Include="ns_resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="nw_resize.png">
+      <Filter>wwwroot</Filter>
+    </None>
   </ItemGroup>
 </Project>

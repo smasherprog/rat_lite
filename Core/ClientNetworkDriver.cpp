@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ClientNetworkDriver.h"
-#include "TCPSocket.h"
+#include "WebSocket.h"
 #include "Shapes.h"
 #include "IClientDriver.h"
 #include "Image.h"
@@ -15,7 +15,7 @@ namespace SL {
 
 			class ClientNetworkDriverImpl : public IBaseNetworkDriver {
 				IClientDriver* _IClientDriver;
-				std::shared_ptr<Network::TCPSocket<socket>> _Socket;
+				std::shared_ptr<Network::WebSocket<socket>> _Socket;
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				std::string _dst_host, _dst_port;
 			public:
@@ -25,7 +25,7 @@ namespace SL {
 				void Start() {
 					Stop();
 					_IO_Runner = std::move(std::make_unique<IO_Runner>());
-					_Socket = std::make_shared<TCPSocket<socket>>(this, _IO_Runner->get_io_service());
+					_Socket = std::make_shared<WebSocket<socket>>(this, _IO_Runner->get_io_service());
 					_Socket->connect(_dst_host.c_str(), _dst_port.c_str());
 				}
 				void Stop() {

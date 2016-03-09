@@ -1,17 +1,17 @@
 #include "stdafx.h"
 #include "ViewerWindow.h"
-#include "Image.h"
-#include "ClientNetworkDriver.h"
-#include "Packet.h"
-#include "ISocket.h"
-#include "IClientDriver.h"
+#include "../Core/Image.h"
+#include "../Core/ClientNetworkDriver.h"
+#include "../Core/Packet.h"
+#include "../Core/ISocket.h"
+#include "../Core/IClientDriver.h"
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_RGB_Image.H>
-#include "Mouse.h"
+#include "../Core/Mouse.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -41,6 +41,8 @@ namespace SL {
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
+				bool _HasFocus = false;
+
 				static void window_cb(Fl_Widget *widget, void *)
 				{
 					auto wnd = (ViewerWindowImpl*)widget;
@@ -57,6 +59,28 @@ namespace SL {
 					resizable(_MyCanvas);
 					show();
 
+				}
+
+				virtual int handle(int e) override {
+					switch (e) {
+
+					case FL_PUSH:
+					case FL_RELEASE:
+					case FL_DRAG:
+					case FL_MOVE:
+						handle_mouse(e, Fl::event_button(), Fl::event_x(), Fl::event_y());
+						break;
+					case FL_FOCUS:
+						_HasFocus = true;
+						break;
+					case FL_UNFOCUS:
+						_HasFocus = false;
+						break;
+					};
+					return Fl_Window::handle(e);
+				}
+				void handle_mouse(int event, int button, int x, int y) {
+				
 				}
 				virtual ~ViewerWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;
@@ -98,6 +122,7 @@ namespace SL {
 
 				}
 				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) override {
+					if (!_MyCanvas->_Image) return;
 					Utilities::Image::Copy(*img, Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width()), *_MyCanvas->_Image, *rect);
 					Fl::awake(awakenredraw, this);
 

@@ -22,6 +22,8 @@ namespace SL {
 				//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
 				void Stop();
 
+				
+
 			};
 		}
 	}

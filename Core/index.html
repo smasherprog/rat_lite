@@ -65,7 +65,7 @@
             var self = this;
             self.Cursor = Fl_Cursor.FL_CURSOR_ARROW;
             self._ClientNetworkDriver = new ClientNetworkDriver(self);
-            self._ClientNetworkDriver.start("ws://"+window.location.hostname+":8081/echo");
+            self._ClientNetworkDriver.start("ws://"+window.location.hostname+":6001/echo");
             self.OnReceive_MouseInfo = function (mouseinfo) {
                 self.Cursor = mouseinfo.Mouse_Type;
                 document.getElementById("mousecanvas").style.top = mouseinfo.Y + "px";
@@ -187,13 +187,13 @@
                     console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                     t0 = performance.now();
                     switch (packetheader.Packet_Type) {
-                        case (4)://this is an image
+                        case (2)://this is an image
                             self.onreceiveimage(dstbuff);
                             break;
-                        case (5)://this is an imagedif
+                        case (3)://this is an imagedif
                             self.onreceiveimagedif(dstbuff);
                             break;
-                        case (6)://this is a mouse image
+                        case (4)://this is a mouse image
                             self.onreceivemouseinfo(dstbuff);
                             break;
                

@@ -58,20 +58,7 @@ namespace SL {
 			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->WrappedImage.data(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
 
 			SelectObject(capturedc.get(), originalBmp);
-			struct utrgba {
-				unsigned char r, g, b, a;
-			};
-			auto startdata = (utrgba*)retimg->WrappedImage.data();
-			for (auto r = 0; r < height; r++) {
-				for (auto c = 0; c < width; c++) {
-					auto& tmp = startdata[c + r*width];
-					auto tmpr = tmp.r;
-					tmp.r = tmp.b;
-					tmp.b = tmpr;
-				}
-			}
-			//Sanity check to ensure the data is correct
-			//SaveBMP(bmpInfo.bmiHeader, SL::Screen_Capture::getData(blk), "c:\\users\\scott\\desktop\\one.bmp");
+	
 			return retimg;
 		}
 
@@ -139,50 +126,44 @@ namespace SL {
 #elif __ANDROID__
 #error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #endif
-
-
-		class DesktopCache {
-			Utilities::ThreadPool _ThreadPool;
-			std::shared_ptr<Utilities::Image_Wrapper> _Image;
-			std::chrono::time_point<std::chrono::steady_clock> _Timer;
-			std::mutex _TimerLock;
-		public:
-			DesktopCache() : _ThreadPool(1), _Timer(std::chrono::steady_clock::now()) {
-				//get an image on startup to seed
-				_ThreadPool.Enqueue([this]() {
-					_Image = CaptureDesktopImage();
-				});
-			}
-
-			std::shared_ptr<Utilities::Image> GetImage() {
-				{
-					std::lock_guard<std::mutex> lock(_TimerLock);
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _Timer).count() > DESKTOPCAPTURERATE && _ThreadPool.TaskCount() == 0) {
-						_Timer = std::chrono::steady_clock::now();
-						_ThreadPool.Enqueue([this]() {
-							_Image.reset();
-							//auto start = std::chrono::steady_clock::now();
-							_Image = CaptureDesktopImage();
-							//std::cout << "It took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() << " milliseconds to CaptureDesktopImage() " << std::endl;
-						});
-					}
-				}
-				while (true) {
-					auto tmpimage = _Image;
-					if (tmpimage) {
-						return std::shared_ptr<Utilities::Image>(tmpimage, &tmpimage->WrappedImage);
-					}
-					else { //wait for an image to become available. This should only happen on the first call to this function
-						std::this_thread::sleep_for(std::chrono::milliseconds(DESKTOPWAITCAPTURERATE));
-					}
-				}
-			}
-		};
+		namespace INTERNAL {
+			struct ScreenImpl {
+				std::thread _thread;
+				std::function<void(std::shared_ptr<Utilities::Image>)> _CallBack;
+				int _ms_Delay;
+				bool _Running;
+			};
+		}
 	}
 }
 
+void SL::Remote_Access_Library::Capturing::Screen::_run()
+{
+	std::shared_ptr<Utilities::Image_Wrapper> _Image;
+	while (_ScreenImpl->_Running) {
+		_Image.reset();
+		auto start = std::chrono::steady_clock::now();
+		_Image = CaptureDesktopImage();
+		_ScreenImpl->_CallBack(std::shared_ptr<Utilities::Image>(_Image, &_Image->WrappedImage));
+		auto mstaken = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+		if (mstaken <= _ScreenImpl->_ms_Delay) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(_ScreenImpl->_ms_Delay - mstaken));
+		}
+	}
+}
 
-const std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Capturing::CaptureDesktop() {
-	static DesktopCache _DesktopCache;
-	return _DesktopCache.GetImage();
+SL::Remote_Access_Library::Capturing::Screen::Screen(std::function<void(std::shared_ptr<Utilities::Image>)> func, int ms_dely)
+{
+	_ScreenImpl = new INTERNAL::ScreenImpl();
+	_ScreenImpl->_ms_Delay = ms_dely;
+	_ScreenImpl->_CallBack = func;
+	_ScreenImpl->_Running = true;
+	_ScreenImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Screen::_run, this);
+}
+
+SL::Remote_Access_Library::Capturing::Screen::~Screen()
+{
+	_ScreenImpl->_Running = false;
+	_ScreenImpl->_thread.join();
+	delete _ScreenImpl;
 }

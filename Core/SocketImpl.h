@@ -21,8 +21,6 @@ namespace SL {
 				
 				std::deque<OutgoingPacket> _OutgoingPackets;
 				SocketStats _SocketStats;
-				
-
 
 				boost::asio::deadline_timer read_deadline_;
 				boost::asio::deadline_timer write_deadline_;
@@ -35,8 +33,6 @@ namespace SL {
 
 				void StartReadTimer(int seconds);
 				void StartWriteTimer(int seconds);
-
-			
 
 				IBaseNetworkDriver* get_Driver() const;
 				SocketStats get_Socketstats() const;
@@ -65,7 +61,9 @@ namespace SL {
 				PacketHeader WritePacketHeader;
 				PacketHeader ReadPacketHeader;
 				std::unordered_map<std::string, std::string> Header;
-
+				bool Server = false;
+				std::string Host;
+				std::string Port;
 			};
 		}
 

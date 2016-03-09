@@ -9,8 +9,6 @@ namespace SL {
 
 			enum class PACKET_TYPES : unsigned int {
 				INVALID,
-				WEBSOCKET_CLOSE,
-				WEBSOCKET_PING,
 				HTTP_MSG,
 				IMAGE,
 				IMAGEDIF,

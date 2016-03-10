@@ -18,15 +18,12 @@ namespace SL {
 				unsigned int UncompressedLength;
 			};
 			class SocketImpl {
-				
+
 				std::deque<OutgoingPacket> _OutgoingPackets;
 				SocketStats _SocketStats;
 
-				boost::asio::deadline_timer read_deadline_;
-				boost::asio::deadline_timer write_deadline_;
 				IBaseNetworkDriver* _IBaseNetworkDriver;
-				bool Closed;
-				bool Writing;
+			
 			public:
 
 				SocketImpl(boost::asio::io_service& io_service, IBaseNetworkDriver* netevents);
@@ -37,8 +34,6 @@ namespace SL {
 				IBaseNetworkDriver* get_Driver() const;
 				SocketStats get_Socketstats() const;
 
-				boost::asio::deadline_timer& get_read_deadline_timer();
-				boost::asio::deadline_timer& get_write_deadline_timer();
 				char* get_ReadBuffer();
 				unsigned int get_ReadBufferSize();
 				bool writing() const;
@@ -53,17 +48,19 @@ namespace SL {
 				void UpdateReadStats();
 				void UpdateWriteStats(Packet& packet, size_t beforesize);
 
-				void close(boost::asio::basic_socket<boost::asio::ip::tcp, boost::asio::stream_socket_service <boost::asio::ip::tcp>>& sock);
-				bool closed(boost::asio::basic_socket<boost::asio::ip::tcp, boost::asio::stream_socket_service <boost::asio::ip::tcp>>& sock);
-
 				std::vector<char> _IncomingBuffer;
-	
+				boost::asio::deadline_timer read_deadline_;
+				boost::asio::deadline_timer write_deadline_;
 				PacketHeader WritePacketHeader;
 				PacketHeader ReadPacketHeader;
 				std::unordered_map<std::string, std::string> Header;
 				bool Server = false;
 				std::string Host;
 				std::string Port;
+				bool Closed;
+				bool Writing;
+				int readtimeout;
+				int writetimeout;
 			};
 		}
 

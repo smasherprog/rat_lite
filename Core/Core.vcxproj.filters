@@ -13,9 +13,6 @@
     <Filter Include="Capturing">
       <UniqueIdentifier>{1fcdd7ac-ba8f-4001-9902-9ccbc503c1ed}</UniqueIdentifier>
     </Filter>
-    <Filter Include="wwwroot">
-      <UniqueIdentifier>{7279f241-ad1e-4f43-b7f4-eb750c7c471b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Network\Socket">
       <UniqueIdentifier>{188948fc-5d34-4575-a9d3-a71b8874d246}</UniqueIdentifier>
     </Filter>
@@ -231,47 +228,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="index.html">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="favicon.ico">
-      <Filter>wwwroot</Filter>
-    </None>
     <None Include="packages.config" />
-    <None Include="zstd.js">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="zstd.js.mem">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="arrow.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="cross.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="help.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="text.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="wait.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="we-resize.png" />
-    <None Include="we_resize.png" />
-    <None Include="hand.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="ne_resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="ns_resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
-    <None Include="nw_resize.png">
-      <Filter>wwwroot</Filter>
-    </None>
   </ItemGroup>
 </Project>

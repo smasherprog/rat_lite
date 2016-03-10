@@ -59,25 +59,35 @@ namespace SL {
 
 				//MUST BE an std::shared_ptr otherwise it will crash
 				TCPListener(IBaseNetworkDriver* driver, unsigned short port, boost::asio::io_service& io_service) :
-					_driver(driver), _acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-					_socket(io_service, _context), _context(boost::asio::ssl::context::tlsv12) {
+					_driver(driver), _io_service(io_service), _acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+					 _context(boost::asio::ssl::context::tlsv12) {
+
+					_context.set_options(
+						boost::asio::ssl::context::default_workarounds
+						| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
+						| boost::asio::ssl::context::single_dh_use);
+					//_context.set_password_callback(boost::bind(&server::get_password, this))
+					//_context.use_certificate_chain_file("server.pem");
+					//_context.use_private_key_file("server.pem", boost::asio::ssl::context::pem);
+					//_context.use_tmp_dh_file("dh2048.pem");
 
 				}
 				~TCPListener() {
 					_acceptor.close();
-				
 				}
 				void Start() {
 					auto self(this->shared_from_this());
-					_acceptor.async_accept(_socket.lowest_layer(), [self, this](boost::system::error_code ec)
+
+					auto _socket = std::make_shared<DERIVED_BASESOCKET>(_driver, _io_service, _context);
+					_acceptor.async_accept(_socket->get_socket().lowest_layer(), [self, this, _socket](boost::system::error_code ec)
 					{	
 						if (!ec)
 						{
 							//boost::asio::ip::tcp::no_delay option(true);
 							//_socket.set_option(option);
-							_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, this](const boost::system::error_code& ec) {
+							_socket->get_socket().async_handshake(boost::asio::ssl::stream_base::server, [self, this, _socket](const boost::system::error_code& ec) {
 								if (!ec) {
-									std::make_shared<DERIVED_BASESOCKET>(_driver, _socket)->connect(nullptr, nullptr);
+									_socket->connect(nullptr, nullptr);
 								}
 								Start();
 							});
@@ -95,8 +105,8 @@ namespace SL {
 				TCPListener& operator=(const TCPListener&) = delete;
 			private:
 				IBaseNetworkDriver* _driver;
+				boost::asio::io_service& _io_service;
 				boost::asio::ip::tcp::acceptor _acceptor;
-				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
 				boost::asio::ssl::context _context;
 			};
 		}

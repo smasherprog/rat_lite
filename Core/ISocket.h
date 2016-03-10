@@ -26,8 +26,10 @@ namespace SL {
 				//calling connected with a host and port will attempt an async connection returns immediatly and executes the OnConnect Callback when connected. If connection fails, the OnClose callback is called
 				virtual void connect(const char* host, const char* port) = 0;
 				virtual SocketTypes get_type() const = 0;
-
-				
+				//s in in seconds
+				virtual void set_ReadTimeout(int s) = 0;
+				//s in in seconds
+				virtual void set_WriteTimeout(int s) = 0;
 
 			protected:
 				//called before OnConnect Called

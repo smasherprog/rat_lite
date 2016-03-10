@@ -5,6 +5,7 @@
 #include "HttpHeader.h"
 #include <random>
 #include <string.h>
+#include <utility>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -15,21 +16,22 @@ namespace SL {
 
 				unsigned char _readheaderbuffer[8];
 				#define MASKSIZE 4
+				unsigned char _writeheaderbuffer[sizeof(char)/*type*/ + sizeof(char)/*extra*/ + sizeof(unsigned long long)/*largest size*/ + MASKSIZE/*mask*/];
+				
 				const std::string ws_magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 			public:
 				explicit WebSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket<T>(netevents, socket) {}
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
 				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
+				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
+
 				virtual ~WebSocket() {
 					std::cout << "~WebSocket" << std::endl;
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::WEBSOCKET; }
 
 			private:
-				
-				void parse_header() {
-
-				}
+			
 				void sendHandshake() {
 					std::shared_ptr<boost::asio::streambuf> write_buffer(new boost::asio::streambuf);
 					auto self(this->shared_from_this());
@@ -228,10 +230,7 @@ namespace SL {
 					});
 				}
 				virtual void writeheader(std::shared_ptr<Packet> packet) override {
-
-					auto writeheader(std::make_shared<std::vector<unsigned char>>());
-					writeheader->resize(sizeof(char)/*type*/ + sizeof(char)/*extra*/ + sizeof(unsigned long long)/*largest size*/ + MASKSIZE/*mask*/);
-					auto p(writeheader->data());
+					auto p(_writeheaderbuffer);
 					*p++ = 130;//binary payload type
 					size_t length = packet->Payload_Length + sizeof(this->_SocketImpl.WritePacketHeader);
 					if (length >= 126) {
@@ -271,11 +270,8 @@ namespace SL {
 						}
 					}
 
-
-					
-
 					auto self(this->shared_from_this());
-					boost::asio::async_write(this->_socket, boost::asio::buffer(writeheader->data(), p - writeheader->data()), [self, this, packet, writeheader](const boost::system::error_code& ec, std::size_t byteswritten)
+					boost::asio::async_write(this->_socket, boost::asio::buffer(_writeheaderbuffer, p - _writeheaderbuffer), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						UNUSED(byteswritten);
 						if (!ec && !this->closed())

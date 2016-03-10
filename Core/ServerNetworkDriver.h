@@ -29,8 +29,8 @@ namespace SL {
 				//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
 				void Stop();
 
-				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img);
-				void Send(ISocket* socket, const Utilities::Image & img);
+				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image& img);
+				void Send(ISocket* socket, const Utilities::Image& img);
 				void Send(ISocket* socket, Capturing::MouseInfo& mouseinfo);
 				
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();

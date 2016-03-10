@@ -2,6 +2,7 @@
 #include <memory>
 #include "TCPSocket.h"
 #include "HttpHeader.h"
+#include <utility>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -13,6 +14,7 @@ namespace SL {
 				explicit HttpSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket<T>(netevents, socket) {}
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
 				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
+				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
 				virtual ~HttpSocket() {
 
 				}

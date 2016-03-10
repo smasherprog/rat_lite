@@ -1,14 +1,15 @@
 #include "stdafx.h"
 #include "SocketImpl.h"
 
-SL::Remote_Access_Library::Network::SocketImpl::SocketImpl(boost::asio::io_service & io_service, Network::IBaseNetworkDriver * netevents) : 
- read_deadline_(io_service), write_deadline_(io_service), _IBaseNetworkDriver(netevents){
+SL::Remote_Access_Library::Network::SocketImpl::SocketImpl(boost::asio::io_service& io_service, Network::IBaseNetworkDriver * netevents) :
+	read_deadline_(io_service), write_deadline_(io_service), _IBaseNetworkDriver(netevents) {
 
 	read_deadline_.expires_at(boost::posix_time::pos_infin);
 	write_deadline_.expires_at(boost::posix_time::pos_infin);
 	memset(&_SocketStats, 0, sizeof(_SocketStats));
-	Writing =Closed = false;
-
+	Writing = Closed = false;
+	readtimeout = 5;
+		writetimeout = 5;
 }
 
 void SL::Remote_Access_Library::Network::SocketImpl::StartReadTimer(int seconds)
@@ -34,16 +35,6 @@ SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Netwo
 	return _SocketStats;
 }
 
-
-boost::asio::deadline_timer& SL::Remote_Access_Library::Network::SocketImpl::get_read_deadline_timer()
-{
-	return read_deadline_;
-}
-
-boost::asio::deadline_timer& SL::Remote_Access_Library::Network::SocketImpl::get_write_deadline_timer()
-{
-	return write_deadline_;
-}
 
 char* SL::Remote_Access_Library::Network::SocketImpl::get_ReadBuffer()
 {
@@ -108,19 +99,3 @@ void SL::Remote_Access_Library::Network::SocketImpl::UpdateWriteStats(Packet & p
 	_SocketStats.NetworkBytesSent += packet.Payload_Length;
 }
 
-void SL::Remote_Access_Library::Network::SocketImpl::close(boost::asio::basic_socket<boost::asio::ip::tcp, boost::asio::stream_socket_service<boost::asio::ip::tcp>>& sock)
-{
-	try
-	{
-		std::cout << "Closing Socket" << std::endl;
-		sock.shutdown(boost::asio::socket_base::shutdown_send);
-		sock.close();
-	}
-	catch (...) {}//I dont care about exceptions when the socket is being closed!
-	Closed = true;
-}
-
-bool SL::Remote_Access_Library::Network::SocketImpl::closed(boost::asio::basic_socket<boost::asio::ip::tcp, boost::asio::stream_socket_service<boost::asio::ip::tcp>>& sock)
-{
-	return Closed || !sock.is_open();
-}

@@ -10,10 +10,11 @@ namespace SL {
 				class WebSocketListinerImpl;
 			}
 			class IBaseNetworkDriver;
+			struct Server_Config;
 			class WebSocketListener {
 			public:
 		
-				WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short listenport = 8081);
+				WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config);
 				~WebSocketListener();
 				WebSocketListener(const WebSocketListener&) = delete;
 				WebSocketListener(WebSocketListener&&) = delete;

@@ -9,11 +9,12 @@ namespace SL {
 				class HttpServerImpl;
 			}
 			class IBaseNetworkDriver;
+			struct Server_Config;
 			class HttpListener {
 				INTERNAL::HttpServerImpl* _HttpServerImpl;
 			public:
 
-				HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::string wwwroot, unsigned short listenport=8080);	
+				HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config);
 				//no copy allowed
 				HttpListener(const HttpListener&) = delete;
 				HttpListener(HttpListener&&) = delete;

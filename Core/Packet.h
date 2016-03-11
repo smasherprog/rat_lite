@@ -10,9 +10,10 @@ namespace SL {
 			enum class PACKET_TYPES : unsigned int {
 				INVALID,
 				HTTP_MSG,
-				IMAGE,
-				IMAGEDIF,
-				MOUSEINFO,
+				SCREENIMAGE,
+				SCREENIMAGEDIF,
+				MOUSEPOS,
+				MOUSEIMAGE,
 				KEYEVENT,
 				//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
 				LAST_PACKET_TYPE

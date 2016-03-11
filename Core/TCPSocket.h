@@ -33,6 +33,7 @@ namespace SL {
 				explicit TCPSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : _socket(io_service, context), _SocketImpl(io_service, netevents), _io_service(io_service) { }
 
 				virtual ~TCPSocket() {
+			
 					close_Socket("~TCPSocket");
 				}
 				BASESOCKET& get_socket() { return _socket; }
@@ -70,7 +71,9 @@ namespace SL {
 				}
 				virtual void close_Socket(std::string reason) override {
 					std::cout << "Closing socket: " << reason << std::endl;
+					_SocketImpl.CancelTimers();
 					if (closed()) return;
+
 					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());
 					try
 					{
@@ -131,7 +134,7 @@ namespace SL {
 
 				}
 				virtual void readheader()  override {
-				
+					readexpire_from_now(0);
 					auto self(this->shared_from_this());
 					boost::asio::async_read(_socket, boost::asio::buffer(&_SocketImpl.ReadPacketHeader, sizeof(_SocketImpl.ReadPacketHeader)), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
@@ -220,9 +223,11 @@ namespace SL {
 
 				void readexpire_from_now(int seconds) {
 
-					auto self(this->shared_from_this());
+				
 					_SocketImpl.StartReadTimer(seconds);
-					if (seconds >= 0) {
+					if (seconds >= 0) {	
+						auto self(this->shared_from_this());
+			
 						_SocketImpl.read_deadline_.async_wait([this, self, seconds](boost::system::error_code ec) {
 							if (ec != boost::asio::error::operation_aborted) {
 								close_Socket("read timer expired. Time waited: " + std::to_string(seconds));
@@ -231,9 +236,10 @@ namespace SL {
 					}
 				}
 				void writeexpire_from_now(int seconds) {
-					auto self(this->shared_from_this());
+	
 					_SocketImpl.StartWriteTimer(seconds);
-					if (seconds >= 0) {
+					if (seconds >= 0) {	
+						auto self(this->shared_from_this());
 						_SocketImpl.write_deadline_.async_wait([this, self, seconds](boost::system::error_code ec) {
 							if (ec != boost::asio::error::operation_aborted) {
 								close_Socket("write timer expired. Time waited: " + std::to_string(seconds));

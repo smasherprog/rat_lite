@@ -9,7 +9,12 @@ SL::Remote_Access_Library::Network::SocketImpl::SocketImpl(boost::asio::io_servi
 	memset(&_SocketStats, 0, sizeof(_SocketStats));
 	Writing = Closed = false;
 	readtimeout = 5;
-		writetimeout = 5;
+	writetimeout = 5;
+}
+
+SL::Remote_Access_Library::Network::SocketImpl::~SocketImpl()
+{
+	CancelTimers();
 }
 
 void SL::Remote_Access_Library::Network::SocketImpl::StartReadTimer(int seconds)
@@ -22,6 +27,12 @@ void SL::Remote_Access_Library::Network::SocketImpl::StartWriteTimer(int seconds
 {
 	if (seconds <= 0) write_deadline_.expires_at(boost::posix_time::pos_infin);
 	else write_deadline_.expires_from_now(boost::posix_time::seconds(seconds));
+}
+
+void SL::Remote_Access_Library::Network::SocketImpl::CancelTimers()
+{
+	read_deadline_.cancel();
+	write_deadline_.cancel();
 }
 
 

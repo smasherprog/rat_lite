@@ -25,6 +25,9 @@
     <Filter Include="Compression">
       <UniqueIdentifier>{f1fabd8f-0c85-405d-8b96-5aef9153d5ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="wwwroot">
+      <UniqueIdentifier>{d5320afc-e5a0-40d6-a92b-a6f2866a4fac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -229,5 +232,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="..\wwwroot\index.html">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="..\wwwroot\Core.ts">
+      <Filter>wwwroot</Filter>
+    </None>
   </ItemGroup>
 </Project>

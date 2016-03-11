@@ -27,10 +27,10 @@ namespace SL {
 			public:
 
 				SocketImpl(boost::asio::io_service& io_service, IBaseNetworkDriver* netevents);
-
+				~SocketImpl();
 				void StartReadTimer(int seconds);
 				void StartWriteTimer(int seconds);
-
+				void CancelTimers();
 				IBaseNetworkDriver* get_Driver() const;
 				SocketStats get_Socketstats() const;
 

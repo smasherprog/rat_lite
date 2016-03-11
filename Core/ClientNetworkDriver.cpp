@@ -41,14 +41,17 @@ namespace SL {
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override {
 
 					switch (p->Packet_Type) {
-					case static_cast<unsigned int>(PACKET_TYPES::IMAGE) :
+					case static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGE) :
 						Image(socket, p);
 						break;
-					case static_cast<unsigned int>(PACKET_TYPES::IMAGEDIF) :
+					case static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGEDIF) :
 						ImageDif(socket, p);
 						break;
-					case static_cast<unsigned int>(PACKET_TYPES::MOUSEINFO) :
-						MouseInfo(socket, p);
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE) :
+						MouseImage(socket, p);
+						break;
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS) :
+						MousePos(socket, p);
 						break;
 					default:
 						_IClientDriver->OnReceive(socket, p);//pass up the chain
@@ -56,9 +59,14 @@ namespace SL {
 					}
 
 				}
-
-				void MouseInfo(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					_IClientDriver->OnReceive_MouseInfo(socket, (Capturing::MouseInfo*)p->Payload);
+				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					auto imgsize = (Utilities::Point*)p->Payload;
+					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
+					_IClientDriver->OnReceive_MouseImage(socket, imgsize, img);
+				}
+				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					assert(p->Payload_Length == sizeof(Utilities::Point));
+					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);
 				}
 				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;

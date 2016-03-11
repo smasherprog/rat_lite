@@ -122,6 +122,7 @@ namespace SL {
 
 				}
 				virtual void readheader()  override {
+					readexpire_from_now(0);
 					auto self(this->shared_from_this());
 					boost::asio::async_read(this->_socket, boost::asio::buffer(_readheaderbuffer, 2), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
@@ -163,6 +164,7 @@ namespace SL {
 				}
 				virtual void readbody() override {
 
+					readexpire_from_now(_SocketImpl.readtimeout);
 					auto self(this->shared_from_this());
 
 					this->_SocketImpl.ReadPacketHeader.Payload_Length += this->_SocketImpl.Server ? MASKSIZE : 0;//if this is a server, it receives 4 extra bytes

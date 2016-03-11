@@ -11,6 +11,7 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_RGB_Image.H>
+#include <FL/Fl_PNG_Image.H>
 #include "../Core/Mouse.h"
 
 namespace SL {
@@ -19,13 +20,18 @@ namespace SL {
 			class MyCanvas : public Fl_Widget {
 			public:
 				std::shared_ptr<Utilities::Image> _Image;
+				Utilities::Point _MousePos;
+				std::shared_ptr<Utilities::Image> _MouseImageData;
+				std::shared_ptr<Fl_RGB_Image> _MouseImage;
 				MyCanvas(int X, int Y, int W, int H, const char*L = 0) : Fl_Widget(X, Y, W, H, L) {
 				}
 				virtual void draw() override {
 					if (_Image) {
 						fl_draw_image((uchar*)_Image->data(), x(), y(), _Image->Width(), _Image->Height(), 4);
 					}
-
+					if (_MouseImage) {
+						_MouseImage->draw( _MousePos.X, _MousePos.Y);
+					}
 				}
 			};
 			class ViewerWindowImpl : public Fl_Double_Window, public Network::IClientDriver
@@ -39,9 +45,14 @@ namespace SL {
 
 
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
+				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
+				float MaxFPS = 30.0f;
+				int FPS = 0;
+				int FrameCounter = 0;
 				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
 				bool _HasFocus = false;
+				bool _CursorHidden = false;
 
 				static void window_cb(Fl_Widget *widget, void *)
 				{
@@ -50,6 +61,7 @@ namespace SL {
 				}
 				ViewerWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
+					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
 
@@ -80,7 +92,10 @@ namespace SL {
 					return Fl_Window::handle(e);
 				}
 				void handle_mouse(int event, int button, int x, int y) {
-				
+					if (!_HasFocus && _CursorHidden) {
+						this->cursor(Fl_Cursor::FL_CURSOR_ARROW);
+						_CursorHidden = false;
+					}
 				}
 				virtual ~ViewerWindowImpl() {
 					std::cout << "~MainWindowImpl() " << std::endl;
@@ -111,7 +126,12 @@ namespace SL {
 					_BeingClosed = true;
 				}
 				static void awakenredraw(void* data) {
-					((ViewerWindowImpl*)data)->redraw();
+					auto imp = ((ViewerWindowImpl*)data);
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - imp->_FrameTimer).count() > imp->MaxFPS / 1000.0f) {
+						imp->_FrameTimer = std::chrono::steady_clock::now();
+						imp->FrameCounter += 1;
+						if (!imp->_BeingClosed) imp->redraw();
+					}
 				}
 				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
 				{
@@ -132,16 +152,26 @@ namespace SL {
 						std::string st = "Client ";
 						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " Kbs Received ";
 						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " Kbs Sent";
+						FPS = FrameCounter;
+						FrameCounter = 0;
+						st += " Fps: " + std::to_string(FPS);
 						LastStats = stats;
 						label(st.c_str());
+					
 					}
 
 				}
-
-				// Inherited via IClientDriver
-				virtual void OnReceive_MouseInfo(const std::shared_ptr<Network::ISocket>& socket, Capturing::MouseInfo* mouseinfo) override
-				{
-
+				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* point, std::shared_ptr<Utilities::Image>& img)override {
+					if (_HasFocus && !_CursorHidden) {
+						this->cursor(Fl_Cursor::FL_CURSOR_NONE);
+						_CursorHidden = true;
+					}
+					_MyCanvas->_MouseImageData = img;
+					_MyCanvas->_MouseImage = std::make_shared<Fl_RGB_Image>((uchar*)img->data(), point->X, point->Y, 4);
+					Fl::awake(awakenredraw, this);
+				}
+				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
+					_MyCanvas->_MousePos = *pos;
 				}
 			};
 

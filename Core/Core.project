@@ -92,12 +92,6 @@
     <File Name="Server.cpp"/>
     <File Name="Server.h"/>
   </VirtualDirectory>
-  <VirtualDirectory Name="UI">
-    <File Name="ConnectWindow.cpp"/>
-    <File Name="ConnectWindow.h"/>
-    <File Name="ViewerWindow.cpp"/>
-    <File Name="ViewerWindow.h"/>
-  </VirtualDirectory>
   <VirtualDirectory Name="Utilities">
     <File Name="ApplicationDirectory.cpp"/>
     <File Name="ApplicationDirectory.h"/>
@@ -122,7 +116,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="GCC" DebuggerType="LLDB Debugger" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-W;-fPIC;-std=c++14;-Wall;$(shell pkg-config gtk+-3.0 --cflags)" C_Options="-g;-W;-fPIC;" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
+      <Compiler Options="-g;-W;-std=c++14;-Wall;-fPIC" C_Options="-g;-W;-fPIC;" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/lib$(ProjectName).so" IntermediateDirectory="./Debug" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

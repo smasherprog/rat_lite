@@ -18,7 +18,7 @@ namespace SL {
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
 					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
-						_IBaseNetworkDriver(netevent), _io_service(io_service), _config(config) { }
+						_config(config), _IBaseNetworkDriver(netevent),  _io_service(io_service){ }
 					virtual ~WebSocketListinerImpl() {
 						Stop();
 					}

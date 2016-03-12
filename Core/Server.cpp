@@ -63,7 +63,7 @@ namespace SL {
 						//make sure to send the full screens to any new connects
 						std::lock_guard<std::mutex> lock(_NewClientLock);
 						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.SendScreenFull(nullptr, *img);
+							_ServerNetworkDriver.SendScreenFull(a.get(), *img);
 						}
 						_NewClients.clear();
 					}
@@ -87,7 +87,7 @@ namespace SL {
 						//make sure to send the full screens to any new connects
 						std::lock_guard<std::mutex> lock(_NewClientLock);
 						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.SendMouse(nullptr, *img);
+							_ServerNetworkDriver.SendMouse(a.get(), *img);
 						}
 						_NewClients.clear();
 					}

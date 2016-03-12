@@ -86,7 +86,7 @@ namespace SL {
 	#include <sys/shm.h>
 	#include <X11/extensions/XShm.h>
 
-		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
+		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
 		{
 			auto display = XOpenDisplay(NULL);
 			auto root = DefaultRootWindow(display);
@@ -112,7 +112,7 @@ namespace SL {
 
 			XShmDetach(display,&shminfo);
    
-			auto px= Utilities::Image::CreateWrappedImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel/8);
+			auto px= Utilities::Image::CreateImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel/8);
 			assert(image->bits_per_pixel==32);//this should always be true... Ill write a case where it isnt, but for now it should be
 			
 			XDestroyImage(image);

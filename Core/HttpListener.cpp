@@ -7,6 +7,7 @@
 #include "HttpHeader.h"
 #include "MediaTypes.h"
 #include <boost/filesystem.hpp>
+#include "Server_Config.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -16,22 +17,30 @@ namespace SL {
 				class HttpServerImpl : public IBaseNetworkDriver {
 				public:
 					std::shared_ptr<TCPListener<socket, HttpSocket<socket>>> _TCPListener;
+					std::shared_ptr<TCPListener<ssl_socket, HttpSocket<ssl_socket>>> _TLSTCPListener;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
-					unsigned short _Listenport;
-					std::string WWWRoot;//this is the search folder for files.. EVERYTHING WILL BE ISSUED OUT IN THE FOLDER SO BE CAREFUL!
-					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, unsigned short port, std::string wwwroot) :
-						_IBaseNetworkDriver(netevent),_io_service(io_service),  _Listenport(port), WWWRoot(wwwroot) {
-						if (WWWRoot.back() == '/' || WWWRoot.back() == '\\') {
-							WWWRoot.pop_back();
+					Server_Config _config;
+
+					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
+						_IBaseNetworkDriver(netevent), _io_service(io_service), _config(config) {
+						if (_config.WWWRoot.empty()) {
+							_config.WWWRoot = "/wwwwroot/";
 						}
+						else if (_config.WWWRoot.back() == '/' || _config.WWWRoot.back() == '\\') {
+							_config.WWWRoot.pop_back();
+						}
+
+						boost::filesystem::path p(boost::filesystem::canonical(_config.WWWRoot));
+						_config.WWWRoot = p.string();
 					}
 					virtual ~HttpServerImpl() {
 						Stop();
 					}
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-						UNUSED(socket);
+						socket->set_ReadTimeout(_config.Read_Timeout);
+						socket->set_WriteTimeout(_config.Write_Timeout);
 						std::cout << "HTTP OnConnect" << std::endl;
 
 					}
@@ -56,10 +65,10 @@ namespace SL {
 					}
 					Packet GetContent(std::string path) {
 						std::cout << "HTTP GetContent " << path << std::endl;
-						if (path == "/") path = WWWRoot+"/index.html";
-						else path = WWWRoot + path;
+						if (path == "/") path = _config.WWWRoot + "/index.html";
+						else path = _config.WWWRoot + path;
 						try {
-							boost::filesystem::path p(boost::filesystem::canonical(path, WWWRoot));
+							boost::filesystem::path p(boost::filesystem::canonical(path, _config.WWWRoot));
 							auto tesert = p.string();
 							if (boost::filesystem::exists(p) && boost::filesystem::is_regular_file(p))
 							{
@@ -79,13 +88,13 @@ namespace SL {
 									struct tm buf;
 									char buffer[80];
 									memset(buffer, 0, sizeof(buffer));
-									#if _WIN32
+#if _WIN32
 									gmtime_s(&buf, &t);
-									#else 
+#else 
 									gmtime_r(&t, &buf);
-									#endif
-									
-									
+#endif
+
+
 									strftime(buffer, 80, "%a, %d %b %G %R GMT", &buf);
 									pack.Header[HttpHeader::HTTP_LASTMODIFIED] = buffer;
 									auto ext = p.extension();
@@ -113,11 +122,20 @@ namespace SL {
 						return pack;
 					}
 					void Start() {
-						_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _Listenport, _io_service);
-						_TCPListener->Start();
+						if (_config.HttpListenPort > 0) {
+							std::cout << "Starting http socket Listening on port " << _config.HttpListenPort << std::endl;
+							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config.HttpListenPort, _io_service);
+							_TCPListener->Start();
+						}
+						if (_config.HttpTLSListenPort > 0) {
+							std::cout << "Starting TLS http socket Listening on port " << _config.HttpTLSListenPort << std::endl;
+							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config.HttpTLSListenPort, _io_service);
+							_TLSTCPListener->Start();
+						}
 					}
 					void Stop() {
 						_TCPListener.reset();
+						_TLSTCPListener.reset();
 					}
 				};
 			}
@@ -126,9 +144,9 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::string wwwroot, unsigned short listenport)
+SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config)
 {
-	_HttpServerImpl = new INTERNAL::HttpServerImpl(netevent, io_service, listenport, wwwroot);
+	_HttpServerImpl = new INTERNAL::HttpServerImpl(netevent, io_service, config);
 }
 
 SL::Remote_Access_Library::Network::HttpListener::~HttpListener()

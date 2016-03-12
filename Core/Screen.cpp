@@ -17,7 +17,7 @@ namespace SL {
 #define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
 #define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
 
-		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
+		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
 		{
 			int left(0), top(0), width(0), height(0);
 			for (auto i = 0; i < Fl::screen_count(); i++) {
@@ -31,16 +31,16 @@ namespace SL {
 			static auto capturedc(RAIIHDC(CreateCompatibleDC(desktopdc.get())));
 			static auto capturebmp(RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), width, height)));
 
-			if (!desktopdc || !capturedc || !capturebmp) return Utilities::Image::CreateWrappedImage(0, 0);
+			if (!desktopdc || !capturedc || !capturebmp) return Utilities::Image::CreateImage(0, 0);
 
 			// Selecting an object into the specified DC 
 			auto originalBmp = SelectObject(capturedc.get(), capturebmp.get());
 
-			auto retimg(Utilities::Image::CreateWrappedImage(height, width));
+			auto retimg(Utilities::Image::CreateImage(height, width));
 
 			if (BitBlt(capturedc.get(), 0, 0, width, height, desktopdc.get(), left, top, SRCCOPY | CAPTUREBLT) == FALSE) {
 				//if the screen cannot be captured, set everything to 1 and return 
-				memset(retimg->WrappedImage.data(), 1, retimg->WrappedImage.size());
+				memset(retimg->data(), 1, retimg->size());
 				SelectObject(capturedc.get(), originalBmp);
 				return retimg;
 			}
@@ -55,7 +55,7 @@ namespace SL {
 			bmpInfo.bmiHeader.biCompression = BI_RGB;
 			bmpInfo.bmiHeader.biSizeImage = ((width * bmpInfo.bmiHeader.biBitCount + 31) / 32) * 4 * height;
 
-			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->WrappedImage.data(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
+			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
 
 			SelectObject(capturedc.get(), originalBmp);
 	
@@ -86,7 +86,7 @@ namespace SL {
 	#include <sys/shm.h>
 	#include <X11/extensions/XShm.h>
 
-		std::shared_ptr<Utilities::Image_Wrapper> CaptureDesktopImage()
+		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
 		{
 			auto display = XOpenDisplay(NULL);
 			auto root = DefaultRootWindow(display);
@@ -112,7 +112,7 @@ namespace SL {
 
 			XShmDetach(display,&shminfo);
    
-			auto px= Utilities::Image::CreateWrappedImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel/8);
+			auto px= Utilities::Image::CreateImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel/8);
 			assert(image->bits_per_pixel==32);//this should always be true... Ill write a case where it isnt, but for now it should be
 			
 			XDestroyImage(image);
@@ -139,12 +139,11 @@ namespace SL {
 
 void SL::Remote_Access_Library::Capturing::Screen::_run()
 {
-	std::shared_ptr<Utilities::Image_Wrapper> _Image;
 	while (_ScreenImpl->_Running) {
-		_Image.reset();
+		
 		auto start = std::chrono::steady_clock::now();
-		_Image = CaptureDesktopImage();
-		_ScreenImpl->_CallBack(std::shared_ptr<Utilities::Image>(_Image, &_Image->WrappedImage));
+		auto i = CaptureDesktopImage();
+		_ScreenImpl->_CallBack(i);
 		auto mstaken = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
 		if (mstaken <= _ScreenImpl->_ms_Delay) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(_ScreenImpl->_ms_Delay - mstaken));

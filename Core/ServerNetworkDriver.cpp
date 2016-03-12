@@ -20,8 +20,8 @@ namespace SL {
 
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
 
-				std::shared_ptr<TCPListener<socket, TCPSocket<socket>>> _TCPListener;
 				std::shared_ptr<WebSocketListener> _WebSocketListener;
+
 				std::unique_ptr<HttpListener> _HttptListener;
 
 				std::unique_ptr<IO_Runner> _IO_Runner;
@@ -35,7 +35,7 @@ namespace SL {
 
 			public:
 				ServerNetworkDriverImpl(Server_Config& config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
-				
+
 				}
 				virtual ~ServerNetworkDriverImpl() {
 					Stop();
@@ -61,27 +61,37 @@ namespace SL {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
 					return _Clients;
 				}
-
-				void Send(ISocket* socket, const Utilities::Image & img) {
-					Utilities::Rect r(Utilities::Point(0, 0),  img.Height(), img.Width());
-					auto p(ExtractImageRect(r, img));
-					p.Packet_Type = static_cast<unsigned int>(PACKET_TYPES::IMAGE);
-					if(socket==nullptr)	SendToAll(p);
-					else socket->send(p);
-				}
-
-				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img) {
+				void SendScreenDif(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img) {
 					auto p(ExtractImageRect(r, img));
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
-				void Send(ISocket* socket, Capturing::MouseInfo mouseinfo) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEINFO), static_cast<unsigned int>(sizeof(mouseinfo)));
-					memcpy(p.Payload, &mouseinfo, sizeof(mouseinfo));
+				void SendScreenFull(ISocket * socket, const Utilities::Image & img) {
+					Utilities::Rect r(Utilities::Point(0, 0), img.Height(), img.Width());
+					auto p(ExtractImageRect(r, img));
+					p.Packet_Type = static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGE);
+					if (socket == nullptr)	SendToAll(p);
+					else socket->send(p);
+				}
+				void SendMouse(ISocket * socket, const Utilities::Image & img) {
+					Utilities::Point r(Utilities::Point(img.Width(), img.Height()));
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), sizeof(r) + img.size());
+					memcpy(p.Payload, &r, sizeof(r));
+					memcpy(p.Payload + sizeof(r), img.data(), img.size());
+					if (socket == nullptr)	SendToAll(p);
+					else socket->send(p);
+				}
+				void SendMouse(ISocket * socket, const Utilities::Point& pos)
+				{
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
+					p.Packet_Type = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
+					memcpy(p.Payload, &pos, sizeof(pos));
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
-			
+
+
+
 				void SendToAll(Packet& packet) {
 					for (auto& c : GetClients()) {
 						c->send(packet);
@@ -99,17 +109,12 @@ namespace SL {
 					Stop();
 
 					_IO_Runner = std::make_unique<IO_Runner>();
-					_TCPListener = std::make_shared<TCPListener<socket, TCPSocket<socket>>>(this, _Config.TCPListenPort, _IO_Runner->get_io_service());
-
 					if (_Config.WebSocketListenPort > 0) {
 
-						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service(), _Config.WWWRoot);
-						_WebSocketListener = std::make_unique<WebSocketListener>(this, _IO_Runner->get_io_service(), _Config.WebSocketListenPort);
+						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service(), _Config);
+						_WebSocketListener = std::make_unique<WebSocketListener>(this, _IO_Runner->get_io_service(), _Config);
 					}
-
-
 					_HttptListener->Start();
-					_TCPListener->Start();
 					_WebSocketListener->Start();
 
 				}
@@ -120,7 +125,6 @@ namespace SL {
 					}
 
 					_HttptListener.reset();
-					_TCPListener.reset();
 					_WebSocketListener.reset();
 					_IO_Runner.reset();
 
@@ -148,7 +152,7 @@ namespace SL {
 					ExtractImageRect(r, img, _CompressBuffer);
 
 					auto srcbuf = (unsigned char*)_CompressBuffer.data();
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::IMAGEDIF), sizeof(Utilities::Rect) + maxsize);
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGEDIF), sizeof(Utilities::Rect) + maxsize);
 
 					auto dst = (unsigned char*)p.Payload;
 					memcpy(dst, &r, sizeof(Utilities::Rect));
@@ -158,7 +162,7 @@ namespace SL {
 					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_BGRX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
 					}
-				//	std::cout << "Sending " << r << std::endl;
+					//	std::cout << "Sending " << r << std::endl;
 					p.Payload_Length = sizeof(Utilities::Rect) + _jpegSize;//adjust the correct size
 					return p;
 				}
@@ -188,18 +192,21 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::Stop()
 }
 
 
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img)
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendScreenDif(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img)
 {
-	_ServerNetworkDriverImpl->Send(socket, r, img);
+	_ServerNetworkDriverImpl->SendScreenDif(socket, r, img);
 }
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * socket, const Utilities::Image & img)
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendScreenFull(ISocket * socket, const Utilities::Image & img)
 {
-	_ServerNetworkDriverImpl->Send(socket, img);
+	_ServerNetworkDriverImpl->SendScreenFull(socket, img);
 }
-
-void SL::Remote_Access_Library::Network::ServerNetworkDriver::Send(ISocket * socket, Capturing::MouseInfo& mousetype)
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Image & img)
 {
-	_ServerNetworkDriverImpl->Send(socket, mousetype);
+	_ServerNetworkDriverImpl->SendMouse(socket, img);
+}
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket * socket, const Utilities::Point & pos)
+{
+	_ServerNetworkDriverImpl->SendMouse(socket, pos);
 }
 
 

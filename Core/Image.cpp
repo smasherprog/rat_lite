@@ -13,13 +13,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 	i.width = w;
 	return std::make_shared<SL::Remote_Access_Library::Utilities::Image>(i);
 }
-std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(unsigned int h, unsigned int w)
-{
-	Image_Impl i;
-	i.height = h;
-	i.width = w;
-	return std::shared_ptr<Image_Wrapper>(new Image_Wrapper(i));
-}
+
 std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::CreateImage(unsigned int h, unsigned int w, const char * data, size_t pixel_stride)
 {
 	assert(pixel_stride==3 || pixel_stride==4);
@@ -41,27 +35,6 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 	return img;
 }
 
-std::shared_ptr<SL::Remote_Access_Library::Utilities::Image_Wrapper> SL::Remote_Access_Library::Utilities::Image::CreateWrappedImage(unsigned int h, unsigned int w, const char * data, size_t pixel_stride)
-{
-	assert(pixel_stride==3 || pixel_stride==4);
-	
-	auto img = CreateWrappedImage(h, w);
-	img->WrappedImage.Size = h*w*img->WrappedImage.Stride();
-	if(pixel_stride==4){
-		memcpy(img->WrappedImage.data(), data, img->WrappedImage.Size);
-	}else {
-		auto dst = img->WrappedImage.data();
-		auto src = data;
-		for(decltype(h*w) i=0;i<h*w; i++){
-			auto srcdata = *((unsigned int*)src);
-			*dst++ = (srcdata & 0xffffff00) | 0x000000ff;
-			src += 3;
-		}
-	}
-	
-	
-	return img;
-}
 void SanitizeRects(std::vector<SL::Remote_Access_Library::Utilities::Rect>& rects, const SL::Remote_Access_Library::Utilities::Image & img) {
 	for (auto& r : rects) {
 		if (r.right() > static_cast<int>(img.Width())) {
@@ -78,14 +51,13 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 
 	//auto start = std::chrono::steady_clock::now();
 
-
 #define maxdist 128
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> rects;
-	if (oldimg.Width() != newimg.Width() || oldimg.Height() != newimg.Height()) {
+	if (oldimg.Width() != newimg.Width() || oldimg.Height() != newimg.Height() || newimg.Width()==0 || newimg.Height()==0) {
 		rects.push_back(Rect(Point(0, 0), newimg.Height(), newimg.Width()));
 		return rects;
 	}
-	rects.reserve(48);
+	rects.reserve((newimg.Height()/ maxdist) +1 * (newimg.Width() / maxdist) + 1);
 	auto oldimg_ptr = (const int*)oldimg.data();
 	auto newimg_ptr = (const int*)newimg.data();
 
@@ -114,7 +86,7 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 		return rects;//make sure there is at least 2
 	}
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> outrects;
-	outrects.reserve(rects.size() / 4);
+	outrects.reserve(rects.size());
 	outrects.push_back(rects[0]);
 	//horizontal scan
 	for (size_t i = 1; i < rects.size() - 1; i++) {
@@ -162,10 +134,5 @@ SL::Remote_Access_Library::Utilities::Image::Image(Image_Impl& impl) : _Height(i
 	_Data = std::make_unique<char[]>(Size);
 }
 SL::Remote_Access_Library::Utilities::Image::~Image() {
-
-}
-
-SL::Remote_Access_Library::Utilities::Image_Wrapper::Image_Wrapper(Image_Impl & impl) : WrappedImage(impl)
-{
 
 }

@@ -11,15 +11,13 @@ int main(int argc, char **argv)
 {
 
 	SL::Remote_Access_Library::Network::Server_Config config;
-	config.TCPListenPort = 6000;//listen on port 600 for tcp connections
 	config.WebSocketListenPort = 6001;// listen for websockets
-	config.WWWRoot = "";
-
+	config.HttpListenPort = 8080;
 	auto searchpath = executable_path(nullptr);
 	auto exeindex = searchpath.find_last_of('\\');
 	if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
 	if (exeindex != searchpath.npos) {
-		config.WWWRoot = searchpath.substr(0, exeindex);
+		config.WWWRoot = searchpath.substr(0, exeindex) + "/../../wwwroot/";
 	}
 	assert(exeindex != std::string::npos);
 	SL::Remote_Access_Library::Server s(config);

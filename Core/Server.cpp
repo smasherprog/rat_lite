@@ -14,10 +14,11 @@ namespace SL {
 		class ServerImpl : public Network::IServerDriver {
 		public:
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
-			Capturing::MouseInfo _LastMouseInfo;
+			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastMouse;
+			Utilities::Point LastMousePos;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
-			std::unique_ptr<Capturing::Screen> _ScreenCapture;
+			
 			bool _Keepgoing;
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
@@ -25,8 +26,7 @@ namespace SL {
 
 			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
 			{
-				_LastMouseInfo.MouseType = 0xffffffff;
-				_LastMouseInfo.Pos = Utilities::Point(0xffffffff, 0xffffffff);
+				LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 				_Keepgoing = true;
 			}
 
@@ -54,8 +54,7 @@ namespace SL {
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
 			{
 				if (!LastScreen) {//first screen send all!
-					LastScreen = img;
-					_ServerNetworkDriver.Send(nullptr, *LastScreen);
+					_ServerNetworkDriver.SendScreenFull(nullptr, *img);
 					std::lock_guard<std::mutex> lock(_NewClientLock);
 					_NewClients.clear();
 				}
@@ -64,33 +63,52 @@ namespace SL {
 						//make sure to send the full screens to any new connects
 						std::lock_guard<std::mutex> lock(_NewClientLock);
 						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.Send(nullptr, *img);
+							_ServerNetworkDriver.SendScreenFull(a.get(), *img);
 						}
 						_NewClients.clear();
 					}
 					if (img->data() != LastScreen->data()) {
 						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *img)) {
-							_ServerNetworkDriver.Send(nullptr, r, *img);
+							_ServerNetworkDriver.SendScreenDif(nullptr, r, *img);
 						}
-						LastScreen = img;//swap
+					}
+				}	
+				LastScreen = img;//swap
+			}
+			void OnMouseImg(std::shared_ptr<Utilities::Image> img)
+			{
+				if (!LastMouse) {//first screen send all!
+					_ServerNetworkDriver.SendMouse(nullptr, *img);
+					std::lock_guard<std::mutex> lock(_NewClientLock);
+					_NewClients.clear();
+				}
+				else {//compare and send all difs along
+					{
+						//make sure to send the full screens to any new connects
+						std::lock_guard<std::mutex> lock(_NewClientLock);
+						for (auto& a : _NewClients) {
+							_ServerNetworkDriver.SendMouse(a.get(), *img);
+						}
+						_NewClients.clear();
+					}
+					if (memcmp(img->data(), LastScreen->data(), std::min(LastScreen->size(), img->size()))!=0) {
+						_ServerNetworkDriver.SendMouse(nullptr, *img);
 					}
 				}
+				LastMouse = img;
 			}
-
-			void ProcessMouse()
+			void OnMousePos(Utilities::Point p)
 			{
-				auto nmouse = SL::Remote_Access_Library::Capturing::GetCursorInfo();
-				if (nmouse.MouseType != _LastMouseInfo.MouseType || nmouse.Pos != _LastMouseInfo.Pos) {
-					_ServerNetworkDriver.Send(nullptr, nmouse);
-					_LastMouseInfo = nmouse;
-				}
+				_ServerNetworkDriver.SendMouse(nullptr, p);
 			}
+	
 			int Run() {
 				_ServerNetworkDriver.Start();
-				_ScreenCapture = std::make_unique<Capturing::Screen>([this](std::shared_ptr<Utilities::Image> img) {this->OnScreen(img); });
+				auto sc = std::make_unique<Capturing::Screen>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnScreen, this, std::placeholders::_1));
+				auto ms = std::make_unique<Capturing::Mouse>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnMouseImg, this, std::placeholders::_1),
+					std::bind(&SL::Remote_Access_Library::ServerImpl::OnMousePos, this, std::placeholders::_1), 1000, 50);
 				while (_Keepgoing) {
-					ProcessMouse();
-					std::this_thread::sleep_for(std::chrono::milliseconds(20));
+					std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				}
 				_ServerNetworkDriver.Stop();
 				return 0;

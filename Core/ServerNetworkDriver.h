@@ -8,16 +8,13 @@ namespace SL {
 			class Rect;
 			class Point;
 		}
-		namespace Capturing {
-			struct MouseInfo;
-		}
 		namespace Network {
 			class ServerNetworkDriverImpl;
 			class IServerDriver;
 			struct Server_Config;
 			class ISocket;
 
-			class ServerNetworkDriver  {
+			class ServerNetworkDriver {
 				std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
 
 			public:
@@ -29,14 +26,15 @@ namespace SL {
 				//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
 				void Stop();
 
-				void Send(ISocket* socket, Utilities::Rect& r, const Utilities::Image & img);
-				void Send(ISocket* socket, const Utilities::Image & img);
-				void Send(ISocket* socket, Capturing::MouseInfo& mouseinfo);
-				
+				void SendScreenDif(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img);
+				void SendScreenFull(ISocket * socket, const Utilities::Image & img);
+				void SendMouse(ISocket * socket, const Utilities::Image & img);
+				void SendMouse(ISocket * socket, const Utilities::Point& pos);
+
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();
 
 			};
-		
+
 		}
 	}
 }

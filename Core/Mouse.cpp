@@ -124,12 +124,18 @@ namespace Remote_Access_Library
 	{ 
 		auto display = XOpenDisplay(NULL);
 		auto img = XFixesGetCursorImage(display);
-		auto i = Utilities::Image::CreateImage(img->height, img->width, (char*)img->pixels, 4);
-		std::vector<unsigned char> test;
-		test.resize(img->height*img->width*4);
-		memcpy(test.data(), img->pixels, test.size());
+
+		if (sizeof(img->pixels[0]) == 8) {
+			auto pixels = (int *) img->pixels;
+			for (auto i = 0; i < img->width * img->height; ++i) {
+				pixels[i] = pixels[i*2];
+			}
+		}
+	
+		auto i = Utilities::Image::CreateImage(img->height, img->width, (char*)img->pixels, 4);	
+
 		XFree(img);
-		 XCloseDisplay(display);
+		XCloseDisplay(display);
 		return i;
 	}
 
@@ -137,13 +143,16 @@ namespace Remote_Access_Library
 	{
 	    auto display = XOpenDisplay(NULL);
 	    auto root = DefaultRootWindow(display);
+		auto img = XFixesGetCursorImage(display);
 
 	    // Get the mouse cursor position
 	    int x, y, root_x, root_y = 0;
 	    unsigned int mask = 0;
 	    Window child_win, root_win;
 	    XQueryPointer(display, root, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
-
+		x-= img->xhot;
+		y-= img->yhot;
+		XFree(img);
 	    XCloseDisplay(display);
 
 	    return Utilities::Point(x, y);

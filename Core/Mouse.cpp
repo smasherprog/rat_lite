@@ -43,7 +43,7 @@ namespace Remote_Access_Library
 		return Utilities::Image::CreateImage(0, 0);
 	    BITMAP bm;
 	    int height = 0;
-
+		bm.bmWidth = 32;
 	    if (ii.hbmColor != NULL) {
 		GetObject(colorbmp.get(), sizeof(bm), &bm);
 		height = bm.bmHeight;

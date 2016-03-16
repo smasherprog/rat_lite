@@ -2,9 +2,9 @@
 //
 
 #include "stdafx.h"
-#include <FL\Fl.H>
+#include <FL/Fl.H>
 
-#include "..\Desktop_UI\ConnectWindow.h"
+#include "../Desktop_UI/ConnectWindow.h"
 
 int main(int argc, char **argv) {
 	Fl::args(argc, argv);

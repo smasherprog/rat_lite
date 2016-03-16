@@ -3,12 +3,12 @@
   <Project Name="Core" Path="Core/Core.project" Active="No"/>
   <Project Name="Server" Path="Server/Server.project" Active="Yes"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="Server" ConfigName="Debug"/>
       <Project Name="Core" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="Core" ConfigName="Release"/>
       <Project Name="Server" ConfigName="Release"/>

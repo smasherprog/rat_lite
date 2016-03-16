@@ -32,6 +32,7 @@ namespace SL {
 						{
 							//boost::asio::ip::tcp::no_delay option(true);
 							//_socket.set_option(option);
+							std::cout << "Servicing new connection .. " << std::endl;
 							std::make_shared<DERIVED_BASESOCKET>(_driver, _socket)->connect(nullptr, nullptr);
 							Start();
 						}

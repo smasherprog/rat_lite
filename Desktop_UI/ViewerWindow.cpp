@@ -53,7 +53,8 @@ namespace SL {
 				bool _BeingClosed = false;
 				bool _HasFocus = false;
 				bool _CursorHidden = false;
-
+				char _Title[255];
+				
 				static void window_cb(Fl_Widget *widget, void *)
 				{
 					auto wnd = (ViewerWindowImpl*)widget;
@@ -133,6 +134,7 @@ namespace SL {
 						if (!imp->_BeingClosed) imp->redraw();
 					}
 				}
+			
 				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
 				{
 					UNUSED(socket);
@@ -140,6 +142,10 @@ namespace SL {
 					_MyCanvas->resize(0, 0, img->Width(), img->Height());
 					Fl::awake(awakenredraw, this);
 
+				}
+				static void awakensettitle(void* data) {
+					auto imp = ((ViewerWindowImpl*)data);
+					imp->label(imp->_Title);
 				}
 				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) override {
 					if (!_MyCanvas->_Image) return;
@@ -156,14 +162,19 @@ namespace SL {
 						FrameCounter = 0;
 						st += " Fps: " + std::to_string(FPS);
 						LastStats = stats;
-						label(st.c_str());
-					
+						if(st.size()>sizeof(_Title)-1) st = st.substr(0, sizeof(_Title)-1);
+						memcpy(_Title, st.c_str(), st.size()+1);
+						Fl::awake(awakensettitle, this);
 					}
 
 				}
+				static void awakenhidecursor(void* data) {
+					auto imp = ((ViewerWindowImpl*)data);
+					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
+				}
 				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* point, std::shared_ptr<Utilities::Image>& img)override {
 					if (_HasFocus && !_CursorHidden) {
-						this->cursor(Fl_Cursor::FL_CURSOR_NONE);
+						Fl::awake(awakenhidecursor, this);
 						_CursorHidden = true;
 					}
 					_MyCanvas->_MouseImageData = img;

@@ -33,7 +33,6 @@ namespace SL {
 				explicit TCPSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : _socket(io_service, context), _SocketImpl(io_service, netevents), _io_service(io_service) { }
 
 				virtual ~TCPSocket() {
-			
 					close_Socket("~TCPSocket");
 				}
 				BASESOCKET& get_socket() { return _socket; }
@@ -71,18 +70,25 @@ namespace SL {
 				}
 				virtual void close_Socket(std::string reason) override {
 					std::cout << "Closing socket: " << reason << std::endl;
-					_SocketImpl.CancelTimers();
+				
 					if (closed()) return;
-
+					_SocketImpl.Closed = true;
+					_SocketImpl.CancelTimers();
 					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());
 					try
 					{
 						std::cout << "Closing Socket" << std::endl;
-						_socket.lowest_layer().shutdown(boost::asio::socket_base::shutdown_send);
+						boost::system::error_code ec;
+					
+						_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 						_socket.lowest_layer().close();
 					}
-					catch (...) {}//I dont care about exceptions when the socket is being closed!
-					_SocketImpl.Closed = true;
+					catch (std::exception e) {
+						auto st = e.what();
+						std::cout << st << std::endl;
+					
+					}//I dont care about exceptions when the socket is being closed!
+				
 
 				}
 				//pending packets which are queued up and waiting to be sent

@@ -30,7 +30,9 @@ namespace SL {
 				}
 				void Stop() {
 					if (_Socket) _Socket->close_Socket("Stopping Listener");
+					_Socket.reset();
 					if (_IO_Runner) _IO_Runner->Stop();
+					_IO_Runner.reset();
 				}
 				virtual ~ClientNetworkDriverImpl() {
 					Stop();

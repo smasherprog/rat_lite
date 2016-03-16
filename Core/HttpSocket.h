@@ -16,7 +16,7 @@ namespace SL {
 				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
 				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
 				virtual ~HttpSocket() {
-
+					close_Socket("~HttpSocket");
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::HTTPSOCKET; }
 

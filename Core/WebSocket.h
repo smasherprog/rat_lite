@@ -26,7 +26,7 @@ namespace SL {
 				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
 
 				virtual ~WebSocket() {
-					std::cout << "~WebSocket" << std::endl;
+					close_Socket("~WebSocket");
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::WEBSOCKET; }
 

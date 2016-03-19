@@ -1,0 +1,238 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Capturing">
+      <UniqueIdentifier>{c797f52d-9f5f-4678-bd9c-060ce3b39857}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Compression">
+      <UniqueIdentifier>{97c74e65-cd2b-45f5-bad6-068b0ee61663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{d9ef1a3f-ea65-49ec-b024-2a93ab7f0422}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Socket">
+      <UniqueIdentifier>{8b3afb65-5f91-4240-a859-f7e716d0879d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Listener">
+      <UniqueIdentifier>{338cd425-2ff6-4579-b558-33c892c248eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network\Driver">
+      <UniqueIdentifier>{41d7a51a-817b-4289-86d3-eb10e9048315}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{9ae0f189-ad7c-4a5d-a397-4c8593507970}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{efcc364d-6e66-41ca-bfc6-1fa53a3b74f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="wwwroot">
+      <UniqueIdentifier>{486bb838-570a-425a-aaa3-9d059b12d301}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp">
+      <Filter>Capturing</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Screen.cpp">
+      <Filter>Capturing</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)divsufsort.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)fse.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)huff0.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)zbuff.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)zdict.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)zstd_compress.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)zstd_decompress.c">
+      <Filter>Compression</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)IO_Runner.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SocketImpl.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)HttpListener.cpp">
+      <Filter>Network\Listener</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)WebSocketListener.cpp">
+      <Filter>Network\Listener</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.cpp">
+      <Filter>Network\Driver</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ServerNetworkDriver.cpp">
+      <Filter>Network\Driver</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Server.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ApplicationDirectory.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Image.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)MediaTypes.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
+      <Filter>Capturing</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Screen.h">
+      <Filter>Capturing</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)bitstream.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)divsufsort.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)error_private.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)error_public.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)fse.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)fse_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)huff0.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)huff0_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mem.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zbuff.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zbuff_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zdict.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zdict_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zstd.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zstd_internal.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zstd_opt.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)zstd_static.h">
+      <Filter>Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)IO_Runner.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Server_Config.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SocketStats.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)HttpSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ISocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SocketImpl.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)TCPSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)HttpListener.h">
+      <Filter>Network\Listener</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)TCPListener.h">
+      <Filter>Network\Listener</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h">
+      <Filter>Network\Listener</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)IBaseNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)IClientDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)IServerDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ServerNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto.hpp">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Image.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Shapes.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ThreadPool.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">
+      <Filter>wwwroot</Filter>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+      <Filter>wwwroot</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -21,7 +21,6 @@
     <ClInclude Include="ViewerWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConnectWindow.cpp">
@@ -30,7 +29,6 @@
     <ClCompile Include="ViewerWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

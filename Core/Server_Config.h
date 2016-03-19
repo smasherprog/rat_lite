@@ -14,6 +14,7 @@ namespace SL {
 				unsigned short HttpTLSListenPort = 0;
 				//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
 				std::string WWWRoot;
+				
 			};
 		}
 	}

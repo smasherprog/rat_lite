@@ -13,10 +13,8 @@ namespace SL
 #if _WIN32
 
 #define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(& ::DeleteDC)>(handle, &::DeleteDC)
-#define RAIIHBITMAP(handle) \
-    std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(& ::DeleteObject)>(handle, &::DeleteObject)
-#define RAIIHANDLE(handle) \
-    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(& ::CloseHandle)>(handle, &::CloseHandle)
+#define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(& ::DeleteObject)>(handle, &::DeleteObject)
+#define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(& ::CloseHandle)>(handle, &::CloseHandle)
 
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
@@ -73,8 +71,7 @@ namespace SL
 				bi.biSizeImage = ((width * bi.biBitCount + 31) / 32) * 4 * height;
 
 				auto retimg(Utilities::Image::CreateImage(width, height));
-				GetDIBits(
-					desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+				GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
 				SelectObject(capturedc.get(), originalBmp);
 				if (ii.wResID == 32513) { // when its just the i beam
@@ -85,7 +82,7 @@ namespace SL
 						}
 					}
 				}
-				else if (ii.hbmMask != nullptr && ii.hbmColor == nullptr) {
+				else if (ii.hbmMask != nullptr && ii.hbmColor == nullptr) {// just 
 					unsigned int* ptr = (unsigned int*)retimg->data();
 					for (auto i = 0; i < retimg->size() / 4; i++) {
 						if (ptr[i] != 0) {

@@ -26,7 +26,7 @@ namespace SL {
 				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
 
 				virtual ~WebSocket() {
-					close_Socket("~WebSocket");
+					this->close_Socket("~WebSocket");
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::WEBSOCKET; }
 
@@ -278,7 +278,7 @@ namespace SL {
 						UNUSED(byteswritten);
 						if (!ec && !this->closed())
 						{
-							TCPSocket<T>::writeheader(packet);//call base
+							this->TCPSocket<T>::writeheader(packet);//call base
 						}
 						else this->close_Socket(std::string("writeheader async_write ") + ec.message());
 					});

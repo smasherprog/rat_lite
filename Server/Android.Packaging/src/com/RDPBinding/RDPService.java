@@ -4,54 +4,78 @@ import android.app.Service;
 import android.widget.Toast;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.HandlerThread;
+import android.os.Process;
+
 
 public class RDPService extends Service {
 	private static final String TAG = RDPService.class.getSimpleName();
-
-	private long UnMangedPtr;
+	private Looper mServiceLooper;
+	private ServiceHandler mServiceHandler;
 
 	public native long StartService();
-
 	public native boolean StopService(long p);
 
-	int mStartMode; // indicates how to behave if the service is killed
-	IBinder mBinder; // interface for clients that bind
-	boolean mAllowRebind; // indicates whether onRebind should be used
+	private final class ServiceHandler extends Handler {
+		public ServiceHandler(Looper looper) {
+			super(looper);
+		}
 
+		@Override
+		public void handleMessage(Message msg) {
 
-	public RDPService() {
+			long UnMangedPtr = StartService();
+
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// Restore interrupt status.
+				Thread.currentThread().interrupt();
+			}
+			StopService(UnMangedPtr);
+			stopSelf(msg.arg1);
+		}
+	}
+
+	static {
 		System.loadLibrary("Android_Server");
-		UnMangedPtr = 0;
-		mStartMode = START_STICKY;
-		mBinder = null;
-		mAllowRebind = true;
 	}
 
 	@Override
 	public void onCreate() {
-		// The service is being created
+		HandlerThread thread = new HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND);
+		thread.start();
+
+		// Get the HandlerThread's Looper and use it for our Handler
+		mServiceLooper = thread.getLooper();
+		mServiceHandler = new ServiceHandler(mServiceLooper);
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// The service is starting, due to a call to startService()
-		UnMangedPtr = StartService();
-		Toast.makeText(this, " onStartCommand " + UnMangedPtr, Toast.LENGTH_SHORT).show();
-		return mStartMode;
+		Message msg = mServiceHandler.obtainMessage();
+		msg.arg1 = startId;
+		mServiceHandler.sendMessage(msg);
+
+		Toast.makeText(this, " onStartCommand ", Toast.LENGTH_SHORT).show();
+		return START_NOT_STICKY;
 	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
 		// A client is binding to the service with bindService()
 		Toast.makeText(this, " onBind", Toast.LENGTH_SHORT).show();
-		return mBinder;
+		return null;
 	}
 
 	@Override
 	public boolean onUnbind(Intent intent) {
 		// All clients have unbound with unbindService()
 		Toast.makeText(this, " onUnbind", Toast.LENGTH_SHORT).show();
-		return mAllowRebind;
+		return false;
 	}
 
 	@Override
@@ -65,8 +89,7 @@ public class RDPService extends Service {
 	public void onDestroy() {
 		// The service is no longer used and is being destroyed
 		Toast.makeText(this, " onDestroy", Toast.LENGTH_SHORT).show();
-		StopService(UnMangedPtr);
-		UnMangedPtr = 0;
+
 	}
 
 }

@@ -8,6 +8,7 @@
 #include <boost/asio/ssl.hpp>
 #include "zstd.h"
 #include "SocketImpl.h"
+#include <string>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -236,7 +237,8 @@ namespace SL {
 			
 						_SocketImpl.read_deadline_.async_wait([this, self, seconds](boost::system::error_code ec) {
 							if (ec != boost::asio::error::operation_aborted) {
-								close_Socket("read timer expired. Time waited: " + std::to_string(seconds));
+								close_Socket("read timer expired. Time waited: ");
+								//close_Socket("read timer expired. Time waited: " + std::to_string(seconds));
 							}
 						});
 					}
@@ -248,7 +250,8 @@ namespace SL {
 						auto self(this->shared_from_this());
 						_SocketImpl.write_deadline_.async_wait([this, self, seconds](boost::system::error_code ec) {
 							if (ec != boost::asio::error::operation_aborted) {
-								close_Socket("write timer expired. Time waited: " + std::to_string(seconds));
+								//close_Socket("write timer expired. Time waited: " + std::to_string(seconds));
+								close_Socket("write timer expired. Time waited: ");
 							}
 						});
 					}

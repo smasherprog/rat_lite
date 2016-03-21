@@ -7,4 +7,7 @@
   <ItemGroup>
     <ClCompile Include="Bindings.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>

@@ -60,7 +60,7 @@ AS       := /usr/bin/as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IntermediateDirectory)/ConnectWindow.cpp$(ObjectSuffix) $(IntermediateDirectory)/stdafx.cpp$(ObjectSuffix) $(IntermediateDirectory)/ViewerWindow.cpp$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/ConnectWindow.cpp$(ObjectSuffix) $(IntermediateDirectory)/ViewerWindow.cpp$(ObjectSuffix) 
 
 
 
@@ -93,14 +93,6 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/main.cpp$(ObjectSuffix): main.cpp $(IntermediateDirectory)/main.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/scott/Documents/Repo/Remote_Access_Library/Desktop_UI/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/main.cpp$(DependSuffix): main.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/main.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/main.cpp$(DependSuffix) -MM "main.cpp"
-
-$(IntermediateDirectory)/main.cpp$(PreprocessSuffix): main.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main.cpp$(PreprocessSuffix) "main.cpp"
-
 $(IntermediateDirectory)/ConnectWindow.cpp$(ObjectSuffix): ConnectWindow.cpp $(IntermediateDirectory)/ConnectWindow.cpp$(DependSuffix)
 	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/scott/Documents/Repo/Remote_Access_Library/Desktop_UI/ConnectWindow.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/ConnectWindow.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/ConnectWindow.cpp$(DependSuffix): ConnectWindow.cpp
@@ -108,14 +100,6 @@ $(IntermediateDirectory)/ConnectWindow.cpp$(DependSuffix): ConnectWindow.cpp
 
 $(IntermediateDirectory)/ConnectWindow.cpp$(PreprocessSuffix): ConnectWindow.cpp
 	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/ConnectWindow.cpp$(PreprocessSuffix) "ConnectWindow.cpp"
-
-$(IntermediateDirectory)/stdafx.cpp$(ObjectSuffix): stdafx.cpp $(IntermediateDirectory)/stdafx.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/scott/Documents/Repo/Remote_Access_Library/Desktop_UI/stdafx.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/stdafx.cpp$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/stdafx.cpp$(DependSuffix): stdafx.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/stdafx.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/stdafx.cpp$(DependSuffix) -MM "stdafx.cpp"
-
-$(IntermediateDirectory)/stdafx.cpp$(PreprocessSuffix): stdafx.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/stdafx.cpp$(PreprocessSuffix) "stdafx.cpp"
 
 $(IntermediateDirectory)/ViewerWindow.cpp$(ObjectSuffix): ViewerWindow.cpp $(IntermediateDirectory)/ViewerWindow.cpp$(DependSuffix)
 	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/scott/Documents/Repo/Remote_Access_Library/Desktop_UI/ViewerWindow.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/ViewerWindow.cpp$(ObjectSuffix) $(IncludePath)

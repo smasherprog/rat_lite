@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ViewerWindow.h"
 #include "../Core/Image.h"
 #include "../Core/ClientNetworkDriver.h"
@@ -13,6 +12,7 @@
 #include <FL/Fl_RGB_Image.H>
 #include <FL/Fl_PNG_Image.H>
 #include "../Core/Mouse.h"
+#include "../Core/stdafx.h"
 
 namespace SL {
 	namespace Remote_Access_Library {

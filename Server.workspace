@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="Server" Database="">
-  <Project Name="Server" Path="Server/Server.project" Active="Yes"/>
+  <Project Name="Desktop_Server" Path="Server/Server.project" Active="Yes"/>
   <Project Name="Core" Path="Core/Core.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
-      <Project Name="Server" ConfigName="Debug"/>
+      <Project Name="Desktop_Server" ConfigName="Debug"/>
       <Project Name="Core" ConfigName="Debug"/>
       <Project Name="Core" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
       <Project Name="Core" ConfigName="Release"/>
-      <Project Name="Server" ConfigName="Release"/>
+      <Project Name="Desktop_Server" ConfigName="Release"/>
       <Project Name="Core" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>

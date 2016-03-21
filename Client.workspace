@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="Client" Database="">
+  <Project Name="Core" Path="Core/Core.project" Active="No"/>
+  <Project Name="Desktop_UI" Path="Desktop_UI/Desktop_UI.project" Active="No"/>
+  <Project Name="Client" Path="Client/Client.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="Core" ConfigName="Debug"/>
+      <Project Name="Desktop_UI" ConfigName="Debug"/>
+      <Project Name="Client" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="Core" ConfigName="Release"/>
+      <Project Name="Desktop_UI" ConfigName="Release"/>
+      <Project Name="Client" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

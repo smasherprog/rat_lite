@@ -29,14 +29,11 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="main.cpp"/>
     <File Name="ConnectWindow.cpp"/>
-    <File Name="stdafx.cpp"/>
     <File Name="ViewerWindow.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Include">
     <File Name="ConnectWindow.h"/>
-    <File Name="stdafx.h"/>
     <File Name="ViewerWindow.h"/>
   </VirtualDirectory>
   <Dependencies Name="Debug">

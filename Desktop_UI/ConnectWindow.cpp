@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ConnectWindow.h"
 #include "ViewerWindow.h"
 #include <FL/Fl.H>

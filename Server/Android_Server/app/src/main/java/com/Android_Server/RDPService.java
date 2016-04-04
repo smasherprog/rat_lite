@@ -1,4 +1,4 @@
-package com.RDPBinding;
+package com.Android_Server;
 
 import android.app.Service;
 import android.widget.Toast;

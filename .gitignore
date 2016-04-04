@@ -19,6 +19,9 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+.workspace/
+.gradle/
+
 *.tlog
 .vs/
 # Roslyn cache directories
@@ -36,6 +39,7 @@ TestResult.xml
 [Dd]ebugPS/
 [Rr]eleasePS/
 dlldata.c
+
 *.db
 *_i.c
 *_p.c

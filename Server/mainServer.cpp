@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 	auto exeindex = searchpath.find_last_of('\\');
 	if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
 	if (exeindex != searchpath.npos) {
-		config.WWWRoot = searchpath.substr(0, exeindex) + "/../../wwwroot/";
+		config.WWWRoot = searchpath.substr(0, exeindex) + "/../../../wwwroot/";
 	}
 	assert(exeindex != std::string::npos);
 	SL::Remote_Access_Library::Server s(config);

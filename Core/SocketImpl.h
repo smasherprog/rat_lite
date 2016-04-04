@@ -4,6 +4,7 @@
 #include "IBaseNetworkDriver.h"
 #include "Packet.h"
 #include "SocketStats.h"
+#include <deque>
 
 namespace SL {
 	namespace Remote_Access_Library {

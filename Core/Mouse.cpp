@@ -13,10 +13,8 @@ namespace SL
 #if _WIN32
 
 #define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(& ::DeleteDC)>(handle, &::DeleteDC)
-#define RAIIHBITMAP(handle) \
-    std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(& ::DeleteObject)>(handle, &::DeleteObject)
-#define RAIIHANDLE(handle) \
-    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(& ::CloseHandle)>(handle, &::CloseHandle)
+#define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(& ::DeleteObject)>(handle, &::DeleteObject)
+#define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(& ::CloseHandle)>(handle, &::CloseHandle)
 
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
@@ -73,21 +71,20 @@ namespace SL
 				bi.biSizeImage = ((width * bi.biBitCount + 31) / 32) * 4 * height;
 
 				auto retimg(Utilities::Image::CreateImage(width, height));
-				GetDIBits(
-					desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+				GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
 				SelectObject(capturedc.get(), originalBmp);
 				if (ii.wResID == 32513) { // when its just the i beam
 					unsigned int* ptr = (unsigned int*)retimg->data();
-					for (auto i = 0; i < retimg->size() / 4; i++) {
+					for (decltype(retimg->size()) i = 0; i < retimg->size() / 4; i++) {
 						if (ptr[i] != 0) {
 							ptr[i] = 0xff000000;
 						}
 					}
 				}
-				else if (ii.hbmMask != nullptr && ii.hbmColor == nullptr) {
-					unsigned int* ptr = (unsigned int*)retimg->data();
-					for (auto i = 0; i < retimg->size() / 4; i++) {
+				else if (ii.hbmMask != nullptr && ii.hbmColor == nullptr) {// just 
+					auto ptr = (unsigned int*)retimg->data();
+					for (decltype(retimg->size()) i = 0; i < retimg->size() / 4; i++) {
 						if (ptr[i] != 0) {
 							ptr[i] = ptr[i] | 0xffffffff;
 						}
@@ -127,6 +124,15 @@ namespace SL
 #endif
 
 #error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
+#elif __ANDROID__
+			std::shared_ptr<Utilities::Image> CaptureMouseImage()
+			{
+				return Utilities::Image::CreateImage(0, 0);
+			}
+			Utilities::Point GetCursorPos()
+			{
+				return Utilities::Point(0,0);
+			}
 #elif __linux__
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
@@ -167,8 +173,6 @@ namespace SL
 
 				return Utilities::Point(x, y);
 			}
-#elif __ANDROID__
-#error Andriod specific implementation  of CaptureMouse has not been written yet. You can help out by writing it!
 #endif
 			bool SetCursorPosition(Utilities::Point p)
 			{
@@ -181,7 +185,8 @@ namespace SL
 				new_pos.x = p.X;
 				new_pos.y = p.Y;
 				return !CGWarpMouseCursorPosition(new_pos);
-
+#elif __ANDROID__
+				return true;
 #elif __linux__
 #include <X11/Xlib.h>
 				auto display = XOpenDisplay(NULL);
@@ -194,8 +199,8 @@ namespace SL
 #endif
 
 				return false; // Fail
-			}
 		}
+	}
 		namespace INTERNAL
 		{
 			struct MouseImpl
@@ -208,7 +213,7 @@ namespace SL
 				bool _Running;
 			};
 		}
-	}
+}
 }
 void SL::Remote_Access_Library::Capturing::Mouse::_run()
 {

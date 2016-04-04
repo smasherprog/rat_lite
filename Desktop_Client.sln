@@ -5,11 +5,15 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{61414967-7AD4-4A82-B1B4-AB95E68436E5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj", "{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Desktop_UI", "Desktop_UI\Desktop_UI.vcxproj", "{D5E2652C-A744-40C8-91C5-AC669D23DAE0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Core\Core.vcxitems*{d5e2652c-a744-40c8-91c5-ac669d23dae0}*SharedItemsImports = 4
+		Core\Core.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
@@ -25,14 +29,6 @@ Global
 		{61414967-7AD4-4A82-B1B4-AB95E68436E5}.Release|x64.Build.0 = Release|x64
 		{61414967-7AD4-4A82-B1B4-AB95E68436E5}.Release|x86.ActiveCfg = Release|Win32
 		{61414967-7AD4-4A82-B1B4-AB95E68436E5}.Release|x86.Build.0 = Release|Win32
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Debug|x64.ActiveCfg = Debug|x64
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Debug|x64.Build.0 = Debug|x64
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Debug|x86.ActiveCfg = Debug|Win32
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Debug|x86.Build.0 = Debug|Win32
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Release|x64.ActiveCfg = Release|x64
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Release|x64.Build.0 = Release|x64
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Release|x86.ActiveCfg = Release|Win32
-		{C870874B-BFFE-4AE9-AD8A-6F1A400381AB}.Release|x86.Build.0 = Release|Win32
 		{D5E2652C-A744-40C8-91C5-AC669D23DAE0}.Debug|x64.ActiveCfg = Debug|x64
 		{D5E2652C-A744-40C8-91C5-AC669D23DAE0}.Debug|x64.Build.0 = Debug|x64
 		{D5E2652C-A744-40C8-91C5-AC669D23DAE0}.Debug|x86.ActiveCfg = Debug|Win32

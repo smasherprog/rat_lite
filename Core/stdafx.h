@@ -5,9 +5,9 @@
 
 #pragma once
 
-
 #ifdef _WIN32
 
+#include <FL/Fl.H>
 #define NOMINMAX 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
@@ -28,11 +28,13 @@
 #include <functional>
 #include <condition_variable>
 #include <algorithm>
-#include <iostream>
 #include <chrono>
 #include <string>
+
+#include <iostream>
 #include <sstream>
 #include <fstream>
+
 #include <unordered_map>
 #include <algorithm>
 #include <numeric>

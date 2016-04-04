@@ -59,6 +59,12 @@ std::string executable_path(const char *argv0)
 #else
 #   error "Unknown Apple platform"
 #endif
+#elif __ANDROID__
+std::string executable_path(const char *argv0)
+{
+
+	return executable_path_fallback(argv0);
+}
 
 #elif (__linux__) // } {
 

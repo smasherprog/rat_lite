@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Image.h"
 #include <assert.h>
+#include <iterator>
 
 struct SL::Remote_Access_Library::Utilities::Image_Impl {
 	unsigned int height;
@@ -104,11 +105,11 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	rects.resize(0);
 	//vertical scan
 	for (auto& otrect : outrects) {
-
-		auto found = std::find_if(rbegin(rects), rend(rects), [=](const SL::Remote_Access_Library::Utilities::Rect& rec) {
+		
+		auto found = std::find_if(rects.rbegin(), rects.rend(), [=](const SL::Remote_Access_Library::Utilities::Rect& rec) {
 			return rec.bottom() == otrect.top() && rec.left() == otrect.left() && rec.right() == otrect.right();
 		});
-		if (found == rend(rects)) {
+		if (found == rects.rend()) {
 			rects.push_back(otrect);
 		}
 		else {

@@ -3,6 +3,7 @@
 #include "TCPSocket.h"
 #include "HttpHeader.h"
 #include <utility>
+#include <string>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -16,7 +17,7 @@ namespace SL {
 				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
 				explicit HttpSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
 				virtual ~HttpSocket() {
-
+					this->close_Socket("~HttpSocket");
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::HTTPSOCKET; }
 
@@ -38,7 +39,7 @@ namespace SL {
 							this->_SocketImpl.ReadPacketHeader.Payload_Length = 0;
 							if (it != this->_SocketImpl.Header.end()) {
 								try {
-									this->_SocketImpl.ReadPacketHeader.Payload_Length = static_cast<unsigned int>(stoull(it->second));
+									this->_SocketImpl.ReadPacketHeader.Payload_Length = static_cast<unsigned int>(atoi(it->second.c_str()));
 								}
 								catch (const std::exception &e) {
 									std::cout << e.what() << std::endl;
@@ -74,7 +75,7 @@ namespace SL {
 					for (auto& a : pack->Header) {//write the other headers
 						os << a.first << HttpHeader::HTTP_KEYVALUEDELIM << a.second << HttpHeader::HTTP_ENDLINE;
 					}
-					os << HttpHeader::HTTP_CONTENTLENGTH << HttpHeader::HTTP_KEYVALUEDELIM << std::to_string(pack->Payload_Length) << HttpHeader::HTTP_ENDLINE;
+					os << HttpHeader::HTTP_CONTENTLENGTH << HttpHeader::HTTP_KEYVALUEDELIM << pack->Payload_Length << HttpHeader::HTTP_ENDLINE;
 					os << HttpHeader::HTTP_ENDLINE;//marks the end of the header
 
 					auto self(this->shared_from_this());

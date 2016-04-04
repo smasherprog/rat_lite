@@ -7,6 +7,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/fl_ask.H>
 
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
@@ -49,7 +50,7 @@ namespace SL {
 					connectbtn->label("Connect");
 				}
 				static void try_connect_frm(Fl_Widget* o, void* userdata) {
-					UNUSED(o);
+					
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					std::string host = ptr->bInput->value();
 					ptr->connectbtn->label("Connecting . . .");

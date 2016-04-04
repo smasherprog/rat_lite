@@ -8,7 +8,6 @@ namespace SL {
 			class Image_Wrapper;
 			struct Image_Impl;
 			class Image {
-
 				std::unique_ptr<char[]> _Data;
 				unsigned int _Height;
 				unsigned int _Width;

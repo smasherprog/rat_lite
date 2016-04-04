@@ -25,6 +25,7 @@ Latest standards: c++ 14
 <li>
 <a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Visual-Studio-Development">Visual Studio</a>
 </li>
+<li><a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Android-Development">Android</a> </li>
 <li>
 <a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Ubuntu-Development">Ubuntu</a>
 </li>

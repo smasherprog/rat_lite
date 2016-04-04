@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "ConnectWindow.h"
 #include "ViewerWindow.h"
 #include <FL/Fl.H>
@@ -5,7 +6,7 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Button.H>
 #include <FL/fl_ask.H>
-#include "../Core/stdafx.h"
+
 
 namespace SL {
 	namespace Remote_Access_Library {

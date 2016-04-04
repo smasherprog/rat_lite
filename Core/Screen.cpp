@@ -2,8 +2,8 @@
 #include "Screen.h"
 #include "Image.h"
 #include "ThreadPool.h"
-#include <FL/Fl.H>
 #include <assert.h>
+
 #define DESKTOPCAPTURERATE 100
 #define DESKTOPWAITCAPTURERATE 20
 
@@ -11,7 +11,7 @@ namespace SL {
 	namespace Remote_Access_Library {
 
 #if _WIN32
-
+#include <FL/Fl.H>
 		//RAII Objects to ensure proper destruction
 #define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(&::DeleteDC)>(handle, &::DeleteDC)
 #define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
@@ -75,6 +75,11 @@ namespace SL {
 #endif
 
 #error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
+#elif __ANDROID__
+		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
+		{
+			return Utilities::Image::CreateImage(0, 0);
+		}
 #elif __linux__
 
 
@@ -123,8 +128,6 @@ namespace SL {
             return px;
             
         }
-#elif __ANDROID__
-#error Andriod specific implementation  of CaptureDesktopImage has not been written yet. You can help out by writing it!
 #endif
 		namespace INTERNAL {
 			struct ScreenImpl {

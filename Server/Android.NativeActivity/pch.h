@@ -1,2 +1,2 @@
-#include <string.h>
+#pragma once
 #include <jni.h>

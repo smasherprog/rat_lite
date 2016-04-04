@@ -29,7 +29,20 @@ namespace SL {
 					this->close_Socket("~WebSocket");
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::WEBSOCKET; }
+				void Android_writeheader(std::shared_ptr<Packet> packet) {
+					this->writeexpire_from_now(this->_SocketImpl.writetimeout);
+					auto self(this->shared_from_this());
 
+					boost::asio::async_write(this->_socket, boost::asio::buffer(&this->_SocketImpl.WritePacketHeader, sizeof(this->_SocketImpl.WritePacketHeader)), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
+					{
+						if (!ec && !this->closed())
+						{
+							assert(byteswritten == sizeof(this->_SocketImpl.WritePacketHeader));
+							this->writebody(packet);
+						}
+						else this->close_Socket(std::string("writeheader async_write ") + ec.message());
+					});
+				}
 			private:
 			
 				void sendHandshake() {
@@ -278,12 +291,13 @@ namespace SL {
 						UNUSED(byteswritten);
 						if (!ec && !this->closed())
 						{
-							this->TCPSocket<T>::writeheader(packet);//call base
+							this->Android_writeheader(packet);//call base
 						}
 						else this->close_Socket(std::string("writeheader async_write ") + ec.message());
 					});
 
 				}
+	
 				void send_close(int status_code, std::string reason) {
 					auto writeheader(std::make_shared<std::vector<unsigned char>>());
 					writeheader->resize(2 + reason.size());

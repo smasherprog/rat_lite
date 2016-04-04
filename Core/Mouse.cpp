@@ -76,15 +76,15 @@ namespace SL
 				SelectObject(capturedc.get(), originalBmp);
 				if (ii.wResID == 32513) { // when its just the i beam
 					unsigned int* ptr = (unsigned int*)retimg->data();
-					for (auto i = 0; i < retimg->size() / 4; i++) {
+					for (decltype(retimg->size()) i = 0; i < retimg->size() / 4; i++) {
 						if (ptr[i] != 0) {
 							ptr[i] = 0xff000000;
 						}
 					}
 				}
 				else if (ii.hbmMask != nullptr && ii.hbmColor == nullptr) {// just 
-					unsigned int* ptr = (unsigned int*)retimg->data();
-					for (auto i = 0; i < retimg->size() / 4; i++) {
+					auto ptr = (unsigned int*)retimg->data();
+					for (decltype(retimg->size()) i = 0; i < retimg->size() / 4; i++) {
 						if (ptr[i] != 0) {
 							ptr[i] = ptr[i] | 0xffffffff;
 						}
@@ -124,6 +124,15 @@ namespace SL
 #endif
 
 #error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
+#elif __ANDROID__
+			std::shared_ptr<Utilities::Image> CaptureMouseImage()
+			{
+				return Utilities::Image::CreateImage(0, 0);
+			}
+			Utilities::Point GetCursorPos()
+			{
+				return Utilities::Point(0,0);
+			}
 #elif __linux__
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
@@ -164,8 +173,6 @@ namespace SL
 
 				return Utilities::Point(x, y);
 			}
-#elif __ANDROID__
-#error Andriod specific implementation  of CaptureMouse has not been written yet. You can help out by writing it!
 #endif
 			bool SetCursorPosition(Utilities::Point p)
 			{
@@ -178,7 +185,8 @@ namespace SL
 				new_pos.x = p.X;
 				new_pos.y = p.Y;
 				return !CGWarpMouseCursorPosition(new_pos);
-
+#elif __ANDROID__
+				return true;
 #elif __linux__
 #include <X11/Xlib.h>
 				auto display = XOpenDisplay(NULL);
@@ -191,8 +199,8 @@ namespace SL
 #endif
 
 				return false; // Fail
-			}
 		}
+	}
 		namespace INTERNAL
 		{
 			struct MouseImpl
@@ -205,7 +213,7 @@ namespace SL
 				bool _Running;
 			};
 		}
-	}
+}
 }
 void SL::Remote_Access_Library::Capturing::Mouse::_run()
 {

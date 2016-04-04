@@ -1,21 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Desktop_Server", "Server\Desktop_Server.vcxproj", "{E7542752-E293-42F4-B5AC-3B6DA41BD908}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
-EndProject
 Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "Android_Server.Packaging", "Server\Android.Packaging\Android_Server.Packaging.androidproj", "{E47327A2-A8E2-42E8-A419-E9B0E83E9FAD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Android_Server.NativeActivity", "Server\Android.NativeActivity\Android_Server.NativeActivity.vcxproj", "{D0A4B417-2242-469C-9503-7D40C8725DFE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Core\Core.vcxitems*{d0a4b417-2242-469c-9503-7d40c8725dfe}*SharedItemsImports = 4
-		Core\Core.vcxitems*{e7542752-e293-42f4-b5ac-3b6da41bd908}*SharedItemsImports = 4
-		Core\Core.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -28,18 +24,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Debug|ARM.ActiveCfg = Debug|ARM
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Debug|ARM64.ActiveCfg = Debug|Win32
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Debug|x64.ActiveCfg = Debug|x64
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Debug|x64.Build.0 = Debug|x64
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Debug|x86.ActiveCfg = Debug|Win32
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Debug|x86.Build.0 = Debug|Win32
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Release|ARM.ActiveCfg = Release|ARM
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Release|ARM64.ActiveCfg = Release|Win32
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Release|x64.ActiveCfg = Release|x64
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Release|x64.Build.0 = Release|x64
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Release|x86.ActiveCfg = Release|Win32
-		{E7542752-E293-42F4-B5AC-3B6DA41BD908}.Release|x86.Build.0 = Release|Win32
 		{E47327A2-A8E2-42E8-A419-E9B0E83E9FAD}.Debug|ARM.ActiveCfg = Debug|ARM
 		{E47327A2-A8E2-42E8-A419-E9B0E83E9FAD}.Debug|ARM.Build.0 = Debug|ARM
 		{E47327A2-A8E2-42E8-A419-E9B0E83E9FAD}.Debug|ARM.Deploy.0 = Debug|ARM

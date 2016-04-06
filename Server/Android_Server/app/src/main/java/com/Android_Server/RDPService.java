@@ -27,7 +27,7 @@ public class RDPService extends Service {
 		@Override
 		public void handleMessage(Message msg) {
 
-			long UnMangedPtr = StartService();
+			//long UnMangedPtr = StartService();
 
 			try {
 				Thread.sleep(5000);
@@ -35,7 +35,7 @@ public class RDPService extends Service {
 				// Restore interrupt status.
 				Thread.currentThread().interrupt();
 			}
-			StopService(UnMangedPtr);
+			//StopService(UnMangedPtr);
 			stopSelf(msg.arg1);
 		}
 	}

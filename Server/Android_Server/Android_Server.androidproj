@@ -54,6 +54,30 @@
   </ItemDefinitionGroup>
   <ImportGroup Label="ExtensionSettings" />
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemGroup>
     <GradleTemplate Include="app\build.gradle.template" />
     <GradleTemplate Include="app\src\main\AndroidManifest.xml.template" />
@@ -61,6 +85,7 @@
   <ItemGroup>
     <JavaCompile Include="app\src\main\java\com\Android_Server\Android_Server.java" />
     <JavaCompile Include="app\src\main\java\com\Android_Server\RDPService.java" />
+    <JavaCompile Include="app\src\main\res\layout\testlay.xml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="app\src\main\assets\Core.js" />
@@ -71,6 +96,7 @@
     <Content Include="app\src\main\assets\zstd.js" />
     <Content Include="app\src\main\assets\zstd.js.mem" />
     <Content Include="app\src\main\assets\zstdjsgen.bat" />
+    <Content Include="app\src\main\jniLibs\x86\gdbserver" />
     <Content Include="app\src\main\res\values\strings.xml" />
   </ItemGroup>
   <ItemGroup>

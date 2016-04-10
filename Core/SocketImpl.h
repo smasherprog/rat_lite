@@ -1,6 +1,6 @@
 #pragma once
-#include <boost/asio.hpp>
-#include <boost/asio/deadline_timer.hpp>
+#include <asio.hpp>
+#include <asio/deadline_timer.hpp>
 #include "IBaseNetworkDriver.h"
 #include "Packet.h"
 #include "SocketStats.h"
@@ -27,7 +27,7 @@ namespace SL {
 			
 			public:
 
-				SocketImpl(boost::asio::io_service& io_service, IBaseNetworkDriver* netevents);
+				SocketImpl(asio::io_service& io_service, IBaseNetworkDriver* netevents);
 				~SocketImpl();
 				void StartReadTimer(int seconds);
 				void StartWriteTimer(int seconds);
@@ -50,8 +50,8 @@ namespace SL {
 				void UpdateWriteStats(Packet& packet, size_t beforesize);
 
 				std::vector<char> _IncomingBuffer;
-				boost::asio::deadline_timer read_deadline_;
-				boost::asio::deadline_timer write_deadline_;
+				asio::deadline_timer read_deadline_;
+				asio::deadline_timer write_deadline_;
 				PacketHeader WritePacketHeader;
 				PacketHeader ReadPacketHeader;
 				std::unordered_map<std::string, std::string> Header;

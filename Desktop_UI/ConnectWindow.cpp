@@ -6,7 +6,9 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Button.H>
 #include <FL/fl_ask.H>
-
+#include <string>
+#include <memory>
+#include <thread>
 
 namespace SL {
 	namespace Remote_Access_Library {

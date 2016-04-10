@@ -13,7 +13,7 @@ void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels l
 	msg += " Func: " + func;
 	msg += " Msg: " + str;
 	switch (level) {
-	case(DEBUG_log_level):
+	case(Debug_log_level):
 		__android_log_print(ANDROID_LOG_DEBUG, APPNAME, msg.c_str());
 		break;
 	case(ERROR_log_level):

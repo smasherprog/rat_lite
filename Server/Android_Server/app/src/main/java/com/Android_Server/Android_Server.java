@@ -15,15 +15,14 @@ public class Android_Server extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL); 
 
-
 		Button myButton = new Button(this);
-	
+
 		LinearLayout row = new LinearLayout(this);
 		row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
 
 		myButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 		myButton.setText("Start");

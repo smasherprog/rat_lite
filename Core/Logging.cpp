@@ -30,6 +30,7 @@ void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels l
 		break;
 	default:
 		__android_log_print(ANDROID_LOG_INFO, APPNAME, msg.c_str());
+
 	}
 }
 #else 

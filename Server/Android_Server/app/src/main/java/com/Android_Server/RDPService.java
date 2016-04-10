@@ -24,6 +24,7 @@ public class RDPService extends Service {
 			super(looper);
 		}
 
+
 		@Override
 		public void handleMessage(Message msg) {
 

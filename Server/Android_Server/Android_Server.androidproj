@@ -88,21 +88,16 @@
     <JavaCompile Include="app\src\main\res\layout\testlay.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="app\src\main\assets\Core.js" />
-    <Content Include="app\src\main\assets\Core.ts" />
-    <Content Include="app\src\main\assets\favicon.ico" />
-    <Content Include="app\src\main\assets\index.html" />
-    <Content Include="app\src\main\assets\zstd.d.ts" />
-    <Content Include="app\src\main\assets\zstd.js" />
-    <Content Include="app\src\main\assets\zstd.js.mem" />
-    <Content Include="app\src\main\assets\zstdjsgen.bat" />
-    <Content Include="app\src\main\jniLibs\x86\gdbserver" />
-    <Content Include="app\src\main\jniLibs\x86\libc++_shared.so" />
     <Content Include="app\src\main\res\values\strings.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Android.NativeActivity\Android_Server.NativeActivity.vcxproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="app\src\main\assets\wwwroot\" />
+  </ItemGroup>
   <Import Project="$(AndroidTargetsPath)\Android.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <Import Project="copydeps.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
 </Project>

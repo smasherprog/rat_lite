@@ -1,0 +1,9 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <Target Name="cpthewwrotstert" BeforeTargets="Build">
+		<ItemGroup>
+			<Mywthing3254SourceFiles Include="$(OutDir)wwwroot\*.*"/> 
+		</ItemGroup>
+		<Copy SourceFiles="@(Mywthing3254SourceFiles)" DestinationFolder="$(OutDir)wwwroot\" /> 
+  </Target>
+</Project>

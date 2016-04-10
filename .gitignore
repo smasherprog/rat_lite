@@ -39,7 +39,8 @@ TestResult.xml
 [Dd]ebugPS/
 [Rr]eleasePS/
 dlldata.c
-
+*.so
+*.a
 *.db
 *_i.c
 *_p.c

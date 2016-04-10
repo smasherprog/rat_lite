@@ -17,6 +17,7 @@ model {
         targetCompatibility=JavaVersion.VERSION_1_7
     }
 
+
     android.buildTypes {
         release {
             minifyEnabled = false

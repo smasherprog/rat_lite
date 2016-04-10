@@ -110,4 +110,6 @@
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
+    <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />
+	
 </Project>

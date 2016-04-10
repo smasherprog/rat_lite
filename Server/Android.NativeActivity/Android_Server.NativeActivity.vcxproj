@@ -359,21 +359,21 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\boost.1.60.0.0\build\native\boost.targets" Condition="Exists('..\..\packages\boost.1.60.0.0\build\native\boost.targets')" />
-    <Import Project="..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets" Condition="Exists('..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets')" />
     <Import Project="..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets" Condition="Exists('..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets')" />
-    <Import Project="..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets" Condition="Exists('..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets')" />
-    <Import Project="..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets')" />
     <Import Project="..\..\packages\asio.1.10.6\build\native\asio.targets" Condition="Exists('..\..\packages\asio.1.10.6\build\native\asio.targets')" />
+    <Import Project="..\..\packages\Libjpeg-Turbo.1.4.2.22\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\..\packages\Libjpeg-Turbo.1.4.2.22\build\native\Libjpeg-Turbo.targets')" />
+    <Import Project="..\..\packages\open_ssl_android.1.0.2.11\build\native\open_ssl_android.targets" Condition="Exists('..\..\packages\open_ssl_android.1.0.2.11\build\native\open_ssl_android.targets')" />
+    <Import Project="..\..\packages\open_ssl.1.0.2.07\build\native\open_ssl.targets" Condition="Exists('..\..\packages\open_ssl.1.0.2.07\build\native\open_ssl.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\boost.1.60.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.60.0.0\build\native\boost.targets'))" />
-    <Error Condition="!Exists('..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets'))" />
     <Error Condition="!Exists('..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets'))" />
-    <Error Condition="!Exists('..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets'))" />
     <Error Condition="!Exists('..\..\packages\asio.1.10.6\build\native\asio.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\asio.1.10.6\build\native\asio.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Libjpeg-Turbo.1.4.2.22\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Libjpeg-Turbo.1.4.2.22\build\native\Libjpeg-Turbo.targets'))" />
+    <Error Condition="!Exists('..\..\packages\open_ssl_android.1.0.2.11\build\native\open_ssl_android.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl_android.1.0.2.11\build\native\open_ssl_android.targets'))" />
+    <Error Condition="!Exists('..\..\packages\open_ssl.1.0.2.07\build\native\open_ssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl.1.0.2.07\build\native\open_ssl.targets'))" />
   </Target>
 </Project>

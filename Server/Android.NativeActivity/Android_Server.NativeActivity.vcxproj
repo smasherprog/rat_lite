@@ -36,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bindings.h" />
-    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bindings.cpp" />
@@ -75,6 +74,7 @@
     <PlatformToolset>Clang_3_6</PlatformToolset>
     <UseOfStl>c++_shared</UseOfStl>
     <AndroidAPILevel>android-21</AndroidAPILevel>
+    <ThumbMode>Thumb</ThumbMode>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -188,36 +188,42 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <VerboseOutput>false</VerboseOutput>
@@ -226,54 +232,61 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;jpeg_turbo</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <DebugInformationFormat>None</DebugInformationFormat>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;jpeg_turbo</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <VerboseOutput>false</VerboseOutput>
@@ -282,36 +295,41 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <DebugInformationFormat>None</DebugInformationFormat>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;jpeg_turbo</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <VerboseOutput>false</VerboseOutput>
@@ -319,18 +337,20 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <CompileAs>CompileAsCpp</CompileAs>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <ExceptionHandling>Enabled</ExceptionHandling>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
-      <CLanguageStandard>c11</CLanguageStandard>
-      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\include;$(SolutionDir)..\crystax-ndk-10.3.1\sources\libjpeg-turbo\1.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);boost_filesystem;boost_system;boost_thread;m;jpeg_turbo</LibraryDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\crystax-ndk-10.3.1\sources\boost\1.59.0\libs\$(TargetArchAbi)\$(LLVMPathName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>%(LibraryDependencies);m;log</LibraryDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>
       </AdditionalDependencies>
       <VerboseOutput>true</VerboseOutput>
@@ -338,14 +358,22 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Libjpeg-Turbo.1.4.2.18\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\..\packages\Libjpeg-Turbo.1.4.2.18\build\native\Libjpeg-Turbo.targets')" />
-    <Import Project="..\..\packages\open_ssl.1.0.2.04\build\native\open_ssl.targets" Condition="Exists('..\..\packages\open_ssl.1.0.2.04\build\native\open_ssl.targets')" />
+    <Import Project="..\..\packages\asio-cpp.1.10.2.0\build\native\asio-cpp.targets" Condition="Exists('..\..\packages\asio-cpp.1.10.2.0\build\native\asio-cpp.targets')" />
+    <Import Project="..\..\packages\boost.1.60.0.0\build\native\boost.targets" Condition="Exists('..\..\packages\boost.1.60.0.0\build\native\boost.targets')" />
+    <Import Project="..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets" Condition="Exists('..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets')" />
+    <Import Project="..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets" Condition="Exists('..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets')" />
+    <Import Project="..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets" Condition="Exists('..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets')" />
+    <Import Project="..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Libjpeg-Turbo.1.4.2.18\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Libjpeg-Turbo.1.4.2.18\build\native\Libjpeg-Turbo.targets'))" />
-    <Error Condition="!Exists('..\..\packages\open_ssl.1.0.2.04\build\native\open_ssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl.1.0.2.04\build\native\open_ssl.targets'))" />
+    <Error Condition="!Exists('..\..\packages\asio-cpp.1.10.2.0\build\native\asio-cpp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\asio-cpp.1.10.2.0\build\native\asio-cpp.targets'))" />
+    <Error Condition="!Exists('..\..\packages\boost.1.60.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.60.0.0\build\native\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl_android.1.0.2.0\build\native\open_ssl_android.targets'))" />
+    <Error Condition="!Exists('..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl_windows.1.0.2.0\build\native\open_ssl_windows.targets'))" />
+    <Error Condition="!Exists('..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\open_ssl.1.0.2.05\build\native\open_ssl.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Libjpeg-Turbo.1.4.2.20\build\native\Libjpeg-Turbo.targets'))" />
   </Target>
 </Project>

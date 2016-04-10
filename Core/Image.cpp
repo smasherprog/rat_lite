@@ -131,6 +131,7 @@ void SL::Remote_Access_Library::Utilities::Image::Copy(Image& src, Rect src_rect
 
 
 
+
 SL::Remote_Access_Library::Utilities::Image::Image(Image_Impl& impl) : _Height(impl.height), _Width(impl.width), Size(impl.height*impl.width * 4) {
 	_Data = std::make_unique<char[]>(Size);
 }

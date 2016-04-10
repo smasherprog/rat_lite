@@ -1,5 +1,14 @@
 #include "stdafx.h"
 #include "ApplicationDirectory.h"
+
+#if __ANDROID__
+std::string executable_path(const char *argv0)
+{
+	return "";
+}
+#else 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <boost/filesystem/operations.hpp>
@@ -36,9 +45,9 @@ std::string executable_path(const char *argv0)
 #elif __APPLE__
 #include "TargetConditionals.h"
 #if TARGET_IPHONE_SIMULATOR
-		// iOS Simulator
+// iOS Simulator
 #elif TARGET_OS_IPHONE
-		// iOS device
+// iOS device
 #elif TARGET_OS_MAC
 #include <mach-o/dyld.h>
 
@@ -59,12 +68,6 @@ std::string executable_path(const char *argv0)
 #else
 #   error "Unknown Apple platform"
 #endif
-#elif __ANDROID__
-std::string executable_path(const char *argv0)
-{
-
-	return executable_path_fallback(argv0);
-}
 
 #elif (__linux__) // } {
 
@@ -94,3 +97,5 @@ std::string executable_path(const char *argv0)
 }
 
 #endif // }
+
+#endif

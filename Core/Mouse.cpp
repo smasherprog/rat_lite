@@ -2,6 +2,7 @@
 #include "Mouse.h"
 #include "Image.h"
 #include <assert.h>
+#include <thread>
 
 namespace SL
 {
@@ -131,7 +132,7 @@ namespace SL
 			}
 			Utilities::Point GetCursorPos()
 			{
-				return Utilities::Point(0,0);
+				return Utilities::Point(0, 0);
 			}
 #elif __linux__
 #include <X11/Xlib.h>
@@ -196,11 +197,12 @@ namespace SL
 
 				XCloseDisplay(display);
 				return true;
+#else
+				return false; // Fail
 #endif
 
-				return false; // Fail
+			}
 		}
-	}
 		namespace INTERNAL
 		{
 			struct MouseImpl
@@ -213,7 +215,7 @@ namespace SL
 				bool _Running;
 			};
 		}
-}
+	}
 }
 void SL::Remote_Access_Library::Capturing::Mouse::_run()
 {
@@ -245,6 +247,7 @@ SL::Remote_Access_Library::Capturing::Mouse::Mouse(std::function<void(std::share
 	_MouseImpl->_Running = true;
 	_MouseImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Mouse::_run, this);
 }
+
 
 SL::Remote_Access_Library::Capturing::Mouse::~Mouse()
 {

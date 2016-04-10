@@ -19,6 +19,7 @@ public class Android_Server extends Activity {
 		LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL); 
 
+
 		Button myButton = new Button(this);
 	
 		LinearLayout row = new LinearLayout(this);

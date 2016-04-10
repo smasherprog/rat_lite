@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "HttpHeader.h"
+#include <sstream>
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {

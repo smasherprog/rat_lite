@@ -97,6 +97,7 @@
     <Content Include="app\src\main\assets\zstd.js.mem" />
     <Content Include="app\src\main\assets\zstdjsgen.bat" />
     <Content Include="app\src\main\jniLibs\x86\gdbserver" />
+    <Content Include="app\src\main\jniLibs\x86\libc++_shared.so" />
     <Content Include="app\src\main\res\values\strings.xml" />
   </ItemGroup>
   <ItemGroup>

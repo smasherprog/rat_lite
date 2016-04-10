@@ -5,6 +5,8 @@
 #include "Image.h"
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
+#include <thread>
+#include <mutex>
 
 namespace SL {
 	namespace Remote_Access_Library {

@@ -15,29 +15,5 @@
 #endif
 
 #define UNUSED(x) (void)(x)
-
-#include <cstring>
-#include <stdio.h>
-#include <thread>
-#include <memory>
-#include <atomic>
-#include <mutex>
-#include <chrono>
-#include <deque>
-#include <queue>
-#include <functional>
-#include <condition_variable>
-#include <algorithm>
-#include <chrono>
-#include <string>
-
-#include <iostream>
-#include <sstream>
-#include <fstream>
-
-#include <unordered_map>
-#include <algorithm>
-#include <numeric>
-
-
-
+#define ASIO_HAS_BOOST_DATE_TIME
+#define ASIO_DISABLE_THREAD_KEYWORD_EXTENSION

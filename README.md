@@ -2,7 +2,7 @@
 <p>This library is intended to be a VNC-like application, but with a few design goals:
 <ul>
 <li>
-Simple code
+Simple  (download and press build -- no complicated steps)
 </li>
 <li>
 Cross-platform:Win, Linux, (all)Web Browsers, Andriod, IOS(Probably not IOS, but maybe)

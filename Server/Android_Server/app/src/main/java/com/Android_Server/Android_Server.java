@@ -1,5 +1,5 @@
 
-package com.RDPBinding;
+package com.Android_Server;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -8,8 +8,9 @@ import android.widget.LinearLayout;
 import android.view.View;
 import android.content.Intent;
 
-public class MainActivity extends Activity {
-	private static final String TAG = MainActivity.class.getSimpleName();
+public class Android_Server extends Activity {
+
+	private static final String TAG = Android_Server.class.getSimpleName();
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -19,9 +20,9 @@ public class MainActivity extends Activity {
 
 		Button myButton = new Button(this);
 
-		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 		LinearLayout row = new LinearLayout(this);
 		row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
 
 		myButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 		myButton.setText("Start");

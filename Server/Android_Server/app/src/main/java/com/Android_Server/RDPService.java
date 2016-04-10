@@ -1,4 +1,4 @@
-package com.RDPBinding;
+package com.Android_Server;
 
 import android.app.Service;
 import android.widget.Toast;
@@ -24,10 +24,11 @@ public class RDPService extends Service {
 			super(looper);
 		}
 
+
 		@Override
 		public void handleMessage(Message msg) {
 
-			long UnMangedPtr = StartService();
+			//long UnMangedPtr = StartService();
 
 			try {
 				Thread.sleep(5000);
@@ -35,7 +36,7 @@ public class RDPService extends Service {
 				// Restore interrupt status.
 				Thread.currentThread().interrupt();
 			}
-			StopService(UnMangedPtr);
+			//StopService(UnMangedPtr);
 			stopSelf(msg.arg1);
 		}
 	}

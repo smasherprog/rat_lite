@@ -14,6 +14,8 @@
 #include <FL/Fl_PNG_Image.H>
 #include "../Core/Mouse.h"
 #include "../Core/stdafx.h"
+#include <chrono>
+#include <mutex>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -100,13 +102,11 @@ namespace SL {
 					}
 				}
 				virtual ~ViewerWindowImpl() {
-					std::cout << "~MainWindowImpl() " << std::endl;
 					_ClientNetworkDriver.Stop();
 				}
 				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override
 				{
 					UNUSED(socket);
-					std::cout << "MainWindowImpl::OnConnect " << std::endl;
 				}
 
 				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet) override

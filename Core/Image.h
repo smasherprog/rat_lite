@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "Shapes.h"
+#include <vector>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -21,7 +22,7 @@ namespace SL {
 
 				Image(Image_Impl&);
 				~Image();
-			
+
 				//pixel stride
 
 				static unsigned int DefaultStride() { return 4; }
@@ -31,10 +32,10 @@ namespace SL {
 				size_t size() const { return Size; }
 				unsigned int Height() const { return _Height; }
 				unsigned int Width() const { return _Width; }
-	
+
 			};
 			//this object is used for shared_ptr alias constuctor
-		
+
 		}
 	}
 };

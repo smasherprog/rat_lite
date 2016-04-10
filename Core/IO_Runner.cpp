@@ -1,18 +1,20 @@
 #include "stdafx.h"
 #include "IO_Runner.h"
-#include <boost/asio.hpp>
+#include <asio.hpp>
+#include <thread>
+#include "Logging.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 			class IO_RunnerImpl {
 			public:
-				boost::asio::io_service io_service;
+				asio::io_service io_service;
 				IO_RunnerImpl() :work(io_service) { //MUST BE 1, otherwise calls can be interleaved when sendiing and receiving
 					io_servicethread = std::thread([this]() {
-						std::cout << "Starting io_service Factory" << std::endl;
+						SL_RAT_LOG("Starting io_service Factory", Utilities::Logging_Levels::INFO_log_level);
 						io_service.run();
-						std::cout << "stopping io_service Factory" << std::endl;
+						SL_RAT_LOG("stopping io_service Factory", Utilities::Logging_Levels::INFO_log_level);
 					});
 				}
 				~IO_RunnerImpl()
@@ -22,7 +24,7 @@ namespace SL {
 				}
 
 				std::thread io_servicethread;
-				boost::asio::io_service::work work;
+				asio::io_service::work work;
 			};
 		}
 	}
@@ -51,7 +53,7 @@ void SL::Remote_Access_Library::Network::IO_Runner::Stop()
 	_IO_RunnerImpl = nullptr;
 }
 
-boost::asio::io_service& SL::Remote_Access_Library::Network::IO_Runner::get_io_service()
+asio::io_service& SL::Remote_Access_Library::Network::IO_Runner::get_io_service()
 {
 	return _IO_RunnerImpl->io_service;
 }

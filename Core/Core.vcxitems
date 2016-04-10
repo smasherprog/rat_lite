@@ -35,6 +35,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)IO_Runner.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Logging.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MediaTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Screen.cpp" />
@@ -79,6 +80,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)IO_Runner.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IServerDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ISocket.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Logging.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)mem.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h" />
@@ -93,7 +95,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)stdafx.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)TCPListener.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)TCPSocket.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)ThreadPool.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)zbuff.h" />
@@ -109,4 +110,6 @@
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
+    <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />
+	
 </Project>

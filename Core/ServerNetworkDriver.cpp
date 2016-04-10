@@ -8,11 +8,11 @@
 #include "Server_Config.h"
 #include "WebSocketListener.h"
 #include "IO_Runner.h"
-#include "ThreadPool.h"
 #include "TCPListener.h"
 #include "HttpListener.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
+#include <mutex>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -25,7 +25,7 @@ namespace SL {
 				std::unique_ptr<HttpListener> _HttptListener;
 
 				std::unique_ptr<IO_Runner> _IO_Runner;
-				Utilities::ThreadPool _SendPool, _ReceivePool;
+				
 				IServerDriver* _IServerDriver;
 
 				std::vector<std::shared_ptr<ISocket>> _Clients;
@@ -160,7 +160,7 @@ namespace SL {
 
 
 					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_BGRX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						std::cout << "Err msg " << tjGetErrorStr() << std::endl;
+						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
 					}
 					//	std::cout << "Sending " << r << std::endl;
 					p.Payload_Length = sizeof(Utilities::Rect) + _jpegSize;//adjust the correct size

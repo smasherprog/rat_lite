@@ -2,7 +2,7 @@
   
   <Target Name="cpthewwrotstert" BeforeTargets="Build">
 		<ItemGroup>
-			<Mywthing3254SourceFiles Include="$(OutDir)wwwroot\*.*"/> 
+			<Mywthing3254SourceFiles Include="$(SolutionDir)wwwroot\*.*"/> 
 		</ItemGroup>
 		<Copy SourceFiles="@(Mywthing3254SourceFiles)" DestinationFolder="$(OutDir)wwwroot\" /> 
   </Target>

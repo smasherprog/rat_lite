@@ -58,7 +58,7 @@ namespace SL {
 			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
 
 			SelectObject(capturedc.get(), originalBmp);
-	
+
 			return retimg;
 		}
 
@@ -84,12 +84,12 @@ namespace SL {
 
 
 
-	#include <X11/X.h>
-	#include <X11/Xlib.h>
-	#include <X11/Xlibint.h>
-	#include <X11/Xutil.h>
-	#include <sys/shm.h>
-	#include <X11/extensions/XShm.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xlibint.h>
+#include <X11/Xutil.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
 
 		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
 		{
@@ -98,36 +98,36 @@ namespace SL {
 			auto screen = XDefaultScreen(display);
 			auto visual = DefaultVisual(display, screen);
 			auto depth = DefaultDepth(display, screen);
-			  
+
 			XWindowAttributes gwa;
-			XGetWindowAttributes(display, root , &gwa);
+			XGetWindowAttributes(display, root, &gwa);
 			auto width = gwa.width;
 			auto height = gwa.height;
-			   
+
 			XShmSegmentInfo shminfo;
-			auto image = XShmCreateImage(display,visual, depth,ZPixmap, NULL, &shminfo, width, height);
-			shminfo.shmid = shmget(IPC_PRIVATE, image->bytes_per_line * image->height, IPC_CREAT|0777);
-			
+			auto image = XShmCreateImage(display, visual, depth, ZPixmap, NULL, &shminfo, width, height);
+			shminfo.shmid = shmget(IPC_PRIVATE, image->bytes_per_line * image->height, IPC_CREAT | 0777);
+
 			shminfo.readOnly = False;
 			shminfo.shmaddr = image->data = (char*)shmat(shminfo.shmid, 0, 0);
-		
-			XShmAttach(display,&shminfo);
 
-			XShmGetImage(display,root,image,0,0,AllPlanes);
+			XShmAttach(display, &shminfo);
 
-			XShmDetach(display,&shminfo);
-   
-			auto px= Utilities::Image::CreateImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel/8);
-			assert(image->bits_per_pixel==32);//this should always be true... Ill write a case where it isnt, but for now it should be
-			
+			XShmGetImage(display, root, image, 0, 0, AllPlanes);
+
+			XShmDetach(display, &shminfo);
+
+			auto px = Utilities::Image::CreateImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel / 8);
+			assert(image->bits_per_pixel == 32);//this should always be true... Ill write a case where it isnt, but for now it should be
+
 			XDestroyImage(image);
-			shmdt (shminfo.shmaddr);
-			shmctl (shminfo.shmid, IPC_RMID, 0);
+			shmdt(shminfo.shmaddr);
+			shmctl(shminfo.shmid, IPC_RMID, 0);
 			XCloseDisplay(display);
-			
-            return px;
-            
-        }
+
+			return px;
+
+		}
 #endif
 		namespace INTERNAL {
 			struct ScreenImpl {
@@ -143,7 +143,7 @@ namespace SL {
 void SL::Remote_Access_Library::Capturing::Screen::_run()
 {
 	while (_ScreenImpl->_Running) {
-		
+
 		auto start = std::chrono::steady_clock::now();
 		auto i = CaptureDesktopImage();
 		_ScreenImpl->_CallBack(i);
@@ -156,16 +156,20 @@ void SL::Remote_Access_Library::Capturing::Screen::_run()
 
 SL::Remote_Access_Library::Capturing::Screen::Screen(std::function<void(std::shared_ptr<Utilities::Image>)> func, int ms_dely)
 {
+#if !__ANDROID__
 	_ScreenImpl = new INTERNAL::ScreenImpl();
 	_ScreenImpl->_ms_Delay = ms_dely;
 	_ScreenImpl->_CallBack = func;
 	_ScreenImpl->_Running = true;
 	_ScreenImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Screen::_run, this);
+#endif
 }
 
 SL::Remote_Access_Library::Capturing::Screen::~Screen()
 {
-	_ScreenImpl->_Running = false;
-	_ScreenImpl->_thread.join();
-	delete _ScreenImpl;
+	if (_ScreenImpl) {
+		_ScreenImpl->_Running = false;
+		_ScreenImpl->_thread.join();
+		delete _ScreenImpl;
+	}
 }

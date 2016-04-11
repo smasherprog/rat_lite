@@ -2,7 +2,7 @@
 #define	CRYPTO_HPP
 
 #include <string>
-#include <cmath>
+#include <math.h>
 
 #include <openssl/evp.h>
 #include <openssl/buffer.h>

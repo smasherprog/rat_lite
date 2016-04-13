@@ -33,7 +33,7 @@ public class Android_Server extends Activity {
 	private static final String TAG = Android_Server.class.getName();
 	private static final int REQUEST_CODE = 100;
 
-	private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY| DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
+	private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR;
 	private static MediaProjection sMediaProjection;
 	  private static final String SCREENCAP_NAME = "screencap";
 	private MediaProjectionManager mProjectionManager;
@@ -60,7 +60,7 @@ public class Android_Server extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+	
 		// call for the projection manager
 		mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 	
@@ -206,16 +206,21 @@ public class Android_Server extends Activity {
 		@Override
 		public void onImageAvailable(ImageReader reader) {
 			Image image = null;
+			Bitmap bitmap = null;
 			try {
-				image = mImageReader.acquireLatestImage();
+				image = reader.acquireLatestImage();
 				if (image != null) {
 					Image.Plane[] planes = image.getPlanes();
-					ByteBuffer buffer = planes[0].getBuffer();
+					ByteBuffer buffer= planes[0].getBuffer();
 					int pixelStride = planes[0].getPixelStride();
 					int rowStride = planes[0].getRowStride();
 					int rowPadding = rowStride - pixelStride * mWidth;
+
 					OnImage(buffer, mWidth + rowPadding / pixelStride, mHeight);
 
+					//bitmap = Bitmap.createBitmap(mWidth + rowPadding / pixelStride, mHeight, Bitmap.Config.ARGB_8888);
+                    //bitmap.copyPixelsFromBuffer(planes[0].getBuffer());
+			
 					Log.e(TAG, "captured image: ");
 				}
 

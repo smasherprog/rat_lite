@@ -39,6 +39,7 @@ void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels l
 	}
 }
 #else 
+#include <iostream>
 void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels level, std::string file, std::string line, std::string func)
 {
 	auto msg = Logging_level_Names[level] + ":";
@@ -46,7 +47,7 @@ void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels l
 	msg += " Line: " + line;
 	msg += " Func: " + func;
 	msg += " Msg: " + str;
-
+	std::cout << msg << std::endl;
 }
 #endif
 

@@ -105,15 +105,18 @@ namespace SL {
 						asio::ip::tcp::resolver::query query(host, port);
 						asio::error_code ercode;
 						auto endpoint = resolver.resolve(query, ercode);
-
-						asio::async_connect(_socket.lowest_layer(), endpoint, [self, this](const std::error_code& ec, asio::ip::tcp::resolver::iterator)
-						{
-							if (!closed()) {
-								handshake();
-							}
-							else close_Socket(std::string("async_connect ") + ec.message());
-						});
-						close_Socket(std::string("async_connect ") + ercode.message());
+						if (ercode) {
+							close_Socket(std::string("async_connect ") + ercode.message());
+						}
+						else {
+							asio::async_connect(_socket.lowest_layer(), endpoint, [self, this](const std::error_code& ec, asio::ip::tcp::resolver::iterator)
+							{
+								if (!closed()) {
+									handshake();
+								}
+								else close_Socket(std::string("async_connect ") + ec.message());
+							});
+						}
 					}
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::TCPSOCKET; }

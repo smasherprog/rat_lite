@@ -157,9 +157,13 @@ namespace SL {
 					auto dst = (unsigned char*)p.Payload;
 					memcpy(dst, &r, sizeof(Utilities::Rect));
 					dst += sizeof(Utilities::Rect);
+#if __ANDROID__
+					auto colorencoding = TJPF_RGBX;
+#else 
+					auto colorencoding = TJPF_BGRX;
+#endif
 
-
-					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, TJPF_BGRX, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
 					}
 					//	std::cout << "Sending " << r << std::endl;

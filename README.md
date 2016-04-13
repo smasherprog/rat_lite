@@ -37,6 +37,11 @@ Latest standards: c++ 14
 <h3>LICENSE:</h3>
 <p>https://tldrlegal.com/license/mit-license</p>
 <p>
+<h5>Windows Connecting to Linux</h5>
 <img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Windows_to_Linux.png" target="_blank"/>
+</p>
+<p>
+<h5>Linux Connecting to Windows</h5>
 <img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/linux_to_windows.png" target="_blank"/>
 </p>
+

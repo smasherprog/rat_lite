@@ -39,7 +39,7 @@ Latest standards: c++ 14
 <p>
 <h5>Windows Connecting to Android</h5>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Android.PNG" target="_blank"/>
-<img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Android2.PNG" target="_blank"/>
+<img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/android2.PNG" target="_blank"/>
 </p>
 <p>
 <h5>Windows Connecting to Linux</h5>

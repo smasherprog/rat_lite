@@ -3,6 +3,7 @@
 #include "Image.h"
 #include <assert.h>
 #include <thread>
+#include "Logging.h"
 
 namespace SL
 {
@@ -126,12 +127,17 @@ namespace SL
 
 #error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
 #elif __ANDROID__
+		
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
+			//this should never be ran
+				assert(true);
 				return Utilities::Image::CreateImage(0, 0);
 			}
 			Utilities::Point GetCursorPos()
 			{
+				//this should never be ran
+				assert(true);
 				return Utilities::Point(0, 0);
 			}
 #elif __linux__
@@ -237,6 +243,8 @@ SL::Remote_Access_Library::Capturing::Mouse::Mouse(std::function<void(std::share
 	int img_dely,
 	int pos_dely)
 {
+	//androids should not be running this code.. mm kay
+#if  !__ANDROID__
 	assert(img_dely > pos_dely); // img delay must be longer than the pos delay.. mm kay?
 	_MouseImpl = new INTERNAL::MouseImpl();
 	_MouseImpl->_img_Delay = img_dely;
@@ -246,12 +254,15 @@ SL::Remote_Access_Library::Capturing::Mouse::Mouse(std::function<void(std::share
 
 	_MouseImpl->_Running = true;
 	_MouseImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Mouse::_run, this);
+#endif
 }
 
 
 SL::Remote_Access_Library::Capturing::Mouse::~Mouse()
 {
-	_MouseImpl->_Running = false;
-	_MouseImpl->_thread.join();
-	delete _MouseImpl;
+	if (_MouseImpl) {
+		_MouseImpl->_Running = false;
+		_MouseImpl->_thread.join();
+		delete _MouseImpl;
+	}
 }

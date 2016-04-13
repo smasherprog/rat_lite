@@ -67,11 +67,14 @@ namespace SL {
 					request << HttpHeader::HTTP_SECWEBSOCKETKEY << HttpHeader::HTTP_KEYVALUEDELIM << nonce_base64 << HttpHeader::HTTP_ENDLINE;
 					request << "Sec-WebSocket-Version: 13" << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 					std::shared_ptr<std::string> accept_sha1(new std::string(Crypto::SHA1(nonce_base64 + ws_magic_string)));
-					asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const std::error_code& ec, size_t /*bytes_transferred*/) {
+					
+					asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const std::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
+							SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
 							std::shared_ptr<asio::streambuf> read_buffer(new asio::streambuf);
-							asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, read_buffer, accept_sha1, self](const std::error_code& ec, size_t /*bytes_transferred*/) {
+							asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, read_buffer, accept_sha1, self](const std::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
+									SL_RAT_LOG(std::string("Read Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
 									std::istream stream(read_buffer.get());
 									this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
 									if (Crypto::Base64::decode(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETACCEPT]) == *accept_sha1) {
@@ -97,7 +100,7 @@ namespace SL {
 					asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [self, read_buffer, this](const std::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
 						if (!ec) {
-
+							SL_RAT_LOG(std::string("Read Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
 
 							std::istream stream(read_buffer.get());
 							this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
@@ -112,8 +115,8 @@ namespace SL {
 								
 							handshake << HttpHeader::HTTP_SECWEBSOCKETACCEPT << HttpHeader::HTTP_KEYVALUEDELIM << Crypto::Base64::encode(Crypto::SHA1(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETKEY] + ws_magic_string)) << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 							asio::async_write(this->_socket, *write_buffer, [this, self, write_buffer](const std::error_code& ec, size_t bytes_transferred) {
-								UNUSED(bytes_transferred);
 								if (!ec) {
+									SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
 									this->_SocketImpl.get_Driver()->OnConnect(self);
 									readheader();
 
@@ -161,7 +164,7 @@ namespace SL {
 										readbody();
 									}
 									else {
-										return this->close_Socket(std::string("readheader async_read ") + ec.message());
+										return this->close_Socket(std::string("readheader async_read 2 ") + ec.message());
 									}
 								});
 							}
@@ -171,7 +174,7 @@ namespace SL {
 							}
 						}
 						else {
-							this->close_Socket(std::string("readheader async_read ") + ec.message());
+							this->close_Socket(std::string("readheader async_read 1 ") + ec.message());
 						}
 					});
 				}

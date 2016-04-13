@@ -22,6 +22,9 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 	auto img = CreateImage(h, w);
 	img->Size = h*w*img->Stride();
 	if(pixel_stride==4){
+
+		char tmpbuf[50];
+		memcpy(tmpbuf, data, 50);
 		memcpy(img->data(), data, img->Size);
 	}else {
 		auto dst = (unsigned int*)img->data();

@@ -13,7 +13,11 @@ namespace SL {
 				IO_RunnerImpl() :work(io_service) { //MUST BE 1, otherwise calls can be interleaved when sendiing and receiving
 					io_servicethread = std::thread([this]() {
 						SL_RAT_LOG("Starting io_service Factory", Utilities::Logging_Levels::INFO_log_level);
-						io_service.run();
+						asio::error_code ec;
+						io_service.run(ec);
+						if (ec) {
+							SL_RAT_LOG(ec.message(), Utilities::Logging_Levels::ERROR_log_level);
+						}
 						SL_RAT_LOG("stopping io_service Factory", Utilities::Logging_Levels::INFO_log_level);
 					});
 				}

@@ -8,7 +8,11 @@ namespace SL {
 			struct Server_Config;
 		}
 		class ServerImpl;
-	
+		enum Server_Status {
+			SERVER_RUNNING,
+			SERVER_STOPPING,
+			SERVER_STOPPED
+		};
 		class Server {
 		public:
 			// to extend your own functionality, pass a pointer to a class derived from Network::IUserNetworkDriver. This class will receive the events and you can extend your own functionality
@@ -16,11 +20,15 @@ namespace SL {
 			~Server();
 
 			int Run();
-
+			void Stop(bool block);
+			Server_Status get_Status()const;
+#if __ANDROID__
+			void OnImage(char* buf, int width, int height);
+#endif
 
 		private:
 			std::shared_ptr<ServerImpl> _ServerImpl;
-			
+
 		};
 	}
 }

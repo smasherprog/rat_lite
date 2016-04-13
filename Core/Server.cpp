@@ -24,15 +24,17 @@ namespace SL {
 			bool _Keepgoing;
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
-
+			Server_Status Status;
 
 			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
 			{
 				LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 				_Keepgoing = true;
+				Status = Server_Status::SERVER_STOPPED;
 			}
 
 			virtual ~ServerImpl() {
+				Status = Server_Status::SERVER_STOPPED;
 				_Keepgoing = false;
 			}
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
@@ -44,13 +46,11 @@ namespace SL {
 			}
 
 			virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket)override {
-
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 			}
 
 			virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
-				UNUSED(socket);
-				UNUSED(packet);
+				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnReceive(socket, packet);
 			}
 
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
@@ -105,17 +105,29 @@ namespace SL {
 			}
 	
 			int Run() {
+				Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();
 				auto sc = std::make_unique<Capturing::Screen>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnScreen, this, std::placeholders::_1));
 				auto ms = std::make_unique<Capturing::Mouse>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnMouseImg, this, std::placeholders::_1),
 					std::bind(&SL::Remote_Access_Library::ServerImpl::OnMousePos, this, std::placeholders::_1), 1000, 50);
 				while (_Keepgoing) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+					std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				}
 				_ServerNetworkDriver.Stop();
+				Status = Server_Status::SERVER_STOPPED;
 				return 0;
 			}
-
+			void Stop(bool block) {
+				_Keepgoing = false;
+				if (block) {
+					while (Status != Server_Status::SERVER_STOPPED) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(5));
+					}
+				}
+			}
+			Server_Status get_Status() const {
+				return Status;
+			}
 		};
 
 	}
@@ -128,7 +140,7 @@ SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Networ
 
 SL::Remote_Access_Library::Server::~Server()
 {
-
+	_ServerImpl->Stop(true);
 }
 
 int SL::Remote_Access_Library::Server::Run()
@@ -137,3 +149,18 @@ int SL::Remote_Access_Library::Server::Run()
 
 }
 
+void SL::Remote_Access_Library::Server::Stop(bool block)
+{
+	_ServerImpl->Stop(block);
+}
+
+SL::Remote_Access_Library::Server_Status SL::Remote_Access_Library::Server::get_Status() const
+{
+	return _ServerImpl->get_Status();
+}
+#if __ANDROID__
+void SL::Remote_Access_Library::Server::OnImage(char* buf, int width, int height)
+{
+	return _ServerImpl->OnScreen(Utilities::Image::CreateImage(height, width, buf, 4));
+}
+#endif

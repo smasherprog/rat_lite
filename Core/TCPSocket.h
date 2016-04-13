@@ -71,25 +71,18 @@ namespace SL {
 					return _SocketImpl.Closed || !_socket.lowest_layer().is_open();
 				}
 				virtual void close_Socket(std::string reason) override {
-				
+
 					SL_RAT_LOG("Closing socket: " + reason, Utilities::Logging_Levels::INFO_log_level);
 					if (closed()) return;
 					_SocketImpl.Closed = true;
 					_SocketImpl.CancelTimers();
 					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());
-					try
-					{
-						std::error_code ec;
-
-						_socket.lowest_layer().shutdown(asio::ip::tcp::socket::shutdown_both, ec);
-						_socket.lowest_layer().close();
+					asio::error_code ec;
+					_socket.lowest_layer().shutdown(asio::ip::tcp::socket::shutdown_both, ec);
+					_socket.lowest_layer().close();
+					if (ec) {
+						SL_RAT_LOG(ec.message(), Utilities::Logging_Levels::ERROR_log_level);
 					}
-					catch (std::exception e) {
-						auto st = e.what();
-						SL_RAT_LOG(e.what(), Utilities::Logging_Levels::ERROR_log_level);
-					}//I dont care about exceptions when the socket is being closed!
-
-
 				}
 				//pending packets which are queued up and waiting to be sent
 				virtual SocketStats get_SocketStats() const override {
@@ -107,12 +100,15 @@ namespace SL {
 					}
 					else {
 						_SocketImpl.Server = false;
-						try
-						{
-							asio::ip::tcp::resolver resolver(_io_service);
-							asio::ip::tcp::resolver::query query(host, port);
-							auto endpoint = resolver.resolve(query);
 
+						asio::ip::tcp::resolver resolver(_io_service);
+						asio::ip::tcp::resolver::query query(host, port);
+						asio::error_code ercode;
+						auto endpoint = resolver.resolve(query, ercode);
+						if (ercode) {
+							close_Socket(std::string("async_connect ") + ercode.message());
+						}
+						else {
 							asio::async_connect(_socket.lowest_layer(), endpoint, [self, this](const std::error_code& ec, asio::ip::tcp::resolver::iterator)
 							{
 								if (!closed()) {
@@ -120,9 +116,6 @@ namespace SL {
 								}
 								else close_Socket(std::string("async_connect ") + ec.message());
 							});
-						}
-						catch (std::exception ex) {
-							close_Socket(std::string("async_connect ") + ex.what());
 						}
 					}
 				}

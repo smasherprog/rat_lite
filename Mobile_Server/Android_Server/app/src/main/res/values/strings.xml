@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Android_Server</string>
+  <string name="service_name">Android_Server_RDPS</string>
+  <string name="start_recording">Start Recording</string>
+  <string name="stop_recording">Stop Recording</string>
+</resources>
+

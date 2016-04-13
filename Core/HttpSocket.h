@@ -25,8 +25,8 @@ namespace SL {
 
 
 				virtual void readheader()  override {
-					
-					auto self(this->shared_from_this());	
+
+					auto self(this->shared_from_this());
 					std::shared_ptr<asio::streambuf> read_buffer(new asio::streambuf);
 					asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, self, read_buffer](const std::error_code& ec, std::size_t s)
 					{
@@ -38,13 +38,8 @@ namespace SL {
 							const auto it = this->_SocketImpl.Header.find(HttpHeader::HTTP_CONTENTLENGTH);
 							this->_SocketImpl.ReadPacketHeader.Payload_Length = 0;
 							if (it != this->_SocketImpl.Header.end()) {
-								try {
-									this->_SocketImpl.ReadPacketHeader.Payload_Length = static_cast<unsigned int>(atoi(it->second.c_str()));
-								}
 
-								catch (const std::exception &e) {
-									SL_RAT_LOG(e.what(), Utilities::Logging_Levels::ERROR_log_level);
-								}
+								this->_SocketImpl.ReadPacketHeader.Payload_Length = static_cast<unsigned int>(std::stoi(it->second.c_str()));
 							}
 							auto extrabytesread = static_cast<unsigned int>(beforesize - s);
 							if (this->_SocketImpl.ReadPacketHeader.Payload_Length > extrabytesread) this->_SocketImpl.ReadPacketHeader.Payload_Length -= extrabytesread;
@@ -58,7 +53,7 @@ namespace SL {
 						}
 					});
 				}
-			
+
 				virtual void writeheader(std::shared_ptr<Packet> pack) override {
 					//the headers below are required... 
 					assert(pack->Header.find(HttpHeader::HTTP_CONTENTTYPE) != pack->Header.end());
@@ -84,7 +79,7 @@ namespace SL {
 					{
 						UNUSED(byteswritten);
 						if (!ec && !this->closed())
-						{				
+						{
 							this->writebody(pack);
 						}
 						else this->close_Socket(std::string("writeheader async_write ") + ec.message());
@@ -103,7 +98,7 @@ namespace SL {
 					return p;
 				}
 
-			
+
 
 			};
 

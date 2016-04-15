@@ -246,7 +246,7 @@ SL::Remote_Access_Library::Capturing::Mouse::Mouse(std::function<void(std::share
 	//androids should not be running this code.. mm kay
 #if  !__ANDROID__
 	assert(img_dely > pos_dely); // img delay must be longer than the pos delay.. mm kay?
-	_MouseImpl = new INTERNAL::MouseImpl();
+	_MouseImpl = std::make_unique<INTERNAL::MouseImpl>();
 	_MouseImpl->_img_Delay = img_dely;
 	_MouseImpl->_pos_Delay = pos_dely;
 	_MouseImpl->_ImgCallBack = img_func;
@@ -263,6 +263,5 @@ SL::Remote_Access_Library::Capturing::Mouse::~Mouse()
 	if (_MouseImpl) {
 		_MouseImpl->_Running = false;
 		_MouseImpl->_thread.join();
-		delete _MouseImpl;
 	}
 }

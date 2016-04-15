@@ -15,9 +15,9 @@ namespace SL {
 			template<typename T>class WebSocket : public TCPSocket<T> {
 
 				unsigned char _readheaderbuffer[8];
-				#define MASKSIZE 4
+#define MASKSIZE 4
 				unsigned char _writeheaderbuffer[sizeof(char)/*type*/ + sizeof(char)/*extra*/ + sizeof(unsigned long long)/*largest size*/ + MASKSIZE/*mask*/];
-				
+
 				const std::string ws_magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 			public:
 				explicit WebSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket<T>(netevents, socket) {}
@@ -44,7 +44,7 @@ namespace SL {
 					});
 				}
 			private:
-			
+
 				void sendHandshake() {
 					std::shared_ptr<asio::streambuf> write_buffer(new asio::streambuf);
 					auto self(this->shared_from_this());
@@ -67,7 +67,7 @@ namespace SL {
 					request << HttpHeader::HTTP_SECWEBSOCKETKEY << HttpHeader::HTTP_KEYVALUEDELIM << nonce_base64 << HttpHeader::HTTP_ENDLINE;
 					request << "Sec-WebSocket-Version: 13" << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 					std::shared_ptr<std::string> accept_sha1(new std::string(Crypto::SHA1(nonce_base64 + ws_magic_string)));
-					
+
 					asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const std::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
 							SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
@@ -112,7 +112,7 @@ namespace SL {
 							handshake << "HTTP/1.1 101 Web Socket Protocol Handshake" << HttpHeader::HTTP_ENDLINE;
 							handshake << "Upgrade: websocket" << HttpHeader::HTTP_ENDLINE;
 							handshake << "Connection: Upgrade" << HttpHeader::HTTP_ENDLINE;
-								
+
 							handshake << HttpHeader::HTTP_SECWEBSOCKETACCEPT << HttpHeader::HTTP_KEYVALUEDELIM << Crypto::Base64::encode(Crypto::SHA1(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETKEY] + ws_magic_string)) << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 							asio::async_write(this->_socket, *write_buffer, [this, self, write_buffer](const std::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
@@ -274,7 +274,7 @@ namespace SL {
 						std::random_device rd;
 						unsigned char mask[MASKSIZE];
 						for (int c = 0; c < MASKSIZE; c++) {
-							mask[c]=*p++ = static_cast<unsigned char>(dist(rd));
+							mask[c] = *p++ = static_cast<unsigned char>(dist(rd));
 						}
 						size_t c = 0;
 						auto pheader = reinterpret_cast<unsigned char*>(&this->_SocketImpl.WritePacketHeader);
@@ -299,7 +299,7 @@ namespace SL {
 					});
 
 				}
-	
+
 				void send_close(int status_code, std::string reason) {
 					auto writeheader(std::make_shared<std::vector<unsigned char>>());
 					writeheader->resize(2 + reason.size());

@@ -14,7 +14,7 @@ namespace SL {
 		}
 		namespace Capturing {
 			class Mouse {
-				INTERNAL::MouseImpl* _MouseImpl;
+				std::unique_ptr<INTERNAL::MouseImpl> _MouseImpl;
 				void _run();
 			public:
 				Mouse(std::function<void(std::shared_ptr<Utilities::Image>)> img_func, std::function<void(Utilities::Point)> pos_func, int img_dely = 1000, int pos_dely = 20);

@@ -121,6 +121,7 @@ namespace SL {
 				void Stop() {
 					{
 						std::lock_guard<std::mutex> lock(_ClientsLock);
+						std::for_each(begin(_Clients), end(_Clients), [](const std::shared_ptr<ISocket>& o) { o->close_Socket("ShuttingDown"); });
 						_Clients.clear();//destroy all clients
 					}
 

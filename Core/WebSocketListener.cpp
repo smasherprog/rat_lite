@@ -26,9 +26,10 @@ namespace SL {
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 						SL_RAT_LOG("websocket OnConnect", Utilities::Logging_Levels::INFO_log_level);
-						_IBaseNetworkDriver->OnConnect(socket);
 						socket->set_ReadTimeout(_config.Read_Timeout);
 						socket->set_WriteTimeout(_config.Write_Timeout);
+						_IBaseNetworkDriver->OnConnect(socket);
+				
 						/*	std::string testing = "sdfdf";
 							Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_TEXT), testing.size());
 							memcpy(p.Payload, testing.c_str(), testing.size());

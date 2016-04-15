@@ -3,7 +3,6 @@ package com.Android_Server;
 import java.io.*;
 import java.net.*;
 import java.util.*;   
-//import org.apache.http.conn.util.InetAddressUtils;
 
 public class Utils {
 

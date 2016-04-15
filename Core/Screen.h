@@ -12,7 +12,7 @@ namespace SL {
 		}
 		namespace Capturing {
 			class Screen {
-				INTERNAL::ScreenImpl* _ScreenImpl;
+				std::unique_ptr<INTERNAL::ScreenImpl> _ScreenImpl;
 				void _run();
 			public:
 				Screen(std::function<void(std::shared_ptr<Utilities::Image>)> func, int ms_dely=100);

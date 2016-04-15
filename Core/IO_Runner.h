@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 namespace asio { class io_service; } 
 namespace SL {
@@ -14,7 +15,7 @@ namespace SL {
 
 				asio::io_service& get_io_service();
 			private:
-				IO_RunnerImpl* _IO_RunnerImpl;
+				std::unique_ptr<IO_RunnerImpl> _IO_RunnerImpl;
 			};
 		}
 	}

@@ -114,6 +114,7 @@ namespace SL {
 					std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				}
 				_ServerNetworkDriver.Stop();
+	
 				Status = Server_Status::SERVER_STOPPED;
 				return 0;
 			}

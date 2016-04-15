@@ -24,7 +24,7 @@ namespace SL {
 				SocketStats _SocketStats;
 
 				IBaseNetworkDriver* _IBaseNetworkDriver;
-			
+
 			public:
 
 				SocketImpl(asio::io_service& io_service, IBaseNetworkDriver* netevents);

@@ -1,4 +1,3 @@
-
 package com.Android_Server;
 
 import android.app.Activity;
@@ -27,15 +26,20 @@ import android.widget.Button;
 import android.widget.TextView;
 import java.nio.ByteBuffer;
 
-
 public class Android_Server extends Activity {
+
+	public native void StartService();
+
+	public native void StopService();
+
+	public native void OnImage(ByteBuffer b, int w, int h);
 
 	private static final String TAG = Android_Server.class.getName();
 	private static final int REQUEST_CODE = 100;
 
 	private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR;
-	private static MediaProjection sMediaProjection;
-	  private static final String SCREENCAP_NAME = "screencap";
+	private MediaProjection sMediaProjection;
+	private static final String SCREENCAP_NAME = "screencap";
 	private MediaProjectionManager mProjectionManager;
 	private ImageReader mImageReader;
 	private Handler mHandler;
@@ -47,10 +51,6 @@ public class Android_Server extends Activity {
 	private int mRotation;
 	private OrientationChangeCallback mOrientationChangeCallback;
 
-	public native void StartService();
-	public native void StopService();
-	public native void OnImage(ByteBuffer b, int w, int h);
-
 	static {
 		System.loadLibrary("Android_RDPServerBindings");
 	}
@@ -60,13 +60,13 @@ public class Android_Server extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-	
+
 		// call for the projection manager
 		mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-	
-		TextView txt =(TextView) findViewById(R.id.ipareatext);
+
+		TextView txt = (TextView) findViewById(R.id.ipareatext);
 		txt.setText(Utils.getIPAddress(true));
-		
+
 		// start projection
 		Button startButton = (Button) findViewById(R.id.startButton);
 		startButton.setOnClickListener(new OnClickListener() {
@@ -86,7 +86,6 @@ public class Android_Server extends Activity {
 				stopProjection();
 			}
 		});
-
 		// start capture handling thread
 		new Thread() {
 			@Override
@@ -97,6 +96,7 @@ public class Android_Server extends Activity {
 			}
 		}.start();
 	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == REQUEST_CODE) {
@@ -143,10 +143,12 @@ public class Android_Server extends Activity {
 	private class MediaProjectionStopCallback extends MediaProjection.Callback {
 		@Override
 		public void onStop() {
-			Log.e("ScreenCapture", "stopping projection.");
 			mHandler.post(new Runnable() {
 				@Override
 				public void run() {
+
+					Log.e("ScreenCapture", "stopping projection.");
+
 					if (mVirtualDisplay != null)
 						mVirtualDisplay.release();
 					if (mImageReader != null)
@@ -155,8 +157,10 @@ public class Android_Server extends Activity {
 						mOrientationChangeCallback.disable();
 					sMediaProjection.unregisterCallback(MediaProjectionStopCallback.this);
 					StopService();
+
 				}
 			});
+
 		}
 	}
 
@@ -206,12 +210,11 @@ public class Android_Server extends Activity {
 		@Override
 		public void onImageAvailable(ImageReader reader) {
 			Image image = null;
-			Bitmap bitmap = null;
 			try {
 				image = reader.acquireLatestImage();
 				if (image != null) {
 					Image.Plane[] planes = image.getPlanes();
-					ByteBuffer buffer= planes[0].getBuffer();
+					ByteBuffer buffer = planes[0].getBuffer();
 					int pixelStride = planes[0].getPixelStride();
 					int rowStride = planes[0].getRowStride();
 					int rowPadding = rowStride - pixelStride * mWidth;
@@ -219,8 +222,8 @@ public class Android_Server extends Activity {
 					OnImage(buffer, mWidth + rowPadding / pixelStride, mHeight);
 
 					//bitmap = Bitmap.createBitmap(mWidth + rowPadding / pixelStride, mHeight, Bitmap.Config.ARGB_8888);
-                    //bitmap.copyPixelsFromBuffer(planes[0].getBuffer());
-			
+					//bitmap.copyPixelsFromBuffer(planes[0].getBuffer());
+
 					Log.e(TAG, "captured image: ");
 				}
 

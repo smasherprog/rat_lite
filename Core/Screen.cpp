@@ -157,7 +157,7 @@ void SL::Remote_Access_Library::Capturing::Screen::_run()
 SL::Remote_Access_Library::Capturing::Screen::Screen(std::function<void(std::shared_ptr<Utilities::Image>)> func, int ms_dely)
 {
 #if !__ANDROID__
-	_ScreenImpl = new INTERNAL::ScreenImpl();
+	_ScreenImpl = std::make_unique<INTERNAL::ScreenImpl>();
 	_ScreenImpl->_ms_Delay = ms_dely;
 	_ScreenImpl->_CallBack = func;
 	_ScreenImpl->_Running = true;
@@ -170,6 +170,5 @@ SL::Remote_Access_Library::Capturing::Screen::~Screen()
 	if (_ScreenImpl) {
 		_ScreenImpl->_Running = false;
 		_ScreenImpl->_thread.join();
-		delete _ScreenImpl;
 	}
 }

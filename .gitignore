@@ -21,6 +21,7 @@ bld/
 [Oo]bj/
 .workspace/
 .gradle/
+[Jj]ni[Ll]ibs/
 
 *.tlog
 .vs/
@@ -39,6 +40,7 @@ TestResult.xml
 [Dd]ebugPS/
 [Rr]eleasePS/
 dlldata.c
+
 *.so
 *.a
 *.db

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{61414967-7AD4-4A82-B1B4-AB95E68436E5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Desktop_Client", "Desktop_Client\Desktop_Client.vcxproj", "{61414967-7AD4-4A82-B1B4-AB95E68436E5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Desktop_UI", "Desktop_UI\Desktop_UI.vcxproj", "{D5E2652C-A744-40C8-91C5-AC669D23DAE0}"
 EndProject

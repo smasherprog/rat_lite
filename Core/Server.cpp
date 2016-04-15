@@ -122,7 +122,7 @@ namespace SL {
 				_Keepgoing = false;
 				if (block) {
 					while (Status != Server_Status::SERVER_STOPPED) {
-						std::this_thread::sleep_for(std::chrono::milliseconds(5));
+						std::this_thread::sleep_for(std::chrono::milliseconds(20));
 					}
 				}
 			}

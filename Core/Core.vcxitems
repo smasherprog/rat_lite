@@ -17,17 +17,29 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)ApplicationDirectory.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)divsufsort.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\divsufsort.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)fse.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huff0.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zdict.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_compress.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_decompress.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpListener.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)huff0.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)Image.cpp">
       <AssemblerOutput>
       </AssemblerOutput>
@@ -46,34 +58,31 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)WebSocketListener.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)zbuff.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)zdict.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)zstd_compress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)zstd_decompress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)bitstream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\bitstream.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\divsufsort.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_private.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_public.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse_static.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huff0.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huff0_static.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\mem.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zbuff.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zbuff_static.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zdict.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zdict_static.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_internal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_opt.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_static.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)divsufsort.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)error_private.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)error_public.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)fse.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)fse_static.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpListener.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpSocket.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)huff0.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)huff0_static.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IBaseNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IClientDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Image.h" />
@@ -82,7 +91,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ISocket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Logging.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)mem.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Screen.h" />
@@ -97,19 +105,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)TCPSocket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zbuff.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zbuff_static.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zdict.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zdict_static.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zstd.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zstd_internal.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zstd_opt.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)zstd_static.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
-    <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />
-	
+  <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />
 </Project>

@@ -9,6 +9,8 @@ namespace SL {
 			public:
 				ViewerWindow(const char*  dst_host, const char*  dst_port);
 				~ViewerWindow();
+
+				void ScaleView(bool b);
 			};
 		}
 	}

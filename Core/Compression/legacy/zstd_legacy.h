@@ -1,7 +1,7 @@
 /*
-    zstd - buffered version of compression library
-    experimental complementary API, for static linking only
-    Copyright (C) 2015-2016, Yann Collet.
+    zstd_legacy - decoder for legacy format
+    Header File
+    Copyright (C) 2015, Yann Collet.
 
     BSD 2-Clause License (http://www.opensource.org/licenses/bsd-license.php)
 
@@ -27,15 +27,11 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     You can contact the author at :
-    - zstd homepage : http://www.zstd.net
+    - zstd source repository : https://github.com/Cyan4973/zstd
+    - ztsd public forum : https://groups.google.com/forum/#!forum/lz4c
 */
-#ifndef ZSTD_BUFFERED_STATIC_H
-#define ZSTD_BUFFERED_STATIC_H
-
-/* The objects defined into this file should be considered experimental.
- * They are not labelled stable, as their prototype may change in the future.
- * You can use them for tests, provide feedback, or if you can endure risk of future changes.
- */
+#ifndef ZSTD_LEGACY_H
+#define ZSTD_LEGACY_H
 
 #if defined (__cplusplus)
 extern "C" {
@@ -44,18 +40,55 @@ extern "C" {
 /* *************************************
 *  Includes
 ***************************************/
-#include "zstd_static.h"     /* ZSTD_parameters */
-#include "zbuff.h"
+#include "mem.h"            /* MEM_STATIC */
+#include "error_private.h"  /* ERROR */
+#include "zstd_v01.h"
+#include "zstd_v02.h"
+#include "zstd_v03.h"
+#include "zstd_v04.h"
+#include "zstd_v05.h"
+
+MEM_STATIC unsigned ZSTD_isLegacy (U32 magicNumberLE)
+{
+	switch(magicNumberLE)
+	{
+		case ZSTDv01_magicNumberLE :
+		case ZSTDv02_magicNumber :
+		case ZSTDv03_magicNumber :
+		case ZSTDv04_magicNumber :
+		case ZSTDv05_MAGICNUMBER :
+            return 1;
+		default : return 0;
+	}
+}
 
 
-/* *************************************
-*  Advanced Streaming functions
-***************************************/
-ZSTDLIB_API size_t ZBUFF_compressInit_advanced(ZBUFF_CCtx* cctx, const void* dict, size_t dictSize, ZSTD_parameters params);
+MEM_STATIC size_t ZSTD_decompressLegacy(
+                     void* dst, size_t dstCapacity,
+               const void* src, size_t compressedSize,
+                     U32 magicNumberLE)
+{
+	switch(magicNumberLE)
+	{
+		case ZSTDv01_magicNumberLE :
+			return ZSTDv01_decompress(dst, dstCapacity, src, compressedSize);
+		case ZSTDv02_magicNumber :
+			return ZSTDv02_decompress(dst, dstCapacity, src, compressedSize);
+		case ZSTDv03_magicNumber :
+			return ZSTDv03_decompress(dst, dstCapacity, src, compressedSize);
+		case ZSTDv04_magicNumber :
+			return ZSTDv04_decompress(dst, dstCapacity, src, compressedSize);
+		case ZSTDv05_MAGICNUMBER :
+			return ZSTDv05_decompress(dst, dstCapacity, src, compressedSize);
+		default :
+		    return ERROR(prefix_unknown);
+	}
+}
+
 
 
 #if defined (__cplusplus)
 }
 #endif
 
-#endif  /* ZSTD_BUFFERED_STATIC_H */
+#endif   /* ZSTD_LEGACY_H */

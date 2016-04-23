@@ -6,7 +6,7 @@
 #include <asio.hpp>
 #include <asio/deadline_timer.hpp>
 #include <asio/ssl.hpp>
-#include "zstd.h"
+#include "Compression/zstd.h"
 #include "SocketImpl.h"
 #include <string>
 #include "Logging.h"
@@ -54,6 +54,7 @@ namespace SL {
 							writeheader(_SocketImpl.GetNextWritePacket());
 						}
 					});
+					
 				}
 
 				virtual void set_ReadTimeout(int s)override {

@@ -5,6 +5,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/fl_ask.H>
 #include <string>
 #include <memory>
@@ -18,6 +19,7 @@ namespace SL {
 				Fl_Window* cWindow = nullptr;
 				Fl_Input* bInput = nullptr;
 				Fl_Button* connectbtn = nullptr;
+				Fl_Check_Button* checkbx = nullptr;
 				std::string Host, Port;
 				std::unique_ptr<ViewerWindow> _MainWindow;
 				ConnectWindowImpl() {
@@ -61,12 +63,17 @@ namespace SL {
 					std::thread th([host, ptr]() { try_connect(host, ptr); });
 					th.detach();
 				}
-
+				static void setscale(Fl_Widget* o, void* userdata) {
+					auto ptr = ((ConnectWindowImpl*)userdata);
+					if (ptr->checkbx && ptr->_MainWindow) ptr->_MainWindow->ScaleView(ptr->checkbx->value() == 1);
+				}
 				void Init() {
 
-					cWindow = new Fl_Window(400, 420, 300, 50, "Connect to Host");
+					cWindow = new Fl_Window(400, 420, 300, 70, "Connect to Host");
 					bInput = new Fl_Input(50, 0, 150, 30, "Host: ");
-					//bInput->callback(try_connect_frm, this);
+					checkbx = new Fl_Check_Button(50, 40, 100, 14, " Scaling");
+					checkbx->align(FL_ALIGN_LEFT);
+					checkbx->callback(setscale, this);
 					connectbtn = new Fl_Button(200, 0, 80, 30, "Connect");
 					connectbtn->callback(try_connect_frm, this);
 					cWindow->end();

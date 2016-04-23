@@ -65,7 +65,7 @@ namespace SL {
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
-					_IClientDriver->OnReceive_MouseImage(socket, imgsize, img);
+					_IClientDriver->OnReceive_MouseImage(socket, img);
 				}
 				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					assert(p->Payload_Length == sizeof(Utilities::Point));
@@ -87,7 +87,7 @@ namespace SL {
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
 					}
-					_IClientDriver->OnReceive_ImageDif(socket, imgrect, img);
+					_IClientDriver->OnReceive_ImageDif(socket, imgrect->Origin, img);
 
 				}
 				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {

@@ -16,25 +16,127 @@
 #include "../Core/stdafx.h"
 #include <chrono>
 #include <mutex>
+#include "../Core/Logging.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
 			class MyCanvas : public Fl_Widget {
-			public:
-				std::shared_ptr<Utilities::Image> _Image;
+				std::shared_ptr<Utilities::Image> _OriginalImage;//this is the original image, kept to resize the scaled if needed
+				std::shared_ptr<Utilities::Image> _ScaledImage;
+				std::mutex _ImageLock;
+
 				Utilities::Point _MousePos;
 				std::shared_ptr<Utilities::Image> _MouseImageData;
-				std::shared_ptr<Fl_RGB_Image> _MouseImage;
-				MyCanvas(int X, int Y, int W, int H, const char*L = 0) : Fl_Widget(X, Y, W, H, L) {
+				std::unique_ptr<Fl_RGB_Image> _MouseImage;
+
+				bool _ScaleImage = false;
+#define SCROLLBARSIZE 16
+
+				int ParentSize() const {
+					auto pheight = this->parent()->h() - SCROLLBARSIZE;//16 is the scrollbars size
+					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
+					return pheight;
 				}
+				float GetScaleFactor()const {
+					if (_OriginalImage) {
+						auto pheight = this->parent()->h() - SCROLLBARSIZE;//16 is the scrollbars size
+						if (pheight < 0) pheight = 48;//cannot make image smaller than this..
+						return static_cast<float>(pheight) / static_cast<float>(_OriginalImage->Height());
+					}
+					return 1.0f;
+				}
+
+			public:
+
+				MyCanvas(int X, int Y, int W, int H, const char*L = 0) : Fl_Widget(X, Y, W, H, L) {}
 				virtual void draw() override {
-					if (_Image) {
-						fl_draw_image((uchar*)_Image->data(), x(), y(), _Image->Width(), _Image->Height(), 4);
+
+					if (_ScaledImage) {
+						//make sure the image is scaled properly
+						if (_ScaleImage) {
+							auto psize = ParentSize();
+							if (psize != _ScaledImage->Height()) {//rescale the image
+
+								auto tmpscaled = Utilities::Image::Resize(_OriginalImage, psize, static_cast<int>(GetScaleFactor()*_OriginalImage->Width()));
+								{
+									std::lock_guard<std::mutex> lock(_ImageLock);
+									_ScaledImage = tmpscaled;
+								}
+								this->size(_ScaledImage->Width(), _ScaledImage->Height());
+							}
+						}
+						else {//NO SCALING!!
+							if (_ScaledImage->Width() != _OriginalImage->Width() || _ScaledImage->Height() != _OriginalImage->Height()) {
+								auto tmpscaled = Utilities::Image::CreateImage(_OriginalImage->Height(), _OriginalImage->Width(), _OriginalImage->data(), 4);
+								{
+									std::lock_guard<std::mutex> lock(_ImageLock);
+									_ScaledImage = tmpscaled;
+								}
+								this->size(_ScaledImage->Width(), _ScaledImage->Height());
+							}
+						}
+
+						fl_draw_image((uchar*)_ScaledImage->data(), x(), y(), _ScaledImage->Width(), _ScaledImage->Height(), 4);
 					}
 					if (_MouseImage) {
-						_MouseImage->draw( _MousePos.X, _MousePos.Y);
+						_MouseImage->draw(_MousePos.X, _MousePos.Y);
 					}
+				}
+				void SetImage(const std::shared_ptr<Utilities::Image>& m) {
+					_OriginalImage = m;
+					auto tmpscaled = Utilities::Image::CreateImage(_OriginalImage->Height(), _OriginalImage->Width(), _OriginalImage->data(), 4);
+					{
+						std::lock_guard<std::mutex> lock(_ImageLock);
+						_ScaledImage = tmpscaled;
+					}
+					this->size(m->Width(), m->Height());
+				}
+				void SetImageDif(Utilities::Point pos, const std::shared_ptr<Utilities::Image>& img) {
+					if (_OriginalImage) {
+						auto dst_rect = Utilities::Rect(pos, (int)img->Height(), (int)img->Width());
+						auto src_rect = Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width());
+						Utilities::Image::Copy(*img, src_rect, *_OriginalImage, dst_rect);//keep original in sync
+						if (_ScaledImage) {
+							if (_ScaleImage && _OriginalImage->Height() != _ScaledImage->Height()) {//rescale the incoming image image
+								auto scalefactor = GetScaleFactor();
+								auto resampledimg = Utilities::Image::Resize(img, scalefactor);
+								pos.X = static_cast<int>(floor(static_cast<float>(pos.X)*scalefactor));
+								pos.Y = static_cast<int>(floor(static_cast<float>(pos.Y)*scalefactor));
+								auto dst_rect = Utilities::Rect(pos, (int)resampledimg->Height(), (int)resampledimg->Width());
+								auto src_rect = Utilities::Rect(Utilities::Point(0, 0), (int)resampledimg->Height(), (int)resampledimg->Width());
+								{
+									std::lock_guard<std::mutex> lock(_ImageLock);
+									Utilities::Image::Copy(*resampledimg, src_rect, *_ScaledImage, dst_rect);//copy scaled down 
+								}
+
+							}
+							else {
+								auto dst_rect = Utilities::Rect(pos, (int)img->Height(), (int)img->Width());
+								auto src_rect = Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width());
+								{
+									std::lock_guard<std::mutex> lock(_ImageLock);
+									Utilities::Image::Copy(*img, src_rect, *_ScaledImage, dst_rect);//no sling going on here 
+								}
+							}
+						}
+					}
+				}
+				void SetMouseImage(const std::shared_ptr<Utilities::Image>& m) {
+					_MouseImageData = m;
+					_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
+				}
+				void SetMousePosition(const Utilities::Point& m) {
+					_MousePos = m;
+					if (_ScaledImage) {//need to scale the mouse pos as well
+						auto scalefactor = GetScaleFactor();
+						_MousePos.X = static_cast<int>(static_cast<float>(_MousePos.X)*scalefactor);
+						_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y)*scalefactor);
+					}
+				}
+				void ScaleImage(bool b) {
+					_ScaleImage = b;
+
 				}
 			};
 			class ViewerWindowImpl : public Fl_Double_Window, public Network::IClientDriver
@@ -57,7 +159,7 @@ namespace SL {
 				bool _HasFocus = false;
 				bool _CursorHidden = false;
 				char _Title[255];
-				
+
 				static void window_cb(Fl_Widget *widget, void *)
 				{
 					auto wnd = (ViewerWindowImpl*)widget;
@@ -135,12 +237,14 @@ namespace SL {
 						if (!imp->_BeingClosed) imp->redraw();
 					}
 				}
-			
+				void ScaleView(bool b)
+				{
+					_MyCanvas->ScaleImage(b);
+				}
 				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
 				{
 					UNUSED(socket);
-					_MyCanvas->_Image = img;
-					_MyCanvas->resize(0, 0, img->Width(), img->Height());
+					_MyCanvas->SetImage(img);
 					Fl::awake(awakenredraw, this);
 
 				}
@@ -148,11 +252,9 @@ namespace SL {
 					auto imp = ((ViewerWindowImpl*)data);
 					imp->label(imp->_Title);
 				}
-				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Rect* rect, std::shared_ptr<Utilities::Image>& img) override {
-					if (!_MyCanvas->_Image) return;
-					Utilities::Image::Copy(*img, Utilities::Rect(Utilities::Point(0, 0), (int)img->Height(), (int)img->Width()), *_MyCanvas->_Image, *rect);
+				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {
+					_MyCanvas->SetImageDif(pos, img);
 					Fl::awake(awakenredraw, this);
-
 					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 						_NetworkStatsTimer = std::chrono::steady_clock::now();
 						auto stats = socket->get_SocketStats();
@@ -163,8 +265,8 @@ namespace SL {
 						FrameCounter = 0;
 						st += " Fps: " + std::to_string(FPS);
 						LastStats = stats;
-						if(st.size()>sizeof(_Title)-1) st = st.substr(0, sizeof(_Title)-1);
-						memcpy(_Title, st.c_str(), st.size()+1);
+						if (st.size() > sizeof(_Title) - 1) st = st.substr(0, sizeof(_Title) - 1);
+						memcpy(_Title, st.c_str(), st.size() + 1);
 						Fl::awake(awakensettitle, this);
 					}
 
@@ -173,17 +275,16 @@ namespace SL {
 					auto imp = ((ViewerWindowImpl*)data);
 					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 				}
-				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* point, std::shared_ptr<Utilities::Image>& img)override {
+				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
 					if (_HasFocus && !_CursorHidden) {
 						Fl::awake(awakenhidecursor, this);
 						_CursorHidden = true;
 					}
-					_MyCanvas->_MouseImageData = img;
-					_MyCanvas->_MouseImage = std::make_shared<Fl_RGB_Image>((uchar*)img->data(), point->X, point->Y, 4);
+					_MyCanvas->SetMouseImage(img);
 					Fl::awake(awakenredraw, this);
 				}
 				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
-					_MyCanvas->_MousePos = *pos;
+					_MyCanvas->SetMousePosition(*pos);
 				}
 			};
 
@@ -198,4 +299,9 @@ SL::Remote_Access_Library::UI::ViewerWindow::ViewerWindow(const char * dst_host,
 }
 
 SL::Remote_Access_Library::UI::ViewerWindow::~ViewerWindow() {
+}
+
+void SL::Remote_Access_Library::UI::ViewerWindow::ScaleView(bool b)
+{
+	_ViewerWindowImpl->ScaleView(b);
 }

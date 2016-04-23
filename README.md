@@ -11,6 +11,9 @@ Cross-platform:Win, Linux, (all)Web Browsers, Andriod, IOS(Probably not IOS, but
 Performance 
 </li>
 <li>
+Extreme Compression 
+</li>
+<li>
 Extendable 
 </li>
 <li>

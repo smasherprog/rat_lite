@@ -14,10 +14,10 @@ Performance
 Extreme Compression (libjpeg-turbo + zstd)
 </li>
 <li>
-Extendable 
+Encryption (openssl)
 </li>
 <li>
-Security
+Extendable 
 </li>
 <li>
 Latest standards: c++ 14 

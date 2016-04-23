@@ -11,7 +11,7 @@ Cross-platform:Win, Linux, (all)Web Browsers, Andriod, IOS(Probably not IOS, but
 Performance 
 </li>
 <li>
-Extreme Compression 
+Extreme Compression (libjpeg-turbo + zstd)
 </li>
 <li>
 Extendable 

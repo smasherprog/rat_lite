@@ -2,22 +2,23 @@
 //the file above needs to be named .ts in order for typescript to actually generate javascript code..
 var SL;
 (function (SL) {
-    var Remote_Access_Library;
     (function (Remote_Access_Library) {
-        var Utilities;
         (function (Utilities) {
             var Point = (function () {
                 function Point(X, Y) {
                     this.X = X;
                     this.Y = Y;
                 }
-                Point.sizeof = function () { return 8; }; //actual bytes used
+                Point.sizeof = function () {
+                    return 8;
+                };
+
                 Point.FromArray = function (data) {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Point(arr[0], arr[1]);
                 };
                 return Point;
-            }());
+            })();
             Utilities.Point = Point;
             var Rect = (function () {
                 function Rect(Origin, Height, Width) {
@@ -25,16 +26,19 @@ var SL;
                     this.Height = Height;
                     this.Width = Width;
                 }
-                Rect.sizeof = function () { return 8 + Point.sizeof(); }; //actual bytes used
+                Rect.sizeof = function () {
+                    return 8 + Point.sizeof();
+                };
+
                 Rect.FromArray = function (data) {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Rect(new Point(arr[0], arr[1]), arr[2], arr[3]);
                 };
                 return Rect;
-            }());
+            })();
             Utilities.Rect = Rect;
-        })(Utilities = Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
-        var Network;
+        })(Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
+        var Utilities = Remote_Access_Library.Utilities;
         (function (Network) {
             var PACKET_TYPES;
             (function (PACKET_TYPES) {
@@ -45,6 +49,7 @@ var SL;
                 PACKET_TYPES[PACKET_TYPES["MOUSEPOS"] = 4] = "MOUSEPOS";
                 PACKET_TYPES[PACKET_TYPES["MOUSEIMAGE"] = 5] = "MOUSEIMAGE";
                 PACKET_TYPES[PACKET_TYPES["KEYEVENT"] = 6] = "KEYEVENT";
+
                 //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
                 PACKET_TYPES[PACKET_TYPES["LAST_PACKET_TYPE"] = 7] = "LAST_PACKET_TYPE";
             })(PACKET_TYPES || (PACKET_TYPES = {}));
@@ -55,47 +60,87 @@ var SL;
                     this.Payload_Length = data.getInt32(4, true);
                     this.UncompressedLength = data.getInt32(8, true);
                 }
-                PacketHeader.prototype.sizeof = function () { return 12; }; //actual bytes used
+                PacketHeader.prototype.sizeof = function () {
+                    return 12;
+                };
                 return PacketHeader;
-            }());
+            })();
             Network.PacketHeader = PacketHeader;
             var SocketStats = (function () {
                 function SocketStats() {
                 }
                 return SocketStats;
-            }());
+            })();
             Network.SocketStats = SocketStats;
             var ClientDriver = (function () {
                 function ClientDriver(_Screen_Canvas_Id, _Mouse_Canvas_Id) {
                     var _this = this;
                     this._Screen_Canvas_Id = _Screen_Canvas_Id;
                     this._Mouse_Canvas_Id = _Mouse_Canvas_Id;
+                    this._ScaleImage = false;
+                    this.ScaleView = function (b) {
+                        _this._ScaleImage = b;
+                    };
+                    this.onresize = function (ev) {
+                        if (_this._ScaleImage && _this._OriginalImage != null) {
+                            var elem = document.getElementById(_this._Screen_Canvas_Id);
+                            var scale = _this.GetScalingFactor();
+                            elem.width = _this._OriginalImage.width * scale;
+                            elem.height = _this._OriginalImage.height * scale;
+                            elem.getContext("2d").drawImage(_this._OriginalImage, 0, 0, elem.width, elem.height);
+                        } else if (!_this._ScaleImage && _this._OriginalImage != null) {
+                            var elem = document.getElementById(_this._Screen_Canvas_Id);
+                            if (elem.height != _this._OriginalImage.height || elem.width != _this._OriginalImage.width) {
+                                elem.width = _this._OriginalImage.width;
+                                elem.height = _this._OriginalImage.height;
+                                elem.getContext("2d").drawImage(_this._OriginalImage, 0, 0);
+                            }
+                        }
+                    };
                     this.OnReceive_ImageDif = function (socket, rect, img) {
                         "use strict";
+
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                         var i = new Image();
                         i.src = "data:image/jpeg;base64," + img;
-                        var canvid = _this._Screen_Canvas_Id;
+                        var self = _this;
                         i.onload = function () {
-                            var elem = document.getElementById(canvid);
-                            elem.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
+                            var elem = document.getElementById(self._Screen_Canvas_Id);
+                            if (self._ScaleImage) {
+                                var scale = self.GetScalingFactor();
+                                elem.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
+                            } else {
+                                elem.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
+                            }
                             // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                         };
+
                         i.onerror = function (stuff) {
                             console.log("Img Onerror:", stuff);
                         };
                     };
                     this.OnReceive_Image = function (socket, rect, img) {
                         "use strict";
+
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                         var i = new Image();
                         i.src = "data:image/jpeg;base64," + img;
-                        var canvid = _this._Screen_Canvas_Id;
+
+                        var self = _this;
                         i.onload = function () {
-                            var elem = document.getElementById(canvid);
-                            elem.width = i.width;
-                            elem.height = i.height;
-                            elem.getContext("2d").drawImage(i, 0, 0);
+                            var elem = document.getElementById(self._Screen_Canvas_Id);
+
+                            if (self._ScaleImage) {
+                                var scale = self.GetScalingFactor();
+                                elem.width = i.width * scale;
+                                elem.height = i.height * scale;
+                                elem.getContext("2d").drawImage(i, 0, 0, elem.width, elem.height);
+                            } else {
+                                elem.width = i.width;
+                                elem.height = i.height;
+                                elem.getContext("2d").drawImage(i, 0, 0);
+                            }
+                            self._OriginalImage = i;
                             // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                         };
                         i.onerror = function (stuff) {
@@ -104,12 +149,14 @@ var SL;
                     };
                     this.OnReceive_MouseImage = function (socket, point, img) {
                         "use strict";
+
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                         var elem = document.getElementById(_this._Mouse_Canvas_Id);
                         elem.width = point.X;
                         elem.height = point.Y;
-                        try {
+                        try  {
                             _this._Cursor = elem.getContext("2d").createImageData(point.X, point.Y);
+
                             for (var i = 0; i < _this._Cursor.data.length; i += 4) {
                                 _this._Cursor.data[i + 0] = img[i + 0];
                                 _this._Cursor.data[i + 1] = img[i + 1];
@@ -117,20 +164,34 @@ var SL;
                                 _this._Cursor.data[i + 3] = img[i + 3];
                             }
                             elem.getContext("2d").putImageData(_this._Cursor, 0, 0);
-                        }
-                        catch (e) {
+                        } catch (e) {
                             console.log(e.message);
                         }
                     };
                     this.OnReceive_MousePos = function (socket, pos) {
                         var elem = document.getElementById(_this._Mouse_Canvas_Id);
-                        elem.style.top = pos.Y + "px";
-                        elem.style.left = pos.X + "px";
+                        if (_this._ScaleImage) {
+                            var scale = _this.GetScalingFactor();
+                            elem.style.top = (pos.Y * scale) + "px";
+                            elem.style.left = (pos.X * scale) + "px";
+                        } else {
+                            elem.style.top = pos.Y + "px";
+                            elem.style.left = pos.X + "px";
+                        }
                     };
+                    window.addEventListener("resize", this.onresize);
                 }
+                ClientDriver.prototype.GetScalingFactor = function () {
+                    if (this._OriginalImage != null) {
+                        return window.innerHeight / this._OriginalImage.height;
+                    } else {
+                        return 1.0;
+                    }
+                };
                 return ClientDriver;
-            }());
+            })();
             Network.ClientDriver = ClientDriver;
+
             var ClientNetworkDriver = (function () {
                 function ClientNetworkDriver(_IClientDriver, _dst_host, _dst_port) {
                     var _this = this;
@@ -141,8 +202,7 @@ var SL;
                         var connectstring = "";
                         if (window.location.protocol != "https:") {
                             connectstring += "ws://";
-                        }
-                        else {
+                        } else {
                             connectstring += "wss://";
                         }
                         connectstring += _this._dst_host + ":" + _this._dst_port + "/rdp";
@@ -159,32 +219,36 @@ var SL;
                     this.OnMessage = function (ev) {
                         var t0 = performance.now();
                         var packetheader = new PacketHeader(ev.data);
+
                         var srcPtr = Module._malloc(packetheader.Payload_Length);
                         _this._TotalMemoryUsed += packetheader.Payload_Length;
                         var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, packetheader.Payload_Length);
                         srcbuff.set(new Uint8Array(ev.data, packetheader.sizeof()));
+
                         var dsttr = Module._malloc(packetheader.UncompressedLength);
                         _this._TotalMemoryUsed += packetheader.UncompressedLength;
                         var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, packetheader.UncompressedLength);
+
                         var decompressedsize = _ZSTD_decompress(dstbuff.byteOffset, packetheader.UncompressedLength, srcbuff.byteOffset, packetheader.Payload_Length);
                         if (_ZSTD_isError(decompressedsize) > 0) {
                             console.log('zstd error' + _ZSTD_getErrorName(decompressedsize));
                         }
                         var t1 = performance.now();
+
                         //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
                         console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop");
                         t0 = performance.now();
                         switch (packetheader.Packet_Type) {
-                            case (PACKET_TYPES.SCREENIMAGE):
+                            case (2 /* SCREENIMAGE */):
                                 _this.Image(dstbuff);
                                 break;
-                            case (PACKET_TYPES.SCREENIMAGEDIF):
+                            case (3 /* SCREENIMAGEDIF */):
                                 _this.ImageDif(dstbuff);
                                 break;
-                            case (PACKET_TYPES.MOUSEIMAGE):
+                            case (5 /* MOUSEIMAGE */):
                                 _this.MouseImage(dstbuff);
                                 break;
-                            case (PACKET_TYPES.MOUSEPOS):
+                            case (4 /* MOUSEPOS */):
                                 _this.MousePos(dstbuff);
                                 break;
                             default:
@@ -197,6 +261,7 @@ var SL;
                         Module._free(srcPtr);
                         _this._TotalMemoryUsed -= packetheader.Payload_Length;
                         t1 = performance.now();
+
                         //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
                         console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
                     };
@@ -221,6 +286,7 @@ var SL;
                     }
                     return window.btoa(binary);
                 };
+
                 ClientNetworkDriver.prototype.OnOpen = function (ev) {
                     window.document.title = "Connected: " + window.location.hostname + ":6001/rdp";
                     console.log('Socket Opened');
@@ -259,8 +325,10 @@ var SL;
                     console.log('Socket Closed: ' + reason);
                 };
                 return ClientNetworkDriver;
-            }());
+            })();
             Network.ClientNetworkDriver = ClientNetworkDriver;
-        })(Network = Remote_Access_Library.Network || (Remote_Access_Library.Network = {}));
-    })(Remote_Access_Library = SL.Remote_Access_Library || (SL.Remote_Access_Library = {}));
+        })(Remote_Access_Library.Network || (Remote_Access_Library.Network = {}));
+        var Network = Remote_Access_Library.Network;
+    })(SL.Remote_Access_Library || (SL.Remote_Access_Library = {}));
+    var Remote_Access_Library = SL.Remote_Access_Library;
 })(SL || (SL = {}));

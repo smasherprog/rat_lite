@@ -5,6 +5,7 @@
 Anyone know of a better way to get mime types in a cross platform way?
 
 */
+
 const char MimeTypes[][2][128] =
 {
 	{ "***",    "application/octet-stream" },

@@ -16,7 +16,7 @@ namespace SL {
 #define S(x) #x
 #define S_(x) S(x)
 
-#define SL_RAT_LOG(str, level) Log(str, level, S_(__FILE__), S_(__LINE__), S_(__func__))
+#define SL_RAT_LOG(str, level) Log(str, level, S_(__FILE__), S_(__LINE__), __func__)
 		}
 	}
 }

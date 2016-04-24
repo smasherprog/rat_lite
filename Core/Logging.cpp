@@ -1,11 +1,6 @@
 #include "stdafx.h"
 #include "Logging.h"
 
-
-
-
-
-
 #if __ANDROID__
 #include <android/log.h>
 #define APPNAME "Remote_Access_Library"

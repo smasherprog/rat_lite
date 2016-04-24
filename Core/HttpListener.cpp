@@ -52,6 +52,12 @@ namespace SL {
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
 						UNUSED(socket);
 						auto requestedpath = packet->Header[HttpHeader::HTTP_PATH];
+						
+						auto params = requestedpath.find('?');
+						if (params != requestedpath.npos) {
+							requestedpath = requestedpath.substr(0, params);
+						}
+						
 						//sanitize path below. SImple for right now, 
 						std::transform(begin(requestedpath), end(requestedpath), begin(requestedpath), [](const char& elem) {
 							if ((elem >= 'a' && elem <= 'z') || (elem >= 'A' && elem <= 'Z') || (elem >= '0' && elem <= '9') || elem == ' ' || elem == '_' || elem == '.' || elem == '/' || elem == '\\') {
@@ -76,7 +82,7 @@ namespace SL {
 #else 
 
 					Packet GetContent(std::string path) {
-						SL_RAT_LOG(std::string("HTTP GetContent ") + path, Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(std::string("HTTP GetContent ") + path, Utilities::Logging_Levels::INFO_log_level);
 						if (path == "/") path = _config.WWWRoot + "/index.html";
 						else path = _config.WWWRoot + path;
 						try {

@@ -61,21 +61,57 @@ module SL {
             }
             export class ClientDriver {
                 _Cursor: ImageData;
-                constructor(private _Screen_Canvas_Id: string, private _Mouse_Canvas_Id: string) {
+                _ScaleImage = false;
+                _OriginalImage: HTMLImageElement;
 
+                constructor(private _Screen_Canvas_Id: string, private _Mouse_Canvas_Id: string) {
+                    window.addEventListener("resize", this.onresize);
                 }
 
+                public ScaleView = (b: boolean): void => {
+                    this._ScaleImage = b;
+                }
+                onresize = (ev: UIEvent): void => {
+
+                    if (this._ScaleImage && this._OriginalImage != null) {
+                        var elem = <HTMLCanvasElement>document.getElementById(this._Screen_Canvas_Id);
+                        var scale = this.GetScalingFactor();
+                        elem.width = this._OriginalImage.width * scale;
+                        elem.height = this._OriginalImage.height * scale;
+                        elem.getContext("2d").drawImage(this._OriginalImage, 0, 0, elem.width, elem.height);
+                    } else if (!this._ScaleImage && this._OriginalImage != null) {
+                        var elem = <HTMLCanvasElement>document.getElementById(this._Screen_Canvas_Id);
+                        if (elem.height != this._OriginalImage.height || elem.width != this._OriginalImage.width) {
+                            elem.width = this._OriginalImage.width;
+                            elem.height = this._OriginalImage.height;
+                            elem.getContext("2d").drawImage(this._OriginalImage, 0, 0);
+                        }
+                    }
+                }
+                GetScalingFactor(): number {
+                    if (this._OriginalImage != null) {
+                        return window.innerHeight / this._OriginalImage.height;
+                    } else {
+                        return 1.0;
+                    }
+                }
                 public OnReceive_ImageDif = (socket: WebSocket, rect: Utilities.Rect, img: string): void => {
                     "use strict";
                     //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                     var i = new Image();
                     i.src = "data:image/jpeg;base64," + img
-                    var canvid = this._Screen_Canvas_Id;
+                    var self = this;
                     i.onload = function () {
-                        var elem = <HTMLCanvasElement>document.getElementById(canvid);
-                        elem.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
+                        var elem = <HTMLCanvasElement>document.getElementById(self._Screen_Canvas_Id);
+                        if (self._ScaleImage) {
+                            var scale = self.GetScalingFactor();
+                            elem.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
+                        } else {
+                            elem.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
+                        }
                         // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                     };
+
                     i.onerror = function (stuff) {
                         console.log("Img Onerror:", stuff);
                     };
@@ -86,12 +122,22 @@ module SL {
 
                     var i = new Image();
                     i.src = "data:image/jpeg;base64," + img;
-                    var canvid = this._Screen_Canvas_Id;
+               
+                    var self = this;
                     i.onload = function () {
-                        var elem = <HTMLCanvasElement>document.getElementById(canvid);
-                        elem.width = i.width;
-                        elem.height = i.height;
-                        elem.getContext("2d").drawImage(i, 0, 0);
+                        var elem = <HTMLCanvasElement>document.getElementById(self._Screen_Canvas_Id);
+
+                        if (self._ScaleImage) {
+                            var scale = self.GetScalingFactor();
+                            elem.width = i.width * scale;
+                            elem.height = i.height * scale;
+                            elem.getContext("2d").drawImage(i, 0, 0, elem.width, elem.height);
+                        } else {
+                            elem.width = i.width;
+                            elem.height = i.height;
+                            elem.getContext("2d").drawImage(i, 0, 0);
+                        }
+                        self._OriginalImage = i;
                         // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                     };
                     i.onerror = function (stuff) {
@@ -121,16 +167,27 @@ module SL {
                 }
                 public OnReceive_MousePos = (socket: WebSocket, pos: Utilities.Point): void => {
                     var elem = <HTMLCanvasElement>document.getElementById(this._Mouse_Canvas_Id);
-                    elem.style.top = pos.Y + "px";
-                    elem.style.left = pos.X + "px";
+                    if (this._ScaleImage) {
+                        var scale = this.GetScalingFactor();
+                        elem.style.top = (pos.Y * scale) + "px";
+                        elem.style.left = (pos.X * scale) + "px";
+                    } else {
+                        elem.style.top = pos.Y + "px";
+                        elem.style.left = pos.X + "px";
+                    }
                 }
             }
+
+
             export class ClientNetworkDriver {
                 _Socket: WebSocket;
                 _SocketStats: SocketStats;
                 _TotalMemoryUsed: number;
+
                 constructor(private _IClientDriver: ClientDriver, private _dst_host: string, private _dst_port: string) { }
                 public Start = (): void => {
+
+
                     var connectstring = "";
                     if (window.location.protocol != "https:") {
                         connectstring += "ws://";
@@ -144,6 +201,7 @@ module SL {
                     this._Socket.onclose = this.OnClose;
                     this._Socket.onmessage = this.OnMessage;
                 }
+
                 public Stop = (): void => {
                     this._Socket.close(1001, "Web Browser called Stop()");
                     this._Socket = null;
@@ -209,6 +267,7 @@ module SL {
                 }
 
                 ImageDif = (data: Uint8Array): void => {
+
                     this._IClientDriver.OnReceive_ImageDif(this._Socket,
                         Utilities.Rect.FromArray(data),
                         this._arrayBufferToBase64(data, Utilities.Rect.sizeof()));

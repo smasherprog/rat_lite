@@ -9,6 +9,8 @@ struct SL::Remote_Access_Library::Utilities::Image_Impl {
 	unsigned int width;
 };
 
+
+
 std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::CreateImage(unsigned int h, unsigned int w) {
 	Image_Impl i;
 	i.height = h;
@@ -34,7 +36,6 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 			src += 3;
 		}
 	}
-
 	return img;
 }
 //const unsigned char* GetPixelClamped(const unsigned char* image, int x, int y)

@@ -11,6 +11,7 @@
 #include <string>
 #include "Logging.h"
 
+
 namespace SL {
 	namespace Remote_Access_Library {
 
@@ -42,8 +43,8 @@ namespace SL {
 				virtual void send(Packet& pack) override
 				{
 					auto self(this->shared_from_this());
-					auto compack(std::make_shared<Packet>(std::move(compress(pack))));
 					auto beforesize = pack.Payload_Length;
+					auto compack(std::make_shared<Packet>(std::move(compress(pack))));
 					_io_service.post([this, self, compack, beforesize]()
 					{
 						_SocketImpl.AddOutgoingPacket(compack, beforesize);
@@ -213,6 +214,7 @@ namespace SL {
 					Packet p(packet.Packet_Type, _SocketImpl.ReadPacketHeader.UncompressedLength, std::move(packet.Header));
 					p.Payload_Length = static_cast<unsigned int>(ZSTD_decompress(p.Payload, _SocketImpl.ReadPacketHeader.UncompressedLength, packet.Payload, packet.Payload_Length));
 					if (ZSTD_isError(p.Payload_Length) > 0) {
+						SL_RAT_LOG(ZSTD_getErrorName(p.Payload_Length), Utilities::Logging_Levels::ERROR_log_level);
 						return Packet(static_cast<unsigned int>(PACKET_TYPES::INVALID));//empty packet
 					}
 					_SocketImpl.UpdateReadStats();

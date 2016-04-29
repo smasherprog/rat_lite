@@ -11,10 +11,13 @@ Cross-platform:Win, Linux, (all)Web Browsers, Andriod, IOS(Probably not IOS, but
 Performance 
 </li>
 <li>
-Extendable 
+Extreme Compression (libjpeg-turbo + zstd)
 </li>
 <li>
-Security
+Encryption (openssl)
+</li>
+<li>
+Extendable 
 </li>
 <li>
 Latest standards: c++ 14 

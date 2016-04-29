@@ -1,1 +1,1 @@
-tsc Core.ts
+tsc wwwroot/Core.ts

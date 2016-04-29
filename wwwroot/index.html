@@ -9,14 +9,20 @@
 <body>
     <script>
         var SL_Client;
+		   function getURLParameter(name) {
+                return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [, ""])[1].replace(/\+/g, '%20')) || null;
+            }
         document.addEventListener("DOMContentLoaded", function (event) {
             if ("WebSocket" in window) {
+			
                 var clientdriver = new SL.Remote_Access_Library.Network.ClientDriver("myCanvas", "mousecanvas");
+				clientdriver.ScaleView(getURLParameter('ScaleImage') === 'true');
+				
                 SL_Client = new SL.Remote_Access_Library.Network.ClientNetworkDriver(clientdriver, window.location.hostname, "6001");
+				 
+				 
                 SL_Client.Start();
-
             }
-
             else {
                 // The browser doesn't support WebSocket
                 alert("WebSocket NOT supported by your Browser!");

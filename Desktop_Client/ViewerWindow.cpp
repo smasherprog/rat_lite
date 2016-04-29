@@ -202,6 +202,7 @@ namespace SL {
 						this->cursor(Fl_Cursor::FL_CURSOR_ARROW);
 						_CursorHidden = false;
 					}
+					_ClientNetworkDriver.SendMouse(Utilities::Point(x, y));
 				}
 				virtual ~ViewerWindowImpl() {
 					_ClientNetworkDriver.Stop();

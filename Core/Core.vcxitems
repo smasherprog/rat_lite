@@ -92,6 +92,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Logging.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MouseInput.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Screen.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Server.h" />

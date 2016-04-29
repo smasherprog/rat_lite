@@ -19,6 +19,55 @@ namespace SL {
 				std::shared_ptr<Network::WebSocket<socket>> _Socket;
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				std::string _dst_host, _dst_port;
+
+
+				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					auto imgsize = (Utilities::Point*)p->Payload;
+					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
+					_IClientDriver->OnReceive_MouseImage(socket, img);
+				}
+				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					assert(p->Payload_Length == sizeof(Utilities::Point));
+					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);
+				}
+				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					auto imgrect = (Utilities::Rect*)p->Payload;
+					auto compfree = [](void* handle) {tjDestroy(handle); };
+					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
+
+					int jpegSubsamp(0), outwidth(0), outheight(0);
+					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
+
+					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
+						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+					}
+					auto img = Utilities::Image::CreateImage(outheight, outwidth);
+
+					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+					}
+					_IClientDriver->OnReceive_ImageDif(socket, imgrect->Origin, img);
+
+				}
+				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+
+					auto compfree = [](void* handle) {tjDestroy(handle); };
+					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
+					int jpegSubsamp(0), outwidth(0), outheight(0);
+					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
+
+					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
+						SL_RAT_LOG(std::string("tjDecompressHeader2 ") + tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+					}
+					auto img = Utilities::Image::CreateImage(outheight, outwidth);
+
+					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+					}
+					_IClientDriver->OnReceive_Image(socket, img);
+
+				}
+
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _dst_host(dst_host), _dst_port(dst_port) {
 
@@ -62,55 +111,21 @@ namespace SL {
 					}
 
 				}
-				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					auto imgsize = (Utilities::Point*)p->Payload;
-					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
-					_IClientDriver->OnReceive_MouseImage(socket, img);
+				void SendMouse(Utilities::Point& pos) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
+					auto dst = (unsigned char*)p.Payload;
+					memcpy(dst, &pos, sizeof(pos));
+					_Socket->send(p);
 				}
-				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					assert(p->Payload_Length == sizeof(Utilities::Point));
-					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);
-				}
-				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					auto imgrect = (Utilities::Rect*)p->Payload;
-					auto compfree = [](void* handle) {tjDestroy(handle); };
-					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
+				void SendMouse(Input::MouseEvents ev, Input::MousePress press) {
+					unsigned char val(ev | press);
 
-					int jpegSubsamp(0), outwidth(0), outheight(0);
-					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
-
-					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
-					}
-					auto img = Utilities::Image::CreateImage(outheight, outwidth);
-
-					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
-					}
-					_IClientDriver->OnReceive_ImageDif(socket, imgrect->Origin, img);
-
-				}
-				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-				
-					auto compfree = [](void* handle) {tjDestroy(handle); };
-					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
-					int jpegSubsamp(0), outwidth(0), outheight(0);
-					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
-
-					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
-						SL_RAT_LOG(std::string("tjDecompressHeader2 ")  + tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
-					}
-					auto img = Utilities::Image::CreateImage(outheight, outwidth);
-
-					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
-					}
-					_IClientDriver->OnReceive_Image(socket, img);
-
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(val));
+					auto dst = (unsigned char*)p.Payload;
+					*dst = val;
+					_Socket->send(p);
 				}
 			};
-
-
 		}
 	}
 }
@@ -134,4 +149,14 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::Start()
 void SL::Remote_Access_Library::Network::ClientNetworkDriver::Stop()
 {
 	_ClientNetworkDriverImpl->Stop();
+}
+
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(Utilities::Point & pos)
+{
+	_ClientNetworkDriverImpl->SendMouse(pos);
+}
+
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(Input::MouseEvents ev, Input::MousePress press)
+{
+	_ClientNetworkDriverImpl->SendMouse(ev, press);
 }

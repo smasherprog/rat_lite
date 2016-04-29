@@ -158,7 +158,7 @@ namespace SL {
 									UNUSED(bytes_transferred);
 									if (!ec) {
 
-										for (int c = 0; c <readbytes; c++) {
+										for (int c = 0; c < readbytes; c++) {
 											this->_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer[c] << (8 * (readbytes - 1 - c));
 										}
 										readbody();
@@ -222,17 +222,14 @@ namespace SL {
 									memcpy(mask, packet.Payload, sizeof(mask));
 									auto startpack = packet.Payload;
 
-									for (size_t c = 0; c < packet.Payload_Length - sizeof(mask); c++) {
-										startpack[c] = startpack[c + sizeof(mask)] ^ mask[c % sizeof(mask)];
+									for (size_t c = 0; c < packet.Payload_Length - MASKSIZE; c++) {
+										startpack[c] = startpack[c + MASKSIZE] ^ mask[c % MASKSIZE];
 									}
-									memcpy(&this->_SocketImpl.ReadPacketHeader, packet.Payload + MASKSIZE/*sizeof(mask)*/, sizeof(this->_SocketImpl.ReadPacketHeader));
-									memmove(packet.Payload, packet.Payload + MASKSIZE + sizeof(this->_SocketImpl.ReadPacketHeader), this->_SocketImpl.ReadPacketHeader.Payload_Length);
 								}
-								else {//client receives no mask data from the server
-									memcpy(&this->_SocketImpl.ReadPacketHeader, packet.Payload, sizeof(this->_SocketImpl.ReadPacketHeader));
-									memmove(packet.Payload, packet.Payload + sizeof(this->_SocketImpl.ReadPacketHeader), this->_SocketImpl.ReadPacketHeader.Payload_Length);
 
-								}
+								memcpy(&this->_SocketImpl.ReadPacketHeader, packet.Payload, sizeof(this->_SocketImpl.ReadPacketHeader));
+								memmove(packet.Payload, packet.Payload + sizeof(this->_SocketImpl.ReadPacketHeader), this->_SocketImpl.ReadPacketHeader.Payload_Length);
+
 								packet.Packet_Type = this->_SocketImpl.ReadPacketHeader.Packet_Type;
 								packet.Payload_Length = this->_SocketImpl.ReadPacketHeader.Payload_Length;
 								auto spac(std::make_shared<Packet>(std::move(this->decompress(packet))));
@@ -273,17 +270,17 @@ namespace SL {
 						std::uniform_int_distribution<unsigned short> dist(0, 255);
 						std::random_device rd;
 						unsigned char mask[MASKSIZE];
-						for (int c = 0; c < MASKSIZE; c++) {
+						for (int c = 0; c < sizeof(mask); c++) {
 							mask[c] = *p++ = static_cast<unsigned char>(dist(rd));
 						}
 						size_t c = 0;
 						auto pheader = reinterpret_cast<unsigned char*>(&this->_SocketImpl.WritePacketHeader);
-						for (; c < sizeof(this->_SocketImpl.WritePacketHeader); c++) {
-							*pheader++ ^= mask[c % MASKSIZE];
+						for (size_t i = 0; i < sizeof(this->_SocketImpl.WritePacketHeader); i++, c++) {
+							*pheader++ ^= mask[c % sizeof(mask)];
 						}
 						pheader = reinterpret_cast<unsigned char*>(packet->Payload);
-						for (; c < packet->Payload_Length; c++) {
-							*pheader++ ^= mask[c % MASKSIZE];
+						for (size_t i = 0; i  < packet->Payload_Length; i++, c++) {
+							*pheader++ ^= mask[c % sizeof(mask)];
 						}
 					}
 

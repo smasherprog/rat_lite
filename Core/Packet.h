@@ -15,6 +15,7 @@ namespace SL {
 				MOUSEPOS,
 				MOUSEIMAGE,
 				KEYEVENT,
+				MOUSEEVENT,
 				//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
 				LAST_PACKET_TYPE
 			};
@@ -58,7 +59,11 @@ namespace SL {
 				char* Payload;
 				std::unordered_map<std::string, std::string> Header;
 			};
-
+			inline std::ostream& operator<<(std::ostream& os, const Packet& r)
+			{
+				os << " Packet_Type=" << r.Packet_Type << ", Payload_Length=" << r.Payload_Length;
+				return os;
+			}
 		}
 	}
 }

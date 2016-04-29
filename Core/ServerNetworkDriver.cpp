@@ -13,6 +13,7 @@
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include <mutex>
+#include "MouseInput.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -25,7 +26,7 @@ namespace SL {
 				std::unique_ptr<HttpListener> _HttptListener;
 
 				std::unique_ptr<IO_Runner> _IO_Runner;
-				
+
 				IServerDriver* _IServerDriver;
 
 				std::vector<std::shared_ptr<ISocket>> _Clients;
@@ -33,6 +34,22 @@ namespace SL {
 				Server_Config _Config;
 				std::vector<char> _CompressBuffer;
 
+
+				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					//assert(p->Payload_Length == sizeof(Utilities::Point));
+					Utilities::Point point;
+					memcpy(p->Payload, &point, sizeof(point));
+					_IServerDriver->OnMouse(point);
+				}
+				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					
+					//assert(p->Payload_Length == sizeof(Input::MouseEvents::MIDDLE));
+					unsigned char val(*(unsigned char*)p->Payload);
+					Input::MouseEvents ev = static_cast<Input::MouseEvents>(val & Input::MouseEvents::MIDDLE);
+					Input::MousePress evp = static_cast<Input::MousePress>(val & ~Input::MouseEvents::MIDDLE);
+
+					_IServerDriver->OnMouse(ev, evp);
+				}
 			public:
 				ServerNetworkDriverImpl(Server_Config& config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
 
@@ -53,7 +70,19 @@ namespace SL {
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override
 				{
-					_IServerDriver->OnReceive(socket, p);//pass up the chain
+
+					switch (p->Packet_Type) {
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS) :
+						MousePos(socket, p);
+						break;
+					case static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT) :
+						MouseEvent(socket, p);
+						break;
+					default:
+						_IServerDriver->OnReceive(socket, p);//pass up the chain
+						break;
+					}
+
 				}
 
 

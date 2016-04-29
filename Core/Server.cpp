@@ -7,6 +7,8 @@
 #include "IServerDriver.h"
 #include <thread>
 #include <mutex>
+#include "Logging.h"
+#include "Packet.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -20,7 +22,7 @@ namespace SL {
 			Utilities::Point LastMousePos;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
-			
+
 			bool _Keepgoing;
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
@@ -51,6 +53,7 @@ namespace SL {
 
 			virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnReceive(socket, packet);
+				else SL_RAT_LOG(std::string("OnReceive Unknown Packet ") + std::to_string(packet->Packet_Type), Utilities::Logging_Levels::INFO_log_level);
 			}
 
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
@@ -74,7 +77,7 @@ namespace SL {
 							_ServerNetworkDriver.SendScreenDif(nullptr, r, *img);
 						}
 					}
-				}	
+				}
 				LastScreen = img;//swap
 			}
 			void OnMouseImg(std::shared_ptr<Utilities::Image> img)
@@ -93,28 +96,31 @@ namespace SL {
 						}
 						_NewClients.clear();
 					}
-					if (memcmp(img->data(), LastScreen->data(), std::min(LastScreen->size(), img->size()))!=0) {
+					if (memcmp(img->data(), LastScreen->data(), std::min(LastScreen->size(), img->size())) != 0) {
 						_ServerNetworkDriver.SendMouse(nullptr, *img);
 					}
 				}
 				LastMouse = img;
 			}
-			void OnMousePos(Utilities::Point p)
-			{
-				_ServerNetworkDriver.SendMouse(nullptr, p);
+
+			virtual void OnMouse(Utilities::Point& pos) override {
+				SL_RAT_LOG(std::to_string(pos.X) + " Pos", Utilities::Logging_Levels::INFO_log_level);
 			}
-	
+			virtual void OnMouse(Input::MouseEvents ev, Input::MousePress press) override {
+				SL_RAT_LOG(std::to_string(ev) + " MouseEvents", Utilities::Logging_Levels::INFO_log_level);
+				SL_RAT_LOG(std::to_string(press) + " MousePress", Utilities::Logging_Levels::INFO_log_level);
+			}
+
 			int Run() {
 				Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();
 				auto sc = std::make_unique<Capturing::Screen>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnScreen, this, std::placeholders::_1));
-				auto ms = std::make_unique<Capturing::Mouse>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnMouseImg, this, std::placeholders::_1),
-					std::bind(&SL::Remote_Access_Library::ServerImpl::OnMousePos, this, std::placeholders::_1), 1000, 50);
+				auto ms = std::make_unique<Capturing::Mouse>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnMouseImg, this, std::placeholders::_1), [&](Utilities::Point p) { _ServerNetworkDriver.SendMouse(nullptr, p);  }, 1000, 50);
 				while (_Keepgoing) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(20));
 				}
 				_ServerNetworkDriver.Stop();
-	
+
 				Status = Server_Status::SERVER_STOPPED;
 				return 0;
 			}

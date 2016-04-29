@@ -36,14 +36,14 @@ namespace SL {
 
 
 				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					assert(p->Payload_Length == sizeof(Utilities::Point));
+					//assert(p->Payload_Length == sizeof(Utilities::Point));
 					Utilities::Point point;
 					memcpy(p->Payload, &point, sizeof(point));
 					_IServerDriver->OnMouse(point);
 				}
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					
-					assert(p->Payload_Length == sizeof(Input::MouseEvents::MIDDLE));
+					//assert(p->Payload_Length == sizeof(Input::MouseEvents::MIDDLE));
 					unsigned char val(*(unsigned char*)p->Payload);
 					Input::MouseEvents ev = static_cast<Input::MouseEvents>(val & Input::MouseEvents::MIDDLE);
 					Input::MousePress evp = static_cast<Input::MousePress>(val & ~Input::MouseEvents::MIDDLE);

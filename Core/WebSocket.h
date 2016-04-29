@@ -222,8 +222,8 @@ namespace SL {
 									memcpy(mask, packet.Payload, sizeof(mask));
 									auto startpack = packet.Payload;
 
-									for (size_t c = 0; c < packet.Payload_Length - sizeof(mask); c++) {
-										startpack[c] = startpack[c + sizeof(mask)] ^ mask[c % sizeof(mask)];
+									for (size_t c = 0; c < packet.Payload_Length - MASKSIZE; c++) {
+										startpack[c] = startpack[c + MASKSIZE] ^ mask[c % MASKSIZE];
 									}
 								}
 
@@ -270,18 +270,17 @@ namespace SL {
 						std::uniform_int_distribution<unsigned short> dist(0, 255);
 						std::random_device rd;
 						unsigned char mask[MASKSIZE];
-						for (int c = 0; c < MASKSIZE; c++) {
+						for (int c = 0; c < sizeof(mask); c++) {
 							mask[c] = *p++ = static_cast<unsigned char>(dist(rd));
 						}
 						size_t c = 0;
 						auto pheader = reinterpret_cast<unsigned char*>(&this->_SocketImpl.WritePacketHeader);
-						for (; c < sizeof(this->_SocketImpl.WritePacketHeader); c++) {
-
-							*pheader++ ^= mask[c % MASKSIZE];
+						for (size_t i = 0; i < sizeof(this->_SocketImpl.WritePacketHeader); i++, c++) {
+							*pheader++ ^= mask[c % sizeof(mask)];
 						}
 						pheader = reinterpret_cast<unsigned char*>(packet->Payload);
-						for (; c < packet->Payload_Length; c++) {
-							*pheader++ ^= mask[c % MASKSIZE];
+						for (size_t i = 0; i  < packet->Payload_Length; i++, c++) {
+							*pheader++ ^= mask[c % sizeof(mask)];
 						}
 					}
 

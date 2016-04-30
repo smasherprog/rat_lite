@@ -104,11 +104,11 @@ namespace SL {
 			}
 
 			virtual void OnMouse(Utilities::Point& pos) override {
-				SL_RAT_LOG(std::to_string(pos.X) + " Pos", Utilities::Logging_Levels::INFO_log_level);
+				UNUSED(pos);
 			}
 			virtual void OnMouse(Input::MouseEvents ev, Input::MousePress press) override {
-				SL_RAT_LOG(std::to_string(ev) + " MouseEvents", Utilities::Logging_Levels::INFO_log_level);
-				SL_RAT_LOG(std::to_string(press) + " MousePress", Utilities::Logging_Levels::INFO_log_level);
+				UNUSED(ev);
+				UNUSED(press);
 			}
 
 			int Run() {

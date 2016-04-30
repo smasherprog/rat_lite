@@ -118,11 +118,10 @@ namespace SL {
 					_Socket->send(p);
 				}
 				void SendMouse(Input::MouseEvents ev, Input::MousePress press) {
-					unsigned char val(ev | press);
-
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(val));
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(press)+ sizeof(ev));
 					auto dst = (unsigned char*)p.Payload;
-					*dst = val;
+					*dst++ = ev;
+					*dst++ = press;
 					_Socket->send(p);
 				}
 			};

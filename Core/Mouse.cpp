@@ -5,6 +5,11 @@
 #include <thread>
 #include "Logging.h"
 
+#if __linux__
+#include <X11/Xlib.h>
+#include <X11/extensions/Xfixes.h>
+#endif
+
 namespace SL
 {
 	namespace Remote_Access_Library
@@ -127,10 +132,10 @@ namespace SL
 
 #error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
 #elif __ANDROID__
-		
+
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
-			//this should never be ran
+				//this should never be ran
 				assert(true);
 				return Utilities::Image::CreateImage(0, 0);
 			}
@@ -141,8 +146,7 @@ namespace SL
 				return Utilities::Point(0, 0);
 			}
 #elif __linux__
-#include <X11/Xlib.h>
-#include <X11/extensions/Xfixes.h>
+
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
 				auto display = XOpenDisplay(NULL);
@@ -181,33 +185,55 @@ namespace SL
 				return Utilities::Point(x, y);
 			}
 #endif
-			bool SetCursorPosition(Utilities::Point p)
-			{
 
+
+			void SetMouseEvent(const Input::MouseEvent& m) {
 #if defined _WIN32
-				return SetCursorPos(p.X, p.Y) == TRUE;
+
+				INPUT input;
+				input.type = INPUT_MOUSE;
+				input.mi.mouseData = m.ScrollDelta / 120;
+				input.mi.dx = static_cast<LONG>(static_cast<float>(m.Pos.X)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CXSCREEN))));//x being coord in pixels
+				input.mi.dy = static_cast<LONG>(static_cast<float>(m.Pos.Y)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CYSCREEN))));//y being coord in pixels
+				input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
+				switch (m.EventData) {
+				case Input::MouseEvents::LEFT:
+					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_LEFTUP : MOUSEEVENTF_LEFTDOWN;
+					break;
+				case Input::MouseEvents::MIDDLE:
+					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_MIDDLEUP : MOUSEEVENTF_MIDDLEDOWN;
+					break;
+				case Input::MouseEvents::RIGHT:
+					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_RIGHTDOWN;
+					break;
+				case Input::MouseEvents::SCROLL:
+					input.mi.dwFlags |= MOUSEEVENTF_WHEEL;
+					break;
+				default:
+					break;
+				}
+
+				SendInput(1, &input, sizeof(input));
+
 #elif defined __APPLE__
 				CGPoint new_pos;
 				CGEventErr err;
-				new_pos.x = p.X;
-				new_pos.y = p.Y;
-				return !CGWarpMouseCursorPosition(new_pos);
-#elif __ANDROID__
-				return true;
+				new_pos.x = m.Pos.X;
+				new_pos.y = m.Pos.Y;
+				!CGWarpMouseCursorPosition(new_pos);
 #elif __linux__
-#include <X11/Xlib.h>
+
 				auto display = XOpenDisplay(NULL);
 				auto root = DefaultRootWindow(display);
-
-				XWarpPointer(display, None, root, 0, 0, 0, 0, p.X, p.Y);
-
+				XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
 				XCloseDisplay(display);
-				return true;
-#else
-				return false; // Fail
+
 #endif
 
 			}
+
+		
 		}
 		namespace INTERNAL
 		{

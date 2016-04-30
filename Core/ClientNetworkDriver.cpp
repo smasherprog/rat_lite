@@ -111,17 +111,9 @@ namespace SL {
 					}
 
 				}
-				void SendMouse(Utilities::Point& pos) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
-					auto dst = (unsigned char*)p.Payload;
-					memcpy(dst, &pos, sizeof(pos));
-					_Socket->send(p);
-				}
-				void SendMouse(Input::MouseEvents ev, Input::MousePress press) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(press)+ sizeof(ev));
-					auto dst = (unsigned char*)p.Payload;
-					*dst++ = ev;
-					*dst++ = press;
+				void SendMouse(const Input::MouseEvent& m) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(m));
+					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
 				}
 			};
@@ -150,12 +142,7 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::Stop()
 	_ClientNetworkDriverImpl->Stop();
 }
 
-void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(Utilities::Point & pos)
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const Input::MouseEvent& m)
 {
-	_ClientNetworkDriverImpl->SendMouse(pos);
-}
-
-void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(Input::MouseEvents ev, Input::MousePress press)
-{
-	_ClientNetworkDriverImpl->SendMouse(ev, press);
+	_ClientNetworkDriverImpl->SendMouse(m);
 }

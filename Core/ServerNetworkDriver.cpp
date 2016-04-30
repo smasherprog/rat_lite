@@ -13,7 +13,6 @@
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include <mutex>
-#include "MouseInput.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -35,21 +34,9 @@ namespace SL {
 				std::vector<char> _CompressBuffer;
 
 
-				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					assert(p->Payload_Length == sizeof(Utilities::Point));
-					Utilities::Point point;
-					memcpy( &point, p->Payload,sizeof(point));
-					_IServerDriver->OnMouse(point);
-				}
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					
-					assert(p->Payload_Length == sizeof(Input::MouseEvents::MIDDLE) + sizeof(Input::MousePress::UP));
-					auto val((unsigned char*)p->Payload);
-
-					Input::MouseEvents ev = static_cast<Input::MouseEvents>(*val++);
-					Input::MousePress evp = static_cast<Input::MousePress>(*val++);
-
-					_IServerDriver->OnMouse(ev, evp);
+					assert(p->Payload_Length == sizeof(Input::MouseEvent));
+					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
 			public:
 				ServerNetworkDriverImpl(Server_Config& config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
@@ -73,9 +60,6 @@ namespace SL {
 				{
 
 					switch (p->Packet_Type) {
-					case static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS) :
-						MousePos(socket, p);
-						break;
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT) :
 						MouseEvent(socket, p);
 						break;

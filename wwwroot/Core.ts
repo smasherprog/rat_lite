@@ -21,6 +21,26 @@ module SL {
                 }
             }
         }
+        export module Input {
+            enum MouseEvents {
+                LEFT,
+                RIGHT,
+                MIDDLE,
+                SCROLL,
+                NO_EVENTDATA
+            };
+            enum MousePress {
+                UP,
+                DOWN,
+                NO_PRESS_DATA
+            };
+            export class MouseEvent {
+                EventData: MouseEvents;
+                Pos: Utilities.Point;
+                ScrollDelta: number;
+                PressData: MousePress;
+            };
+        }
         export module Network {
             enum PACKET_TYPES {
                 INVALID,
@@ -30,6 +50,7 @@ module SL {
                 MOUSEPOS,
                 MOUSEIMAGE,
                 KEYEVENT,
+                MOUSEEVENT,
                 //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
                 LAST_PACKET_TYPE
             }
@@ -66,10 +87,18 @@ module SL {
 
                 constructor(private _Screen_Canvas_Id: string, private _Mouse_Canvas_Id: string) {
                     window.addEventListener("resize", this.onresize);
+                    window.addEventListener("click", this.onclick);
+                    window.addEventListener("mousemove", this.onmove);
                 }
 
                 public ScaleView = (b: boolean): void => {
                     this._ScaleImage = b;
+                }
+                onclick = (ev: MouseEvent): void => {
+
+                }
+                onmove = (ev: MouseEvent): void => {
+
                 }
                 onresize = (ev: UIEvent): void => {
 
@@ -122,7 +151,7 @@ module SL {
 
                     var i = new Image();
                     i.src = "data:image/jpeg;base64," + img;
-               
+
                     var self = this;
                     i.onload = function () {
                         var elem = <HTMLCanvasElement>document.getElementById(self._Screen_Canvas_Id);
@@ -205,6 +234,9 @@ module SL {
                 public Stop = (): void => {
                     this._Socket.close(1001, "Web Browser called Stop()");
                     this._Socket = null;
+                }
+                public SendMouse = (m: Input.MouseEvent): void => {
+
                 }
                 OnMessage = (ev: MessageEvent): void => {
                     var t0 = performance.now();

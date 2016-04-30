@@ -103,14 +103,9 @@ namespace SL {
 				LastMouse = img;
 			}
 
-			virtual void OnMouse(Utilities::Point& pos) override {
-				UNUSED(pos);
+			virtual void OnMouse(Input::MouseEvent* m) override {
+				Capturing::SetMouseEvent(*m);
 			}
-			virtual void OnMouse(Input::MouseEvents ev, Input::MousePress press) override {
-				UNUSED(ev);
-				UNUSED(press);
-			}
-
 			int Run() {
 				Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();

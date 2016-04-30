@@ -38,14 +38,7 @@ namespace SL {
 					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
 					return pheight;
 				}
-				float GetScaleFactor()const {
-					if (_OriginalImage) {
-						auto pheight = this->parent()->h() - SCROLLBARSIZE;//16 is the scrollbars size
-						if (pheight < 0) pheight = 48;//cannot make image smaller than this..
-						return static_cast<float>(pheight) / static_cast<float>(_OriginalImage->Height());
-					}
-					return 1.0f;
-				}
+
 
 			public:
 
@@ -122,6 +115,14 @@ namespace SL {
 						}
 					}
 				}
+				float GetScaleFactor() const {
+					if (_OriginalImage) {
+						auto pheight = this->parent()->h() - SCROLLBARSIZE;//16 is the scrollbars size
+						if (pheight < 0) pheight = 48;//cannot make image smaller than this..
+						return static_cast<float>(pheight) / static_cast<float>(_OriginalImage->Height());
+					}
+					return 1.0f;
+				}
 				void SetMouseImage(const std::shared_ptr<Utilities::Image>& m) {
 					_MouseImageData = m;
 					_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
@@ -183,10 +184,16 @@ namespace SL {
 					switch (e) {
 
 					case FL_PUSH:
+						handle_mousebutton(Fl::event_button(), true);
+						handle_mousemove(Fl::event_x(), Fl::event_y());
+						break;
 					case FL_RELEASE:
+						handle_mousebutton(Fl::event_button(), false);
+						handle_mousemove(Fl::event_x(), Fl::event_y());
+						break;
 					case FL_DRAG:
 					case FL_MOVE:
-						handle_mouse(e, Fl::event_button(), Fl::event_x(), Fl::event_y());
+						handle_mousemove(Fl::event_x(), Fl::event_y());
 						break;
 					case FL_FOCUS:
 						_HasFocus = true;
@@ -197,12 +204,28 @@ namespace SL {
 					};
 					return Fl_Window::handle(e);
 				}
-				void handle_mouse(int event, int button, int x, int y) {
+				void handle_mousebutton(int button, bool pushed) {
+					switch (button) {
+						case FL_LEFT_MOUSE:
+							_ClientNetworkDriver.SendMouse(Input::MouseEvents::LEFT, pushed ? Input::MousePress::DOWN : Input::MousePress::UP);
+							break;
+						case FL_MIDDLE_MOUSE:
+							_ClientNetworkDriver.SendMouse(Input::MouseEvents::MIDDLE, pushed ? Input::MousePress::DOWN : Input::MousePress::UP);
+							break;
+						case FL_RIGHT_MOUSE:
+							_ClientNetworkDriver.SendMouse(Input::MouseEvents::RIGHT, pushed ? Input::MousePress::DOWN : Input::MousePress::UP);
+							break;
+					};
+				}
+				void handle_mousemove(int x, int y) {
 					if (!_HasFocus && _CursorHidden) {
 						this->cursor(Fl_Cursor::FL_CURSOR_ARROW);
 						_CursorHidden = false;
 					}
-					_ClientNetworkDriver.SendMouse(Utilities::Point(x, y));
+					auto scale = _MyCanvas->GetScaleFactor();
+					_ClientNetworkDriver.SendMouse(Utilities::Point(
+						static_cast<int>(static_cast<float>(x) / scale),
+						static_cast<int>(static_cast<float>(y) / scale)));
 				}
 				virtual ~ViewerWindowImpl() {
 					_ClientNetworkDriver.Stop();

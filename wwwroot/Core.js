@@ -39,6 +39,32 @@ var SL;
             Utilities.Rect = Rect;
         })(Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
         var Utilities = Remote_Access_Library.Utilities;
+        (function (Input) {
+            var MouseEvents;
+            (function (MouseEvents) {
+                MouseEvents[MouseEvents["LEFT"] = 0] = "LEFT";
+                MouseEvents[MouseEvents["RIGHT"] = 1] = "RIGHT";
+                MouseEvents[MouseEvents["MIDDLE"] = 2] = "MIDDLE";
+                MouseEvents[MouseEvents["SCROLL"] = 3] = "SCROLL";
+                MouseEvents[MouseEvents["NO_EVENTDATA"] = 4] = "NO_EVENTDATA";
+            })(MouseEvents || (MouseEvents = {}));
+            ;
+            var MousePress;
+            (function (MousePress) {
+                MousePress[MousePress["UP"] = 0] = "UP";
+                MousePress[MousePress["DOWN"] = 1] = "DOWN";
+                MousePress[MousePress["NO_PRESS_DATA"] = 2] = "NO_PRESS_DATA";
+            })(MousePress || (MousePress = {}));
+            ;
+            var MouseEvent = (function () {
+                function MouseEvent() {
+                }
+                return MouseEvent;
+            })();
+            Input.MouseEvent = MouseEvent;
+            ;
+        })(Remote_Access_Library.Input || (Remote_Access_Library.Input = {}));
+        var Input = Remote_Access_Library.Input;
         (function (Network) {
             var PACKET_TYPES;
             (function (PACKET_TYPES) {
@@ -49,9 +75,10 @@ var SL;
                 PACKET_TYPES[PACKET_TYPES["MOUSEPOS"] = 4] = "MOUSEPOS";
                 PACKET_TYPES[PACKET_TYPES["MOUSEIMAGE"] = 5] = "MOUSEIMAGE";
                 PACKET_TYPES[PACKET_TYPES["KEYEVENT"] = 6] = "KEYEVENT";
+                PACKET_TYPES[PACKET_TYPES["MOUSEEVENT"] = 7] = "MOUSEEVENT";
 
                 //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
-                PACKET_TYPES[PACKET_TYPES["LAST_PACKET_TYPE"] = 7] = "LAST_PACKET_TYPE";
+                PACKET_TYPES[PACKET_TYPES["LAST_PACKET_TYPE"] = 8] = "LAST_PACKET_TYPE";
             })(PACKET_TYPES || (PACKET_TYPES = {}));
             var PacketHeader = (function () {
                 function PacketHeader(d) {
@@ -73,27 +100,61 @@ var SL;
             })();
             Network.SocketStats = SocketStats;
             var ClientDriver = (function () {
-                function ClientDriver(_Screen_Canvas_Id, _Mouse_Canvas_Id) {
+                function ClientDriver(_dst_host, _dst_port) {
                     var _this = this;
-                    this._Screen_Canvas_Id = _Screen_Canvas_Id;
-                    this._Mouse_Canvas_Id = _Mouse_Canvas_Id;
+                    this._dst_host = _dst_host;
+                    this._dst_port = _dst_port;
                     this._ScaleImage = false;
+                    this._DivRootId = 'SLRATROOTID123';
+                    this.Start = function () {
+                        var testroot = document.getElementById(_this._DivRootId);
+                        if (testroot !== null) {
+                            document.removeChild(testroot);
+                        }
+                        _this._HTMLDivRoot = document.createElement('div');
+                        _this._HTMLDivRoot.id = _this._DivRootId;
+                        _this._HTMLDivRoot.style.position = 'relative';
+                        _this._HTMLCanvasScreenImage = document.createElement('canvas');
+                        _this._HTMLCanvasScreenImage.style.position = 'absolute';
+                        _this._HTMLCanvasScreenImage.style.left = _this._HTMLCanvasScreenImage.style.top = _this._HTMLCanvasScreenImage.style.zIndex = '0';
+
+                        _this._HTMLCanvasMouseImage = document.createElement('canvas');
+
+                        _this._HTMLCanvasMouseImage.style.left = _this._HTMLCanvasMouseImage.style.top = '0';
+                        _this._HTMLCanvasMouseImage.style.zIndex = '1';
+
+                        _this._HTMLDivRoot.appendChild(_this._HTMLCanvasScreenImage);
+                        _this._HTMLDivRoot.appendChild(_this._HTMLCanvasMouseImage);
+                        document.body.appendChild(_this._HTMLDivRoot); //add to the dom
+                        _this._ClientNetworkDriver = new ClientNetworkDriver(_this, _this._dst_host, _this._dst_port);
+                        _this._ClientNetworkDriver.Start();
+                    };
+                    this.Stop = function () {
+                        _this._ClientNetworkDriver.Stop();
+                        _this._ClientNetworkDriver = null;
+                        var testroot = document.getElementById(_this._DivRootId);
+                        if (testroot !== null) {
+                            document.removeChild(testroot);
+                        }
+                    };
                     this.ScaleView = function (b) {
                         _this._ScaleImage = b;
                     };
+                    this.onclick = function (ev) {
+                    };
+                    this.onmove = function (ev) {
+                    };
                     this.onresize = function (ev) {
                         if (_this._ScaleImage && _this._OriginalImage != null) {
-                            var elem = document.getElementById(_this._Screen_Canvas_Id);
                             var scale = _this.GetScalingFactor();
-                            elem.width = _this._OriginalImage.width * scale;
-                            elem.height = _this._OriginalImage.height * scale;
-                            elem.getContext("2d").drawImage(_this._OriginalImage, 0, 0, elem.width, elem.height);
+                            _this._HTMLCanvasScreenImage.width = _this._OriginalImage.width * scale;
+                            _this._HTMLCanvasScreenImage.height = _this._OriginalImage.height * scale;
+                            _this._HTMLCanvasScreenImage.getContext("2d").drawImage(_this._OriginalImage, 0, 0, _this._HTMLCanvasScreenImage.width, _this._HTMLCanvasScreenImage.height);
                         } else if (!_this._ScaleImage && _this._OriginalImage != null) {
-                            var elem = document.getElementById(_this._Screen_Canvas_Id);
-                            if (elem.height != _this._OriginalImage.height || elem.width != _this._OriginalImage.width) {
-                                elem.width = _this._OriginalImage.width;
-                                elem.height = _this._OriginalImage.height;
-                                elem.getContext("2d").drawImage(_this._OriginalImage, 0, 0);
+                            if (_this._HTMLCanvasScreenImage.height != _this._OriginalImage.height || _this._HTMLCanvasScreenImage.width != _this._OriginalImage.width) {
+                                _this._HTMLCanvasScreenImage.width = _this._OriginalImage.width;
+                                _this._HTMLCanvasScreenImage.height = _this._OriginalImage.height;
+                                _this._HTMLCanvasScreenImage.getContext("2d").drawImage(_this._OriginalImage, 0, 0);
                             }
                         }
                     };
@@ -105,12 +166,11 @@ var SL;
                         i.src = "data:image/jpeg;base64," + img;
                         var self = _this;
                         i.onload = function () {
-                            var elem = document.getElementById(self._Screen_Canvas_Id);
                             if (self._ScaleImage) {
                                 var scale = self.GetScalingFactor();
-                                elem.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
+                                self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
                             } else {
-                                elem.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
+                                self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
                             }
                             // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                         };
@@ -128,17 +188,15 @@ var SL;
 
                         var self = _this;
                         i.onload = function () {
-                            var elem = document.getElementById(self._Screen_Canvas_Id);
-
                             if (self._ScaleImage) {
                                 var scale = self.GetScalingFactor();
-                                elem.width = i.width * scale;
-                                elem.height = i.height * scale;
-                                elem.getContext("2d").drawImage(i, 0, 0, elem.width, elem.height);
+                                self._HTMLCanvasScreenImage.width = i.width * scale;
+                                self._HTMLCanvasScreenImage.height = i.height * scale;
+                                self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0, self._HTMLCanvasScreenImage.width, self._HTMLCanvasScreenImage.height);
                             } else {
-                                elem.width = i.width;
-                                elem.height = i.height;
-                                elem.getContext("2d").drawImage(i, 0, 0);
+                                self._HTMLCanvasScreenImage.width = i.width;
+                                self._HTMLCanvasScreenImage.height = i.height;
+                                self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0);
                             }
                             self._OriginalImage = i;
                             // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
@@ -151,11 +209,10 @@ var SL;
                         "use strict";
 
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
-                        var elem = document.getElementById(_this._Mouse_Canvas_Id);
-                        elem.width = point.X;
-                        elem.height = point.Y;
+                        _this._HTMLCanvasMouseImage.width = point.X;
+                        _this._HTMLCanvasMouseImage.height = point.Y;
                         try  {
-                            _this._Cursor = elem.getContext("2d").createImageData(point.X, point.Y);
+                            _this._Cursor = _this._HTMLCanvasMouseImage.getContext("2d").createImageData(point.X, point.Y);
 
                             for (var i = 0; i < _this._Cursor.data.length; i += 4) {
                                 _this._Cursor.data[i + 0] = img[i + 0];
@@ -163,23 +220,24 @@ var SL;
                                 _this._Cursor.data[i + 2] = img[i + 2];
                                 _this._Cursor.data[i + 3] = img[i + 3];
                             }
-                            elem.getContext("2d").putImageData(_this._Cursor, 0, 0);
+                            _this._HTMLCanvasMouseImage.getContext("2d").putImageData(_this._Cursor, 0, 0);
                         } catch (e) {
                             console.log(e.message);
                         }
                     };
                     this.OnReceive_MousePos = function (socket, pos) {
-                        var elem = document.getElementById(_this._Mouse_Canvas_Id);
                         if (_this._ScaleImage) {
                             var scale = _this.GetScalingFactor();
-                            elem.style.top = (pos.Y * scale) + "px";
-                            elem.style.left = (pos.X * scale) + "px";
+                            _this._HTMLCanvasMouseImage.style.top = (pos.Y * scale) + "px";
+                            _this._HTMLCanvasMouseImage.style.left = (pos.X * scale) + "px";
                         } else {
-                            elem.style.top = pos.Y + "px";
-                            elem.style.left = pos.X + "px";
+                            _this._HTMLCanvasMouseImage.style.top = pos.Y + "px";
+                            _this._HTMLCanvasMouseImage.style.left = pos.X + "px";
                         }
                     };
                     window.addEventListener("resize", this.onresize);
+                    window.addEventListener("click", this.onclick);
+                    window.addEventListener("mousemove", this.onmove);
                 }
                 ClientDriver.prototype.GetScalingFactor = function () {
                     if (this._OriginalImage != null) {
@@ -215,6 +273,8 @@ var SL;
                     this.Stop = function () {
                         _this._Socket.close(1001, "Web Browser called Stop()");
                         _this._Socket = null;
+                    };
+                    this.SendMouse = function (m) {
                     };
                     this.OnMessage = function (ev) {
                         var t0 = performance.now();
@@ -326,7 +386,6 @@ var SL;
                 };
                 return ClientNetworkDriver;
             })();
-            Network.ClientNetworkDriver = ClientNetworkDriver;
         })(Remote_Access_Library.Network || (Remote_Access_Library.Network = {}));
         var Network = Remote_Access_Library.Network;
     })(SL.Remote_Access_Library || (SL.Remote_Access_Library = {}));

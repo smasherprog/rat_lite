@@ -185,14 +185,10 @@ namespace SL {
 					switch (e) {
 
 					case FL_PUSH:
-						handle_mouse(Fl::event_button(), Input::MousePress::DOWN, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::MousePress::DOWN, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_RELEASE:
-						handle_mouse(Fl::event_button(), Input::MousePress::UP, Fl::event_x(), Fl::event_y());
-						break;
-					case FL_DRAG:
-					case FL_MOVE:
-						handle_mouse(Fl::event_button(), Input::MousePress::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::MousePress::UP, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_FOCUS:
 						_HasFocus = true;
@@ -200,32 +196,46 @@ namespace SL {
 					case FL_UNFOCUS:
 						_HasFocus = false;
 						break;
+					case FL_DRAG:
+					case FL_MOUSEWHEEL:
+					case FL_MOVE:
+						handle_mouse(e, Fl::event_button(), Input::MousePress::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
+						break;
+					default:
+						break;
 					};
 					return Fl_Window::handle(e);
 				}
-				void handle_mouse(int button, Input::MousePress press, int x, int y) {
+				void handle_mouse(int e, int button, Input::MousePress press, int x, int y) {
 
 					auto scale = _MyCanvas->GetScaleFactor();
 
 					Input::MouseEvent ev;
 					ev.Pos = Utilities::Point(static_cast<int>(static_cast<float>(x) / scale), static_cast<int>(static_cast<float>(y) / scale));
-					ev.ScrollDelta = 0;
-					ev.PressData = press;
+					if (e == FL_MOUSEWHEEL) {
+						ev.ScrollDelta = Fl::event_dy();
 
-					if (press == Input::MousePress::NO_PRESS_DATA) button = 0;
+					} else {
+						ev.ScrollDelta = 0;
+					}
+					
+					ev.PressData = press;
+					
+				
 					switch (button) {
-					case FL_LEFT_MOUSE:
-						ev.EventData = Input::MouseEvents::LEFT;
-						break;
-					case FL_MIDDLE_MOUSE:
-						ev.EventData = Input::MouseEvents::MIDDLE;
-						break;
-					case FL_RIGHT_MOUSE:
-						ev.EventData = Input::MouseEvents::RIGHT;
-						break;
-					default:
-						ev.EventData = Input::MouseEvents::NO_EVENTDATA;
-					};
+						case FL_LEFT_MOUSE:
+							ev.EventData = Input::MouseEvents::LEFT;
+							break;
+						case FL_MIDDLE_MOUSE:
+							ev.EventData = Input::MouseEvents::MIDDLE;
+							break;
+						case FL_RIGHT_MOUSE:
+							ev.EventData = Input::MouseEvents::RIGHT;
+							break;
+						default:
+							ev.EventData = Input::MouseEvents::NO_EVENTDATA;
+							break;
+						};
 
 					_ClientNetworkDriver.SendMouse(ev);
 				}

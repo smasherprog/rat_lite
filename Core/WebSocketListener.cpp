@@ -23,7 +23,6 @@ namespace SL {
 					virtual ~WebSocketListinerImpl() {
 						Stop();
 					}
-
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 						SL_RAT_LOG("websocket OnConnect", Utilities::Logging_Levels::INFO_log_level);
 						socket->set_ReadTimeout(_config.Read_Timeout);

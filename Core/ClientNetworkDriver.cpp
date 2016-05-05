@@ -19,13 +19,12 @@ namespace SL {
 				std::shared_ptr<Network::WebSocket<socket>> _Socket;
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				std::string _dst_host, _dst_port;
-
-
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
 					_IClientDriver->OnReceive_MouseImage(socket, img);
 				}
+
 				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					assert(p->Payload_Length == sizeof(Utilities::Point));
 					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);

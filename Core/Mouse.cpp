@@ -188,6 +188,7 @@ namespace SL
 
 
 			void SetMouseEvent(const Input::MouseEvent& m) {
+				//SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
 #if defined _WIN32
 
 				INPUT input;
@@ -214,7 +215,7 @@ namespace SL
 					break;
 				}
 
-				SendInput(1, &input, sizeof(input));
+				//SendInput(1, &input, sizeof(input));
 
 #elif defined __APPLE__
 				CGPoint new_pos;

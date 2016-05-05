@@ -58,20 +58,15 @@ namespace SL {
 
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
 			{
-				if (!LastScreen) {//first screen send all!
-					_ServerNetworkDriver.SendScreenFull(nullptr, *img);
+				if (!_NewClients.empty()) {
+					//make sure to send the full screens to any new connects
 					std::lock_guard<std::mutex> lock(_NewClientLock);
+					for (auto& a : _NewClients) {
+						_ServerNetworkDriver.SendScreenFull(a.get(), *img);
+					}
 					_NewClients.clear();
 				}
-				else {//compare and send all difs along
-					{
-						//make sure to send the full screens to any new connects
-						std::lock_guard<std::mutex> lock(_NewClientLock);
-						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.SendScreenFull(a.get(), *img);
-						}
-						_NewClients.clear();
-					}
+				if (LastScreen) {
 					if (img->data() != LastScreen->data()) {
 						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *img)) {
 							_ServerNetworkDriver.SendScreenDif(nullptr, r, *img);

@@ -14,6 +14,7 @@ namespace SL {
 					{
 						if (in[i] == '%')
 						{
+
 							if (i + 3 <= in.size())
 							{
 								int value = 0;
@@ -25,6 +26,7 @@ namespace SL {
 								}
 								else
 								{
+
 									return std::string("/");
 								}
 							}

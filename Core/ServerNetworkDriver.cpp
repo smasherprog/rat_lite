@@ -35,7 +35,7 @@ namespace SL {
 
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					assert(p->Payload_Length == sizeof(Input::MouseEvent));
+					assert(p->Payload_Length == sizeof(Input::MouseEvent::EventData) + sizeof(Input::MouseEvent::Pos) + sizeof(Input::MouseEvent::ScrollDelta) + sizeof(Input::MouseEvent::PressData));
 					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
 			public:
@@ -58,7 +58,6 @@ namespace SL {
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override
 				{
-
 					switch (p->Packet_Type) {
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT) :
 						MouseEvent(socket, p);

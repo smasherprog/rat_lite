@@ -17,6 +17,11 @@ var SL;
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Point(arr[0], arr[1]);
                 };
+                Point.prototype.Fill = function (d, offset) {
+                    var dt = new DataView(d, offset);
+                    dt.setInt32(0, this.X, true);
+                    dt.setInt32(4, this.Y, true);
+                };
                 return Point;
             })();
             Utilities.Point = Point;
@@ -34,31 +39,58 @@ var SL;
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Rect(new Point(arr[0], arr[1]), arr[2], arr[3]);
                 };
+                Rect.prototype.Fill = function (d, offset) {
+                    this.Origin.Fill(d, offset);
+                    var dt = new DataView(d, offset + Point.sizeof());
+                    dt.setInt32(0, this.Height, true);
+                    dt.setInt32(4, this.Width, true);
+                };
                 return Rect;
             })();
             Utilities.Rect = Rect;
         })(Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
         var Utilities = Remote_Access_Library.Utilities;
         (function (Input) {
-            var MouseEvents;
             (function (MouseEvents) {
                 MouseEvents[MouseEvents["LEFT"] = 0] = "LEFT";
                 MouseEvents[MouseEvents["RIGHT"] = 1] = "RIGHT";
                 MouseEvents[MouseEvents["MIDDLE"] = 2] = "MIDDLE";
                 MouseEvents[MouseEvents["SCROLL"] = 3] = "SCROLL";
                 MouseEvents[MouseEvents["NO_EVENTDATA"] = 4] = "NO_EVENTDATA";
-            })(MouseEvents || (MouseEvents = {}));
+            })(Input.MouseEvents || (Input.MouseEvents = {}));
+            var MouseEvents = Input.MouseEvents;
             ;
-            var MousePress;
             (function (MousePress) {
                 MousePress[MousePress["UP"] = 0] = "UP";
                 MousePress[MousePress["DOWN"] = 1] = "DOWN";
                 MousePress[MousePress["NO_PRESS_DATA"] = 2] = "NO_PRESS_DATA";
-            })(MousePress || (MousePress = {}));
+            })(Input.MousePress || (Input.MousePress = {}));
+            var MousePress = Input.MousePress;
             ;
             var MouseEvent = (function () {
-                function MouseEvent() {
+                function MouseEvent(EventData, Pos, ScrollDelta, PressData) {
+                    if (typeof EventData === "undefined") { EventData = 4 /* NO_EVENTDATA */; }
+                    if (typeof Pos === "undefined") { Pos = new Utilities.Point(0, 0); }
+                    if (typeof ScrollDelta === "undefined") { ScrollDelta = 0; }
+                    if (typeof PressData === "undefined") { PressData = 2 /* NO_PRESS_DATA */; }
+                    this.EventData = EventData;
+                    this.Pos = Pos;
+                    this.ScrollDelta = ScrollDelta;
+                    this.PressData = PressData;
                 }
+                MouseEvent.sizeof = function () {
+                    return 1 + Utilities.Point.sizeof() + 4 + 1;
+                };
+                MouseEvent.prototype.Fill = function (d, offset) {
+                    var dt = new DataView(d, offset);
+                    dt.setUint8(0, this.EventData);
+                    offset += 1;
+                    this.Pos.Fill(d, offset);
+                    offset += Utilities.Point.sizeof();
+                    dt.setInt32(offset, this.ScrollDelta, true);
+                    offset += 4;
+                    dt.setUint8(offset, this.PressData);
+                };
                 return MouseEvent;
             })();
             Input.MouseEvent = MouseEvent;
@@ -66,7 +98,6 @@ var SL;
         })(Remote_Access_Library.Input || (Remote_Access_Library.Input = {}));
         var Input = Remote_Access_Library.Input;
         (function (Network) {
-            var PACKET_TYPES;
             (function (PACKET_TYPES) {
                 PACKET_TYPES[PACKET_TYPES["INVALID"] = 0] = "INVALID";
                 PACKET_TYPES[PACKET_TYPES["HTTP_MSG"] = 1] = "HTTP_MSG";
@@ -79,16 +110,26 @@ var SL;
 
                 //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
                 PACKET_TYPES[PACKET_TYPES["LAST_PACKET_TYPE"] = 8] = "LAST_PACKET_TYPE";
-            })(PACKET_TYPES || (PACKET_TYPES = {}));
+            })(Network.PACKET_TYPES || (Network.PACKET_TYPES = {}));
+            var PACKET_TYPES = Network.PACKET_TYPES;
             var PacketHeader = (function () {
-                function PacketHeader(d) {
-                    var data = new DataView(d);
-                    this.Packet_Type = data.getInt32(0, true);
-                    this.Payload_Length = data.getInt32(4, true);
-                    this.UncompressedLength = data.getInt32(8, true);
+                function PacketHeader(Packet_Type, Payload_Length, UncompressedLength) {
+                    if (typeof Packet_Type === "undefined") { Packet_Type = 0 /* INVALID */; }
+                    if (typeof Payload_Length === "undefined") { Payload_Length = 0; }
+                    if (typeof UncompressedLength === "undefined") { UncompressedLength = 0; }
+                    this.Packet_Type = Packet_Type;
+                    this.Payload_Length = Payload_Length;
+                    this.UncompressedLength = UncompressedLength;
+                    this.Payload = new ArrayBuffer(this.Payload_Length);
                 }
                 PacketHeader.prototype.sizeof = function () {
                     return 12;
+                };
+
+                PacketHeader.prototype.Fill = function (arr) {
+                    arr[0] = this.Packet_Type;
+                    arr[1] = this.Payload_Length;
+                    arr[2] = this.UncompressedLength;
                 };
                 return PacketHeader;
             })();
@@ -140,9 +181,40 @@ var SL;
                     this.ScaleView = function (b) {
                         _this._ScaleImage = b;
                     };
-                    this.onclick = function (ev) {
+                    this.onmousedown = function (ev) {
+                        _this.handlemouse(ev.button, 1 /* DOWN */, ev.clientX, ev.clientY);
+                    };
+                    this.onmouseup = function (ev) {
+                        _this.handlemouse(ev.button, 0 /* UP */, ev.clientX, ev.clientY);
                     };
                     this.onmove = function (ev) {
+                        _this.handlemouse(-1, 2 /* NO_PRESS_DATA */, ev.clientX, ev.clientY);
+                    };
+                    this.handlemouse = function (button, press, x, y) {
+                        var ev = new Input.MouseEvent();
+                        var scale = _this.GetScalingFactor();
+                        ev.Pos.X = x / scale;
+                        ev.Pos.Y = y / scale;
+                        ev.ScrollDelta = 0;
+
+                        ev.PressData = press;
+
+                        switch (button) {
+                            case 0:
+                                ev.EventData = 0 /* LEFT */;
+                                break;
+                            case 1:
+                                ev.EventData = 2 /* MIDDLE */;
+                                break;
+                            case 2:
+                                ev.EventData = 1 /* RIGHT */;
+                                break;
+                            default:
+                                ev.EventData = 4 /* NO_EVENTDATA */;
+                                break;
+                        }
+                        ;
+                        _this._ClientNetworkDriver.SendMouse(ev);
                     };
                     this.onresize = function (ev) {
                         if (_this._ScaleImage && _this._OriginalImage != null) {
@@ -159,6 +231,8 @@ var SL;
                         }
                     };
                     this.OnReceive_ImageDif = function (socket, rect, img) {
+                        if (_this._OriginalImage === null)
+                            return;
                         "use strict";
 
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
@@ -236,11 +310,12 @@ var SL;
                         }
                     };
                     window.addEventListener("resize", this.onresize);
-                    window.addEventListener("click", this.onclick);
+                    window.addEventListener("mousedown", this.onmousedown);
+                    window.addEventListener("mouseup", this.onmouseup);
                     window.addEventListener("mousemove", this.onmove);
                 }
                 ClientDriver.prototype.GetScalingFactor = function () {
-                    if (this._OriginalImage != null) {
+                    if (this._ScaleImage && this._OriginalImage != null) {
                         return window.innerHeight / this._OriginalImage.height;
                     } else {
                         return 1.0;
@@ -275,10 +350,50 @@ var SL;
                         _this._Socket = null;
                     };
                     this.SendMouse = function (m) {
+                        var pac = new PacketHeader(7 /* MOUSEEVENT */, Input.MouseEvent.sizeof(), Input.MouseEvent.sizeof());
+                        m.Fill(pac.Payload, 0);
+                        _this.Compress_and_Send(pac);
+                    };
+                    this.Compress_and_Send = function (p) {
+                        var t0 = performance.now();
+
+                        var srcPtr = Module._malloc(p.Payload_Length);
+                        _this._TotalMemoryUsed += p.Payload_Length;
+                        var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length);
+                        srcbuff.set(new Uint8Array(p.Payload, p.sizeof())); //copy the data to the newly allocated memory
+
+                        var dstsize = _ZSTD_compressBound(p.UncompressedLength + p.sizeof());
+                        var dsttr = Module._malloc(dstsize);
+                        _this._TotalMemoryUsed += dstsize;
+                        var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, dstsize);
+
+                        p.Payload_Length = _ZSTD_compress(dstbuff.byteOffset + p.sizeof(), dstsize - p.sizeof(), srcbuff.byteOffset, p.Payload_Length, 3);
+                        if (_ZSTD_isError(p.Payload_Length) > 0) {
+                            console.log('zstd error' + _ZSTD_getErrorName(p.Payload_Length));
+                        }
+
+                        p.Fill(new Uint32Array(Module.HEAPU8.buffer, dsttr, p.sizeof()));
+
+                        var t1 = performance.now();
+
+                        //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
+                        // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
+                        Module._free(srcPtr);
+                        _this._TotalMemoryUsed -= p.Payload_Length;
+                        var dstsendbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, p.UncompressedLength + p.sizeof());
+
+                        // this._Socket.send(dstsendbuff);
+                        Module._free(dsttr);
+                        _this._TotalMemoryUsed -= dstsize;
                     };
                     this.OnMessage = function (ev) {
                         var t0 = performance.now();
-                        var packetheader = new PacketHeader(ev.data);
+
+                        var packetheader = new PacketHeader();
+                        var data = new DataView(ev.data);
+                        packetheader.Packet_Type = data.getInt32(0, true);
+                        packetheader.Payload_Length = data.getInt32(4, true);
+                        packetheader.UncompressedLength = data.getInt32(8, true);
 
                         var srcPtr = Module._malloc(packetheader.Payload_Length);
                         _this._TotalMemoryUsed += packetheader.Payload_Length;
@@ -296,7 +411,7 @@ var SL;
                         var t1 = performance.now();
 
                         //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                        console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop");
+                        //   console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                         t0 = performance.now();
                         switch (packetheader.Packet_Type) {
                             case (2 /* SCREENIMAGE */):
@@ -321,9 +436,8 @@ var SL;
                         Module._free(srcPtr);
                         _this._TotalMemoryUsed -= packetheader.Payload_Length;
                         t1 = performance.now();
-
                         //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                        console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
+                        //  console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
                     };
                     this.Image = function (data) {
                         _this._IClientDriver.OnReceive_Image(_this._Socket, Utilities.Rect.FromArray(data), _this._arrayBufferToBase64(data, Utilities.Rect.sizeof()));
@@ -332,7 +446,7 @@ var SL;
                         _this._IClientDriver.OnReceive_ImageDif(_this._Socket, Utilities.Rect.FromArray(data), _this._arrayBufferToBase64(data, Utilities.Rect.sizeof()));
                     };
                     this.MouseImage = function (data) {
-                        _this._IClientDriver.OnReceive_MouseImage(_this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.slice(Utilities.Point.sizeof()).buffer));
+                        _this._IClientDriver.OnReceive_MouseImage(_this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.buffer, Utilities.Point.sizeof()));
                     };
                     this.MousePos = function (data) {
                         _this._IClientDriver.OnReceive_MousePos(_this._Socket, Utilities.Point.FromArray(data));
@@ -386,6 +500,7 @@ var SL;
                 };
                 return ClientNetworkDriver;
             })();
+            Network.ClientNetworkDriver = ClientNetworkDriver;
         })(Remote_Access_Library.Network || (Remote_Access_Library.Network = {}));
         var Network = Remote_Access_Library.Network;
     })(SL.Remote_Access_Library || (SL.Remote_Access_Library = {}));

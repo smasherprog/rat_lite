@@ -11,6 +11,11 @@ module SL {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Point(arr[0], arr[1]);
                 }
+                Fill(d: ArrayBuffer, offset: number): void {
+                    var dt = new DataView(d, offset);
+                    dt.setInt32(0, this.X, true);
+                    dt.setInt32(4, this.Y, true);
+                }
             }
             export class Rect {
                 static sizeof(): number { return 8 + Point.sizeof(); }//actual bytes used
@@ -19,30 +24,50 @@ module SL {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Rect(new Point(arr[0], arr[1]), arr[2], arr[3]);
                 }
+                Fill(d: ArrayBuffer, offset: number): void {
+                    this.Origin.Fill(d, offset);
+                    var dt = new DataView(d, offset + Point.sizeof());
+                    dt.setInt32(0, this.Height, true);
+                    dt.setInt32(4, this.Width, true);
+                }
             }
         }
         export module Input {
-            enum MouseEvents {
+            export enum MouseEvents {
                 LEFT,
                 RIGHT,
                 MIDDLE,
                 SCROLL,
                 NO_EVENTDATA
             };
-            enum MousePress {
+            export enum MousePress {
                 UP,
                 DOWN,
                 NO_PRESS_DATA
             };
             export class MouseEvent {
-                EventData: MouseEvents;
-                Pos: Utilities.Point;
-                ScrollDelta: number;
-                PressData: MousePress;
+
+                constructor(public EventData = MouseEvents.NO_EVENTDATA,
+                    public Pos = new Utilities.Point(0, 0),
+                    public ScrollDelta = 0,
+                    public PressData = MousePress.NO_PRESS_DATA) { }
+
+                static sizeof() { return 1 + Utilities.Point.sizeof() + 4 + 1; }//actual bytes used
+                Fill(d: ArrayBuffer, offset: number): void {
+
+                    var dt = new DataView(d, offset);
+                    dt.setUint8(0, this.EventData);
+                    offset += 1;
+                    this.Pos.Fill(d, offset);
+                    offset += Utilities.Point.sizeof();
+                    dt.setInt32(offset, this.ScrollDelta, true);
+                    offset += 4;
+                    dt.setUint8(offset, this.PressData);
+                }
             };
         }
         export module Network {
-            enum PACKET_TYPES {
+            export enum PACKET_TYPES {
                 INVALID,
                 HTTP_MSG,
                 SCREENIMAGE,
@@ -55,15 +80,15 @@ module SL {
                 LAST_PACKET_TYPE
             }
             export class PacketHeader {
-                Packet_Type: PACKET_TYPES;
-                Payload_Length: number;
-                UncompressedLength: number;
+                Payload: ArrayBuffer;
                 sizeof() { return 12; }//actual bytes used
-                constructor(d: ArrayBuffer) {
-                    var data = new DataView(d);
-                    this.Packet_Type = data.getInt32(0, true);
-                    this.Payload_Length = data.getInt32(4, true);
-                    this.UncompressedLength = data.getInt32(8, true);
+                constructor(public Packet_Type = PACKET_TYPES.INVALID, public Payload_Length = 0, public UncompressedLength = 0) {
+                    this.Payload = new ArrayBuffer(this.Payload_Length);
+                }
+                Fill(arr: Uint32Array): void {
+                    arr[0] = this.Packet_Type;
+                    arr[1] = this.Payload_Length;
+                    arr[2] = this.UncompressedLength;
                 }
             }
             export class SocketStats {
@@ -94,7 +119,8 @@ module SL {
                 constructor(private _dst_host: string, private _dst_port: string) {
 
                     window.addEventListener("resize", this.onresize);
-                    window.addEventListener("click", this.onclick);
+                    window.addEventListener("mousedown", this.onmousedown);
+                    window.addEventListener("mouseup", this.onmouseup);
                     window.addEventListener("mousemove", this.onmove);
                 }
                 public Start = (): void => {
@@ -131,16 +157,45 @@ module SL {
                 public ScaleView = (b: boolean): void => {
                     this._ScaleImage = b;
                 }
-                onclick = (ev: MouseEvent): void => {
-
+                onmousedown = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY);
+                }
+                onmouseup = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY);
                 }
                 onmove = (ev: MouseEvent): void => {
+                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY);
 
+                }
+                private handlemouse = (button: number, press: Input.MousePress, x: number, y: number): void => {
+                    var ev = new Input.MouseEvent();
+                    var scale = this.GetScalingFactor();
+                    ev.Pos.X = x / scale;
+                    ev.Pos.Y = y / scale;
+                    ev.ScrollDelta = 0;
+
+                    ev.PressData = press;
+
+                    switch (button) {
+                        case 0:
+                            ev.EventData = Input.MouseEvents.LEFT;
+                            break;
+                        case 1:
+                            ev.EventData = Input.MouseEvents.MIDDLE;
+                            break;
+                        case 2:
+                            ev.EventData = Input.MouseEvents.RIGHT;
+                            break;
+                        default:
+                            ev.EventData = Input.MouseEvents.NO_EVENTDATA;
+                            break;
+                    };
+                    this._ClientNetworkDriver.SendMouse(ev);
                 }
                 onresize = (ev: UIEvent): void => {
 
                     if (this._ScaleImage && this._OriginalImage != null) {
-                      
+
                         var scale = this.GetScalingFactor();
                         this._HTMLCanvasScreenImage.width = this._OriginalImage.width * scale;
                         this._HTMLCanvasScreenImage.height = this._OriginalImage.height * scale;
@@ -154,13 +209,14 @@ module SL {
                     }
                 }
                 GetScalingFactor(): number {
-                    if (this._OriginalImage != null) {
+                    if (this._ScaleImage && this._OriginalImage != null) {
                         return window.innerHeight / this._OriginalImage.height;
                     } else {
                         return 1.0;
                     }
                 }
                 public OnReceive_ImageDif = (socket: WebSocket, rect: Utilities.Rect, img: string): void => {
+                    if (this._OriginalImage === null) return;
                     "use strict";
                     //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                     var i = new Image();
@@ -209,7 +265,7 @@ module SL {
                 public OnReceive_MouseImage = (socket: WebSocket, point: Utilities.Point, img: Uint8Array): void => {
                     "use strict";
                     //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
-                    
+
                     this._HTMLCanvasMouseImage.width = point.X;
                     this._HTMLCanvasMouseImage.height = point.Y;
                     try {
@@ -240,7 +296,7 @@ module SL {
             }
 
 
-            class ClientNetworkDriver {
+            export class ClientNetworkDriver {
                 _Socket: WebSocket;
                 _SocketStats: SocketStats;
                 _TotalMemoryUsed: number;
@@ -268,11 +324,54 @@ module SL {
                     this._Socket = null;
                 }
                 public SendMouse = (m: Input.MouseEvent): void => {
+                    var pac = new PacketHeader(PACKET_TYPES.MOUSEEVENT, Input.MouseEvent.sizeof(), Input.MouseEvent.sizeof());
+                    m.Fill(pac.Payload, 0);
+                    this.Compress_and_Send(pac);
+                }
+                private Compress_and_Send = (p: PacketHeader): void => {
+                    var t0 = performance.now();
+
+                    var srcPtr = Module._malloc(p.Payload_Length);
+                    this._TotalMemoryUsed += p.Payload_Length;
+                    var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length);//get enough space in the heap
+                    srcbuff.set(new Uint8Array(p.Payload, p.sizeof()));//copy the data to the newly allocated memory
+
+                    var dstsize = _ZSTD_compressBound(p.UncompressedLength + p.sizeof());
+                    var dsttr = Module._malloc(dstsize);//get worst case space requirements for dst buffer
+                    this._TotalMemoryUsed += dstsize;
+                    var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, dstsize);// dont write to the header portion
+                    
+
+                    p.Payload_Length = _ZSTD_compress(dstbuff.byteOffset + p.sizeof(), dstsize - p.sizeof(), srcbuff.byteOffset, p.Payload_Length, 3);
+                    if (_ZSTD_isError(p.Payload_Length) > 0) {
+                        console.log('zstd error' + _ZSTD_getErrorName(p.Payload_Length));
+                    }
+                   
+                    p.Fill(new Uint32Array(Module.HEAPU8.buffer, dsttr, p.sizeof()));
+
+                    var t1 = performance.now();
+                    //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
+                   // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
+
+                    Module._free(srcPtr);
+                    this._TotalMemoryUsed -= p.Payload_Length;
+                    var dstsendbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, p.UncompressedLength + p.sizeof());// dont write to the header portion
+
+                   // this._Socket.send(dstsendbuff);
+                    Module._free(dsttr);
+                    this._TotalMemoryUsed -= dstsize;
 
                 }
                 OnMessage = (ev: MessageEvent): void => {
                     var t0 = performance.now();
-                    var packetheader = new PacketHeader(ev.data);
+
+                    var packetheader = new PacketHeader();
+                    var data = new DataView(ev.data);
+                    packetheader.Packet_Type = data.getInt32(0, true);
+                    packetheader.Payload_Length = data.getInt32(4, true);
+                    packetheader.UncompressedLength = data.getInt32(8, true);
+
+
 
                     var srcPtr = Module._malloc(packetheader.Payload_Length);
                     this._TotalMemoryUsed += packetheader.Payload_Length;
@@ -289,7 +388,7 @@ module SL {
                     }
                     var t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                    console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
+                 //   console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                     t0 = performance.now();
                     switch (packetheader.Packet_Type) {
                         case (PACKET_TYPES.SCREENIMAGE):
@@ -314,7 +413,7 @@ module SL {
                     this._TotalMemoryUsed -= packetheader.Payload_Length;
                     t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                    console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
+                  //  console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
                 }
                 _arrayBufferToBase64(buffer: Uint8Array, offset: number): string {
                     var binary = '';
@@ -338,7 +437,7 @@ module SL {
                 }
                 MouseImage = (data: Uint8Array): void => {
 
-                    this._IClientDriver.OnReceive_MouseImage(this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.slice(Utilities.Point.sizeof()).buffer));
+                    this._IClientDriver.OnReceive_MouseImage(this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.buffer, Utilities.Point.sizeof()));
                 }
                 MousePos = (data: Uint8Array): void => {
                     this._IClientDriver.OnReceive_MousePos(this._Socket, Utilities.Point.FromArray(data));

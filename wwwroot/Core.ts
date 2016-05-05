@@ -271,7 +271,7 @@ module SL {
                     this._HTMLCanvasMouseImage.height = point.Y;
                     try {
                         this._Cursor = this._HTMLCanvasMouseImage.getContext("2d").createImageData(point.X, point.Y);
-
+                        
                         for (var i = 0; i < this._Cursor.data.length; i += 4) {
                             this._Cursor.data[i + 0] = img[i + 0];
                             this._Cursor.data[i + 1] = img[i + 1];

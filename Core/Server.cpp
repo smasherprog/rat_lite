@@ -43,6 +43,7 @@ namespace SL {
 				{
 					std::lock_guard<std::mutex> lock(_NewClientLock);
 					_NewClients.push_back(socket);
+
 				}
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
@@ -77,21 +78,11 @@ namespace SL {
 			}
 			void OnMouseImg(std::shared_ptr<Utilities::Image> img)
 			{
-				if (!LastMouse) {//first screen send all!
+				if (!LastMouse) {
 					_ServerNetworkDriver.SendMouse(nullptr, *img);
-					std::lock_guard<std::mutex> lock(_NewClientLock);
-					_NewClients.clear();
 				}
-				else {//compare and send all difs along
-					{
-						//make sure to send the full screens to any new connects
-						std::lock_guard<std::mutex> lock(_NewClientLock);
-						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.SendMouse(a.get(), *img);
-						}
-						_NewClients.clear();
-					}
-					if (memcmp(img->data(), LastScreen->data(), std::min(LastScreen->size(), img->size())) != 0) {
+				else {
+					if (memcmp(img->data(), LastMouse->data(), std::min(LastMouse->size(), img->size())) != 0) {
 						_ServerNetworkDriver.SendMouse(nullptr, *img);
 					}
 				}

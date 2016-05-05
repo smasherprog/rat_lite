@@ -224,9 +224,11 @@ namespace SL {
 									unsigned char mask[MASKSIZE];
 									memcpy(mask, packet.Payload, sizeof(mask));
 									auto startpack = packet.Payload;
-
+									std::vector<char> test;
+									test.resize(packet.Payload_Length - MASKSIZE);
+								
 									for (size_t c = 0; c < packet.Payload_Length - MASKSIZE; c++) {
-										startpack[c] = startpack[c + MASKSIZE] ^ mask[c % MASKSIZE];
+										test[c]= startpack[c] = startpack[c + MASKSIZE] ^ mask[c % MASKSIZE];
 									}
 								}
 

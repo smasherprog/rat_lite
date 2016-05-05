@@ -84,12 +84,12 @@ var SL;
                 MouseEvent.prototype.Fill = function (d, offset) {
                     var dt = new DataView(d, offset);
                     dt.setUint8(0, this.EventData);
-                    offset += 1;
-                    this.Pos.Fill(d, offset);
-                    offset += Utilities.Point.sizeof();
-                    dt.setInt32(offset, this.ScrollDelta, true);
-                    offset += 4;
-                    dt.setUint8(offset, this.PressData);
+
+                    this.Pos.Fill(d, offset + 1);
+
+                    dt.setInt32(offset + 1 + Utilities.Point.sizeof(), this.ScrollDelta, true);
+
+                    dt.setUint8(offset + 1 + Utilities.Point.sizeof() + 4, this.PressData);
                 };
                 return MouseEvent;
             })();
@@ -360,7 +360,7 @@ var SL;
                         var srcPtr = Module._malloc(p.Payload_Length);
                         _this._TotalMemoryUsed += p.Payload_Length;
                         var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length);
-                        srcbuff.set(new Uint8Array(p.Payload, p.sizeof())); //copy the data to the newly allocated memory
+                        srcbuff.set(new Uint8Array(p.Payload, 0, p.Payload_Length)); //copy the data to the newly allocated memory
 
                         var dstsize = _ZSTD_compressBound(p.UncompressedLength + p.sizeof());
                         var dsttr = Module._malloc(dstsize);
@@ -380,9 +380,9 @@ var SL;
                         // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
                         Module._free(srcPtr);
                         _this._TotalMemoryUsed -= p.Payload_Length;
-                        var dstsendbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, p.UncompressedLength + p.sizeof());
-
-                        // this._Socket.send(dstsendbuff);
+                        var test = dstbuff.buffer.slice(dsttr, dsttr + p.Payload_Length + p.sizeof());
+                        var teu = new Uint8Array(test, 0, p.Payload_Length + p.sizeof());
+                        _this._Socket.send(teu);
                         Module._free(dsttr);
                         _this._TotalMemoryUsed -= dstsize;
                     };

@@ -97,7 +97,6 @@ namespace SL {
 				}
 				LastMouse = img;
 			}
-
 			virtual void OnMouse(Input::MouseEvent* m) override {
 				Capturing::SetMouseEvent(*m);
 			}
@@ -122,6 +121,7 @@ namespace SL {
 					}
 				}
 			}
+
 			Server_Status get_Status() const {
 				return Status;
 			}

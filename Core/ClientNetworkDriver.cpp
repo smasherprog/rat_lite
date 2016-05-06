@@ -19,13 +19,12 @@ namespace SL {
 				std::shared_ptr<Network::WebSocket<socket>> _Socket;
 				std::unique_ptr<IO_Runner> _IO_Runner;
 				std::string _dst_host, _dst_port;
-
-
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
 					_IClientDriver->OnReceive_MouseImage(socket, img);
 				}
+
 				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					assert(p->Payload_Length == sizeof(Utilities::Point));
 					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);
@@ -111,17 +110,9 @@ namespace SL {
 					}
 
 				}
-				void SendMouse(Utilities::Point& pos) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
-					auto dst = (unsigned char*)p.Payload;
-					memcpy(dst, &pos, sizeof(pos));
-					_Socket->send(p);
-				}
-				void SendMouse(Input::MouseEvents ev, Input::MousePress press) {
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(press)+ sizeof(ev));
-					auto dst = (unsigned char*)p.Payload;
-					*dst++ = ev;
-					*dst++ = press;
+				void SendMouse(const Input::MouseEvent& m) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(m));
+					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
 				}
 			};
@@ -150,12 +141,7 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::Stop()
 	_ClientNetworkDriverImpl->Stop();
 }
 
-void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(Utilities::Point & pos)
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const Input::MouseEvent& m)
 {
-	_ClientNetworkDriverImpl->SendMouse(pos);
-}
-
-void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(Input::MouseEvents ev, Input::MousePress press)
-{
-	_ClientNetworkDriverImpl->SendMouse(ev, press);
+	_ClientNetworkDriverImpl->SendMouse(m);
 }

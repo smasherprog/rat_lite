@@ -29,6 +29,7 @@ namespace SL {
 					this->close_Socket("~WebSocket");
 				}
 				virtual SocketTypes get_type() const override { return SocketTypes::WEBSOCKET; }
+				//function below is needed to accomidate the android compiler.. 
 				void Android_writeheader(std::shared_ptr<Packet> packet) {
 					this->writeexpire_from_now(this->_SocketImpl.writetimeout);
 					auto self(this->shared_from_this());
@@ -143,6 +144,7 @@ namespace SL {
 					asio::async_read(this->_socket, asio::buffer(_readheaderbuffer, 2), [this, self](const std::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
 						if (!ec) {
+							assert(bytes_transferred == 2);
 							this->_SocketImpl.ReadPacketHeader.Payload_Length = 0;
 							_recv_fin_rsv_opcode = _readheaderbuffer[0];
 							//Close connection if unmasked message from client (protocol error)
@@ -155,9 +157,9 @@ namespace SL {
 							auto readbytes = (_readheaderbuffer[1] & 127) == 126 ? 2 : ((_readheaderbuffer[1] & 127) == 127 ? 8 : 0);
 							if (readbytes != 0) {
 								asio::async_read(this->_socket, asio::buffer(_readheaderbuffer, readbytes), [this, self, readbytes](const std::error_code& ec, size_t bytes_transferred) {
-									UNUSED(bytes_transferred);
+									
 									if (!ec) {
-
+										assert(readbytes == bytes_transferred);
 										for (int c = 0; c < readbytes; c++) {
 											this->_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer[c] << (8 * (readbytes - 1 - c));
 										}
@@ -188,8 +190,9 @@ namespace SL {
 					auto p(this->_SocketImpl.get_ReadBuffer());
 					auto size(this->_SocketImpl.get_ReadBufferSize());
 					asio::async_read(this->_socket, asio::buffer(p, size), [this, self](const std::error_code& ec, size_t bytes_transferred) {
-						UNUSED(bytes_transferred);
+					
 						if (!ec) {
+							assert(this->_SocketImpl.get_ReadBufferSize() == bytes_transferred);
 							auto packet(this->_SocketImpl.GetNextReadPacket());
 							//If connection close
 							if ((_recv_fin_rsv_opcode & 0x0f) == 8) {
@@ -221,9 +224,11 @@ namespace SL {
 									unsigned char mask[MASKSIZE];
 									memcpy(mask, packet.Payload, sizeof(mask));
 									auto startpack = packet.Payload;
-
+									std::vector<char> test;
+									test.resize(packet.Payload_Length - MASKSIZE);
+								
 									for (size_t c = 0; c < packet.Payload_Length - MASKSIZE; c++) {
-										startpack[c] = startpack[c + MASKSIZE] ^ mask[c % MASKSIZE];
+										test[c]= startpack[c] = startpack[c + MASKSIZE] ^ mask[c % MASKSIZE];
 									}
 								}
 

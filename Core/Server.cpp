@@ -43,6 +43,7 @@ namespace SL {
 				{
 					std::lock_guard<std::mutex> lock(_NewClientLock);
 					_NewClients.push_back(socket);
+
 				}
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
@@ -58,20 +59,15 @@ namespace SL {
 
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
 			{
-				if (!LastScreen) {//first screen send all!
-					_ServerNetworkDriver.SendScreenFull(nullptr, *img);
+				if (!_NewClients.empty()) {
+					//make sure to send the full screens to any new connects
 					std::lock_guard<std::mutex> lock(_NewClientLock);
+					for (auto& a : _NewClients) {
+						_ServerNetworkDriver.SendScreenFull(a.get(), *img);
+					}
 					_NewClients.clear();
 				}
-				else {//compare and send all difs along
-					{
-						//make sure to send the full screens to any new connects
-						std::lock_guard<std::mutex> lock(_NewClientLock);
-						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.SendScreenFull(a.get(), *img);
-						}
-						_NewClients.clear();
-					}
+				if (LastScreen) {
 					if (img->data() != LastScreen->data()) {
 						for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *img)) {
 							_ServerNetworkDriver.SendScreenDif(nullptr, r, *img);
@@ -80,37 +76,23 @@ namespace SL {
 				}
 				LastScreen = img;//swap
 			}
+
+
 			void OnMouseImg(std::shared_ptr<Utilities::Image> img)
 			{
-				if (!LastMouse) {//first screen send all!
+				if (!LastMouse) {
 					_ServerNetworkDriver.SendMouse(nullptr, *img);
-					std::lock_guard<std::mutex> lock(_NewClientLock);
-					_NewClients.clear();
 				}
-				else {//compare and send all difs along
-					{
-						//make sure to send the full screens to any new connects
-						std::lock_guard<std::mutex> lock(_NewClientLock);
-						for (auto& a : _NewClients) {
-							_ServerNetworkDriver.SendMouse(a.get(), *img);
-						}
-						_NewClients.clear();
-					}
-					if (memcmp(img->data(), LastScreen->data(), std::min(LastScreen->size(), img->size())) != 0) {
+				else {
+					if (memcmp(img->data(), LastMouse->data(), std::min(LastMouse->size(), img->size())) != 0) {
 						_ServerNetworkDriver.SendMouse(nullptr, *img);
 					}
 				}
 				LastMouse = img;
 			}
-
-			virtual void OnMouse(Utilities::Point& pos) override {
-				UNUSED(pos);
+			virtual void OnMouse(Input::MouseEvent* m) override {
+				Capturing::SetMouseEvent(*m);
 			}
-			virtual void OnMouse(Input::MouseEvents ev, Input::MousePress press) override {
-				UNUSED(ev);
-				UNUSED(press);
-			}
-
 			int Run() {
 				Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();
@@ -136,7 +118,6 @@ namespace SL {
 				return Status;
 			}
 		};
-
 	}
 }
 

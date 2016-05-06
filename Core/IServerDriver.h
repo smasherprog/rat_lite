@@ -1,9 +1,12 @@
 #pragma once
 #include "IBaseNetworkDriver.h"
-#include "MouseInput.h"
+
 
 namespace SL {
 	namespace Remote_Access_Library {
+		namespace Input {
+			struct MouseEvent;
+		}
 		namespace Utilities {
 			class Point;
 		}
@@ -17,8 +20,7 @@ namespace SL {
 				virtual ~IServerDriver() {}
 
 
-				virtual void OnMouse(Utilities::Point& pos) = 0;
-				virtual void OnMouse(Input::MouseEvents ev, Input::MousePress press) = 0;
+				virtual void OnMouse(Input::MouseEvent* m) = 0;
 
 			};
 		}

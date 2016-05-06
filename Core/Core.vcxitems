@@ -92,7 +92,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Logging.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)MouseInput.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Screen.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Server.h" />
@@ -108,7 +107,13 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
+    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+      <FileType>Document</FileType>
+      <Command>tsc $(SolutionDir)wwwroot\Core.ts</Command>
+      <Outputs>$(OutDir)wwwroot\Core.js</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+      <LinkObjects>false</LinkObjects>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />

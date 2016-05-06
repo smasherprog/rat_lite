@@ -28,9 +28,6 @@
     <Filter Include="wwwroot">
       <UniqueIdentifier>{486bb838-570a-425a-aaa3-9d059b12d301}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Input">
-      <UniqueIdentifier>{ccaac4c1-f65a-4e95-a385-603275123ebb}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp">
@@ -232,7 +229,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse_static.h">
       <Filter>Compression</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)MouseInput.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">

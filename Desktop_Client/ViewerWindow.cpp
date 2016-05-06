@@ -17,6 +17,7 @@
 #include <chrono>
 #include <mutex>
 #include "../Core/Logging.h"
+#include <assert.h>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -116,7 +117,7 @@ namespace SL {
 					}
 				}
 				float GetScaleFactor() const {
-					if (_OriginalImage) {
+					if (_OriginalImage && _ScaleImage) {
 						auto pheight = this->parent()->h() - SCROLLBARSIZE;//16 is the scrollbars size
 						if (pheight < 0) pheight = 48;//cannot make image smaller than this..
 						return static_cast<float>(pheight) / static_cast<float>(_OriginalImage->Height());
@@ -184,16 +185,10 @@ namespace SL {
 					switch (e) {
 
 					case FL_PUSH:
-						handle_mousebutton(Fl::event_button(), true);
-						handle_mousemove(Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::MousePress::DOWN, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_RELEASE:
-						handle_mousebutton(Fl::event_button(), false);
-						handle_mousemove(Fl::event_x(), Fl::event_y());
-						break;
-					case FL_DRAG:
-					case FL_MOVE:
-						handle_mousemove(Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::MousePress::UP, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_FOCUS:
 						_HasFocus = true;
@@ -201,31 +196,48 @@ namespace SL {
 					case FL_UNFOCUS:
 						_HasFocus = false;
 						break;
+					case FL_DRAG:
+					case FL_MOUSEWHEEL:
+					case FL_MOVE:
+						handle_mouse(e, Fl::event_button(), Input::MousePress::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
+						break;
+					default:
+						break;
 					};
 					return Fl_Window::handle(e);
 				}
-				void handle_mousebutton(int button, bool pushed) {
+				void handle_mouse(int e, int button, Input::MousePress press, int x, int y) {
+
+					auto scale = _MyCanvas->GetScaleFactor();
+
+					Input::MouseEvent ev;
+					ev.Pos = Utilities::Point(static_cast<int>(static_cast<float>(x) / scale), static_cast<int>(static_cast<float>(y) / scale));
+					if (e == FL_MOUSEWHEEL) {
+						ev.ScrollDelta = Fl::event_dy();
+
+					} else {
+						ev.ScrollDelta = 0;
+					}
+					
+					ev.PressData = press;
+					
+				
 					switch (button) {
 						case FL_LEFT_MOUSE:
-							_ClientNetworkDriver.SendMouse(Input::MouseEvents::LEFT, pushed ? Input::MousePress::DOWN : Input::MousePress::UP);
+							ev.EventData = Input::MouseEvents::LEFT;
 							break;
 						case FL_MIDDLE_MOUSE:
-							_ClientNetworkDriver.SendMouse(Input::MouseEvents::MIDDLE, pushed ? Input::MousePress::DOWN : Input::MousePress::UP);
+							ev.EventData = Input::MouseEvents::MIDDLE;
 							break;
 						case FL_RIGHT_MOUSE:
-							_ClientNetworkDriver.SendMouse(Input::MouseEvents::RIGHT, pushed ? Input::MousePress::DOWN : Input::MousePress::UP);
+							ev.EventData = Input::MouseEvents::RIGHT;
 							break;
-					};
-				}
-				void handle_mousemove(int x, int y) {
-					if (!_HasFocus && _CursorHidden) {
-						this->cursor(Fl_Cursor::FL_CURSOR_ARROW);
-						_CursorHidden = false;
-					}
-					auto scale = _MyCanvas->GetScaleFactor();
-					_ClientNetworkDriver.SendMouse(Utilities::Point(
-						static_cast<int>(static_cast<float>(x) / scale),
-						static_cast<int>(static_cast<float>(y) / scale)));
+						default:
+							ev.EventData = Input::MouseEvents::NO_EVENTDATA;
+							break;
+						};
+
+					_ClientNetworkDriver.SendMouse(ev);
 				}
 				virtual ~ViewerWindowImpl() {
 					_ClientNetworkDriver.Stop();
@@ -307,6 +319,7 @@ namespace SL {
 					_MyCanvas->SetMouseImage(img);
 					Fl::awake(awakenredraw, this);
 				}
+
 				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
 					_MyCanvas->SetMousePosition(*pos);
 				}

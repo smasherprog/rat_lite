@@ -11,6 +11,11 @@ module SL {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Point(arr[0], arr[1]);
                 }
+                Fill(d: ArrayBuffer, offset: number): void {
+                    var dt = new DataView(d, offset);
+                    dt.setInt32(0, this.X, true);
+                    dt.setInt32(4, this.Y, true);
+                }
             }
             export class Rect {
                 static sizeof(): number { return 8 + Point.sizeof(); }//actual bytes used
@@ -19,10 +24,47 @@ module SL {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Rect(new Point(arr[0], arr[1]), arr[2], arr[3]);
                 }
+                Fill(d: ArrayBuffer, offset: number): void {
+                    this.Origin.Fill(d, offset);
+                    var dt = new DataView(d, offset + Point.sizeof());
+                    dt.setInt32(0, this.Height, true);
+                    dt.setInt32(4, this.Width, true);
+                }
             }
         }
+        export module Input {
+            export enum MouseEvents {
+                LEFT,
+                RIGHT,
+                MIDDLE,
+                SCROLL,
+                NO_EVENTDATA
+            };
+            export enum MousePress {
+                UP,
+                DOWN,
+                NO_PRESS_DATA
+            };
+            export class MouseEvent {
+
+                constructor(public EventData = MouseEvents.NO_EVENTDATA,
+                    public Pos = new Utilities.Point(0, 0),
+                    public ScrollDelta = 0,
+                    public PressData = MousePress.NO_PRESS_DATA) { }
+
+                static sizeof() { return 4 + Utilities.Point.sizeof() + 4 + 4; }//actual bytes used
+                Fill(d: ArrayBuffer, offset: number): void {
+                    var dt = new DataView(d, offset);
+                    dt.setUint32(0, this.EventData, true);
+                    this.Pos.Fill(d, offset + 4);
+                    dt.setInt32(offset + 4 + Utilities.Point.sizeof(), this.ScrollDelta, true);
+                    dt.setUint32(offset + 4 + Utilities.Point.sizeof() + 4, this.PressData, true);
+        
+                }
+            };
+        }
         export module Network {
-            enum PACKET_TYPES {
+            export enum PACKET_TYPES {
                 INVALID,
                 HTTP_MSG,
                 SCREENIMAGE,
@@ -30,19 +72,20 @@ module SL {
                 MOUSEPOS,
                 MOUSEIMAGE,
                 KEYEVENT,
+                MOUSEEVENT,
                 //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
                 LAST_PACKET_TYPE
             }
             export class PacketHeader {
-                Packet_Type: PACKET_TYPES;
-                Payload_Length: number;
-                UncompressedLength: number;
+                Payload: ArrayBuffer;
                 sizeof() { return 12; }//actual bytes used
-                constructor(d: ArrayBuffer) {
-                    var data = new DataView(d);
-                    this.Packet_Type = data.getInt32(0, true);
-                    this.Payload_Length = data.getInt32(4, true);
-                    this.UncompressedLength = data.getInt32(8, true);
+                constructor(public Packet_Type = PACKET_TYPES.INVALID, public Payload_Length = 0, public UncompressedLength = 0) {
+                    this.Payload = new ArrayBuffer(this.Payload_Length);
+                }
+                Fill(arr: Uint32Array): void {
+                    arr[0] = this.Packet_Type;
+                    arr[1] = this.Payload_Length;
+                    arr[2] = this.UncompressedLength;
                 }
             }
             export class SocketStats {
@@ -63,51 +106,125 @@ module SL {
                 _Cursor: ImageData;
                 _ScaleImage = false;
                 _OriginalImage: HTMLImageElement;
+                _ClientNetworkDriver: ClientNetworkDriver;
+                _HTMLDivRoot: HTMLDivElement;
+                _HTMLCanvasScreenImage: HTMLCanvasElement;
+                _HTMLCanvasMouseImage: HTMLCanvasElement;
 
-                constructor(private _Screen_Canvas_Id: string, private _Mouse_Canvas_Id: string) {
+                _DivRootId = 'SLRATROOTID123';//this is an id used internally to double check if a canvas has allready been inserted 
+
+                constructor(private _dst_host: string, private _dst_port: string) {
+
                     window.addEventListener("resize", this.onresize);
+                    window.addEventListener("mousedown", this.onmousedown);
+                    window.addEventListener("mouseup", this.onmouseup);
+                    window.addEventListener("mousemove", this.onmove);
                 }
+                public Start = (): void => {
+                    var testroot = document.getElementById(this._DivRootId);
+                    if (testroot !== null) {
+                        document.removeChild(testroot);
+                    }
+                    this._HTMLDivRoot = document.createElement('div');
+                    this._HTMLDivRoot.id = this._DivRootId;
+                    this._HTMLDivRoot.style.position = 'relative';
+                    this._HTMLCanvasScreenImage = document.createElement('canvas');
+                    this._HTMLCanvasScreenImage.style.position = 'absolute';
+                    this._HTMLCanvasScreenImage.style.left = this._HTMLCanvasScreenImage.style.top = this._HTMLCanvasScreenImage.style.zIndex = '0';
 
+                    this._HTMLCanvasMouseImage = document.createElement('canvas');
+                    this._HTMLCanvasMouseImage.style.position = 'absolute';
+                    this._HTMLCanvasMouseImage.style.left = this._HTMLCanvasMouseImage.style.top = '0';
+                    this._HTMLCanvasMouseImage.style.zIndex = '1';
+
+                    this._HTMLDivRoot.appendChild(this._HTMLCanvasScreenImage);
+                    this._HTMLDivRoot.appendChild(this._HTMLCanvasMouseImage);
+                    document.body.appendChild(this._HTMLDivRoot);//add to the dom
+                    this._ClientNetworkDriver = new ClientNetworkDriver(this, this._dst_host, this._dst_port);
+                    this._ClientNetworkDriver.Start();
+                }
+                public Stop = (): void => {
+                    this._ClientNetworkDriver.Stop();
+                    this._ClientNetworkDriver = null;
+                    var testroot = document.getElementById(this._DivRootId);
+                    if (testroot !== null) {
+                        document.removeChild(testroot);
+                    }
+                }
                 public ScaleView = (b: boolean): void => {
                     this._ScaleImage = b;
+                }
+                onmousedown = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY);
+                }
+                onmouseup = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY);
+                }
+                onmove = (ev: MouseEvent): void => {
+                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY);
+
+                }
+                private handlemouse = (button: number, press: Input.MousePress, x: number, y: number): void => {
+                    var ev = new Input.MouseEvent();
+                    var scale = this.GetScalingFactor();
+                    ev.Pos.X = x / scale;
+                    ev.Pos.Y = y / scale;
+                    ev.ScrollDelta = 0;
+
+                    ev.PressData = press;
+
+                    switch (button) {
+                        case 0:
+                            ev.EventData = Input.MouseEvents.LEFT;
+                            break;
+                        case 1:
+                            ev.EventData = Input.MouseEvents.MIDDLE;
+                            break;
+                        case 2:
+                            ev.EventData = Input.MouseEvents.RIGHT;
+                            break;
+                        default:
+                            ev.EventData = Input.MouseEvents.NO_EVENTDATA;
+                            break;
+                    };
+                    this._ClientNetworkDriver.SendMouse(ev);
                 }
                 onresize = (ev: UIEvent): void => {
 
                     if (this._ScaleImage && this._OriginalImage != null) {
-                        var elem = <HTMLCanvasElement>document.getElementById(this._Screen_Canvas_Id);
+
                         var scale = this.GetScalingFactor();
-                        elem.width = this._OriginalImage.width * scale;
-                        elem.height = this._OriginalImage.height * scale;
-                        elem.getContext("2d").drawImage(this._OriginalImage, 0, 0, elem.width, elem.height);
+                        this._HTMLCanvasScreenImage.width = this._OriginalImage.width * scale;
+                        this._HTMLCanvasScreenImage.height = this._OriginalImage.height * scale;
+                        this._HTMLCanvasScreenImage.getContext("2d").drawImage(this._OriginalImage, 0, 0, this._HTMLCanvasScreenImage.width, this._HTMLCanvasScreenImage.height);
                     } else if (!this._ScaleImage && this._OriginalImage != null) {
-                        var elem = <HTMLCanvasElement>document.getElementById(this._Screen_Canvas_Id);
-                        if (elem.height != this._OriginalImage.height || elem.width != this._OriginalImage.width) {
-                            elem.width = this._OriginalImage.width;
-                            elem.height = this._OriginalImage.height;
-                            elem.getContext("2d").drawImage(this._OriginalImage, 0, 0);
+                        if (this._HTMLCanvasScreenImage.height != this._OriginalImage.height || this._HTMLCanvasScreenImage.width != this._OriginalImage.width) {
+                            this._HTMLCanvasScreenImage.width = this._OriginalImage.width;
+                            this._HTMLCanvasScreenImage.height = this._OriginalImage.height;
+                            this._HTMLCanvasScreenImage.getContext("2d").drawImage(this._OriginalImage, 0, 0);
                         }
                     }
                 }
                 GetScalingFactor(): number {
-                    if (this._OriginalImage != null) {
+                    if (this._ScaleImage && this._OriginalImage != null) {
                         return window.innerHeight / this._OriginalImage.height;
                     } else {
                         return 1.0;
                     }
                 }
                 public OnReceive_ImageDif = (socket: WebSocket, rect: Utilities.Rect, img: string): void => {
+                    if (this._OriginalImage === null) return;
                     "use strict";
                     //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                     var i = new Image();
                     i.src = "data:image/jpeg;base64," + img
                     var self = this;
                     i.onload = function () {
-                        var elem = <HTMLCanvasElement>document.getElementById(self._Screen_Canvas_Id);
                         if (self._ScaleImage) {
                             var scale = self.GetScalingFactor();
-                            elem.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
+                            self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
                         } else {
-                            elem.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
+                            self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
                         }
                         // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                     };
@@ -122,20 +239,18 @@ module SL {
 
                     var i = new Image();
                     i.src = "data:image/jpeg;base64," + img;
-               
+
                     var self = this;
                     i.onload = function () {
-                        var elem = <HTMLCanvasElement>document.getElementById(self._Screen_Canvas_Id);
-
                         if (self._ScaleImage) {
                             var scale = self.GetScalingFactor();
-                            elem.width = i.width * scale;
-                            elem.height = i.height * scale;
-                            elem.getContext("2d").drawImage(i, 0, 0, elem.width, elem.height);
+                            self._HTMLCanvasScreenImage.width = i.width * scale;
+                            self._HTMLCanvasScreenImage.height = i.height * scale;
+                            self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0, self._HTMLCanvasScreenImage.width, self._HTMLCanvasScreenImage.height);
                         } else {
-                            elem.width = i.width;
-                            elem.height = i.height;
-                            elem.getContext("2d").drawImage(i, 0, 0);
+                            self._HTMLCanvasScreenImage.width = i.width;
+                            self._HTMLCanvasScreenImage.height = i.height;
+                            self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0);
                         }
                         self._OriginalImage = i;
                         // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
@@ -147,33 +262,32 @@ module SL {
                 public OnReceive_MouseImage = (socket: WebSocket, point: Utilities.Point, img: Uint8Array): void => {
                     "use strict";
                     //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
-                    var elem = <HTMLCanvasElement>document.getElementById(this._Mouse_Canvas_Id);
-                    elem.width = point.X;
-                    elem.height = point.Y;
-                    try {
-                        this._Cursor = elem.getContext("2d").createImageData(point.X, point.Y);
 
+                    this._HTMLCanvasMouseImage.width = point.X;
+                    this._HTMLCanvasMouseImage.height = point.Y;
+                    try {
+                        this._Cursor = this._HTMLCanvasMouseImage.getContext("2d").createImageData(point.X, point.Y);
+                        
                         for (var i = 0; i < this._Cursor.data.length; i += 4) {
                             this._Cursor.data[i + 0] = img[i + 0];
                             this._Cursor.data[i + 1] = img[i + 1];
                             this._Cursor.data[i + 2] = img[i + 2];
                             this._Cursor.data[i + 3] = img[i + 3];
                         }
-                        elem.getContext("2d").putImageData(this._Cursor, 0, 0);
+                        this._HTMLCanvasMouseImage.getContext("2d").putImageData(this._Cursor, 0, 0);
                     } catch (e) {
                         console.log(e.message);
                     }
 
                 }
                 public OnReceive_MousePos = (socket: WebSocket, pos: Utilities.Point): void => {
-                    var elem = <HTMLCanvasElement>document.getElementById(this._Mouse_Canvas_Id);
                     if (this._ScaleImage) {
                         var scale = this.GetScalingFactor();
-                        elem.style.top = (pos.Y * scale) + "px";
-                        elem.style.left = (pos.X * scale) + "px";
+                        this._HTMLCanvasMouseImage.style.top = (pos.Y * scale) + "px";
+                        this._HTMLCanvasMouseImage.style.left = (pos.X * scale) + "px";
                     } else {
-                        elem.style.top = pos.Y + "px";
-                        elem.style.left = pos.X + "px";
+                        this._HTMLCanvasMouseImage.style.top = pos.Y + "px";
+                        this._HTMLCanvasMouseImage.style.left = pos.X + "px";
                     }
                 }
             }
@@ -206,9 +320,54 @@ module SL {
                     this._Socket.close(1001, "Web Browser called Stop()");
                     this._Socket = null;
                 }
+                public SendMouse = (m: Input.MouseEvent): void => {
+                    var pac = new PacketHeader(PACKET_TYPES.MOUSEEVENT, Input.MouseEvent.sizeof(), Input.MouseEvent.sizeof());
+                    m.Fill(pac.Payload, 0);
+                    this.Compress_and_Send(pac);
+                }
+                private Compress_and_Send = (p: PacketHeader): void => {
+                    var t0 = performance.now();
+
+                    var srcPtr = Module._malloc(p.Payload_Length);
+                    this._TotalMemoryUsed += p.Payload_Length;
+                    var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length);//get enough space in the heap
+                    srcbuff.set(new Uint8Array(p.Payload, 0, p.Payload_Length));//copy the data to the newly allocated memory
+                    
+                    var dstsize = _ZSTD_compressBound(p.UncompressedLength + p.sizeof());
+                    var dsttr = Module._malloc(dstsize);//get worst case space requirements for dst buffer
+                    this._TotalMemoryUsed += dstsize;
+                    var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, dstsize);// dont write to the header portion
+
+                    p.Payload_Length = _ZSTD_compress(dstbuff.byteOffset + p.sizeof(), dstsize - p.sizeof(), srcbuff.byteOffset, p.Payload_Length, 3);
+                    if (_ZSTD_isError(p.Payload_Length) > 0) {
+                        console.log('zstd error' + _ZSTD_getErrorName(p.Payload_Length));
+                    }
+                   
+                    p.Fill(new Uint32Array(Module.HEAPU8.buffer, dsttr, p.sizeof()));
+
+                    var t1 = performance.now();
+                    //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
+                   // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
+
+                    Module._free(srcPtr);
+                    this._TotalMemoryUsed -= p.Payload_Length;
+                    var test = dstbuff.buffer.slice(dsttr, dsttr+ p.Payload_Length + p.sizeof());
+                    var teu = new Uint8Array(test, 0, p.Payload_Length + p.sizeof());
+                    this._Socket.send(teu);
+                    Module._free(dsttr);
+                    this._TotalMemoryUsed -= dstsize;
+
+                }
                 OnMessage = (ev: MessageEvent): void => {
                     var t0 = performance.now();
-                    var packetheader = new PacketHeader(ev.data);
+
+                    var packetheader = new PacketHeader();
+                    var data = new DataView(ev.data);
+                    packetheader.Packet_Type = data.getInt32(0, true);
+                    packetheader.Payload_Length = data.getInt32(4, true);
+                    packetheader.UncompressedLength = data.getInt32(8, true);
+
+
 
                     var srcPtr = Module._malloc(packetheader.Payload_Length);
                     this._TotalMemoryUsed += packetheader.Payload_Length;
@@ -225,7 +384,7 @@ module SL {
                     }
                     var t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                    console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
+                 //   console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                     t0 = performance.now();
                     switch (packetheader.Packet_Type) {
                         case (PACKET_TYPES.SCREENIMAGE):
@@ -250,7 +409,7 @@ module SL {
                     this._TotalMemoryUsed -= packetheader.Payload_Length;
                     t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                    console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
+                  //  console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
                 }
                 _arrayBufferToBase64(buffer: Uint8Array, offset: number): string {
                     var binary = '';
@@ -273,7 +432,6 @@ module SL {
                         this._arrayBufferToBase64(data, Utilities.Rect.sizeof()));
                 }
                 MouseImage = (data: Uint8Array): void => {
-
                     this._IClientDriver.OnReceive_MouseImage(this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.slice(Utilities.Point.sizeof()).buffer));
                 }
                 MousePos = (data: Uint8Array): void => {

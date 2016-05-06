@@ -79,17 +79,14 @@ var SL;
                     this.PressData = PressData;
                 }
                 MouseEvent.sizeof = function () {
-                    return 1 + Utilities.Point.sizeof() + 4 + 1;
+                    return 4 + Utilities.Point.sizeof() + 4 + 4;
                 };
                 MouseEvent.prototype.Fill = function (d, offset) {
                     var dt = new DataView(d, offset);
-                    dt.setUint8(0, this.EventData);
-
-                    this.Pos.Fill(d, offset + 1);
-
-                    dt.setInt32(offset + 1 + Utilities.Point.sizeof(), this.ScrollDelta, true);
-
-                    dt.setUint8(offset + 1 + Utilities.Point.sizeof() + 4, this.PressData);
+                    dt.setUint32(0, this.EventData, true);
+                    this.Pos.Fill(d, offset + 4);
+                    dt.setInt32(offset + 4 + Utilities.Point.sizeof(), this.ScrollDelta, true);
+                    dt.setUint32(offset + 4 + Utilities.Point.sizeof() + 4, this.PressData, true);
                 };
                 return MouseEvent;
             })();
@@ -160,7 +157,7 @@ var SL;
                         _this._HTMLCanvasScreenImage.style.left = _this._HTMLCanvasScreenImage.style.top = _this._HTMLCanvasScreenImage.style.zIndex = '0';
 
                         _this._HTMLCanvasMouseImage = document.createElement('canvas');
-
+                        _this._HTMLCanvasMouseImage.style.position = 'absolute';
                         _this._HTMLCanvasMouseImage.style.left = _this._HTMLCanvasMouseImage.style.top = '0';
                         _this._HTMLCanvasMouseImage.style.zIndex = '1';
 
@@ -446,7 +443,7 @@ var SL;
                         _this._IClientDriver.OnReceive_ImageDif(_this._Socket, Utilities.Rect.FromArray(data), _this._arrayBufferToBase64(data, Utilities.Rect.sizeof()));
                     };
                     this.MouseImage = function (data) {
-                        _this._IClientDriver.OnReceive_MouseImage(_this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.buffer, Utilities.Point.sizeof()));
+                        _this._IClientDriver.OnReceive_MouseImage(_this._Socket, Utilities.Point.FromArray(data), new Uint8Array(data.slice(Utilities.Point.sizeof()).buffer));
                     };
                     this.MousePos = function (data) {
                         _this._IClientDriver.OnReceive_MousePos(_this._Socket, Utilities.Point.FromArray(data));

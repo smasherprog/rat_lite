@@ -234,6 +234,8 @@
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">
       <Filter>wwwroot</Filter>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
+    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+      <Filter>wwwroot</Filter>
+    </None>
   </ItemGroup>
 </Project>

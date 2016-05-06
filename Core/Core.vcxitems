@@ -112,6 +112,7 @@
       <Command>tsc $(SolutionDir)wwwroot\Core.ts</Command>
       <Outputs>$(OutDir)wwwroot\Core.js</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
+      <LinkObjects>false</LinkObjects>
     </None>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>

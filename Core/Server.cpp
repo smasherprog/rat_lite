@@ -76,6 +76,8 @@ namespace SL {
 				}
 				LastScreen = img;//swap
 			}
+
+
 			void OnMouseImg(std::shared_ptr<Utilities::Image> img)
 			{
 				if (!LastMouse) {
@@ -112,12 +114,10 @@ namespace SL {
 					}
 				}
 			}
-
 			Server_Status get_Status() const {
 				return Status;
 			}
 		};
-
 	}
 }
 

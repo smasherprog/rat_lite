@@ -35,7 +35,7 @@ namespace SL {
 
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					assert(p->Payload_Length == sizeof(Input::MouseEvent::EventData) + sizeof(Input::MouseEvent::Pos) + sizeof(Input::MouseEvent::ScrollDelta) + sizeof(Input::MouseEvent::PressData));
+					assert(p->Payload_Length == sizeof(Input::MouseEvent));
 					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
 			public:
@@ -53,7 +53,7 @@ namespace SL {
 				virtual void OnClose(const std::shared_ptr<ISocket>& socket)override {
 					_IServerDriver->OnClose(socket);
 					std::lock_guard<std::mutex> lock(_ClientsLock);
-					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [socket](const std::shared_ptr<ISocket>& p) { return p == socket; }), _Clients.end());
+					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&socket](const std::shared_ptr<ISocket>& p) { return p == socket; }), _Clients.end());
 				}
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override

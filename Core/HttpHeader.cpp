@@ -14,7 +14,6 @@ namespace SL {
 					{
 						if (in[i] == '%')
 						{
-
 							if (i + 3 <= in.size())
 							{
 								int value = 0;
@@ -26,7 +25,6 @@ namespace SL {
 								}
 								else
 								{
-
 									return std::string("/");
 								}
 							}
@@ -50,6 +48,7 @@ namespace SL {
 		}
 	}
 }
+
 
 std::unordered_map<std::string, std::string> SL::Remote_Access_Library::Network::HttpHeader::Parse(std::string defaultheaderversion, std::istream& stream)
 {

@@ -39,8 +39,6 @@ SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Netwo
 {
 	return _SocketStats;
 }
-
-
 char* SL::Remote_Access_Library::Network::SocketImpl::get_ReadBuffer()
 {
 	_IncomingBuffer.reserve(ReadPacketHeader.Payload_Length);

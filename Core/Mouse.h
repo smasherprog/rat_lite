@@ -6,14 +6,14 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Input {
-			enum MouseEvents : unsigned char {
+			enum MouseEvents : unsigned int {
 				LEFT,
 				RIGHT,
 				MIDDLE,
 				SCROLL,
 				NO_EVENTDATA
 			};
-			enum MousePress : unsigned char {
+			enum MousePress : unsigned int {
 				UP,
 				DOWN,
 				NO_PRESS_DATA

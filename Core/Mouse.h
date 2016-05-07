@@ -16,6 +16,7 @@ namespace SL {
 			enum MousePress : unsigned int {
 				UP,
 				DOWN,
+				DBLCLICK,
 				NO_PRESS_DATA
 			};
 			struct MouseEvent {

@@ -42,6 +42,7 @@ module SL {
             export enum MousePress {
                 UP,
                 DOWN,
+                DBLCLICK,
                 NO_PRESS_DATA
             };
             export class MouseEvent {
@@ -115,12 +116,16 @@ module SL {
                 constructor(private _dst_host: string, private _dst_port: string) {
 
                     window.addEventListener("resize", this.onresize);
-                    window.addEventListener("mousedown", this.onmousedown);
+                    window.addEventListener("mousedown", this.onmousedown);//event not needed
                     window.addEventListener("mouseup", this.onmouseup);
                     window.addEventListener("mousemove", this.onmove);
                     window.addEventListener("wheel", this.onwheel);
                     window.addEventListener("keydown", this.onkeydown);
                     window.addEventListener("keyup", this.onkeyup);
+                    window.addEventListener("dblclick", this.ondblclick);
+                    // window.addEventListener("touchend", this.ontouchend);
+                    window.addEventListener("touchstart", this.ontouchstart);
+                    window.addEventListener("touchmove", this.ontouchmove);
                 }
                 public Start = (): void => {
                     var testroot = document.getElementById(this._DivRootId);
@@ -162,24 +167,70 @@ module SL {
                 onkeyup = (ev: KeyboardEvent): void => {
 
                 }
+
+                private pointerEventToXY = function (e: any): Utilities.Point {
+                    var out = new Utilities.Point(0, 0);
+                    if (e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend' || e.type == 'touchcancel') {
+                        var touch = e.touches[0] || e.changedTouches[0];
+                        out.X = touch.pageX;
+                        out.Y = touch.pageY;
+                    } else if (e.type == 'mousedown' || e.type == 'mouseup' || e.type == 'mousemove' || e.type == 'mouseover' || e.type == 'mouseout' || e.type == 'mouseenter' || e.type == 'mouseleave') {
+                        out.Y = e.pageY;
+                        out.X = e.pageX;
+                    }
+                    return out;
+                };
+                private TouchTimer: number;
+                private CancelTouchClickTimer = (): void => {
+                    if (this.TouchTimer != null) {
+                        clearTimeout(this.TouchTimer);
+                    }
+                    this.TouchTimer = null;
+                }
+                ontouchstart = (ev: TouchEvent): void => {
+                    if (ev.touches.length == 1) {
+                        this.StartTouchTimer(ev, this.pointerEventToXY(ev));
+                    }
+                }
+                ontouchmove = (ev: TouchEvent): void => {
+                    this.CancelTouchClickTimer();
+                }
+                private StartTouchTimer(ev: TouchEvent, pos: Utilities.Point) {
+                    var self = this;
+                    if (self.TouchTimer == null) {
+                        self.TouchTimer = setTimeout(function () {//single click
+                            self.CancelTouchClickTimer();
+                            self.handlemouse(0, Input.MousePress.DOWN, pos, 0);
+                           // self.handlemouse(0, Input.MousePress.UP, pos, 0);
+                        }, 500)
+                    } else {
+                        ev.preventDefault();
+                        self.CancelTouchClickTimer();
+                        self.handlemouse(0, Input.MousePress.DBLCLICK, pos, 0);
+                    }
+                }
                 onmousedown = (ev: MouseEvent): void => {
-                    this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY, 0);
+                    this.handlemouse(ev.button, Input.MousePress.DOWN, this.pointerEventToXY(ev), 0);
+                }
+                ondblclick = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.DBLCLICK, this.pointerEventToXY(ev), 0);
                 }
                 onmouseup = (ev: MouseEvent): void => {
-                    this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY, 0);
+                    this.handlemouse(ev.button, Input.MousePress.UP, this.pointerEventToXY(ev), 0);
                 }
                 onmove = (ev: MouseEvent): void => {
-                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, 0);
+                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, this.pointerEventToXY(ev), 0);
                 }
                 onwheel = (ev: WheelEvent): void => {
-                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, ev.deltaY);
+                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, this.pointerEventToXY(ev), ev.deltaY);
                 }
-                private handlemouse = (button: number, press: Input.MousePress, x: number, y: number, scroll: number): void => {
+                private handlemouse = (button: number, press: Input.MousePress, pos: Utilities.Point, scroll: number): void => {
                     var ev = new Input.MouseEvent();
                     var scale = this.GetScalingFactor();
-                    ev.Pos.X = x / scale;
-                    ev.Pos.Y = y / scale;
-                    
+                    ev.Pos = pos;
+                    ev.Pos.X = ev.Pos.X / scale;
+                    ev.Pos.Y = ev.Pos.Y / scale;
+
                     if (scroll != 0) {
                         ev.ScrollDelta = scroll < 0 ? -1 : 1;//force a -1 or 1 because browsers send different values for each scroll tick.
                         ev.EventData = Input.MouseEvents.SCROLL;

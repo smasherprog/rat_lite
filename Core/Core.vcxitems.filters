@@ -236,8 +236,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
-      <Filter>wwwroot</Filter>
-    </CustomBuild>
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
   </ItemGroup>
 </Project>

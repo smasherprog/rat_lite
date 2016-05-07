@@ -204,13 +204,19 @@ namespace SL
 
 				switch (m.EventData) {
 				case Input::MouseEvents::LEFT:
-					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_LEFTUP : MOUSEEVENTF_LEFTDOWN;
+					if (m.PressData == Input::MousePress::UP) input.mi.dwFlags |= MOUSEEVENTF_LEFTUP;
+					else if(m.PressData == Input::MousePress::DOWN) input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
+					else input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
 					break;
 				case Input::MouseEvents::MIDDLE:
-					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_MIDDLEUP : MOUSEEVENTF_MIDDLEDOWN;
+					if (m.PressData == Input::MousePress::UP) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
+					else if (m.PressData == Input::MousePress::DOWN) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
+					else input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
 					break;
 				case Input::MouseEvents::RIGHT:
-					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_RIGHTDOWN;
+					if (m.PressData == Input::MousePress::UP) input.mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
+					else if (m.PressData == Input::MousePress::DOWN) input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
+					else input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP;
 					break;
 				case Input::MouseEvents::SCROLL:
 					input.mi.dwFlags |= MOUSEEVENTF_WHEEL;
@@ -220,7 +226,7 @@ namespace SL
 				}
 
 				SendInput(1, &input, sizeof(input));
-
+				if(m.PressData == Input::MousePress::DBLCLICK) SendInput(1, &input, sizeof(input));
 #elif defined __APPLE__
 				CGPoint new_pos;
 				CGEventErr err;

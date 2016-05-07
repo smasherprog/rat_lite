@@ -158,8 +158,8 @@ namespace SL {
 				int FrameCounter = 0;
 				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
-				bool _HasFocus = false;
 				bool _CursorHidden = false;
+				bool _ConnectedToSelf = false;
 				char _Title[255];
 
 				static void window_cb(Fl_Widget *widget, void *)
@@ -167,8 +167,14 @@ namespace SL {
 					auto wnd = (ViewerWindowImpl*)widget;
 					wnd->Close();
 				}
-				ViewerWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
+				ViewerWindowImpl(const char* dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
+					auto ipv4localhost1 = "127.0.0.1";
+					auto ipv4localhost2 = "localhost";
+					auto ipv6localhost = "::1";
+					auto dsthost = std::string(dst_host);
+					_ConnectedToSelf = (ipv4localhost1 == dsthost) || (ipv4localhost2 == dsthost) || (ipv6localhost == dsthost);//flag connects to self because some functions should be disabled in this case
+
 					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
@@ -189,12 +195,6 @@ namespace SL {
 						break;
 					case FL_RELEASE:
 						handle_mouse(e, Fl::event_button(), Input::MousePress::UP, Fl::event_x(), Fl::event_y());
-						break;
-					case FL_FOCUS:
-						_HasFocus = true;
-						break;
-					case FL_UNFOCUS:
-						_HasFocus = false;
 						break;
 					case FL_DRAG:
 					case FL_MOUSEWHEEL:
@@ -234,7 +234,7 @@ namespace SL {
 						};
 					}
 					ev.PressData = press;
-					_ClientNetworkDriver.SendMouse(ev);
+					if(!_ConnectedToSelf) _ClientNetworkDriver.SendMouse(ev);
 				}
 				virtual ~ViewerWindowImpl() {
 					_ClientNetworkDriver.Stop();
@@ -309,7 +309,7 @@ namespace SL {
 					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 				}
 				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
-					if (_HasFocus && !_CursorHidden) {
+					if (!_CursorHidden) {
 						Fl::awake(awakenhidecursor, this);
 						_CursorHidden = true;
 					}

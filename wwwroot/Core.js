@@ -58,7 +58,8 @@ var SL;
             (function (MousePress) {
                 MousePress[MousePress["UP"] = 0] = "UP";
                 MousePress[MousePress["DOWN"] = 1] = "DOWN";
-                MousePress[MousePress["NO_PRESS_DATA"] = 2] = "NO_PRESS_DATA";
+                MousePress[MousePress["DBLCLICK"] = 2] = "DBLCLICK";
+                MousePress[MousePress["NO_PRESS_DATA"] = 3] = "NO_PRESS_DATA";
             })(Input.MousePress || (Input.MousePress = {}));
             var MousePress = Input.MousePress;
             ;
@@ -169,23 +170,54 @@ var SL;
                     };
                     this.onkeyup = function (ev) {
                     };
+                    this.pointerEventToXY = function (e) {
+                        var out = new Utilities.Point(0, 0);
+                        if (e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend' || e.type == 'touchcancel') {
+                            var touch = e.touches[0] || e.changedTouches[0];
+                            out.X = touch.pageX;
+                            out.Y = touch.pageY;
+                        }
+                        else if (e.type == 'mousedown' || e.type == 'mouseup' || e.type == 'mousemove' || e.type == 'mouseover' || e.type == 'mouseout' || e.type == 'mouseenter' || e.type == 'mouseleave') {
+                            out.Y = e.pageY;
+                            out.X = e.pageX;
+                        }
+                        return out;
+                    };
+                    this.CancelTouchClickTimer = function () {
+                        if (_this.TouchTimer != null) {
+                            clearTimeout(_this.TouchTimer);
+                        }
+                        _this.TouchTimer = null;
+                    };
+                    this.ontouchstart = function (ev) {
+                        if (ev.touches.length == 1) {
+                            _this.StartTouchTimer(ev, _this.pointerEventToXY(ev));
+                        }
+                    };
+                    this.ontouchmove = function (ev) {
+                        _this.CancelTouchClickTimer();
+                    };
                     this.onmousedown = function (ev) {
-                        _this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY, 0);
+                        _this.handlemouse(ev.button, Input.MousePress.DOWN, _this.pointerEventToXY(ev), 0);
+                    };
+                    this.ondblclick = function (ev) {
+                        _this.handlemouse(ev.button, Input.MousePress.DBLCLICK, _this.pointerEventToXY(ev), 0);
                     };
                     this.onmouseup = function (ev) {
-                        _this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY, 0);
+                        _this.handlemouse(ev.button, Input.MousePress.UP, _this.pointerEventToXY(ev), 0);
                     };
                     this.onmove = function (ev) {
-                        _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, 0);
+                        _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, _this.pointerEventToXY(ev), 0);
                     };
                     this.onwheel = function (ev) {
-                        _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, ev.deltaY);
+                        _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, _this.pointerEventToXY(ev), ev.deltaY);
                     };
-                    this.handlemouse = function (button, press, x, y, scroll) {
+                    this.handlemouse = function (button, press, pos, scroll) {
                         var ev = new Input.MouseEvent();
                         var scale = _this.GetScalingFactor();
-                        ev.Pos.X = x / scale;
-                        ev.Pos.Y = y / scale;
+                        ev.Pos = pos;
+                        ev.Pos.X = ev.Pos.X / scale;
+                        ev.Pos.Y = ev.Pos.Y / scale;
                         if (scroll != 0) {
                             ev.ScrollDelta = scroll < 0 ? -1 : 1; //force a -1 or 1 because browsers send different values for each scroll tick.
                             ev.EventData = Input.MouseEvents.SCROLL;
@@ -304,13 +336,32 @@ var SL;
                         }
                     };
                     window.addEventListener("resize", this.onresize);
-                    window.addEventListener("mousedown", this.onmousedown);
+                    window.addEventListener("mousedown", this.onmousedown); //event not needed
                     window.addEventListener("mouseup", this.onmouseup);
                     window.addEventListener("mousemove", this.onmove);
                     window.addEventListener("wheel", this.onwheel);
                     window.addEventListener("keydown", this.onkeydown);
                     window.addEventListener("keyup", this.onkeyup);
+                    window.addEventListener("dblclick", this.ondblclick);
+                    // window.addEventListener("touchend", this.ontouchend);
+                    window.addEventListener("touchstart", this.ontouchstart);
+                    window.addEventListener("touchmove", this.ontouchmove);
                 }
+                ClientDriver.prototype.StartTouchTimer = function (ev, pos) {
+                    var self = this;
+                    if (self.TouchTimer == null) {
+                        self.TouchTimer = setTimeout(function () {
+                            self.CancelTouchClickTimer();
+                            self.handlemouse(0, Input.MousePress.DOWN, pos, 0);
+                            // self.handlemouse(0, Input.MousePress.UP, pos, 0);
+                        }, 500);
+                    }
+                    else {
+                        ev.preventDefault();
+                        self.CancelTouchClickTimer();
+                        self.handlemouse(0, Input.MousePress.DBLCLICK, pos, 0);
+                    }
+                };
                 ClientDriver.prototype.GetScalingFactor = function () {
                     if (this._ScaleImage && this._OriginalImage != null) {
                         return window.innerHeight / this._OriginalImage.height;

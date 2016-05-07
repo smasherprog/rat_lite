@@ -1,5 +1,4 @@
 /// <reference path="zstd.d.ts" />
-//the file above needs to be named .ts in order for typescript to actually generate javascript code..
 
 module SL {
     export module Remote_Access_Library {
@@ -59,7 +58,7 @@ module SL {
                     this.Pos.Fill(d, offset + 4);
                     dt.setInt32(offset + 4 + Utilities.Point.sizeof(), this.ScrollDelta, true);
                     dt.setUint32(offset + 4 + Utilities.Point.sizeof() + 4, this.PressData, true);
-        
+
                 }
             };
         }
@@ -119,6 +118,9 @@ module SL {
                     window.addEventListener("mousedown", this.onmousedown);
                     window.addEventListener("mouseup", this.onmouseup);
                     window.addEventListener("mousemove", this.onmove);
+                    window.addEventListener("wheel", this.onwheel);
+                    window.addEventListener("keydown", this.onkeydown);
+                    window.addEventListener("keyup", this.onkeyup);
                 }
                 public Start = (): void => {
                     var testroot = document.getElementById(this._DivRootId);
@@ -154,39 +156,51 @@ module SL {
                 public ScaleView = (b: boolean): void => {
                     this._ScaleImage = b;
                 }
-                onmousedown = (ev: MouseEvent): void => {
-                    this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY);
-                }
-                onmouseup = (ev: MouseEvent): void => {
-                    this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY);
-                }
-                onmove = (ev: MouseEvent): void => {
-                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY);
+                onkeydown = (ev: KeyboardEvent): void => {
 
                 }
-                private handlemouse = (button: number, press: Input.MousePress, x: number, y: number): void => {
+                onkeyup = (ev: KeyboardEvent): void => {
+
+                }
+                onmousedown = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY, 0);
+                }
+                onmouseup = (ev: MouseEvent): void => {
+                    this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY, 0);
+                }
+                onmove = (ev: MouseEvent): void => {
+                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, 0);
+                }
+                onwheel = (ev: WheelEvent): void => {
+                    this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, ev.deltaY);
+                }
+                private handlemouse = (button: number, press: Input.MousePress, x: number, y: number, scroll: number): void => {
                     var ev = new Input.MouseEvent();
                     var scale = this.GetScalingFactor();
                     ev.Pos.X = x / scale;
                     ev.Pos.Y = y / scale;
-                    ev.ScrollDelta = 0;
-
+                    
+                    if (scroll != 0) {
+                        ev.ScrollDelta = scroll < 0 ? -1 : 1;//force a -1 or 1 because browsers send different values for each scroll tick.
+                        ev.EventData = Input.MouseEvents.SCROLL;
+                    } else {
+                        ev.ScrollDelta = 0;
+                        switch (button) {
+                            case 0:
+                                ev.EventData = Input.MouseEvents.LEFT;
+                                break;
+                            case 1:
+                                ev.EventData = Input.MouseEvents.MIDDLE;
+                                break;
+                            case 2:
+                                ev.EventData = Input.MouseEvents.RIGHT;
+                                break;
+                            default:
+                                ev.EventData = Input.MouseEvents.NO_EVENTDATA;
+                                break;
+                        };
+                    }
                     ev.PressData = press;
-
-                    switch (button) {
-                        case 0:
-                            ev.EventData = Input.MouseEvents.LEFT;
-                            break;
-                        case 1:
-                            ev.EventData = Input.MouseEvents.MIDDLE;
-                            break;
-                        case 2:
-                            ev.EventData = Input.MouseEvents.RIGHT;
-                            break;
-                        default:
-                            ev.EventData = Input.MouseEvents.NO_EVENTDATA;
-                            break;
-                    };
                     this._ClientNetworkDriver.SendMouse(ev);
                 }
                 onresize = (ev: UIEvent): void => {
@@ -267,7 +281,7 @@ module SL {
                     this._HTMLCanvasMouseImage.height = point.Y;
                     try {
                         this._Cursor = this._HTMLCanvasMouseImage.getContext("2d").createImageData(point.X, point.Y);
-                        
+
                         for (var i = 0; i < this._Cursor.data.length; i += 4) {
                             this._Cursor.data[i + 0] = img[i + 0];
                             this._Cursor.data[i + 1] = img[i + 1];
@@ -332,7 +346,7 @@ module SL {
                     this._TotalMemoryUsed += p.Payload_Length;
                     var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length);//get enough space in the heap
                     srcbuff.set(new Uint8Array(p.Payload, 0, p.Payload_Length));//copy the data to the newly allocated memory
-                    
+
                     var dstsize = _ZSTD_compressBound(p.UncompressedLength + p.sizeof());
                     var dsttr = Module._malloc(dstsize);//get worst case space requirements for dst buffer
                     this._TotalMemoryUsed += dstsize;
@@ -342,16 +356,16 @@ module SL {
                     if (_ZSTD_isError(p.Payload_Length) > 0) {
                         console.log('zstd error' + _ZSTD_getErrorName(p.Payload_Length));
                     }
-                   
+
                     p.Fill(new Uint32Array(Module.HEAPU8.buffer, dsttr, p.sizeof()));
 
                     var t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                   // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
+                    // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
 
                     Module._free(srcPtr);
                     this._TotalMemoryUsed -= p.Payload_Length;
-                    var test = dstbuff.buffer.slice(dsttr, dsttr+ p.Payload_Length + p.sizeof());
+                    var test = dstbuff.buffer.slice(dsttr, dsttr + p.Payload_Length + p.sizeof());
                     var teu = new Uint8Array(test, 0, p.Payload_Length + p.sizeof());
                     this._Socket.send(teu);
                     Module._free(dsttr);
@@ -384,7 +398,7 @@ module SL {
                     }
                     var t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                 //   console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
+                    //   console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                     t0 = performance.now();
                     switch (packetheader.Packet_Type) {
                         case (PACKET_TYPES.SCREENIMAGE):
@@ -409,7 +423,7 @@ module SL {
                     this._TotalMemoryUsed -= packetheader.Payload_Length;
                     t1 = performance.now();
                     //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-                  //  console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
+                    //  console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
                 }
                 _arrayBufferToBase64(buffer: Uint8Array, offset: number): string {
                     var binary = '';

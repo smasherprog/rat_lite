@@ -104,6 +104,7 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -111,6 +112,7 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
@@ -118,6 +120,7 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -125,6 +128,7 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -132,6 +136,7 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
@@ -139,6 +144,7 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>Intermediate\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)Output\$(Platform)\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -156,6 +162,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -173,6 +189,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
@@ -190,6 +216,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -211,6 +247,16 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -232,6 +278,16 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
@@ -253,6 +309,16 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="mainServer.cpp" />

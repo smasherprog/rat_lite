@@ -187,13 +187,17 @@ namespace SL
 #endif
 
 
-			void SetMouseEvent(const Input::MouseEvent& m) {
-				//SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
-#if defined _WIN32
 
+			void SetMouseEvent(const Input::MouseEvent& m) {
+				SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
+				assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
+
+#if defined _WIN32
+				
 				INPUT input;
+				memset(&input, 0, sizeof(input));
 				input.type = INPUT_MOUSE;
-				input.mi.mouseData = m.ScrollDelta / 120;
+				input.mi.mouseData = m.ScrollDelta * 120;
 				input.mi.dx = static_cast<LONG>(static_cast<float>(m.Pos.X)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CXSCREEN))));//x being coord in pixels
 				input.mi.dy = static_cast<LONG>(static_cast<float>(m.Pos.Y)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CYSCREEN))));//y being coord in pixels
 				input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
@@ -215,7 +219,7 @@ namespace SL
 					break;
 				}
 
-				//SendInput(1, &input, sizeof(input));
+				SendInput(1, &input, sizeof(input));
 
 #elif defined __APPLE__
 				CGPoint new_pos;

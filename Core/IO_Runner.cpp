@@ -36,7 +36,6 @@ namespace SL {
 	}
 }
 
-
 SL::Remote_Access_Library::Network::IO_Runner::IO_Runner() {
 	Start();
 }

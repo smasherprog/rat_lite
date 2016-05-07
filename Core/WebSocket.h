@@ -219,7 +219,10 @@ namespace SL {
 								});
 							}
 							else {
+							
 								if (this->_SocketImpl.Server) {
+									assert(bytes_transferred > 4);
+							
 									//servers receive data masked, so it needs to be unmasked
 									unsigned char mask[MASKSIZE];
 									memcpy(mask, packet.Payload, sizeof(mask));

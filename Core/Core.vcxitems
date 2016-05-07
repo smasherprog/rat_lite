@@ -107,13 +107,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
       <FileType>Document</FileType>
-      <Command>tsc $(SolutionDir)wwwroot\Core.ts</Command>
-      <Outputs>$(OutDir)wwwroot\Core.js</Outputs>
+      <Command>tsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
+      <Outputs>Core.js</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
       <LinkObjects>false</LinkObjects>
-    </None>
+      <ExcludedFromBuild>
+      </ExcludedFromBuild>
+    </CustomBuild>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />

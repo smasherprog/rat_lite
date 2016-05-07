@@ -1,18 +1,16 @@
 /// <reference path="zstd.d.ts" />
-//the file above needs to be named .ts in order for typescript to actually generate javascript code..
 var SL;
 (function (SL) {
+    var Remote_Access_Library;
     (function (Remote_Access_Library) {
+        var Utilities;
         (function (Utilities) {
             var Point = (function () {
                 function Point(X, Y) {
                     this.X = X;
                     this.Y = Y;
                 }
-                Point.sizeof = function () {
-                    return 8;
-                };
-
+                Point.sizeof = function () { return 8; }; //actual bytes used
                 Point.FromArray = function (data) {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Point(arr[0], arr[1]);
@@ -23,7 +21,7 @@ var SL;
                     dt.setInt32(4, this.Y, true);
                 };
                 return Point;
-            })();
+            }());
             Utilities.Point = Point;
             var Rect = (function () {
                 function Rect(Origin, Height, Width) {
@@ -31,10 +29,7 @@ var SL;
                     this.Height = Height;
                     this.Width = Width;
                 }
-                Rect.sizeof = function () {
-                    return 8 + Point.sizeof();
-                };
-
+                Rect.sizeof = function () { return 8 + Point.sizeof(); }; //actual bytes used
                 Rect.FromArray = function (data) {
                     var arr = new Int32Array(data.slice(0, this.sizeof()).buffer);
                     return new Rect(new Point(arr[0], arr[1]), arr[2], arr[3]);
@@ -46,10 +41,10 @@ var SL;
                     dt.setInt32(4, this.Width, true);
                 };
                 return Rect;
-            })();
+            }());
             Utilities.Rect = Rect;
-        })(Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
-        var Utilities = Remote_Access_Library.Utilities;
+        })(Utilities = Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
+        var Input;
         (function (Input) {
             (function (MouseEvents) {
                 MouseEvents[MouseEvents["LEFT"] = 0] = "LEFT";
@@ -69,18 +64,16 @@ var SL;
             ;
             var MouseEvent = (function () {
                 function MouseEvent(EventData, Pos, ScrollDelta, PressData) {
-                    if (typeof EventData === "undefined") { EventData = 4 /* NO_EVENTDATA */; }
-                    if (typeof Pos === "undefined") { Pos = new Utilities.Point(0, 0); }
-                    if (typeof ScrollDelta === "undefined") { ScrollDelta = 0; }
-                    if (typeof PressData === "undefined") { PressData = 2 /* NO_PRESS_DATA */; }
+                    if (EventData === void 0) { EventData = MouseEvents.NO_EVENTDATA; }
+                    if (Pos === void 0) { Pos = new Utilities.Point(0, 0); }
+                    if (ScrollDelta === void 0) { ScrollDelta = 0; }
+                    if (PressData === void 0) { PressData = MousePress.NO_PRESS_DATA; }
                     this.EventData = EventData;
                     this.Pos = Pos;
                     this.ScrollDelta = ScrollDelta;
                     this.PressData = PressData;
                 }
-                MouseEvent.sizeof = function () {
-                    return 4 + Utilities.Point.sizeof() + 4 + 4;
-                };
+                MouseEvent.sizeof = function () { return 4 + Utilities.Point.sizeof() + 4 + 4; }; //actual bytes used
                 MouseEvent.prototype.Fill = function (d, offset) {
                     var dt = new DataView(d, offset);
                     dt.setUint32(0, this.EventData, true);
@@ -89,11 +82,11 @@ var SL;
                     dt.setUint32(offset + 4 + Utilities.Point.sizeof() + 4, this.PressData, true);
                 };
                 return MouseEvent;
-            })();
+            }());
             Input.MouseEvent = MouseEvent;
             ;
-        })(Remote_Access_Library.Input || (Remote_Access_Library.Input = {}));
-        var Input = Remote_Access_Library.Input;
+        })(Input = Remote_Access_Library.Input || (Remote_Access_Library.Input = {}));
+        var Network;
         (function (Network) {
             (function (PACKET_TYPES) {
                 PACKET_TYPES[PACKET_TYPES["INVALID"] = 0] = "INVALID";
@@ -104,38 +97,34 @@ var SL;
                 PACKET_TYPES[PACKET_TYPES["MOUSEIMAGE"] = 5] = "MOUSEIMAGE";
                 PACKET_TYPES[PACKET_TYPES["KEYEVENT"] = 6] = "KEYEVENT";
                 PACKET_TYPES[PACKET_TYPES["MOUSEEVENT"] = 7] = "MOUSEEVENT";
-
                 //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
                 PACKET_TYPES[PACKET_TYPES["LAST_PACKET_TYPE"] = 8] = "LAST_PACKET_TYPE";
             })(Network.PACKET_TYPES || (Network.PACKET_TYPES = {}));
             var PACKET_TYPES = Network.PACKET_TYPES;
             var PacketHeader = (function () {
                 function PacketHeader(Packet_Type, Payload_Length, UncompressedLength) {
-                    if (typeof Packet_Type === "undefined") { Packet_Type = 0 /* INVALID */; }
-                    if (typeof Payload_Length === "undefined") { Payload_Length = 0; }
-                    if (typeof UncompressedLength === "undefined") { UncompressedLength = 0; }
+                    if (Packet_Type === void 0) { Packet_Type = PACKET_TYPES.INVALID; }
+                    if (Payload_Length === void 0) { Payload_Length = 0; }
+                    if (UncompressedLength === void 0) { UncompressedLength = 0; }
                     this.Packet_Type = Packet_Type;
                     this.Payload_Length = Payload_Length;
                     this.UncompressedLength = UncompressedLength;
                     this.Payload = new ArrayBuffer(this.Payload_Length);
                 }
-                PacketHeader.prototype.sizeof = function () {
-                    return 12;
-                };
-
+                PacketHeader.prototype.sizeof = function () { return 12; }; //actual bytes used
                 PacketHeader.prototype.Fill = function (arr) {
                     arr[0] = this.Packet_Type;
                     arr[1] = this.Payload_Length;
                     arr[2] = this.UncompressedLength;
                 };
                 return PacketHeader;
-            })();
+            }());
             Network.PacketHeader = PacketHeader;
             var SocketStats = (function () {
                 function SocketStats() {
                 }
                 return SocketStats;
-            })();
+            }());
             Network.SocketStats = SocketStats;
             var ClientDriver = (function () {
                 function ClientDriver(_dst_host, _dst_port) {
@@ -143,7 +132,7 @@ var SL;
                     this._dst_host = _dst_host;
                     this._dst_port = _dst_port;
                     this._ScaleImage = false;
-                    this._DivRootId = 'SLRATROOTID123';
+                    this._DivRootId = 'SLRATROOTID123'; //this is an id used internally to double check if a canvas has allready been inserted 
                     this.Start = function () {
                         var testroot = document.getElementById(_this._DivRootId);
                         if (testroot !== null) {
@@ -155,12 +144,10 @@ var SL;
                         _this._HTMLCanvasScreenImage = document.createElement('canvas');
                         _this._HTMLCanvasScreenImage.style.position = 'absolute';
                         _this._HTMLCanvasScreenImage.style.left = _this._HTMLCanvasScreenImage.style.top = _this._HTMLCanvasScreenImage.style.zIndex = '0';
-
                         _this._HTMLCanvasMouseImage = document.createElement('canvas');
                         _this._HTMLCanvasMouseImage.style.position = 'absolute';
                         _this._HTMLCanvasMouseImage.style.left = _this._HTMLCanvasMouseImage.style.top = '0';
                         _this._HTMLCanvasMouseImage.style.zIndex = '1';
-
                         _this._HTMLDivRoot.appendChild(_this._HTMLCanvasScreenImage);
                         _this._HTMLDivRoot.appendChild(_this._HTMLCanvasMouseImage);
                         document.body.appendChild(_this._HTMLDivRoot); //add to the dom
@@ -178,39 +165,50 @@ var SL;
                     this.ScaleView = function (b) {
                         _this._ScaleImage = b;
                     };
+                    this.onkeydown = function (ev) {
+                    };
+                    this.onkeyup = function (ev) {
+                    };
                     this.onmousedown = function (ev) {
-                        _this.handlemouse(ev.button, 1 /* DOWN */, ev.clientX, ev.clientY);
+                        _this.handlemouse(ev.button, Input.MousePress.DOWN, ev.clientX, ev.clientY, 0);
                     };
                     this.onmouseup = function (ev) {
-                        _this.handlemouse(ev.button, 0 /* UP */, ev.clientX, ev.clientY);
+                        _this.handlemouse(ev.button, Input.MousePress.UP, ev.clientX, ev.clientY, 0);
                     };
                     this.onmove = function (ev) {
-                        _this.handlemouse(-1, 2 /* NO_PRESS_DATA */, ev.clientX, ev.clientY);
+                        _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, 0);
                     };
-                    this.handlemouse = function (button, press, x, y) {
+                    this.onwheel = function (ev) {
+                        _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, ev.clientX, ev.clientY, ev.deltaY);
+                    };
+                    this.handlemouse = function (button, press, x, y, scroll) {
                         var ev = new Input.MouseEvent();
                         var scale = _this.GetScalingFactor();
                         ev.Pos.X = x / scale;
                         ev.Pos.Y = y / scale;
-                        ev.ScrollDelta = 0;
-
-                        ev.PressData = press;
-
-                        switch (button) {
-                            case 0:
-                                ev.EventData = 0 /* LEFT */;
-                                break;
-                            case 1:
-                                ev.EventData = 2 /* MIDDLE */;
-                                break;
-                            case 2:
-                                ev.EventData = 1 /* RIGHT */;
-                                break;
-                            default:
-                                ev.EventData = 4 /* NO_EVENTDATA */;
-                                break;
+                        if (scroll != 0) {
+                            ev.ScrollDelta = scroll < 0 ? -1 : 1; //force a -1 or 1 because browsers send different values for each scroll tick.
+                            ev.EventData = Input.MouseEvents.SCROLL;
                         }
-                        ;
+                        else {
+                            ev.ScrollDelta = 0;
+                            switch (button) {
+                                case 0:
+                                    ev.EventData = Input.MouseEvents.LEFT;
+                                    break;
+                                case 1:
+                                    ev.EventData = Input.MouseEvents.MIDDLE;
+                                    break;
+                                case 2:
+                                    ev.EventData = Input.MouseEvents.RIGHT;
+                                    break;
+                                default:
+                                    ev.EventData = Input.MouseEvents.NO_EVENTDATA;
+                                    break;
+                            }
+                            ;
+                        }
+                        ev.PressData = press;
                         _this._ClientNetworkDriver.SendMouse(ev);
                     };
                     this.onresize = function (ev) {
@@ -219,7 +217,8 @@ var SL;
                             _this._HTMLCanvasScreenImage.width = _this._OriginalImage.width * scale;
                             _this._HTMLCanvasScreenImage.height = _this._OriginalImage.height * scale;
                             _this._HTMLCanvasScreenImage.getContext("2d").drawImage(_this._OriginalImage, 0, 0, _this._HTMLCanvasScreenImage.width, _this._HTMLCanvasScreenImage.height);
-                        } else if (!_this._ScaleImage && _this._OriginalImage != null) {
+                        }
+                        else if (!_this._ScaleImage && _this._OriginalImage != null) {
                             if (_this._HTMLCanvasScreenImage.height != _this._OriginalImage.height || _this._HTMLCanvasScreenImage.width != _this._OriginalImage.width) {
                                 _this._HTMLCanvasScreenImage.width = _this._OriginalImage.width;
                                 _this._HTMLCanvasScreenImage.height = _this._OriginalImage.height;
@@ -231,7 +230,6 @@ var SL;
                         if (_this._OriginalImage === null)
                             return;
                         "use strict";
-
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                         var i = new Image();
                         i.src = "data:image/jpeg;base64," + img;
@@ -240,23 +238,21 @@ var SL;
                             if (self._ScaleImage) {
                                 var scale = self.GetScalingFactor();
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, rect.Origin.X * scale, rect.Origin.Y * scale, rect.Width * scale, rect.Height * scale);
-                            } else {
+                            }
+                            else {
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, rect.Origin.X, rect.Origin.Y);
                             }
                             // console.log("ctx.drawImage" + coords.Y, "  " + coords.X);
                         };
-
                         i.onerror = function (stuff) {
                             console.log("Img Onerror:", stuff);
                         };
                     };
                     this.OnReceive_Image = function (socket, rect, img) {
                         "use strict";
-
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                         var i = new Image();
                         i.src = "data:image/jpeg;base64," + img;
-
                         var self = _this;
                         i.onload = function () {
                             if (self._ScaleImage) {
@@ -264,7 +260,8 @@ var SL;
                                 self._HTMLCanvasScreenImage.width = i.width * scale;
                                 self._HTMLCanvasScreenImage.height = i.height * scale;
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0, self._HTMLCanvasScreenImage.width, self._HTMLCanvasScreenImage.height);
-                            } else {
+                            }
+                            else {
                                 self._HTMLCanvasScreenImage.width = i.width;
                                 self._HTMLCanvasScreenImage.height = i.height;
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0);
@@ -278,13 +275,11 @@ var SL;
                     };
                     this.OnReceive_MouseImage = function (socket, point, img) {
                         "use strict";
-
                         //console.log('coords' + coords.X + ' ' + coords.Y + ' ' + coords.Width + ' ' + coords.Height);
                         _this._HTMLCanvasMouseImage.width = point.X;
                         _this._HTMLCanvasMouseImage.height = point.Y;
-                        try  {
+                        try {
                             _this._Cursor = _this._HTMLCanvasMouseImage.getContext("2d").createImageData(point.X, point.Y);
-
                             for (var i = 0; i < _this._Cursor.data.length; i += 4) {
                                 _this._Cursor.data[i + 0] = img[i + 0];
                                 _this._Cursor.data[i + 1] = img[i + 1];
@@ -292,7 +287,8 @@ var SL;
                                 _this._Cursor.data[i + 3] = img[i + 3];
                             }
                             _this._HTMLCanvasMouseImage.getContext("2d").putImageData(_this._Cursor, 0, 0);
-                        } catch (e) {
+                        }
+                        catch (e) {
                             console.log(e.message);
                         }
                     };
@@ -301,7 +297,8 @@ var SL;
                             var scale = _this.GetScalingFactor();
                             _this._HTMLCanvasMouseImage.style.top = (pos.Y * scale) + "px";
                             _this._HTMLCanvasMouseImage.style.left = (pos.X * scale) + "px";
-                        } else {
+                        }
+                        else {
                             _this._HTMLCanvasMouseImage.style.top = pos.Y + "px";
                             _this._HTMLCanvasMouseImage.style.left = pos.X + "px";
                         }
@@ -310,18 +307,21 @@ var SL;
                     window.addEventListener("mousedown", this.onmousedown);
                     window.addEventListener("mouseup", this.onmouseup);
                     window.addEventListener("mousemove", this.onmove);
+                    window.addEventListener("wheel", this.onwheel);
+                    window.addEventListener("keydown", this.onkeydown);
+                    window.addEventListener("keyup", this.onkeyup);
                 }
                 ClientDriver.prototype.GetScalingFactor = function () {
                     if (this._ScaleImage && this._OriginalImage != null) {
                         return window.innerHeight / this._OriginalImage.height;
-                    } else {
+                    }
+                    else {
                         return 1.0;
                     }
                 };
                 return ClientDriver;
-            })();
+            }());
             Network.ClientDriver = ClientDriver;
-
             var ClientNetworkDriver = (function () {
                 function ClientNetworkDriver(_IClientDriver, _dst_host, _dst_port) {
                     var _this = this;
@@ -332,7 +332,8 @@ var SL;
                         var connectstring = "";
                         if (window.location.protocol != "https:") {
                             connectstring += "ws://";
-                        } else {
+                        }
+                        else {
                             connectstring += "wss://";
                         }
                         connectstring += _this._dst_host + ":" + _this._dst_port + "/rdp";
@@ -347,32 +348,26 @@ var SL;
                         _this._Socket = null;
                     };
                     this.SendMouse = function (m) {
-                        var pac = new PacketHeader(7 /* MOUSEEVENT */, Input.MouseEvent.sizeof(), Input.MouseEvent.sizeof());
+                        var pac = new PacketHeader(PACKET_TYPES.MOUSEEVENT, Input.MouseEvent.sizeof(), Input.MouseEvent.sizeof());
                         m.Fill(pac.Payload, 0);
                         _this.Compress_and_Send(pac);
                     };
                     this.Compress_and_Send = function (p) {
                         var t0 = performance.now();
-
                         var srcPtr = Module._malloc(p.Payload_Length);
                         _this._TotalMemoryUsed += p.Payload_Length;
-                        var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length);
+                        var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, p.Payload_Length); //get enough space in the heap
                         srcbuff.set(new Uint8Array(p.Payload, 0, p.Payload_Length)); //copy the data to the newly allocated memory
-
                         var dstsize = _ZSTD_compressBound(p.UncompressedLength + p.sizeof());
-                        var dsttr = Module._malloc(dstsize);
+                        var dsttr = Module._malloc(dstsize); //get worst case space requirements for dst buffer
                         _this._TotalMemoryUsed += dstsize;
-                        var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, dstsize);
-
+                        var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, dstsize); // dont write to the header portion
                         p.Payload_Length = _ZSTD_compress(dstbuff.byteOffset + p.sizeof(), dstsize - p.sizeof(), srcbuff.byteOffset, p.Payload_Length, 3);
                         if (_ZSTD_isError(p.Payload_Length) > 0) {
                             console.log('zstd error' + _ZSTD_getErrorName(p.Payload_Length));
                         }
-
                         p.Fill(new Uint32Array(Module.HEAPU8.buffer, dsttr, p.sizeof()));
-
                         var t1 = performance.now();
-
                         //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
                         // console.log("took " + (t1 - t0) + " milliseconds to Compress the packet")
                         Module._free(srcPtr);
@@ -385,42 +380,37 @@ var SL;
                     };
                     this.OnMessage = function (ev) {
                         var t0 = performance.now();
-
                         var packetheader = new PacketHeader();
                         var data = new DataView(ev.data);
                         packetheader.Packet_Type = data.getInt32(0, true);
                         packetheader.Payload_Length = data.getInt32(4, true);
                         packetheader.UncompressedLength = data.getInt32(8, true);
-
                         var srcPtr = Module._malloc(packetheader.Payload_Length);
                         _this._TotalMemoryUsed += packetheader.Payload_Length;
                         var srcbuff = new Uint8Array(Module.HEAPU8.buffer, srcPtr, packetheader.Payload_Length);
                         srcbuff.set(new Uint8Array(ev.data, packetheader.sizeof()));
-
                         var dsttr = Module._malloc(packetheader.UncompressedLength);
                         _this._TotalMemoryUsed += packetheader.UncompressedLength;
                         var dstbuff = new Uint8Array(Module.HEAPU8.buffer, dsttr, packetheader.UncompressedLength);
-
                         var decompressedsize = _ZSTD_decompress(dstbuff.byteOffset, packetheader.UncompressedLength, srcbuff.byteOffset, packetheader.Payload_Length);
                         if (_ZSTD_isError(decompressedsize) > 0) {
                             console.log('zstd error' + _ZSTD_getErrorName(decompressedsize));
                         }
                         var t1 = performance.now();
-
                         //comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
                         //   console.log("took " + (t1 - t0) + " milliseconds to Decompress the receive loop")
                         t0 = performance.now();
                         switch (packetheader.Packet_Type) {
-                            case (2 /* SCREENIMAGE */):
+                            case (PACKET_TYPES.SCREENIMAGE):
                                 _this.Image(dstbuff);
                                 break;
-                            case (3 /* SCREENIMAGEDIF */):
+                            case (PACKET_TYPES.SCREENIMAGEDIF):
                                 _this.ImageDif(dstbuff);
                                 break;
-                            case (5 /* MOUSEIMAGE */):
+                            case (PACKET_TYPES.MOUSEIMAGE):
                                 _this.MouseImage(dstbuff);
                                 break;
-                            case (4 /* MOUSEPOS */):
+                            case (PACKET_TYPES.MOUSEPOS):
                                 _this.MousePos(dstbuff);
                                 break;
                             default:
@@ -457,7 +447,6 @@ var SL;
                     }
                     return window.btoa(binary);
                 };
-
                 ClientNetworkDriver.prototype.OnOpen = function (ev) {
                     window.document.title = "Connected: " + window.location.hostname + ":6001/rdp";
                     console.log('Socket Opened');
@@ -496,10 +485,8 @@ var SL;
                     console.log('Socket Closed: ' + reason);
                 };
                 return ClientNetworkDriver;
-            })();
+            }());
             Network.ClientNetworkDriver = ClientNetworkDriver;
-        })(Remote_Access_Library.Network || (Remote_Access_Library.Network = {}));
-        var Network = Remote_Access_Library.Network;
-    })(SL.Remote_Access_Library || (SL.Remote_Access_Library = {}));
-    var Remote_Access_Library = SL.Remote_Access_Library;
+        })(Network = Remote_Access_Library.Network || (Remote_Access_Library.Network = {}));
+    })(Remote_Access_Library = SL.Remote_Access_Library || (SL.Remote_Access_Library = {}));
 })(SL || (SL = {}));

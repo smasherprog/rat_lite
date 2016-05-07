@@ -214,15 +214,11 @@ namespace SL {
 					ev.Pos = Utilities::Point(static_cast<int>(static_cast<float>(x) / scale), static_cast<int>(static_cast<float>(y) / scale));
 					if (e == FL_MOUSEWHEEL) {
 						ev.ScrollDelta = Fl::event_dy();
-
-					} else {
-						ev.ScrollDelta = 0;
+						ev.EventData = Input::MouseEvents::SCROLL;
 					}
-					
-					ev.PressData = press;
-					
-				
-					switch (button) {
+					else {
+						ev.ScrollDelta = 0;
+						switch (button) {
 						case FL_LEFT_MOUSE:
 							ev.EventData = Input::MouseEvents::LEFT;
 							break;
@@ -236,7 +232,8 @@ namespace SL {
 							ev.EventData = Input::MouseEvents::NO_EVENTDATA;
 							break;
 						};
-
+					}
+					ev.PressData = press;
 					_ClientNetworkDriver.SendMouse(ev);
 				}
 				virtual ~ViewerWindowImpl() {

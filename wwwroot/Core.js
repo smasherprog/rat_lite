@@ -46,6 +46,295 @@ var SL;
         })(Utilities = Remote_Access_Library.Utilities || (Remote_Access_Library.Utilities = {}));
         var Input;
         (function (Input) {
+            (function (KeyPress) {
+                KeyPress[KeyPress["UP"] = 0] = "UP";
+                KeyPress[KeyPress["DOWN"] = 1] = "DOWN";
+            })(Input.KeyPress || (Input.KeyPress = {}));
+            var KeyPress = Input.KeyPress;
+            ;
+            (function (SpecialKeys) {
+                SpecialKeys[SpecialKeys["ALT"] = 0] = "ALT";
+                SpecialKeys[SpecialKeys["CTRL"] = 1] = "CTRL";
+                SpecialKeys[SpecialKeys["SHIFT"] = 2] = "SHIFT";
+                SpecialKeys[SpecialKeys["NO_PRESS_DATA"] = 3] = "NO_PRESS_DATA";
+            })(Input.SpecialKeys || (Input.SpecialKeys = {}));
+            var SpecialKeys = Input.SpecialKeys;
+            ;
+            var KeyEvent = (function () {
+                function KeyEvent(PressData, Key, SpecialKey) {
+                    this.PressData = PressData;
+                    this.Key = Key;
+                    this.SpecialKey = SpecialKey;
+                }
+                KeyEvent.sizeof = function () { return 4 + 4 + 4; }; //actual bytes used
+                KeyEvent.prototype.Fill = function (d, offset) {
+                    var dt = new DataView(d, offset);
+                    dt.setUint32(0, this.PressData, true);
+                    dt.setInt32(4, this.Key, true);
+                    dt.setUint32(4 + 4, this.SpecialKey, true);
+                };
+                KeyEvent.keyboardMap = [
+                    "",
+                    "",
+                    "",
+                    "CANCEL",
+                    "",
+                    "",
+                    "HELP",
+                    "",
+                    "BACK_SPACE",
+                    "TAB",
+                    "",
+                    "",
+                    "CLEAR",
+                    "ENTER",
+                    "ENTER_SPECIAL",
+                    "",
+                    "SHIFT",
+                    "CONTROL",
+                    "ALT",
+                    "PAUSE",
+                    "CAPS_LOCK",
+                    "KANA",
+                    "EISU",
+                    "JUNJA",
+                    "FINAL",
+                    "HANJA",
+                    "",
+                    "ESCAPE",
+                    "CONVERT",
+                    "NONCONVERT",
+                    "ACCEPT",
+                    "MODECHANGE",
+                    "SPACE",
+                    "PAGE_UP",
+                    "PAGE_DOWN",
+                    "END",
+                    "HOME",
+                    "LEFT",
+                    "UP",
+                    "RIGHT",
+                    "DOWN",
+                    "SELECT",
+                    "PRINT",
+                    "EXECUTE",
+                    "PRINTSCREEN",
+                    "INSERT",
+                    "DELETE",
+                    "",
+                    "0",
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "COLON",
+                    "SEMICOLON",
+                    "LESS_THAN",
+                    "EQUALS",
+                    "GREATER_THAN",
+                    "QUESTION_MARK",
+                    "AT",
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "E",
+                    "F",
+                    "G",
+                    "H",
+                    "I",
+                    "J",
+                    "K",
+                    "L",
+                    "M",
+                    "N",
+                    "O",
+                    "P",
+                    "Q",
+                    "R",
+                    "S",
+                    "T",
+                    "U",
+                    "V",
+                    "W",
+                    "X",
+                    "Y",
+                    "Z",
+                    "OS_KEY",
+                    "",
+                    "CONTEXT_MENU",
+                    "",
+                    "SLEEP",
+                    "NUMPAD0",
+                    "NUMPAD1",
+                    "NUMPAD2",
+                    "NUMPAD3",
+                    "NUMPAD4",
+                    "NUMPAD5",
+                    "NUMPAD6",
+                    "NUMPAD7",
+                    "NUMPAD8",
+                    "NUMPAD9",
+                    "MULTIPLY",
+                    "ADD",
+                    "SEPARATOR",
+                    "SUBTRACT",
+                    "DECIMAL",
+                    "DIVIDE",
+                    "F1",
+                    "F2",
+                    "F3",
+                    "F4",
+                    "F5",
+                    "F6",
+                    "F7",
+                    "F8",
+                    "F9",
+                    "F10",
+                    "F11",
+                    "F12",
+                    "F13",
+                    "F14",
+                    "F15",
+                    "F16",
+                    "F17",
+                    "F18",
+                    "F19",
+                    "F20",
+                    "F21",
+                    "F22",
+                    "F23",
+                    "F24",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "NUM_LOCK",
+                    "SCROLL_LOCK",
+                    "WIN_OEM_FJ_JISHO",
+                    "WIN_OEM_FJ_MASSHOU",
+                    "WIN_OEM_FJ_TOUROKU",
+                    "WIN_OEM_FJ_LOYA",
+                    "WIN_OEM_FJ_ROYA",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "CIRCUMFLEX",
+                    "EXCLAMATION",
+                    "DOUBLE_QUOTE",
+                    "HASH",
+                    "DOLLAR",
+                    "PERCENT",
+                    "AMPERSAND",
+                    "UNDERSCORE",
+                    "OPEN_PAREN",
+                    "CLOSE_PAREN",
+                    "ASTERISK",
+                    "PLUS",
+                    "PIPE",
+                    "HYPHEN_MINUS",
+                    "OPEN_CURLY_BRACKET",
+                    "CLOSE_CURLY_BRACKET",
+                    "TILDE",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "VOLUME_MUTE",
+                    "VOLUME_DOWN",
+                    "VOLUME_UP",
+                    "",
+                    "",
+                    "SEMICOLON",
+                    "EQUALS",
+                    "COMMA",
+                    "MINUS",
+                    "PERIOD",
+                    "SLASH",
+                    "BACK_QUOTE",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "OPEN_BRACKET",
+                    "BACK_SLASH",
+                    "CLOSE_BRACKET",
+                    "QUOTE",
+                    "",
+                    "META",
+                    "ALTGR",
+                    "",
+                    "WIN_ICO_HELP",
+                    "WIN_ICO_00",
+                    "",
+                    "WIN_ICO_CLEAR",
+                    "",
+                    "",
+                    "WIN_OEM_RESET",
+                    "WIN_OEM_JUMP",
+                    "WIN_OEM_PA1",
+                    "WIN_OEM_PA2",
+                    "WIN_OEM_PA3",
+                    "WIN_OEM_WSCTRL",
+                    "WIN_OEM_CUSEL",
+                    "WIN_OEM_ATTN",
+                    "WIN_OEM_FINISH",
+                    "WIN_OEM_COPY",
+                    "WIN_OEM_AUTO",
+                    "WIN_OEM_ENLW",
+                    "WIN_OEM_BACKTAB",
+                    "ATTN",
+                    "CRSEL",
+                    "EXSEL",
+                    "EREOF",
+                    "PLAY",
+                    "ZOOM",
+                    "",
+                    "PA1",
+                    "WIN_OEM_CLEAR",
+                    "" // [255]
+                ];
+                return KeyEvent;
+            }());
+            Input.KeyEvent = KeyEvent;
+            ;
             (function (MouseEvents) {
                 MouseEvents[MouseEvents["LEFT"] = 0] = "LEFT";
                 MouseEvents[MouseEvents["RIGHT"] = 1] = "RIGHT";
@@ -167,8 +456,23 @@ var SL;
                         _this._ScaleImage = b;
                     };
                     this.onkeydown = function (ev) {
+                        _this.handle_key(ev, new Input.KeyEvent(Input.KeyPress.DOWN, ev.keyCode || ev.which, Input.SpecialKeys.NO_PRESS_DATA));
                     };
                     this.onkeyup = function (ev) {
+                        _this.handle_key(ev, new Input.KeyEvent(Input.KeyPress.UP, ev.keyCode || ev.which, Input.SpecialKeys.NO_PRESS_DATA));
+                    };
+                    this.handle_key = function (ev, k) {
+                        console.log("s: '" + String.fromCharCode(k.Key) + "'");
+                        console.log("k: '" + k.Key + "'");
+                        console.log("N: '" + Input.KeyEvent.keyboardMap[k.Key] + "'");
+                        var spec = Input.SpecialKeys.NO_PRESS_DATA;
+                        if (ev.altKey)
+                            spec = Input.SpecialKeys.ALT;
+                        else if (ev.ctrlKey)
+                            spec = Input.SpecialKeys.CTRL;
+                        else if (ev.shiftKey)
+                            spec = Input.SpecialKeys.SHIFT;
+                        ev.preventDefault(); //capture the keypress
                     };
                     this.pointerEventToXY = function (e) {
                         var out = new Utilities.Point(0, 0);
@@ -241,7 +545,9 @@ var SL;
                             ;
                         }
                         ev.PressData = press;
-                        _this._ClientNetworkDriver.SendMouse(ev);
+                        if (!_this._ClientNetworkDriver.ConnectedToSelf()) {
+                            _this._ClientNetworkDriver.SendMouse(ev); //sending input to yourself will lead to an infinite loop...
+                        }
                     };
                     this.onresize = function (ev) {
                         if (_this._ScaleImage && _this._OriginalImage != null) {
@@ -379,6 +685,7 @@ var SL;
                     this._IClientDriver = _IClientDriver;
                     this._dst_host = _dst_host;
                     this._dst_port = _dst_port;
+                    this._ConnectedToSelf = false;
                     this.Start = function () {
                         var connectstring = "";
                         if (window.location.protocol != "https:") {
@@ -387,12 +694,16 @@ var SL;
                         else {
                             connectstring += "wss://";
                         }
+                        _this._ConnectedToSelf = (_this._dst_host == '127.0.0.1') || (_this._dst_host == 'localhost') || (_this._dst_host == '::1');
                         connectstring += _this._dst_host + ":" + _this._dst_port + "/rdp";
                         _this._Socket = new WebSocket(connectstring);
                         _this._Socket.binaryType = 'arraybuffer';
                         _this._Socket.onopen = _this.OnOpen;
                         _this._Socket.onclose = _this.OnClose;
                         _this._Socket.onmessage = _this.OnMessage;
+                    };
+                    this.ConnectedToSelf = function () {
+                        return _this._ConnectedToSelf;
                     };
                     this.Stop = function () {
                         _this._Socket.close(1001, "Web Browser called Stop()");

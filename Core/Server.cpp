@@ -91,7 +91,7 @@ namespace SL {
 				LastMouse = img;
 			}
 			virtual void OnMouse(Input::MouseEvent* m) override {
-				Capturing::SetMouseEvent(*m);
+				Input::SetMouseEvent(*m);
 			}
 			int Run() {
 				Status = Server_Status::SERVER_RUNNING;

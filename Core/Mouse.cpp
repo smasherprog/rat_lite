@@ -187,64 +187,6 @@ namespace SL
 #endif
 
 
-
-			void SetMouseEvent(const Input::MouseEvent& m) {
-				SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
-				assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
-
-#if defined _WIN32
-				
-				INPUT input;
-				memset(&input, 0, sizeof(input));
-				input.type = INPUT_MOUSE;
-				input.mi.mouseData = m.ScrollDelta * 120;
-				input.mi.dx = static_cast<LONG>(static_cast<float>(m.Pos.X)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CXSCREEN))));//x being coord in pixels
-				input.mi.dy = static_cast<LONG>(static_cast<float>(m.Pos.Y)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CYSCREEN))));//y being coord in pixels
-				input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
-
-				switch (m.EventData) {
-				case Input::MouseEvents::LEFT:
-					if (m.PressData == Input::MousePress::UP) input.mi.dwFlags |= MOUSEEVENTF_LEFTUP;
-					else if(m.PressData == Input::MousePress::DOWN) input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
-					else input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
-					break;
-				case Input::MouseEvents::MIDDLE:
-					if (m.PressData == Input::MousePress::UP) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
-					else if (m.PressData == Input::MousePress::DOWN) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
-					else input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
-					break;
-				case Input::MouseEvents::RIGHT:
-					if (m.PressData == Input::MousePress::UP) input.mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
-					else if (m.PressData == Input::MousePress::DOWN) input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
-					else input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP;
-					break;
-				case Input::MouseEvents::SCROLL:
-					input.mi.dwFlags |= MOUSEEVENTF_WHEEL;
-					break;
-				default:
-					break;
-				}
-
-				SendInput(1, &input, sizeof(input));
-				if(m.PressData == Input::MousePress::DBLCLICK) SendInput(1, &input, sizeof(input));
-#elif defined __APPLE__
-				CGPoint new_pos;
-				CGEventErr err;
-				new_pos.x = m.Pos.X;
-				new_pos.y = m.Pos.Y;
-				!CGWarpMouseCursorPosition(new_pos);
-#elif __linux__
-
-				auto display = XOpenDisplay(NULL);
-				auto root = DefaultRootWindow(display);
-				XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
-				XCloseDisplay(display);
-
-#endif
-
-			}
-
-		
 		}
 		namespace INTERNAL
 		{
@@ -301,4 +243,64 @@ SL::Remote_Access_Library::Capturing::Mouse::~Mouse()
 		_MouseImpl->_Running = false;
 		_MouseImpl->_thread.join();
 	}
+}
+
+void SL::Remote_Access_Library::Input::SetMouseEvent(const Input::MouseEvent & m)
+{
+
+	SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
+	assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
+
+#if defined _WIN32
+
+	INPUT input;
+	memset(&input, 0, sizeof(input));
+	input.type = INPUT_MOUSE;
+	input.mi.mouseData = m.ScrollDelta * 120;
+	input.mi.dx = static_cast<LONG>(static_cast<float>(m.Pos.X)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CXSCREEN))));//x being coord in pixels
+	input.mi.dy = static_cast<LONG>(static_cast<float>(m.Pos.Y)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CYSCREEN))));//y being coord in pixels
+	input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
+	switch (m.EventData) {
+	case Input::Mouse::Events::LEFT:
+		if (m.PressData == Input::Mouse::Press::UP) input.mi.dwFlags |= MOUSEEVENTF_LEFTUP;
+		else if (m.PressData == Input::Mouse::Press::DOWN) input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
+		else input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
+		break;
+	case Input::Mouse::Events::MIDDLE:
+		if (m.PressData == Input::Mouse::Press::UP) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
+		else if (m.PressData == Input::Mouse::Press::DOWN) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
+		else input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
+		break;
+	case Input::Mouse::Events::RIGHT:
+		if (m.PressData == Input::Mouse::Press::UP) input.mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
+		else if (m.PressData == Input::Mouse::Press::DOWN) input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
+		else input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP;
+		break;
+	case Input::Mouse::Events::SCROLL:
+		input.mi.dwFlags |= MOUSEEVENTF_WHEEL;
+		break;
+	default:
+		break;
+	}
+
+	SendInput(1, &input, sizeof(input));
+	if (m.PressData == Input::Mouse::Press::DBLCLICK) SendInput(1, &input, sizeof(input));
+#elif defined __APPLE__
+	CGPoint new_pos;
+	CGEventErr err;
+	new_pos.x = m.Pos.X;
+	new_pos.y = m.Pos.Y;
+	!CGWarpMouseCursorPosition(new_pos);
+#elif __linux__
+
+	auto display = XOpenDisplay(NULL);
+	auto root = DefaultRootWindow(display);
+	XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
+	XCloseDisplay(display);
+
+#endif
+
+
+
 }

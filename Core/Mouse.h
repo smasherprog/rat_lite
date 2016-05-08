@@ -6,25 +6,30 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Input {
-			enum MouseEvents : unsigned int {
-				LEFT,
-				RIGHT,
-				MIDDLE,
-				SCROLL,
-				NO_EVENTDATA
-			};
-			enum MousePress : unsigned int {
-				UP,
-				DOWN,
-				DBLCLICK,
-				NO_PRESS_DATA
-			};
+			namespace Mouse {
+				enum Events : unsigned int {
+					LEFT,
+					RIGHT,
+					MIDDLE,
+					SCROLL,
+					NO_EVENTDATA
+				};
+				enum Press : unsigned int {
+					UP,
+					DOWN,
+					DBLCLICK,
+					NO_PRESS_DATA
+				};
+
+			}
+
 			struct MouseEvent {
-				MouseEvents EventData;
+				Mouse::Events EventData;
 				Utilities::Point Pos;
 				int ScrollDelta;
-				MousePress PressData;
+				Mouse::Press PressData;
 			};
+			void SetMouseEvent(const Input::MouseEvent& m);
 		}
 		namespace Utilities {
 			class Image;
@@ -41,7 +46,7 @@ namespace SL {
 				~Mouse();
 			};
 
-			void SetMouseEvent(const Input::MouseEvent& m);
+
 		}
 
 	}

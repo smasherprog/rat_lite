@@ -8,6 +8,10 @@ namespace SL {
 			struct Server_Config;
 		}
 		class ServerImpl;
+		namespace Capturing{
+			class Screen;
+		}
+
 		enum Server_Status {
 			SERVER_RUNNING,
 			SERVER_STOPPING,
@@ -22,6 +26,9 @@ namespace SL {
 			int Run();
 			void Stop(bool block);
 			Server_Status get_Status()const;
+			
+			Capturing::Screen get_ScreenHandler();
+
 #if __ANDROID__
 			void OnImage(char* buf, int width, int height);
 #endif

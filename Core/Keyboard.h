@@ -21,7 +21,7 @@ namespace SL {
 				unsigned int Key;
 				Keyboard::Specials SpecialKey;
 			};
-			void SetKeyEvent(KeyEvent ev);
+			void SimulateKeyboardEvent(KeyEvent ev);
 		}
 	}
 }

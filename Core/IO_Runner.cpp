@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "IO_Runner.h"
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include <thread>
 #include "Logging.h"
 
@@ -9,11 +9,11 @@ namespace SL {
 		namespace Network {
 			class IO_RunnerImpl {
 			public:
-				asio::io_service io_service;
+				boost::asio::io_service io_service;
 				IO_RunnerImpl() :work(io_service) { 
 					io_servicethread = std::thread([this]() {
 						SL_RAT_LOG("Starting io_service Factory", Utilities::Logging_Levels::INFO_log_level);
-						asio::error_code ec;
+						boost::system::error_code ec;
 						io_service.run(ec);
 						if (ec) {
 							SL_RAT_LOG(ec.message(), Utilities::Logging_Levels::ERROR_log_level);
@@ -30,7 +30,7 @@ namespace SL {
 					if(io_servicethread.joinable()) io_servicethread.join();
 				}
 				std::thread io_servicethread;
-				asio::io_service::work work;
+				boost::asio::io_service::work work;
 			};
 		}
 	}
@@ -58,7 +58,7 @@ void SL::Remote_Access_Library::Network::IO_Runner::Stop()
 	_IO_RunnerImpl.reset();
 }
 
-asio::io_service& SL::Remote_Access_Library::Network::IO_Runner::get_io_service()
+boost::asio::io_service& SL::Remote_Access_Library::Network::IO_Runner::get_io_service()
 {
 	return _IO_RunnerImpl->io_service;
 }

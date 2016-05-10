@@ -13,9 +13,13 @@
 #include <Windows.h>
 
 #endif
+#include <future>
+#include <chrono>
 
 #define UNUSED(x) (void)(x)
-#define BOOST_NO_EXCEPTIONS 1
-#define ASIO_NO_EXCEPTIONS 1
-#define ASIO_HAS_BOOST_DATE_TIME 1
-#define ASIO_DISABLE_THREAD_KEYWORD_EXTENSION 1
+
+template<typename R>
+bool is_ready(std::future<R> const& f)
+{
+	return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+}

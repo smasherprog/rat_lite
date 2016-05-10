@@ -10,6 +10,7 @@
 #include <X11/extensions/Xfixes.h>
 #endif
 
+
 namespace SL
 {
 	namespace Remote_Access_Library
@@ -193,8 +194,8 @@ namespace SL
 			struct MouseImpl
 			{
 				std::thread _thread;
-				std::function<void(std::shared_ptr<Utilities::Image>)> _ImgCallBack;
-				std::function<void(Utilities::Point)> _PosCallBack;
+				std::function<void(std::shared_ptr<Utilities::Image>)> _ImgCallBack, _ImgCaptureCallback;
+				std::function<void(Utilities::Point)> _PosCallBack, _PosCaptureCallback;
 				int _img_Delay;
 				int _pos_Delay;
 				bool _Running;
@@ -202,50 +203,20 @@ namespace SL
 		}
 	}
 }
-void SL::Remote_Access_Library::Capturing::Mouse::_run()
-{
-	int totalwait = 0;
-	while (_MouseImpl->_Running) {
 
-		if (totalwait >= _MouseImpl->_img_Delay) {
-			_MouseImpl->_ImgCallBack(CaptureMouseImage());
-			totalwait = 0;
-		}
-		totalwait += _MouseImpl->_pos_Delay;
-		_MouseImpl->_PosCallBack(GetCursorPos());
-		std::this_thread::sleep_for(std::chrono::milliseconds(_MouseImpl->_pos_Delay));
-	}
+std::future<std::shared_ptr<SL::Remote_Access_Library::Utilities::Image>> SL::Remote_Access_Library::Input::get_MouseImage()
+{
+	return std::async(std::launch::async, [] { 
+		return Capturing::CaptureMouseImage();
+	});
 }
 
-SL::Remote_Access_Library::Capturing::Mouse::Mouse(std::function<void(std::shared_ptr<Utilities::Image>)> img_func,
-	std::function<void(Utilities::Point)> pos_func,
-	int img_dely,
-	int pos_dely)
+std::future<SL::Remote_Access_Library::Utilities::Point> SL::Remote_Access_Library::Input::get_MousePosition()
 {
-	//androids should not be running this code.. mm kay
-#if  !__ANDROID__
-	assert(img_dely > pos_dely); // img delay must be longer than the pos delay.. mm kay?
-	_MouseImpl = std::make_unique<INTERNAL::MouseImpl>();
-	_MouseImpl->_img_Delay = img_dely;
-	_MouseImpl->_pos_Delay = pos_dely;
-	_MouseImpl->_ImgCallBack = img_func;
-	_MouseImpl->_PosCallBack = pos_func;
-
-	_MouseImpl->_Running = true;
-	_MouseImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Mouse::_run, this);
-#endif
+	return std::async(std::launch::async, [] {return Capturing::GetCursorPos(); });
 }
 
-
-SL::Remote_Access_Library::Capturing::Mouse::~Mouse()
-{
-	if (_MouseImpl) {
-		_MouseImpl->_Running = false;
-		_MouseImpl->_thread.join();
-	}
-}
-
-void SL::Remote_Access_Library::Input::SetMouseEvent(const Input::MouseEvent & m)
+void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEvent & m)
 {
 
 	SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
@@ -304,3 +275,4 @@ void SL::Remote_Access_Library::Input::SetMouseEvent(const Input::MouseEvent & m
 
 
 }
+

@@ -333,7 +333,6 @@
     <Import Project="..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets" Condition="Exists('..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets')" />
     <Import Project="..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets" Condition="Exists('..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets')" />
     <Import Project="..\packages\fltk.1.3.3.3\build\native\fltk.targets" Condition="Exists('..\packages\fltk.1.3.3.3\build\native\fltk.targets')" />
-    <Import Project="..\packages\asio.1.10.6\build\native\asio.targets" Condition="Exists('..\packages\asio.1.10.6\build\native\asio.targets')" />
     <Import Project="..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets" Condition="Exists('..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets')" />
     <Import Project="..\packages\Libjpeg-Turbo.1.4.90\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\packages\Libjpeg-Turbo.1.4.90\build\native\Libjpeg-Turbo.targets')" />
     <Import Project="..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets" Condition="Exists('..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets')" />
@@ -349,7 +348,6 @@
     <Error Condition="!Exists('..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\fltk.1.3.3.3\build\native\fltk.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fltk.1.3.3.3\build\native\fltk.targets'))" />
-    <Error Condition="!Exists('..\packages\asio.1.10.6\build\native\asio.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\asio.1.10.6\build\native\asio.targets'))" />
     <Error Condition="!Exists('..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets'))" />
     <Error Condition="!Exists('..\packages\Libjpeg-Turbo.1.4.90\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Libjpeg-Turbo.1.4.90\build\native\Libjpeg-Turbo.targets'))" />
     <Error Condition="!Exists('..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets'))" />

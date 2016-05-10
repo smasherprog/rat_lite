@@ -2,9 +2,13 @@
 #include "Shapes.h"
 #include <functional>
 #include <memory>
+#include <future>
 
 namespace SL {
 	namespace Remote_Access_Library {
+		namespace Utilities {
+			class Image;
+		}
 		namespace Input {
 			namespace Mouse {
 				enum Events : unsigned int {
@@ -29,25 +33,10 @@ namespace SL {
 				int ScrollDelta;
 				Mouse::Press PressData;
 			};
-			void SetMouseEvent(const Input::MouseEvent& m);
+			void SimulateMouseEvent(const Input::MouseEvent& m);
+			std::future<std::shared_ptr<Utilities::Image>> get_MouseImage();
+			std::future<Utilities::Point> get_MousePosition();
 		}
-		namespace Utilities {
-			class Image;
-		}
-		namespace INTERNAL {
-			struct MouseImpl;
-		}
-		namespace Capturing {
-			class Mouse {
-				std::unique_ptr<INTERNAL::MouseImpl> _MouseImpl;
-				void _run();
-			public:
-				Mouse(std::function<void(std::shared_ptr<Utilities::Image>)> img_func, std::function<void(Utilities::Point)> pos_func, int img_dely = 1000, int pos_dely = 20);
-				~Mouse();
-			};
-
-
-		}
-
+	
 	}
 }

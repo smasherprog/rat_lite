@@ -3,7 +3,7 @@
 #include <string>
 #include "Logging.h"
 
-void SL::Remote_Access_Library::Input::SetKeyEvent(KeyEvent ev)
+void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 {
 	SL_RAT_LOG(std::string("SetKeyEvent Key:") +std::to_string( ev.Key) + std::string(" SpecialKey: ") + std::to_string(ev.SpecialKey) + std::string(" PressData: ") + std::to_string(ev.PressData), Utilities::Logging_Levels::INFO_log_level);
 

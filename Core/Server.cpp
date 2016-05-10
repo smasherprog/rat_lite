@@ -9,6 +9,9 @@
 #include <mutex>
 #include "Logging.h"
 #include "Packet.h"
+#include "Server_Config.h"
+
+
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -19,6 +22,7 @@ namespace SL {
 		public:
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastMouse;
+
 			Utilities::Point LastMousePos;
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
@@ -27,8 +31,9 @@ namespace SL {
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
 			Server_Status Status;
+			Network::Server_Config _Config;
 
-			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent)
+			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
 			{
 				LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 				_Keepgoing = true;
@@ -90,16 +95,56 @@ namespace SL {
 				}
 				LastMouse = img;
 			}
-			virtual void OnMouse(Input::MouseEvent* m) override {
-				Input::SetMouseEvent(*m);
+			void OnMousePos(Utilities::Point p) {
+				_ServerNetworkDriver.SendMouse(nullptr, p);
 			}
+
+
+			virtual void OnMouse(Input::MouseEvent* m) override {
+				Input::SimulateMouseEvent(*m);
+			}
+
+
 			int Run() {
 				Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();
-				auto sc = std::make_unique<Capturing::Screen>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnScreen, this, std::placeholders::_1));
-				auto ms = std::make_unique<Capturing::Mouse>(std::bind(&SL::Remote_Access_Library::ServerImpl::OnMouseImg, this, std::placeholders::_1), [&](Utilities::Point p) { _ServerNetworkDriver.SendMouse(nullptr, p);  }, 1000, 50);
+
+#if !__ANDROID__
+				auto mouseimg(Input::get_MouseImage());
+				auto mousepos(Input::get_MousePosition());
+				auto mouseimgtimer = std::chrono::steady_clock::now();
+				auto mousepostimer = std::chrono::steady_clock::now();
+
+				auto screenimg(Capturing::get_ScreenImage());
+				auto screenimgtimer = std::chrono::steady_clock::now();
+#endif
+
+
 				while (_Keepgoing) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(20));
+#if !__ANDROID__
+					auto curtime = std::chrono::steady_clock::now();
+
+					//check mouse img first
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config.MouseImageCaptureRate && is_ready(mouseimg)) {
+						OnMouseImg(mouseimg.get());
+						mouseimg = Input::get_MouseImage();
+						mouseimgtimer = curtime;
+					}
+					//check mouse pos next
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config.MousePositionCaptureRate && is_ready(mousepos)) {
+						OnMousePos(mousepos.get());
+						mousepos = Input::get_MousePosition();
+						mouseimgtimer = curtime;
+					}
+
+					//check screen next
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config.ScreenImageCaptureRate && is_ready(screenimg)) {
+						OnScreen(screenimg.get());
+						screenimg = Capturing::get_ScreenImage();
+						screenimgtimer = curtime;
+					}
+#endif
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 				}
 				_ServerNetworkDriver.Stop();
 

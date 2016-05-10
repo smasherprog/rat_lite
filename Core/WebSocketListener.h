@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
-namespace asio { class io_service; } 
+
+namespace boost { namespace asio { class io_service; } }
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -14,7 +15,7 @@ namespace SL {
 			class WebSocketListener {
 			public:
 		
-				WebSocketListener(IBaseNetworkDriver* netevent, asio::io_service& io_service, Server_Config& config);
+				WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config);
 				~WebSocketListener();
 				WebSocketListener(const WebSocketListener&) = delete;
 				WebSocketListener(WebSocketListener&&) = delete;

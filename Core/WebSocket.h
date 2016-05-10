@@ -22,8 +22,8 @@ namespace SL {
 			public:
 				explicit WebSocket(IBaseNetworkDriver* netevents, T& socket) :TCPSocket<T>(netevents, socket) {}
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
-				explicit WebSocket(IBaseNetworkDriver* netevents, asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
-				explicit WebSocket(IBaseNetworkDriver* netevents, asio::io_service& io_service, asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
+				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) :TCPSocket<T>(netevents, io_service) {}
+				explicit WebSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : TCPSocket<T>(netevents, io_service, context) {}
 
 				virtual ~WebSocket() {
 					this->close_Socket("~WebSocket");
@@ -34,7 +34,7 @@ namespace SL {
 					this->writeexpire_from_now(this->_SocketImpl.writetimeout);
 					auto self(this->shared_from_this());
 
-					asio::async_write(this->_socket, asio::buffer(&this->_SocketImpl.WritePacketHeader, sizeof(this->_SocketImpl.WritePacketHeader)), [self, this, packet](const std::error_code& ec, std::size_t byteswritten)
+					boost::asio::async_write(this->_socket, boost::asio::buffer(&this->_SocketImpl.WritePacketHeader, sizeof(this->_SocketImpl.WritePacketHeader)), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !this->closed())
 						{
@@ -47,7 +47,7 @@ namespace SL {
 			private:
 
 				void sendHandshake() {
-					std::shared_ptr<asio::streambuf> write_buffer(new asio::streambuf);
+					std::shared_ptr<boost::asio::streambuf> write_buffer(new boost::asio::streambuf);
 					auto self(this->shared_from_this());
 					std::ostream request(write_buffer.get());
 
@@ -69,11 +69,11 @@ namespace SL {
 					request << "Sec-WebSocket-Version: 13" << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 					std::shared_ptr<std::string> accept_sha1(new std::string(Crypto::SHA1(nonce_base64 + ws_magic_string)));
 
-					asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const std::error_code& ec, size_t bytes_transferred) {
+					boost::asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
 							SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
-							std::shared_ptr<asio::streambuf> read_buffer(new asio::streambuf);
-							asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, read_buffer, accept_sha1, self](const std::error_code& ec, size_t bytes_transferred) {
+							std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
+							boost::asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, read_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
 									SL_RAT_LOG(std::string("Read Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
 									std::istream stream(read_buffer.get());
@@ -96,9 +96,9 @@ namespace SL {
 				}
 				void receivehandshake() {
 					auto self(this->shared_from_this());
-					std::shared_ptr<asio::streambuf> read_buffer(new asio::streambuf);
+					std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
 
-					asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [self, read_buffer, this](const std::error_code& ec, size_t bytes_transferred) {
+					boost::asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [self, read_buffer, this](const boost::system::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
 						if (!ec) {
 							SL_RAT_LOG(std::string("Read Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
@@ -107,7 +107,7 @@ namespace SL {
 							this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
 
 							if (this->_SocketImpl.Header.count(HttpHeader::HTTP_SECWEBSOCKETKEY) == 0) return this->close_Socket("handshake async_read_until Sec-WebSocket-Key not present");//close socket and get out malformed
-							auto write_buffer(std::make_shared<asio::streambuf>());
+							auto write_buffer(std::make_shared<boost::asio::streambuf>());
 							std::ostream handshake(write_buffer.get());
 
 							handshake << "HTTP/1.1 101 Web Socket Protocol Handshake" << HttpHeader::HTTP_ENDLINE;
@@ -115,7 +115,7 @@ namespace SL {
 							handshake << "Connection: Upgrade" << HttpHeader::HTTP_ENDLINE;
 
 							handshake << HttpHeader::HTTP_SECWEBSOCKETACCEPT << HttpHeader::HTTP_KEYVALUEDELIM << Crypto::Base64::encode(Crypto::SHA1(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETKEY] + ws_magic_string)) << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
-							asio::async_write(this->_socket, *write_buffer, [this, self, write_buffer](const std::error_code& ec, size_t bytes_transferred) {
+							boost::asio::async_write(this->_socket, *write_buffer, [this, self, write_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
 									SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
 									this->_SocketImpl.get_Driver()->OnConnect(self);
@@ -141,7 +141,7 @@ namespace SL {
 				virtual void readheader()  override {
 					this->readexpire_from_now(0);
 					auto self(this->shared_from_this());
-					asio::async_read(this->_socket, asio::buffer(_readheaderbuffer, 2), [this, self](const std::error_code& ec, size_t bytes_transferred) {
+					boost::asio::async_read(this->_socket, boost::asio::buffer(_readheaderbuffer, 2), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
 						if (!ec) {
 							assert(bytes_transferred == 2);
@@ -156,7 +156,7 @@ namespace SL {
 							}
 							auto readbytes = (_readheaderbuffer[1] & 127) == 126 ? 2 : ((_readheaderbuffer[1] & 127) == 127 ? 8 : 0);
 							if (readbytes != 0) {
-								asio::async_read(this->_socket, asio::buffer(_readheaderbuffer, readbytes), [this, self, readbytes](const std::error_code& ec, size_t bytes_transferred) {
+								boost::asio::async_read(this->_socket, boost::asio::buffer(_readheaderbuffer, readbytes), [this, self, readbytes](const boost::system::error_code& ec, size_t bytes_transferred) {
 									
 									if (!ec) {
 										assert(readbytes == bytes_transferred);
@@ -189,7 +189,7 @@ namespace SL {
 
 					auto p(this->_SocketImpl.get_ReadBuffer());
 					auto size(this->_SocketImpl.get_ReadBufferSize());
-					asio::async_read(this->_socket, asio::buffer(p, size), [this, self](const std::error_code& ec, size_t bytes_transferred) {
+					boost::asio::async_read(this->_socket, boost::asio::buffer(p, size), [this, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 					
 						if (!ec) {
 							assert(this->_SocketImpl.get_ReadBufferSize() == bytes_transferred);
@@ -212,14 +212,17 @@ namespace SL {
 								auto p(writeheader->data());
 								*p++ = 0x1A;
 								*p++ = 0;
-								asio::async_write(this->_socket, asio::buffer(writeheader->data(), writeheader->size()), [self, this, writeheader](const std::error_code& ec, std::size_t)
+								boost::asio::async_write(this->_socket, boost::asio::buffer(writeheader->data(), writeheader->size()), [self, this, writeheader](const boost::system::error_code& ec, std::size_t)
 								{
 									if (ec) this->close_Socket(std::string("ping send failed ") + ec.message());
 									this->readheader();
 								});
 							}
 							else {
+							
 								if (this->_SocketImpl.Server) {
+									assert(bytes_transferred > 4);
+							
 									//servers receive data masked, so it needs to be unmasked
 									unsigned char mask[MASKSIZE];
 									memcpy(mask, packet.Payload, sizeof(mask));
@@ -290,7 +293,7 @@ namespace SL {
 					}
 
 					auto self(this->shared_from_this());
-					asio::async_write(this->_socket, asio::buffer(_writeheaderbuffer, p - _writeheaderbuffer), [self, this, packet](const std::error_code& ec, std::size_t byteswritten)
+					boost::asio::async_write(this->_socket, boost::asio::buffer(_writeheaderbuffer, p - _writeheaderbuffer), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						UNUSED(byteswritten);
 						if (!ec && !this->closed())
@@ -310,7 +313,7 @@ namespace SL {
 					*(unsigned short int*)p = htons(static_cast<unsigned short int>(status_code));
 					memcpy(p + 2, reason.c_str(), reason.size());
 					auto self(this->shared_from_this());
-					asio::async_write(this->_socket, asio::buffer(writeheader->data(), writeheader->size()), [self, this, writeheader](const std::error_code& ec, std::size_t)
+					boost::asio::async_write(this->_socket, boost::asio::buffer(writeheader->data(), writeheader->size()), [self, this, writeheader](const boost::system::error_code& ec, std::size_t)
 					{
 						if (ec) this->close_Socket(std::string("send_close ") + ec.message());
 					});

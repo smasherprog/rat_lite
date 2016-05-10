@@ -3,9 +3,9 @@
 #include "ISocket.h"
 #include "IBaseNetworkDriver.h"
 #include "Packet.h"
-#include <asio.hpp>
-#include <asio/deadline_timer.hpp>
-#include <asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/ssl.hpp>
 #include "Compression/zstd.h"
 #include "SocketImpl.h"
 #include <string>
@@ -17,23 +17,23 @@ namespace SL {
 
 		namespace Network {
 
-			typedef asio::ssl::stream<asio::ip::tcp::socket> ssl_socket;
-			typedef asio::ip::tcp::socket socket;
+			typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
+			typedef boost::asio::ip::tcp::socket socket;
 
 			//this class is async so all calls return immediately and are later executed
 			template<typename BASESOCKET>class TCPSocket : public ISocket {
 			protected:
 				BASESOCKET _socket;
 				SocketImpl _SocketImpl;
-				asio::io_service& _io_service;
+				boost::asio::io_service& _io_service;
 			public:
-				static_assert(std::is_same<BASESOCKET, asio::ip::tcp::socket>::value || std::is_same<BASESOCKET, asio::ssl::stream<asio::ip::tcp::socket>>::value, "BASESOCKET must be asio::ip::tcp::socket or asio::ssl::stream<asio::ip::tcp::socket>");
+				static_assert(std::is_same<BASESOCKET, boost::asio::ip::tcp::socket>::value || std::is_same<BASESOCKET, boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>::value, "BASESOCKET must be boost::asio::ip::tcp::socket or boost::asio::ssl::stream<boost::asio::ip::tcp::socket>");
 
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
 				explicit TCPSocket(IBaseNetworkDriver* netevents, BASESOCKET& socket) :_socket(std::move(socket)), _SocketImpl(_socket.get_io_service(), netevents), _io_service(_socket.get_io_service()) { }
 				//MUST BE CREATED AS A SHARED_PTR OTHERWISE IT WILL CRASH!
-				explicit TCPSocket(IBaseNetworkDriver* netevents, asio::io_service& io_service) : _socket(io_service), _SocketImpl(io_service, netevents), _io_service(io_service) { }
-				explicit TCPSocket(IBaseNetworkDriver* netevents, asio::io_service& io_service, asio::ssl::context& context) : _socket(io_service, context), _SocketImpl(io_service, netevents), _io_service(io_service) { }
+				explicit TCPSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service) : _socket(io_service), _SocketImpl(io_service, netevents), _io_service(io_service) { }
+				explicit TCPSocket(IBaseNetworkDriver* netevents, boost::asio::io_service& io_service, boost::asio::ssl::context& context) : _socket(io_service, context), _SocketImpl(io_service, netevents), _io_service(io_service) { }
 
 				virtual ~TCPSocket() {
 					close_Socket("~TCPSocket");
@@ -79,8 +79,8 @@ namespace SL {
 					_SocketImpl.Closed = true;
 					_SocketImpl.CancelTimers();
 					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());
-					asio::error_code ec;
-					_socket.lowest_layer().shutdown(asio::ip::tcp::socket::shutdown_both, ec);
+					boost::system::error_code ec;
+					_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 					_socket.lowest_layer().close();
 					if (ec) {
 						SL_RAT_LOG(ec.message(), Utilities::Logging_Levels::ERROR_log_level);
@@ -103,15 +103,15 @@ namespace SL {
 					else {
 						_SocketImpl.Server = false;
 
-						asio::ip::tcp::resolver resolver(_io_service);
-						asio::ip::tcp::resolver::query query(host, port);
-						asio::error_code ercode;
+						boost::asio::ip::tcp::resolver resolver(_io_service);
+						boost::asio::ip::tcp::resolver::query query(host, port);
+						boost::system::error_code ercode;
 						auto endpoint = resolver.resolve(query, ercode);
 						if (ercode) {
 							close_Socket(std::string("async_connect ") + ercode.message());
 						}
 						else {
-							asio::async_connect(_socket.lowest_layer(), endpoint, [self, this](const std::error_code& ec, asio::ip::tcp::resolver::iterator)
+							boost::asio::async_connect(_socket.lowest_layer(), endpoint, [self, this](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator)
 							{
 								if (!closed()) {
 									handshake();
@@ -137,7 +137,7 @@ namespace SL {
 				virtual void readheader()  override {
 					readexpire_from_now(0);
 					auto self(this->shared_from_this());
-					asio::async_read(_socket, asio::buffer(&_SocketImpl.ReadPacketHeader, sizeof(_SocketImpl.ReadPacketHeader)), [self, this](const std::error_code& ec, std::size_t len/*length*/)
+					boost::asio::async_read(_socket, boost::asio::buffer(&_SocketImpl.ReadPacketHeader, sizeof(_SocketImpl.ReadPacketHeader)), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
 						if (!ec && !closed()) {
 							assert(len == sizeof(_SocketImpl.ReadPacketHeader));
@@ -152,7 +152,7 @@ namespace SL {
 					auto self(this->shared_from_this());
 					auto p(_SocketImpl.get_ReadBuffer());
 					auto size(_SocketImpl.get_ReadBufferSize());
-					asio::async_read(_socket, asio::buffer(p, size), [self, this](const std::error_code& ec, std::size_t len/*length*/)
+					boost::asio::async_read(_socket, boost::asio::buffer(p, size), [self, this](const boost::system::error_code& ec, std::size_t len/*length*/)
 					{
 						if (!ec && !closed()) {
 							assert(len == _SocketImpl.get_ReadBufferSize());
@@ -171,7 +171,7 @@ namespace SL {
 					writeexpire_from_now(_SocketImpl.writetimeout);
 					auto self(this->shared_from_this());
 
-					asio::async_write(_socket, asio::buffer(&_SocketImpl.WritePacketHeader, sizeof(_SocketImpl.WritePacketHeader)), [self, this, packet](const std::error_code& ec, std::size_t byteswritten)
+					boost::asio::async_write(_socket, boost::asio::buffer(&_SocketImpl.WritePacketHeader, sizeof(_SocketImpl.WritePacketHeader)), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
 						{
@@ -184,7 +184,7 @@ namespace SL {
 				virtual void writebody(std::shared_ptr<Packet> packet) override {
 
 					auto self(this->shared_from_this());
-					asio::async_write(_socket, asio::buffer(packet->Payload, packet->Payload_Length), [self, this, packet](const std::error_code& ec, std::size_t byteswritten)
+					boost::asio::async_write(_socket, boost::asio::buffer(packet->Payload, packet->Payload_Length), [self, this, packet](const boost::system::error_code& ec, std::size_t byteswritten)
 					{
 						if (!ec && !closed())
 						{
@@ -229,8 +229,8 @@ namespace SL {
 					if (seconds >= 0) {
 						auto self(this->shared_from_this());
 
-						_SocketImpl.read_deadline_.async_wait([this, self, seconds](std::error_code ec) {
-							if (ec != asio::error::operation_aborted) {
+						_SocketImpl.read_deadline_.async_wait([this, self, seconds](const boost::system::error_code& ec) {
+							if (ec != boost::asio::error::operation_aborted) {
 								close_Socket("read timer expired. Time waited: ");
 								//close_Socket("read timer expired. Time waited: " + std::to_string(seconds));
 							}
@@ -242,8 +242,8 @@ namespace SL {
 					_SocketImpl.StartWriteTimer(seconds);
 					if (seconds >= 0) {
 						auto self(this->shared_from_this());
-						_SocketImpl.write_deadline_.async_wait([this, self, seconds](std::error_code ec) {
-							if (ec != asio::error::operation_aborted) {
+						_SocketImpl.write_deadline_.async_wait([this, self, seconds](const boost::system::error_code& ec) {
+							if (ec != boost::asio::error::operation_aborted) {
 								//close_Socket("write timer expired. Time waited: " + std::to_string(seconds));
 								close_Socket("write timer expired. Time waited: ");
 							}

@@ -13,7 +13,7 @@
 #include <FL/Fl_RGB_Image.H>
 #include <FL/Fl_PNG_Image.H>
 #include "../Core/Mouse.h"
-#include "../Core/stdafx.h"
+#include "../Core/Keyboard.h"
 #include <chrono>
 #include <mutex>
 #include "../Core/Logging.h"
@@ -158,17 +158,18 @@ namespace SL {
 				int FrameCounter = 0;
 				Network::SocketStats LastStats;
 				bool _BeingClosed = false;
-				bool _HasFocus = false;
 				bool _CursorHidden = false;
 				char _Title[255];
+				bool _HasFocus = false;
 
 				static void window_cb(Fl_Widget *widget, void *)
 				{
 					auto wnd = (ViewerWindowImpl*)widget;
 					wnd->Close();
 				}
-				ViewerWindowImpl(const char*  dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
+				ViewerWindowImpl(const char* dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
+				
 					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
@@ -185,28 +186,37 @@ namespace SL {
 					switch (e) {
 
 					case FL_PUSH:
-						handle_mouse(e, Fl::event_button(), Input::MousePress::DOWN, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::DOWN, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_RELEASE:
-						handle_mouse(e, Fl::event_button(), Input::MousePress::UP, Fl::event_x(), Fl::event_y());
-						break;
-					case FL_FOCUS:
-						_HasFocus = true;
-						break;
-					case FL_UNFOCUS:
-						_HasFocus = false;
+						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::UP, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_DRAG:
 					case FL_MOUSEWHEEL:
 					case FL_MOVE:
-						handle_mouse(e, Fl::event_button(), Input::MousePress::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
 						break;
+					case FL_KEYDOWN:
+						return handle_key(e, Input::Keyboard::Press::DOWN);
+					case FL_KEYUP:
+						return handle_key(e, Input::Keyboard::Press::UP);
+					case FL_FOCUS:
+						_HasFocus = true;
+						return 1;
+					case FL_UNFOCUS:
+						_HasFocus = false;
+						return 1;
 					default:
 						break;
 					};
 					return Fl_Window::handle(e);
 				}
-				void handle_mouse(int e, int button, Input::MousePress press, int x, int y) {
+				int handle_key(int e, Input::Keyboard::Press press) {
+					auto key = Fl::event_key();
+					SL_RAT_LOG(std::to_string(key), Utilities::Logging_Levels::INFO_log_level);
+					return 1;
+				}
+				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {
 
 					auto scale = _MyCanvas->GetScaleFactor();
 
@@ -214,30 +224,29 @@ namespace SL {
 					ev.Pos = Utilities::Point(static_cast<int>(static_cast<float>(x) / scale), static_cast<int>(static_cast<float>(y) / scale));
 					if (e == FL_MOUSEWHEEL) {
 						ev.ScrollDelta = Fl::event_dy();
-
-					} else {
-						ev.ScrollDelta = 0;
+						ev.EventData = Input::Mouse::Events::SCROLL;
 					}
-					
-					ev.PressData = press;
-					
-				
-					switch (button) {
+					else {
+						ev.ScrollDelta = 0;
+						switch (button) {
 						case FL_LEFT_MOUSE:
-							ev.EventData = Input::MouseEvents::LEFT;
+							ev.EventData = Input::Mouse::Events::LEFT;
 							break;
 						case FL_MIDDLE_MOUSE:
-							ev.EventData = Input::MouseEvents::MIDDLE;
+							ev.EventData = Input::Mouse::Events::MIDDLE;
 							break;
 						case FL_RIGHT_MOUSE:
-							ev.EventData = Input::MouseEvents::RIGHT;
+							ev.EventData = Input::Mouse::Events::RIGHT;
 							break;
 						default:
-							ev.EventData = Input::MouseEvents::NO_EVENTDATA;
+							ev.EventData = Input::Mouse::Events::NO_EVENTDATA;
 							break;
 						};
-
-					_ClientNetworkDriver.SendMouse(ev);
+					}
+					ev.PressData = press;
+					if (!_ClientNetworkDriver.ConnectedToSelf()) {
+						_ClientNetworkDriver.SendMouse(ev);//sending input to yourself will lead to an infinite loop...
+					}
 				}
 				virtual ~ViewerWindowImpl() {
 					_ClientNetworkDriver.Stop();

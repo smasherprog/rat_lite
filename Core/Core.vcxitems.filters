@@ -94,6 +94,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huff0.c">
       <Filter>Compression</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Keyboard.cpp">
+      <Filter>Capturing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -229,13 +232,16 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse_static.h">
       <Filter>Compression</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Keyboard.h">
+      <Filter>Capturing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">
       <Filter>wwwroot</Filter>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
-      <Filter>wwwroot</Filter>
-    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
   </ItemGroup>
 </Project>

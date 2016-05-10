@@ -8,6 +8,8 @@ std::string executable_path(const char *argv0)
 }
 #else 
 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <boost/filesystem/operations.hpp>

@@ -25,6 +25,7 @@ namespace SL {
 				void Stop();
 
 				void SendMouse(const Input::MouseEvent& m);
+				bool ConnectedToSelf() const;
 			};
 		}
 	}

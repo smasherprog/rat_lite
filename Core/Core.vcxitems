@@ -47,6 +47,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)IO_Runner.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Keyboard.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Logging.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MediaTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)IO_Runner.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IServerDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ISocket.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Keyboard.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Logging.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h" />
@@ -107,13 +109,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
       <FileType>Document</FileType>
-      <Command>tsc $(SolutionDir)wwwroot\Core.ts</Command>
-      <Outputs>$(OutDir)wwwroot\Core.js</Outputs>
+      <Command>tsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
+      <Outputs>Core.js</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
       <LinkObjects>false</LinkObjects>
-    </None>
+      <ExcludedFromBuild>
+      </ExcludedFromBuild>
+    </CustomBuild>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />

@@ -23,10 +23,10 @@ namespace SL {
 					std::shared_ptr<TCPListener<socket, HttpSocket<socket>>> _TCPListener;
 					std::shared_ptr<TCPListener<ssl_socket, HttpSocket<ssl_socket>>> _TLSTCPListener;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
-					asio::io_service& _io_service;
+					boost::asio::io_service& _io_service;
 					Server_Config _config;
 
-					HttpServerImpl(IBaseNetworkDriver* netevent, asio::io_service& io_service, Server_Config& config) :
+					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
 						_IBaseNetworkDriver(netevent), _io_service(io_service), _config(config) {
 						if (_config.WWWRoot.empty()) {
 							_config.WWWRoot = "/wwwwroot/";
@@ -166,7 +166,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, asio::io_service& io_service, Server_Config& config)
+SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config)
 {
 	_HttpServerImpl = new INTERNAL::HttpServerImpl(netevent, io_service, config);
 }

@@ -66,6 +66,7 @@ namespace SL {
 					_IClientDriver->OnReceive_Image(socket, img);
 
 				}
+				bool _ConectedToSelf = false;
 
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _dst_host(dst_host), _dst_port(dst_port) {
@@ -76,7 +77,10 @@ namespace SL {
 					_IO_Runner = std::move(std::make_unique<IO_Runner>());
 					_Socket = std::make_shared<WebSocket<socket>>(this, _IO_Runner->get_io_service());
 					_Socket->connect(_dst_host.c_str(), _dst_port.c_str());
+					_ConectedToSelf = (std::string("127.0.0.1") == _dst_host) || (std::string("localhost") == _dst_host) || (std::string("::1") == _dst_host);
+
 				}
+				
 				void Stop() {
 					if (_Socket) _Socket->close_Socket("Stopping Listener");
 					_Socket.reset();
@@ -115,6 +119,9 @@ namespace SL {
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
 				}
+				bool ConnectedToSelf() const {
+					return _ConectedToSelf;	
+				}
 			};
 		}
 	}
@@ -144,4 +151,8 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::Stop()
 void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const Input::MouseEvent& m)
 {
 	_ClientNetworkDriverImpl->SendMouse(m);
+}
+
+bool SL::Remote_Access_Library::Network::ClientNetworkDriver::ConnectedToSelf() const {
+	return _ClientNetworkDriverImpl->ConnectedToSelf();
 }

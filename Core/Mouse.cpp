@@ -10,6 +10,7 @@
 #include <X11/extensions/Xfixes.h>
 #endif
 
+
 namespace SL
 {
 	namespace Remote_Access_Library
@@ -187,62 +188,14 @@ namespace SL
 #endif
 
 
-			void SetMouseEvent(const Input::MouseEvent& m) {
-				//SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
-#if defined _WIN32
-
-				INPUT input;
-				input.type = INPUT_MOUSE;
-				input.mi.mouseData = m.ScrollDelta / 120;
-				input.mi.dx = static_cast<LONG>(static_cast<float>(m.Pos.X)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CXSCREEN))));//x being coord in pixels
-				input.mi.dy = static_cast<LONG>(static_cast<float>(m.Pos.Y)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CYSCREEN))));//y being coord in pixels
-				input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
-
-				switch (m.EventData) {
-				case Input::MouseEvents::LEFT:
-					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_LEFTUP : MOUSEEVENTF_LEFTDOWN;
-					break;
-				case Input::MouseEvents::MIDDLE:
-					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_MIDDLEUP : MOUSEEVENTF_MIDDLEDOWN;
-					break;
-				case Input::MouseEvents::RIGHT:
-					input.mi.dwFlags |= m.PressData == Input::MousePress::UP ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_RIGHTDOWN;
-					break;
-				case Input::MouseEvents::SCROLL:
-					input.mi.dwFlags |= MOUSEEVENTF_WHEEL;
-					break;
-				default:
-					break;
-				}
-
-				//SendInput(1, &input, sizeof(input));
-
-#elif defined __APPLE__
-				CGPoint new_pos;
-				CGEventErr err;
-				new_pos.x = m.Pos.X;
-				new_pos.y = m.Pos.Y;
-				!CGWarpMouseCursorPosition(new_pos);
-#elif __linux__
-
-				auto display = XOpenDisplay(NULL);
-				auto root = DefaultRootWindow(display);
-				XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
-				XCloseDisplay(display);
-
-#endif
-
-			}
-
-		
 		}
 		namespace INTERNAL
 		{
 			struct MouseImpl
 			{
 				std::thread _thread;
-				std::function<void(std::shared_ptr<Utilities::Image>)> _ImgCallBack;
-				std::function<void(Utilities::Point)> _PosCallBack;
+				std::function<void(std::shared_ptr<Utilities::Image>)> _ImgCallBack, _ImgCaptureCallback;
+				std::function<void(Utilities::Point)> _PosCallBack, _PosCaptureCallback;
 				int _img_Delay;
 				int _pos_Delay;
 				bool _Running;
@@ -250,45 +203,76 @@ namespace SL
 		}
 	}
 }
-void SL::Remote_Access_Library::Capturing::Mouse::_run()
-{
-	int totalwait = 0;
-	while (_MouseImpl->_Running) {
 
-		if (totalwait >= _MouseImpl->_img_Delay) {
-			_MouseImpl->_ImgCallBack(CaptureMouseImage());
-			totalwait = 0;
-		}
-		totalwait += _MouseImpl->_pos_Delay;
-		_MouseImpl->_PosCallBack(GetCursorPos());
-		std::this_thread::sleep_for(std::chrono::milliseconds(_MouseImpl->_pos_Delay));
-	}
+std::future<std::shared_ptr<SL::Remote_Access_Library::Utilities::Image>> SL::Remote_Access_Library::Input::get_MouseImage()
+{
+	return std::async(std::launch::async, [] { 
+		return Capturing::CaptureMouseImage();
+	});
 }
 
-SL::Remote_Access_Library::Capturing::Mouse::Mouse(std::function<void(std::shared_ptr<Utilities::Image>)> img_func,
-	std::function<void(Utilities::Point)> pos_func,
-	int img_dely,
-	int pos_dely)
+std::future<SL::Remote_Access_Library::Utilities::Point> SL::Remote_Access_Library::Input::get_MousePosition()
 {
-	//androids should not be running this code.. mm kay
-#if  !__ANDROID__
-	assert(img_dely > pos_dely); // img delay must be longer than the pos delay.. mm kay?
-	_MouseImpl = std::make_unique<INTERNAL::MouseImpl>();
-	_MouseImpl->_img_Delay = img_dely;
-	_MouseImpl->_pos_Delay = pos_dely;
-	_MouseImpl->_ImgCallBack = img_func;
-	_MouseImpl->_PosCallBack = pos_func;
+	return std::async(std::launch::async, [] {return Capturing::GetCursorPos(); });
+}
 
-	_MouseImpl->_Running = true;
-	_MouseImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Mouse::_run, this);
+void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEvent & m)
+{
+
+	SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
+	assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
+
+#if defined _WIN32
+
+	INPUT input;
+	memset(&input, 0, sizeof(input));
+	input.type = INPUT_MOUSE;
+	input.mi.mouseData = m.ScrollDelta * 120;
+	input.mi.dx = static_cast<LONG>(static_cast<float>(m.Pos.X)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CXSCREEN))));//x being coord in pixels
+	input.mi.dy = static_cast<LONG>(static_cast<float>(m.Pos.Y)*(65536.0f / static_cast<float>(GetSystemMetrics(SM_CYSCREEN))));//y being coord in pixels
+	input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
+	switch (m.EventData) {
+	case Input::Mouse::Events::LEFT:
+		if (m.PressData == Input::Mouse::Press::UP) input.mi.dwFlags |= MOUSEEVENTF_LEFTUP;
+		else if (m.PressData == Input::Mouse::Press::DOWN) input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
+		else input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
+		break;
+	case Input::Mouse::Events::MIDDLE:
+		if (m.PressData == Input::Mouse::Press::UP) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEUP;
+		else if (m.PressData == Input::Mouse::Press::DOWN) input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN;
+		else input.mi.dwFlags |= MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
+		break;
+	case Input::Mouse::Events::RIGHT:
+		if (m.PressData == Input::Mouse::Press::UP) input.mi.dwFlags |= MOUSEEVENTF_RIGHTUP;
+		else if (m.PressData == Input::Mouse::Press::DOWN) input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN;
+		else input.mi.dwFlags |= MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP;
+		break;
+	case Input::Mouse::Events::SCROLL:
+		input.mi.dwFlags |= MOUSEEVENTF_WHEEL;
+		break;
+	default:
+		break;
+	}
+
+	SendInput(1, &input, sizeof(input));
+	if (m.PressData == Input::Mouse::Press::DBLCLICK) SendInput(1, &input, sizeof(input));
+#elif defined __APPLE__
+	CGPoint new_pos;
+	CGEventErr err;
+	new_pos.x = m.Pos.X;
+	new_pos.y = m.Pos.Y;
+	!CGWarpMouseCursorPosition(new_pos);
+#elif __linux__
+
+	auto display = XOpenDisplay(NULL);
+	auto root = DefaultRootWindow(display);
+	XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
+	XCloseDisplay(display);
+
 #endif
-}
 
 
-SL::Remote_Access_Library::Capturing::Mouse::~Mouse()
-{
-	if (_MouseImpl) {
-		_MouseImpl->_Running = false;
-		_MouseImpl->_thread.join();
-	}
+
 }
+

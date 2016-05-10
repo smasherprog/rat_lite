@@ -129,46 +129,14 @@ namespace SL {
 
 		}
 #endif
-		namespace INTERNAL {
-			struct ScreenImpl {
-				std::thread _thread;
-				std::function<void(std::shared_ptr<Utilities::Image>)> _CallBack;
-				int _ms_Delay;
-				bool _Running;
-			};
-		}
 	}
 }
 
-void SL::Remote_Access_Library::Capturing::Screen::_run()
-{
-	while (_ScreenImpl->_Running) {
 
-		auto start = std::chrono::steady_clock::now();
-		auto i = CaptureDesktopImage();
-		_ScreenImpl->_CallBack(i);
-		auto mstaken = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
-		if (mstaken <= _ScreenImpl->_ms_Delay) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(_ScreenImpl->_ms_Delay - mstaken));
-		}
-	}
-}
 
-SL::Remote_Access_Library::Capturing::Screen::Screen(std::function<void(std::shared_ptr<Utilities::Image>)> func, int ms_dely)
+std::future<std::shared_ptr<SL::Remote_Access_Library::Utilities::Image>> SL::Remote_Access_Library::Capturing::get_ScreenImage()
 {
-#if !__ANDROID__
-	_ScreenImpl = std::make_unique<INTERNAL::ScreenImpl>();
-	_ScreenImpl->_ms_Delay = ms_dely;
-	_ScreenImpl->_CallBack = func;
-	_ScreenImpl->_Running = true;
-	_ScreenImpl->_thread = std::thread(&SL::Remote_Access_Library::Capturing::Screen::_run, this);
-#endif
-}
-
-SL::Remote_Access_Library::Capturing::Screen::~Screen()
-{
-	if (_ScreenImpl) {
-		_ScreenImpl->_Running = false;
-		_ScreenImpl->_thread.join();
-	}
+	return std::async(std::launch::async, [] {
+		return CaptureDesktopImage();
+	});
 }

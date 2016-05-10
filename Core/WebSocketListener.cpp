@@ -17,8 +17,8 @@ namespace SL {
 					std::shared_ptr<TCPListener<ssl_socket, WebSocket<ssl_socket>>> _TLSTCPListener;
 					Server_Config _config;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
-					asio::io_service& _io_service;
-					WebSocketListinerImpl(IBaseNetworkDriver* netevent, asio::io_service& io_service, Server_Config& config) :
+					boost::asio::io_service& _io_service;
+					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
 						_config(config), _IBaseNetworkDriver(netevent),  _io_service(io_service){ }
 					virtual ~WebSocketListinerImpl() {
 						Stop();
@@ -66,7 +66,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::WebSocketListener::WebSocketListener(IBaseNetworkDriver* netevent, asio::io_service& io_service, Server_Config& config)
+SL::Remote_Access_Library::Network::WebSocketListener::WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config)
 {
 	_WebSocketListinerImpl = new INTERNAL::WebSocketListinerImpl(netevent, io_service, config);
 }

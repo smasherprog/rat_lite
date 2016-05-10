@@ -15,6 +15,10 @@ namespace SL {
 				//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
 				std::string WWWRoot;
 				
+				unsigned int MouseImageCaptureRate = 1000;// measured in ms
+				unsigned int MousePositionCaptureRate = 50;// measured in ms
+				unsigned int ScreenImageCaptureRate = 100;// measured in ms
+
 			};
 		}
 	}

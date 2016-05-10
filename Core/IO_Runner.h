@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-namespace asio { class io_service; } 
+namespace boost { namespace asio { class io_service; } }
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -13,7 +13,7 @@ namespace SL {
 				void Start();
 				void Stop();
 
-				asio::io_service& get_io_service();
+				boost::asio::io_service& get_io_service();
 			private:
 				std::unique_ptr<IO_RunnerImpl> _IO_RunnerImpl;
 			};

@@ -8,6 +8,7 @@
 #include "MediaTypes.h"
 #include "Server_Config.h"
 #include "Packet.h"
+#include <fstream>
 
 #ifndef __ANDROID__
 #include <boost/filesystem.hpp>

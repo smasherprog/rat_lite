@@ -10,7 +10,7 @@
 #include "Logging.h"
 #include "Packet.h"
 #include "Server_Config.h"
-
+#include <string.h>
 
 
 namespace SL {

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MediaTypes.h"
 #include <algorithm>
+#include <string.h>
 /*
 Anyone know of a better way to get mime types in a cross platform way?
 

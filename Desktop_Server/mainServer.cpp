@@ -1,8 +1,8 @@
 
-#include "stdafx.h"
-#include "Server.h"
-#include "Server_Config.h"
-#include "ApplicationDirectory.h"
+#include "../Core/stdafx.h"
+#include "../Core/Server.h"
+#include "../Core/Server_Config.h"
+#include "../Core/ApplicationDirectory.h"
 #include <string>
 #include <assert.h>
 #include <stdio.h>

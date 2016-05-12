@@ -137,6 +137,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -149,6 +150,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -161,6 +163,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -173,6 +176,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -185,6 +189,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -197,6 +202,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -209,6 +215,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -221,6 +228,7 @@
       <CppLanguageStandard>c++1y</CppLanguageStandard>
       <AdditionalIncludeDirectories>$(VS_NdkRoot)sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Wno-unused-local-typedefs %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
     <Link>
       <LibraryDependencies>m;log;%(LibraryDependencies)</LibraryDependencies>
@@ -236,7 +244,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\asio.1.10.6\build\native\asio.targets" Condition="Exists('..\..\packages\asio.1.10.6\build\native\asio.targets')" />
     <Import Project="..\..\packages\open_ssl_android.1.0.2.11\build\native\open_ssl_android.targets" Condition="Exists('..\..\packages\open_ssl_android.1.0.2.11\build\native\open_ssl_android.targets')" />

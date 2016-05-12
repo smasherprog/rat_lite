@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include <functional>
+#include <future>
 
 namespace SL {
 	namespace Remote_Access_Library {

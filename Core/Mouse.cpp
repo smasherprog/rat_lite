@@ -2,13 +2,7 @@
 #include "Mouse.h"
 #include "Image.h"
 #include <assert.h>
-#include <thread>
 #include "Logging.h"
-
-#if __linux__
-#include <X11/Xlib.h>
-#include <X11/extensions/Xfixes.h>
-#endif
 
 
 namespace SL
@@ -148,6 +142,10 @@ namespace SL
 			}
 #elif __linux__
 
+
+#include <X11/Xlib.h>
+#include <X11/extensions/Xfixes.h>
+
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
 				auto display = XOpenDisplay(NULL);
@@ -187,26 +185,13 @@ namespace SL
 			}
 #endif
 
-
-		}
-		namespace INTERNAL
-		{
-			struct MouseImpl
-			{
-				std::thread _thread;
-				std::function<void(std::shared_ptr<Utilities::Image>)> _ImgCallBack, _ImgCaptureCallback;
-				std::function<void(Utilities::Point)> _PosCallBack, _PosCaptureCallback;
-				int _img_Delay;
-				int _pos_Delay;
-				bool _Running;
-			};
 		}
 	}
 }
 
 std::future<std::shared_ptr<SL::Remote_Access_Library::Utilities::Image>> SL::Remote_Access_Library::Input::get_MouseImage()
 {
-	return std::async(std::launch::async, [] { 
+	return std::async(std::launch::async, [] {
 		return Capturing::CaptureMouseImage();
 	});
 }
@@ -263,6 +248,8 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 	new_pos.x = m.Pos.X;
 	new_pos.y = m.Pos.Y;
 	!CGWarpMouseCursorPosition(new_pos);
+#elif __ANDROID__
+
 #elif __linux__
 
 	auto display = XOpenDisplay(NULL);

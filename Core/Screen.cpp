@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Screen.h"
 #include "Image.h"
-#include <thread>
 #include <assert.h>
 
 #define DESKTOPCAPTURERATE 100

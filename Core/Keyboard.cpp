@@ -20,7 +20,11 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 #elif defined __APPLE__
 	
 #elif __linux__
+	auto display = XOpenDisplay(NULL);
+	auto root = DefaultRootWindow(display);
 
+
+	XCloseDisplay(display);
 	
 #endif
 

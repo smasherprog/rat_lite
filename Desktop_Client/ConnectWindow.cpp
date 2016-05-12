@@ -1,4 +1,6 @@
-#include "stdafx.h"
+
+#include "../Core/stdafx.h"
+
 #include "ConnectWindow.h"
 #include "ViewerWindow.h"
 #include <FL/Fl.H>
@@ -29,7 +31,8 @@ namespace SL {
 				static void Failed_to_reach_host(void* userdata) {
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					std::string msg = std::string(ptr->bInput->value()) + std::string(" could not be resolved");
-					fl_alert(msg.c_str());
+					auto st = msg.c_str();
+                    fl_alert(st);
 					ptr->ActivateWidgets();
 				}
 				static void DoConnect(void* userdata) {
@@ -71,7 +74,7 @@ namespace SL {
 
 					cWindow = new Fl_Window(400, 420, 300, 70, "Connect to Host");
 					bInput = new Fl_Input(50, 0, 150, 30, "Host: ");
-					checkbx = new Fl_Check_Button(50, 40, 100, 14, " Scaling");
+					checkbx = new Fl_Check_Button(60, 40, 100, 14, " Scaling");
 					checkbx->align(FL_ALIGN_LEFT);
 					checkbx->callback(setscale, this);
 					connectbtn = new Fl_Button(200, 0, 80, 30, "Connect");

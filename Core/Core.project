@@ -37,32 +37,35 @@
     <File Name="Mouse.h"/>
     <File Name="Screen.cpp"/>
     <File Name="Screen.h"/>
+    <File Name="Keyboard.cpp"/>
+    <File Name="Keyboard.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Compression">
-    <File Name="bitstream.h"/>
-    <File Name="divsufsort.c"/>
-    <File Name="divsufsort.h"/>
-    <File Name="error_private.h"/>
-    <File Name="error_public.h"/>
-    <File Name="fse.c"/>
-    <File Name="fse.h"/>
-    <File Name="fse_static.h"/>
-    <File Name="huff0.c"/>
-    <File Name="huff0.h"/>
-    <File Name="huff0_static.h"/>
-    <File Name="mem.h"/>
-    <File Name="zbuff.c"/>
-    <File Name="zbuff.h"/>
-    <File Name="zbuff_static.h"/>
-    <File Name="zdict.c"/>
-    <File Name="zdict.h"/>
-    <File Name="zdict_static.h"/>
-    <File Name="zstd.h"/>
-    <File Name="zstd_compress.c"/>
-    <File Name="zstd_decompress.c"/>
-    <File Name="zstd_internal.h"/>
-    <File Name="zstd_opt.h"/>
-    <File Name="zstd_static.h"/>
+    <File Name="Compression/bitstream.h"/>
+    <File Name="Compression/divsufsort.c"/>
+    <File Name="Compression/divsufsort.h"/>
+    <File Name="Compression/error_private.h"/>
+    <File Name="Compression/error_public.h"/>
+    <File Name="Compression/fse.c"/>
+    <File Name="Compression/fse.h"/>
+    <File Name="Compression/fse_static.h"/>
+    <File Name="Compression/huff0.c"/>
+    <File Name="Compression/huff0.h"/>
+    <File Name="Compression/huff0_static.h"/>
+    <File Name="Compression/mem.h"/>
+    <File Name="Compression/zbuff.c"/>
+    <File Name="Compression/zbuff.h"/>
+    <File Name="Compression/zbuff_static.h"/>
+    <File Name="Compression/zdict.c"/>
+    <File Name="Compression/zdict.h"/>
+    <File Name="Compression/zdict_static.h"/>
+    <File Name="Compression/zstd.h"/>
+    <File Name="Compression/zstd_compress.c"/>
+    <File Name="Compression/zstd_decompress.c"/>
+    <File Name="Compression/zstd_internal.h"/>
+    <File Name="Compression/zstdjsgen.bat"/>
+    <File Name="Compression/zstd_opt.h"/>
+    <File Name="Compression/zstd_static.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Network">
     <File Name="IO_Runner.cpp"/>
@@ -111,9 +114,9 @@
     <File Name="MediaTypes.h"/>
     <File Name="Shapes.h"/>
     <File Name="ThreadPool.h"/>
+    <File Name="Logging.cpp"/>
+    <File Name="Logging.h"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Static Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -124,7 +127,7 @@
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="GCC" DebuggerType="LLDB Debugger" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Debug" CompilerType="GCC" DebuggerType="" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g;-W;-std=c++14;-Wall;-fPIC" C_Options="-g;-W;-fPIC;" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
@@ -199,4 +202,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

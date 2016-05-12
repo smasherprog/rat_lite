@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "../Core/stdafx.h"
 #include "ViewerWindow.h"
 #include "../Core/Image.h"
 #include "../Core/ClientNetworkDriver.h"

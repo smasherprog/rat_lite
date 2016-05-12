@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <iterator>
 #include <array>
+#include <string.h>
 
 struct SL::Remote_Access_Library::Utilities::Image_Impl {
 	unsigned int height;

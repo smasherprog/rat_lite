@@ -4,6 +4,10 @@
 #include <assert.h>
 #include "Logging.h"
 
+#if __linux__
+#include <X11/Xlib.h>
+#include <X11/extensions/Xfixes.h>
+#endif
 
 namespace SL
 {
@@ -142,10 +146,6 @@ namespace SL
 			}
 #elif __linux__
 
-
-#include <X11/Xlib.h>
-#include <X11/extensions/Xfixes.h>
-
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
 				auto display = XOpenDisplay(NULL);
@@ -207,7 +207,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 	SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
 	assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
 
-#if defined _WIN32
+#if _WIN32
 
 	INPUT input;
 	memset(&input, 0, sizeof(input));
@@ -242,7 +242,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 
 	SendInput(1, &input, sizeof(input));
 	if (m.PressData == Input::Mouse::Press::DBLCLICK) SendInput(1, &input, sizeof(input));
-#elif defined __APPLE__
+#elif __APPLE__
 	CGPoint new_pos;
 	CGEventErr err;
 	new_pos.x = m.Pos.X;

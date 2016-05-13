@@ -22,6 +22,7 @@ bld/
 .workspace/
 .gradle/
 [Jj]ni[Ll]ibs/
+.vs/
 
 *.tlog
 .vs/

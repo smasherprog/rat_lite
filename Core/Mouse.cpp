@@ -240,7 +240,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 		break;
 	}
 
-	SendInput(1, &input, sizeof(input));
+	//SendInput(1, &input, sizeof(input));
 	if (m.PressData == Input::Mouse::Press::DBLCLICK) SendInput(1, &input, sizeof(input));
 #elif defined __APPLE__
 	CGPoint new_pos;

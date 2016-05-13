@@ -101,7 +101,7 @@ namespace SL {
 
 
 			virtual void OnMouse(Input::MouseEvent* m) override {
-				Input::SimulateMouseEvent(*m);
+				if(!_Config.IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
 			}
 
 

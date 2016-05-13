@@ -11,6 +11,7 @@ namespace SL {
 
 #if _WIN32
 #include <FL/Fl.H>
+
 		//RAII Objects to ensure proper destruction
 #define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(&::DeleteDC)>(handle, &::DeleteDC)
 #define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)

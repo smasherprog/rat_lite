@@ -3,13 +3,13 @@
 #include <string>
 #include "Logging.h"
 
-#if defined __linux__
+#if __linux__
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/extensions/XTest.h>
 
 int KeyboardMap[] = {
-    0, // [0]
+	0, // [0]
 	0, // [1]
 	0, // [2]
 	XK_Cancel,//"CANCEL", // [3]
@@ -38,7 +38,7 @@ int KeyboardMap[] = {
 	0, // [26]
 	XK_Escape,//"ESCAPE", // [27]
 	0,//"CONVERT", // [28]
-    0,//"NONCONVERT", // [29]
+	0,//"NONCONVERT", // [29]
 	0,//"ACCEPT", // [30]
 	0,//"MODECHANGE", // [31]
 	XK_space,//"SPACE", // [32]
@@ -265,20 +265,25 @@ int KeyboardMap[] = {
 	0,//"PA1", // [253]
 	0,//"WIN_OEM_CLEAR", // [254]
 	0 // [255]
-    };
+};
 
-
+#elif _WIN32
+int KeyboardMap[] =
+	{ 
+	0,
+	0 
+};
 #endif
 
 void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 {
-	SL_RAT_LOG(std::string("SetKeyEvent Key:") +std::to_string( ev.Key) + std::string(" SpecialKey: ") + std::to_string(ev.SpecialKey) + std::string(" PressData: ") + std::to_string(ev.PressData), Utilities::Logging_Levels::INFO_log_level);
-    if(ev.Key> sizeof(KeyboardMap)) {
-        SL_RAT_LOG("Recevied a key event which is larger than the supported size.", Utilities::Logging_Levels::Debug_log_level);
-        return;
-    }
-    if(KeyboardMap[ev.Key]==0) return;//nothing to do
-    
+	SL_RAT_LOG(std::string("SetKeyEvent Key:") + std::to_string(ev.Key) + std::string(" SpecialKey: ") + std::to_string(ev.SpecialKey) + std::string(" PressData: ") + std::to_string(ev.PressData), Utilities::Logging_Levels::INFO_log_level);
+	if (ev.Key > sizeof(KeyboardMap)) {
+		SL_RAT_LOG("Recevied a key event which is larger than the supported size.", Utilities::Logging_Levels::Debug_log_level);
+		return;
+	}
+	if (KeyboardMap[ev.Key] == 0) return;//nothing to do
+
 #if  _WIN32
 
 	INPUT input;
@@ -290,20 +295,20 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 
 #elif __APPLE__
 
- 
+
 #elif __linux__
-   
-    
+
+
 	auto display = XOpenDisplay(NULL);
-    auto keycode = XKeysymToKeycode (display, KeyboardMap[ev.Key]);
-    if (keycode == 0) return;
-    XTestGrabControl(display, True);
-    
-    //XTestFakeKeyEvent(display, keycode, ev.PressData == Keyboard::Press::DOWN ? True : False, 0);
-    XSync (display, False);
-    XTestGrabControl(display, False);
+	auto keycode = XKeysymToKeycode(display, KeyboardMap[ev.Key]);
+	if (keycode == 0) return;
+	XTestGrabControl(display, True);
+
+	//XTestFakeKeyEvent(display, keycode, ev.PressData == Keyboard::Press::DOWN ? True : False, 0);
+	XSync(display, False);
+	XTestGrabControl(display, False);
 	XCloseDisplay(display);
-	
+
 #endif
 
 }

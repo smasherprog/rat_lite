@@ -462,8 +462,6 @@ var SL;
                         _this.handle_key(ev, new Input.KeyEvent(Input.KeyPress.UP, ev.keyCode || ev.which, Input.SpecialKeys.NO_PRESS_DATA));
                     };
                     this.handle_key = function (ev, k) {
-                        console.log("s: '" + String.fromCharCode(k.Key) + "'");
-                        console.log("k: '" + k.Key + "'");
                         console.log("N: '" + Input.KeyEvent.keyboardMap[k.Key] + "'");
                         var spec = Input.SpecialKeys.NO_PRESS_DATA;
                         if (ev.altKey)

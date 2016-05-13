@@ -50,7 +50,7 @@ namespace SL {
 						//make sure the image is scaled properly
 						if (_ScaleImage) {
 							auto psize = ParentSize();
-							if (psize != _ScaledImage->Height()) {//rescale the image
+							if (psize != static_cast<int>(_ScaledImage->Height())) {//rescale the image
 
 								auto tmpscaled = Utilities::Image::Resize(_OriginalImage, psize, static_cast<int>(GetScaleFactor()*_OriginalImage->Width()));
 								{

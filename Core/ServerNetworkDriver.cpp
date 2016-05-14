@@ -30,7 +30,7 @@ namespace SL {
 
 				std::vector<std::shared_ptr<ISocket>> _Clients;
 				std::mutex _ClientsLock;
-				Server_Config _Config;
+				std::shared_ptr<Network::Server_Config> _Config;
 				std::vector<char> _CompressBuffer;
 
 
@@ -39,7 +39,7 @@ namespace SL {
 					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
 			public:
-				ServerNetworkDriverImpl(Server_Config& config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
+				ServerNetworkDriverImpl(std::shared_ptr<Network::Server_Config> config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
 
 				}
 				virtual ~ServerNetworkDriverImpl() {
@@ -68,7 +68,9 @@ namespace SL {
 					}
 
 				}
-
+				size_t ClientCount() const {
+					return _Clients.size();
+				}
 
 				std::vector<std::shared_ptr<ISocket>> GetClients() {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
@@ -122,7 +124,7 @@ namespace SL {
 					Stop();
 
 					_IO_Runner = std::make_unique<IO_Runner>();
-					if (_Config.WebSocketListenPort > 0) {
+					if (_Config->WebSocketListenPort > 0) {
 
 						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service(), _Config);
 						_WebSocketListener = std::make_unique<WebSocketListener>(this, _IO_Runner->get_io_service(), _Config);
@@ -132,12 +134,14 @@ namespace SL {
 
 				}
 				void Stop() {
+					std::vector<std::shared_ptr<ISocket>> copyclients;
 					{
 						std::lock_guard<std::mutex> lock(_ClientsLock);
-						std::for_each(begin(_Clients), end(_Clients), [](const std::shared_ptr<ISocket>& o) { o->close_Socket("ShuttingDown"); });
-						_Clients.clear();//destroy all clients
+						copyclients = std::move(_Clients);//move all of the clients to a new vector
+						_Clients.clear();//clear the internal client listing
 					}
-
+					std::for_each(begin(copyclients), end(copyclients), [](const std::shared_ptr<ISocket>& o) { o->close_Socket("ShuttingDown"); });
+					copyclients.clear();
 					_HttptListener.reset();
 					_WebSocketListener.reset();
 					_IO_Runner.reset();
@@ -189,7 +193,7 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Network::ServerNetworkDriver::ServerNetworkDriver(Network::IServerDriver * r, Server_Config& config) : _ServerNetworkDriverImpl(std::make_unique<ServerNetworkDriverImpl>(config, r))
+SL::Remote_Access_Library::Network::ServerNetworkDriver::ServerNetworkDriver(Network::IServerDriver * r, std::shared_ptr<Network::Server_Config> config) : _ServerNetworkDriverImpl(std::make_unique<ServerNetworkDriverImpl>(config, r))
 {
 
 }
@@ -231,5 +235,10 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket 
 std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>> SL::Remote_Access_Library::Network::ServerNetworkDriver::GetClients()
 {
 	return _ServerNetworkDriverImpl->GetClients();
+}
+
+size_t SL::Remote_Access_Library::Network::ServerNetworkDriver::ClientCount() const
+{
+	return _ServerNetworkDriverImpl->ClientCount();
 }
 

@@ -31,9 +31,9 @@ namespace SL {
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
 			Server_Status Status;
-			Network::Server_Config _Config;
+			std::shared_ptr<Network::Server_Config> _Config;
 
-			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
+			ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
 			{
 				LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 				_Keepgoing = true;
@@ -101,7 +101,7 @@ namespace SL {
 
 
 			virtual void OnMouse(Input::MouseEvent* m) override {
-				if(!_Config.IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
+				if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
 			}
 
 
@@ -123,25 +123,26 @@ namespace SL {
 				while (_Keepgoing) {
 #if !__ANDROID__
 					auto curtime = std::chrono::steady_clock::now();
+					if (_ServerNetworkDriver.ClientCount()>0) {
+						//check mouse img first
+						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
+							OnMouseImg(mouseimg.get());
+							mouseimg = Input::get_MouseImage();
+							mouseimgtimer = curtime;
+						}
+						//check mouse pos next
+						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
+							OnMousePos(mousepos.get());
+							mousepos = Input::get_MousePosition();
+							mouseimgtimer = curtime;
+						}
 
-					//check mouse img first
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config.MouseImageCaptureRate && is_ready(mouseimg)) {
-						OnMouseImg(mouseimg.get());
-						mouseimg = Input::get_MouseImage();
-						mouseimgtimer = curtime;
-					}
-					//check mouse pos next
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config.MousePositionCaptureRate && is_ready(mousepos)) {
-						OnMousePos(mousepos.get());
-						mousepos = Input::get_MousePosition();
-						mouseimgtimer = curtime;
-					}
-
-					//check screen next
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config.ScreenImageCaptureRate && is_ready(screenimg)) {
-						OnScreen(screenimg.get());
-						screenimg = Capturing::get_ScreenImage();
-						screenimgtimer = curtime;
+						//check screen next
+						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config->ScreenImageCaptureRate && is_ready(screenimg)) {
+							OnScreen(screenimg.get());
+							screenimg = Capturing::get_ScreenImage();
+							screenimgtimer = curtime;
+						}
 					}
 #endif
 					std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -166,7 +167,7 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Network::IBaseNetworkDriver* parent)
+SL::Remote_Access_Library::Server::Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent)
 {
 	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }

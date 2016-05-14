@@ -6,7 +6,7 @@
 #include "IBaseNetworkDriver.h"
 #include "HttpHeader.h"
 #include "MediaTypes.h"
-#include "Server_Config.h"
+#include "Server_config.h"
 #include "Packet.h"
 #include <fstream>
 
@@ -25,19 +25,19 @@ namespace SL {
 					std::shared_ptr<TCPListener<ssl_socket, HttpSocket<ssl_socket>>> _TLSTCPListener;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
-					Server_Config _config;
+					std::shared_ptr<Network::Server_Config> _config;
 
-					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
+					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config) :
 						_IBaseNetworkDriver(netevent), _io_service(io_service), _config(config) {
-						if (_config.WWWRoot.empty()) {
-							_config.WWWRoot = "/wwwwroot/";
+						if (_config->WWWRoot.empty()) {
+							_config->WWWRoot = "/wwwwroot/";
 						}
-						else if (_config.WWWRoot.back() == '/' || _config.WWWRoot.back() == '\\') {
-							_config.WWWRoot.pop_back();
+						else if (_config->WWWRoot.back() == '/' || _config->WWWRoot.back() == '\\') {
+							_config->WWWRoot.pop_back();
 						}
 #ifndef __ANDROID__
-						boost::filesystem::path p(boost::filesystem::canonical(_config.WWWRoot));
-						_config.WWWRoot = p.string();
+						boost::filesystem::path p(boost::filesystem::canonical(_config->WWWRoot));
+						_config->WWWRoot = p.string();
 #endif
 					}
 					virtual ~HttpServerImpl() {
@@ -45,8 +45,8 @@ namespace SL {
 					}
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-						socket->set_ReadTimeout(_config.Read_Timeout);
-						socket->set_WriteTimeout(_config.Write_Timeout);
+						socket->set_ReadTimeout(_config->Read_Timeout);
+						socket->set_WriteTimeout(_config->Write_Timeout);
 						SL_RAT_LOG("HTTP OnConnect", Utilities::Logging_Levels::INFO_log_level);
 					}
 					//below will need to be moved out into its own class, but for now this is faster
@@ -84,10 +84,10 @@ namespace SL {
 
 					Packet GetContent(std::string path) {
 						SL_RAT_LOG(std::string("HTTP GetContent ") + path, Utilities::Logging_Levels::INFO_log_level);
-						if (path == "/") path = _config.WWWRoot + "/index.html";
-						else path = _config.WWWRoot + path;
+						if (path == "/") path = _config->WWWRoot + "/index.html";
+						else path = _config->WWWRoot + path;
 						try {
-							boost::filesystem::path p(boost::filesystem::canonical(path, _config.WWWRoot));
+							boost::filesystem::path p(boost::filesystem::canonical(path, _config->WWWRoot));
 							auto tesert = p.string();
 							if (boost::filesystem::exists(p) && boost::filesystem::is_regular_file(p))
 							{
@@ -144,15 +144,15 @@ namespace SL {
 						return pack;
 					}
 					void Start() {
-						if (_config.HttpListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting http socket Listening on port ") + std::to_string(_config.HttpListenPort), Utilities::Logging_Levels::INFO_log_level);
-							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config.HttpListenPort, _io_service);
+						if (_config->HttpListenPort > 0) {
+							SL_RAT_LOG(std::string("Starting http socket Listening on port ") + std::to_string(_config->HttpListenPort), Utilities::Logging_Levels::INFO_log_level);
+							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config->HttpListenPort, _io_service);
 							_TCPListener->Start();
 						}
-						if (_config.HttpTLSListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting TLS http socket Listening on port ") + std::to_string( _config.HttpTLSListenPort), Utilities::Logging_Levels::INFO_log_level);
+						if (_config->HttpTLSListenPort > 0) {
+							SL_RAT_LOG(std::string("Starting TLS http socket Listening on port ") + std::to_string( _config->HttpTLSListenPort), Utilities::Logging_Levels::INFO_log_level);
 
-							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config.HttpTLSListenPort, _io_service);
+							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config->HttpTLSListenPort, _io_service);
 							_TLSTCPListener->Start();
 						}
 					}
@@ -167,7 +167,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config)
+SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config)
 {
 	_HttpServerImpl = new INTERNAL::HttpServerImpl(netevent, io_service, config);
 }

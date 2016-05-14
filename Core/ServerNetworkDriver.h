@@ -19,7 +19,7 @@ namespace SL {
 				std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
 
 			public:
-				ServerNetworkDriver(IServerDriver * r, Server_Config& config);
+				ServerNetworkDriver(IServerDriver * r, std::shared_ptr<Network::Server_Config> config);
 				~ServerNetworkDriver();
 
 				//after creating ServerNetworkDriver, Start() must be called to start the network processessing
@@ -33,6 +33,7 @@ namespace SL {
 				void SendMouse(ISocket * socket, const Utilities::Point& pos);
 
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();
+				size_t ClientCount() const;
 
 			};
 

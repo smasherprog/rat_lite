@@ -56,6 +56,23 @@ namespace SL {
 						}
 					});
 					
+
+					//launch compression on another thread
+			/*		auto sharedpack = std::make_shared<Packet>(std::move(pack));
+					auto compressingpacket = std::async(std::launch::async, [sharedpack, this, self]() { return std::make_shared<Packet>(std::move(this->compress(*sharedpack)));  }).share();
+
+					_io_service.post([this, self, compressingpacket, beforesize]()
+					{
+						_SocketImpl.AddOutgoingPacket(compressingpacket.get(), beforesize);
+						if (!_SocketImpl.writing())
+						{
+							_SocketImpl.writing(true);
+							writeexpire_from_now(30);
+							writeheader(_SocketImpl.GetNextWritePacket());
+						}
+					});
+					*/
+
 				}
 
 				virtual void set_ReadTimeout(int s)override {

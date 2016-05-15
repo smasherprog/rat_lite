@@ -21,15 +21,15 @@ namespace SL {
 			};
 			const std::string Logging_level_Names[] = { "DEBUG", "ERROR", "FATAL", "INFO", "WARN" };
 
-			struct None { };
+			struct NotRealThingy {};
 
 			template<typename List>
 			struct LogData {
 				List list;
 			};
 			typedef std::ostream& (*PfnManipulator)(std::ostream&);
-			inline void output(std::ostream& os, None)
-			{ }
+			inline void output(std::ostream& os, NotRealThingy)
+			{ UNUSED(os); }
 
 			template<typename List>
 			void Log(Logging_Levels level, const char* file, int line, const char* func, LogData<List>&& data)
@@ -107,4 +107,4 @@ namespace SL {
 #define S(x) #x
 #define S_(x) S(x)
 //Usage  SL_RAT_LOG(SL::Remote_Access_Library::Utilities::Logging_Levels::Debug_log_level, "Message goes here "<< 56 <<" Any Valid cout stuff works");
-#define SL_RAT_LOG(level, msg) Log(level, __FILE__, __LINE__,__func__, SL::Remote_Access_Library::Utilities::LogData<SL::Remote_Access_Library::Utilities::None>() << msg)
+#define SL_RAT_LOG(level, msg) Log(level, __FILE__, __LINE__,__func__, SL::Remote_Access_Library::Utilities::LogData<SL::Remote_Access_Library::Utilities::NotRealThingy>() << msg)

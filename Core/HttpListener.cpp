@@ -6,7 +6,7 @@
 #include "IBaseNetworkDriver.h"
 #include "HttpHeader.h"
 #include "MediaTypes.h"
-#include "Server_config.h"
+#include "Server_Config.h"
 #include "Packet.h"
 #include <fstream>
 
@@ -36,7 +36,14 @@ namespace SL {
 							_config->WWWRoot.pop_back();
 						}
 #ifndef __ANDROID__
-						boost::filesystem::path p(boost::filesystem::canonical(_config->WWWRoot));
+                        try{
+                            boost::filesystem::path p(boost::filesystem::canonical(_config->WWWRoot));
+                        } 
+                        catch(std::exception ex){
+                            SL_RAT_LOG(Utilities::FATAL_log_level, "No wwwroot Folder Found!");
+                        }    
+                        
+}
 						_config->WWWRoot = p.string();
 #endif
 					}

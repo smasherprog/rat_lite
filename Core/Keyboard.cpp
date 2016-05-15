@@ -540,6 +540,7 @@ int KeyboardMap[] = {
 
 };
 
+#if  _WIN32
 unsigned int Map_ToPlatformKey(unsigned int key) {
 	switch (key) {
 	case (FL_Help):
@@ -678,12 +679,153 @@ unsigned int Map_ToPlatformKey(unsigned int key) {
 }
 
 
+
+
+#elif __APPLE__
+
+#elif __ANDROID__
+
+
+#elif __linux__
+unsigned int Map_ToPlatformKey(unsigned int key) {
+    switch (key) {
+	case (FL_Help):
+		return XK_Help;
+	case (FL_Shift_L):
+		return XK_Shift_L;
+	case (FL_Shift_R):
+		return XK_Shift_R;
+	case (FL_Control_L):
+		return XK_Control_L;
+	case (FL_Control_R):
+		return XK_Control_R;
+	case (FL_Alt_L):
+		return XK_Alt_L;
+	case (FL_Alt_R):
+		return XK_Alt_R;
+	case (FL_Pause):
+		return XK_Pause;
+	case (FL_Caps_Lock):
+		return XK_Caps_Lock;
+
+	case (FL_Escape):
+		return XK_Escape;
+
+	case (FL_Home):
+		return XK_Home;
+	case (FL_Left):
+		return XK_Left;
+	case (FL_Up):
+		return XK_Up;
+	case (FL_Right):
+		return XK_Right;
+	case (FL_Down):
+		return XK_Down;
+	case (FL_Page_Up):
+		return XK_Page_Up;
+	case (FL_Page_Down):
+		return XK_Page_Down;
+	case (FL_End):
+		return XK_End;
+	case (FL_Home_Page):
+		return XK_Home;
+
+	case (FL_Print):
+		return XK_Print;
+	case (FL_Insert):
+		return XK_Insert;
+	case (FL_Delete):
+		return XK_Delete;
+
+	case (FL_Meta_L):
+		return XK_Meta_L;
+	case (FL_Meta_R):
+		return XK_Meta_R;
+
+	case (FL_Menu):
+		return XK_Menu;
+
+
+	case (SL_MULTIPLY):
+		return XK_KP_Multiply;
+
+	case (SL_ADD):
+		return XK_KP_Add;
+	case (SL_SEPARATOR):
+		return XK_KP_Separator;
+	case (SL_SUBTRACT):
+		return XK_KP_Subtract;
+	case (SL_DECIMAL):
+		return XK_KP_Decimal;
+	case (SL_DIVIDE):
+		return XK_KP_Divide;
+
+	case (FL_F + 1):
+		return XK_F1;
+	case (FL_F + 2):
+		return XK_F2;
+	case (FL_F + 3):
+		return XK_F3;
+	case (FL_F + 4):
+		return XK_F4;
+	case (FL_F + 5):
+		return XK_F5;
+	case (FL_F + 6):
+		return XK_F6;
+	case (FL_F + 7):
+		return XK_F7;
+	case (FL_F + 8):
+		return XK_F8;
+	case (FL_F + 9):
+		return XK_F9;
+	case (FL_F + 10):
+		return XK_F10;
+	case (FL_F + 11):
+		return XK_F11;
+	case (FL_F + 12):
+		return XK_F12;
+	case (FL_F + 13):
+		return XK_F13;
+	case (FL_F + 14):
+		return XK_F14;
+	case (FL_F + 15):
+		return XK_F15;
+	case (FL_F + 16):
+		return XK_F16;
+	case (FL_F + 17):
+		return XK_F17;
+	case (FL_F + 18):
+		return XK_F18;
+	case (FL_F + 19):
+		return XK_F19;
+	case (FL_F + 20):
+		return XK_F20;
+	case (FL_F + 21):
+		return XK_F21;
+	case (FL_F + 22):
+		return XK_F22;
+	case (FL_F + 23):
+		return XK_F23;
+	case (FL_F + 24):
+		return XK_F24;
+	case (FL_Num_Lock):
+		return XK_Num_Lock;
+	case (FL_Scroll_Lock):
+		return XK_Scroll_Lock;
+	default:
+		return 0;
+	}
+}
+
+	
+#endif
+
 void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 {
 	SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Received SetKeyEvent Key:" << ev.Key << " SpecialKey: " << ev.SpecialKey << " PressData: " << ev.PressData);
 	if (ev.Key == 0) return;//unmapped key
 
-	if (ev.Key < 0) {//special key, needs to be mapped to platform specific code
+	if (ev.Key & 0xf000) {//special key, needs to be mapped to platform specific code
 		ev.Key = Map_ToPlatformKey(ev.Key);
 	}//must be ascii char, do a check to make sure it is actually an ascii char. Below are the hex values of ascii chars
 	else if ( !(ev.Key == 0x0008 || ev.Key == 0x0009 || ev.Key == 0x000d || (ev.Key >= 0x0020 && ev.Key >= 0x007f)) ) {
@@ -713,7 +855,8 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 
 
 	auto display = XOpenDisplay(NULL);
-	auto keycode = XKeysymToKeycode(display, KeyboardMap[ev.Key]);
+	auto keycode = XKeysymToKeycode(display, ev.Key);
+    SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "AFter XKeysymToKeycode '"<<keycode<<"'");
 	if (keycode == 0) return;
 	XTestGrabControl(display, True);
 

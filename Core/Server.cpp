@@ -23,25 +23,22 @@ namespace SL {
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastMouse;
 
-			Utilities::Point LastMousePos;
+			Utilities::Point LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
 
-			bool _Keepgoing;
+			bool _Keepgoing= true;
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
-			Server_Status Status;
+			Server_Status _Status = Server_Status::SERVER_STOPPED;
 			std::shared_ptr<Network::Server_Config> _Config;
 
 			ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
 			{
-				LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
-				_Keepgoing = true;
-				Status = Server_Status::SERVER_STOPPED;
 			}
 
 			virtual ~ServerImpl() {
-				Status = Server_Status::SERVER_STOPPED;
+				_Status = Server_Status::SERVER_STOPPED;
 				_Keepgoing = false;
 			}
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
@@ -108,7 +105,7 @@ namespace SL {
 			}
 
 			int Run() {
-				Status = Server_Status::SERVER_RUNNING;
+				_Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();
 
 #if !__ANDROID__
@@ -151,19 +148,19 @@ namespace SL {
 				}
 				_ServerNetworkDriver.Stop();
 
-				Status = Server_Status::SERVER_STOPPED;
+				_Status = Server_Status::SERVER_STOPPED;
 				return 0;
 			}
 			void Stop(bool block) {
 				_Keepgoing = false;
 				if (block) {
-					while (Status != Server_Status::SERVER_STOPPED) {
+					while (_Status != Server_Status::SERVER_STOPPED) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(20));
 					}
 				}
 			}
 			Server_Status get_Status() const {
-				return Status;
+				return _Status;
 			}
 		};
 	}

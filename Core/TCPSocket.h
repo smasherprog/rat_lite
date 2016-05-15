@@ -91,7 +91,7 @@ namespace SL {
 				}
 				virtual void close_Socket(std::string reason) override {
 
-					SL_RAT_LOG("Closing socket: " + reason, Utilities::Logging_Levels::INFO_log_level);
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: "<<reason);
 					if (closed()) return;
 					_SocketImpl.Closed = true;
 					_SocketImpl.CancelTimers();
@@ -100,7 +100,7 @@ namespace SL {
 					_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 					_socket.lowest_layer().close();
 					if (ec) {
-						SL_RAT_LOG(ec.message(), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
 					}
 				}
 				//pending packets which are queued up and waiting to be sent
@@ -231,7 +231,7 @@ namespace SL {
 					Packet p(packet.Packet_Type, _SocketImpl.ReadPacketHeader.UncompressedLength, std::move(packet.Header));
 					p.Payload_Length = static_cast<unsigned int>(ZSTD_decompress(p.Payload, _SocketImpl.ReadPacketHeader.UncompressedLength, packet.Payload, packet.Payload_Length));
 					if (ZSTD_isError(p.Payload_Length) > 0) {
-						SL_RAT_LOG(ZSTD_getErrorName(p.Payload_Length), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ZSTD_getErrorName(p.Payload_Length) );
 						return Packet(static_cast<unsigned int>(PACKET_TYPES::INVALID));//empty packet
 					}
 					_SocketImpl.UpdateReadStats();

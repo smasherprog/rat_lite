@@ -12,6 +12,7 @@
 #include "HttpListener.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
+#include "Keyboard.h"
 #include <mutex>
 
 namespace SL {
@@ -33,6 +34,11 @@ namespace SL {
 				std::shared_ptr<Network::Server_Config> _Config;
 				std::vector<char> _CompressBuffer;
 
+				void KeyboardEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					assert(p->Payload_Length == sizeof(Input::KeyEvent));
+					_IServerDriver->OnKey((Input::KeyEvent*) p->Payload);
+					
+				}
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					assert(p->Payload_Length == sizeof(Input::MouseEvent));
@@ -62,6 +68,10 @@ namespace SL {
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT) :
 						MouseEvent(socket, p);
 						break;
+					case static_cast<unsigned int>(PACKET_TYPES::KEYEVENT) :
+						KeyboardEvent(socket, p);
+						break;
+						
 					default:
 						_IServerDriver->OnReceive(socket, p);//pass up the chain
 						break;
@@ -182,7 +192,7 @@ namespace SL {
 #endif
 
 					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
 					//	std::cout << "Sending " << r << std::endl;
 					p.Payload_Length = sizeof(Utilities::Rect) + _jpegSize;//adjust the correct size

@@ -10,7 +10,6 @@ namespace SL {
 	namespace Remote_Access_Library {
 
 #if _WIN32
-#include <FL/Fl.H>
 
 		//RAII Objects to ensure proper destruction
 #define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(&::DeleteDC)>(handle, &::DeleteDC)
@@ -82,14 +81,6 @@ namespace SL {
 		}
 #elif __linux__
 
-
-
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xlibint.h>
-#include <X11/Xutil.h>
-#include <sys/shm.h>
-#include <X11/extensions/XShm.h>
 
 		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
 		{

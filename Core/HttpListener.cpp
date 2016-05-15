@@ -47,7 +47,7 @@ namespace SL {
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 						socket->set_ReadTimeout(_config->Read_Timeout);
 						socket->set_WriteTimeout(_config->Write_Timeout);
-						SL_RAT_LOG("HTTP OnConnect", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP OnConnect");
 					}
 					//below will need to be moved out into its own class, but for now this is faster
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
@@ -72,7 +72,7 @@ namespace SL {
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
 						UNUSED(socket);
-						SL_RAT_LOG("HTTP Close", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP Close");
 					}
 #ifdef __ANDROID__
 
@@ -83,7 +83,7 @@ namespace SL {
 #else 
 
 					Packet GetContent(std::string path) {
-						SL_RAT_LOG(std::string("HTTP GetContent ") + path, Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP GetContent "<<path);
 						if (path == "/") path = _config->WWWRoot + "/index.html";
 						else path = _config->WWWRoot + path;
 						try {
@@ -127,13 +127,13 @@ namespace SL {
 							}
 						}
 						catch (std::exception e) {
-							SL_RAT_LOG(e.what(), Utilities::Logging_Levels::ERROR_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, e.what());
 						}
 						return Get404Page();
 					}
 #endif
 					Packet Get404Page() {
-						SL_RAT_LOG("HTTP OnReceive Get404Page", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP OnReceive Get404Page");
 
 						std::string sHTML = "<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
 						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(sHTML.size()));
@@ -145,12 +145,12 @@ namespace SL {
 					}
 					void Start() {
 						if (_config->HttpListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting http socket Listening on port ") + std::to_string(_config->HttpListenPort), Utilities::Logging_Levels::INFO_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting http socket Listening on port "<< _config->HttpListenPort);
 							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config->HttpListenPort, _io_service);
 							_TCPListener->Start();
 						}
 						if (_config->HttpTLSListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting TLS http socket Listening on port ") + std::to_string( _config->HttpTLSListenPort), Utilities::Logging_Levels::INFO_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port "<< _config->HttpTLSListenPort);
 
 							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config->HttpTLSListenPort, _io_service);
 							_TLSTCPListener->Start();

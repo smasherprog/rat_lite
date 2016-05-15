@@ -4,11 +4,6 @@
 #include <assert.h>
 #include "Logging.h"
 
-#if __linux__
-#include <X11/Xlib.h>
-#include <X11/extensions/Xfixes.h>
-#endif
-
 namespace SL
 {
 	namespace Remote_Access_Library
@@ -204,7 +199,7 @@ std::future<SL::Remote_Access_Library::Utilities::Point> SL::Remote_Access_Libra
 void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEvent & m)
 {
 
-	SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
+	SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level,"SetMouseEvent EventData:"<<m.EventData<<" ScrollDelta: "<<m.ScrollDelta<<" PressData: "<<m.PressData);
 	assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
 
 #if _WIN32

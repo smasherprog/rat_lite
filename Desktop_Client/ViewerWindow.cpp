@@ -169,7 +169,7 @@ namespace SL {
 				}
 				ViewerWindowImpl(const char* dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
 				{
-				
+
 					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
@@ -211,9 +211,19 @@ namespace SL {
 					};
 					return Fl_Window::handle(e);
 				}
+		
+
 				int handle_key(int e, Input::Keyboard::Press press) {
 					auto key = Fl::event_key();
-					SL_RAT_LOG(std::to_string(key), Utilities::Logging_Levels::INFO_log_level);
+					auto text = Fl::event_text();
+					auto len = Fl::event_length();
+					auto t = *text;
+					if (t >= '0' && t < 'Z') key= static_cast<unsigned int>(t);
+					if (t >= 'a' && t <= 'z') key= static_cast<unsigned int>(t - ('a' - 'A'));
+
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
+					
+
 					return 1;
 				}
 				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {
@@ -276,6 +286,7 @@ namespace SL {
 				}
 				static void awakenredraw(void* data) {
 					auto imp = ((ViewerWindowImpl*)data);
+					if (imp->_BeingClosed) return;
 					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - imp->_FrameTimer).count() > imp->MaxFPS / 1000.0f) {
 						imp->_FrameTimer = std::chrono::steady_clock::now();
 						imp->FrameCounter += 1;
@@ -295,6 +306,7 @@ namespace SL {
 				}
 				static void awakensettitle(void* data) {
 					auto imp = ((ViewerWindowImpl*)data);
+					if (imp->_BeingClosed) return;
 					imp->label(imp->_Title);
 				}
 				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {

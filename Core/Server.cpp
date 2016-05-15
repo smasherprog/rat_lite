@@ -11,7 +11,7 @@
 #include "Packet.h"
 #include "Server_Config.h"
 #include <string.h>
-
+#include "Keyboard.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -59,7 +59,7 @@ namespace SL {
 
 			virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnReceive(socket, packet);
-				else SL_RAT_LOG(std::string("OnReceive Unknown Packet ") + std::to_string(packet->Packet_Type), Utilities::Logging_Levels::INFO_log_level);
+				else SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive Unknown Packet "<<packet->Packet_Type);
 			}
 
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
@@ -103,7 +103,9 @@ namespace SL {
 			virtual void OnMouse(Input::MouseEvent* m) override {
 				if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
 			}
-
+			virtual void OnKey(Input::KeyEvent* m)override {
+				if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateKeyboardEvent(*m);
+			}
 
 			int Run() {
 				Status = Server_Status::SERVER_RUNNING;

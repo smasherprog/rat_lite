@@ -38,12 +38,12 @@ namespace SL {
 					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
 
 					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
 					auto img = Utilities::Image::CreateImage(outheight, outwidth);
 
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
 					_IClientDriver->OnReceive_ImageDif(socket, imgrect->Origin, img);
 
@@ -56,12 +56,12 @@ namespace SL {
 					auto src = (unsigned char*)(p->Payload + sizeof(Utilities::Rect));
 
 					if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
-						SL_RAT_LOG(std::string("tjDecompressHeader2 ") + tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "tjDecompressHeader2 " << tjGetErrorStr());
 					}
 					auto img = Utilities::Image::CreateImage(outheight, outwidth);
 
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-						SL_RAT_LOG(tjGetErrorStr(), Utilities::Logging_Levels::ERROR_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
 					_IClientDriver->OnReceive_Image(socket, img);
 

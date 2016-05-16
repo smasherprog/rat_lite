@@ -456,8 +456,9 @@ module SL {
                 this.handle_key(ev, new Input.KeyEvent(Input.KeyPress.UP, ev.keyCode || ev.which, Input.SpecialKeys.NO_PRESS_DATA));
             }
             private handle_key = (ev: KeyboardEvent, k: Input.KeyEvent): void => {
-                console.log("N: '" + Input.KeyEvent.keyboardMap[k.Key] + "'");
                 k.SpecialKey = Input.SpecialKeys.NO_PRESS_DATA;
+                k.Key = Input.KeyEvent.keyboardMap[k.Key];
+                console.log("Key: '" + k.Key+ "'");
                 if (ev.altKey) k.SpecialKey  = Input.SpecialKeys.ALT;
                 else if (ev.ctrlKey) k.SpecialKey = Input.SpecialKeys.CTRL;
                 else if (ev.shiftKey) k.SpecialKey  = Input.SpecialKeys.SHIFT;

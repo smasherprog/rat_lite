@@ -248,8 +248,55 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 #elif __linux__
 
 	auto display = XOpenDisplay(NULL);
-	auto root = DefaultRootWindow(display);
-	XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
+    XTestFakeMotionEvent(display, 0, m.Pos.X, m.Pos.Y,0);
+    
+	
+    
+    switch (m.EventData) {
+	case Input::Mouse::Events::LEFT:
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button1,False, 0 );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button1,True, 0 );
+		else {//double click
+            XTestFakeButtonEvent(display, Button1,False, 0 );
+            XTestFakeButtonEvent(display, Button1,True, 0 );
+            XTestFakeButtonEvent(display, Button1,False, 0 );
+            XTestFakeButtonEvent(display, Button1,True, 0 );
+        }
+		break;
+	case Input::Mouse::Events::MIDDLE:
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button2,False, 0 );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button2,True, 0 );
+		else {//double click
+            XTestFakeButtonEvent(display, Button2,False, 0 );
+            XTestFakeButtonEvent(display, Button2,True, 0 );
+            XTestFakeButtonEvent(display, Button2,False, 0 );
+            XTestFakeButtonEvent(display, Button2,True, 0 );
+        }
+		break;
+	case Input::Mouse::Events::RIGHT:
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button3,False, 0 );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button3,True, 0 );
+		else {//double click
+            XTestFakeButtonEvent(display, Button3,False, 0 );
+            XTestFakeButtonEvent(display, Button3,True, 0 );
+            XTestFakeButtonEvent(display, Button3,False, 0 );
+            XTestFakeButtonEvent(display, Button3,True, 0 );
+        }
+		break;
+	case Input::Mouse::Events::SCROLL:
+        if(m.ScrollDelta <0){
+            XTestFakeButtonEvent(display, Button4,True, 0 );  
+            XTestFakeButtonEvent(display, Button4,False, 0 );   
+        } else {
+             XTestFakeButtonEvent(display, Button5,True, 0 );  
+            XTestFakeButtonEvent(display, Button5,False, 0 );   
+        }
+        
+		break;
+	default:
+		break;
+	}
+    
 	XCloseDisplay(display);
 
 #endif

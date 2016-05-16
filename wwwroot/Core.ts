@@ -218,7 +218,7 @@ module SL {
                     0, // [157]
                     0, // [158]
                     0, // [159]
-                    0x36, //"CIRCUMFLEX", // [160]
+                    0x60, //"CIRCUMFLEX", // [160]
                     0x31,//"EXCLAMATION", // [161]
                     0x27,//"DOUBLE_QUOTE", // [162]
                     0x33,//"HASH", // [163]
@@ -319,8 +319,8 @@ module SL {
 
         export enum MouseEvents {
             LEFT,
-            RIGHT,
             MIDDLE,
+            RIGHT,
             SCROLL,
             NO_EVENTDATA
         };

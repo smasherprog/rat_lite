@@ -159,7 +159,7 @@ namespace SL {
 								boost::asio::async_read(this->_socket, boost::asio::buffer(_readheaderbuffer, readbytes), [this, self, readbytes](const boost::system::error_code& ec, size_t bytes_transferred) {
 									
 									if (!ec) {
-										assert(static_cast<size_t>(readbytes) == bytes_transferred);
+										assert(readbytes == bytes_transferred);
 										for (int c = 0; c < readbytes; c++) {
 											this->_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer[c] << (8 * (readbytes - 1 - c));
 										}
@@ -266,7 +266,7 @@ namespace SL {
 						else {
 							*p++ = 126 + (this->_SocketImpl.Server ? 0 : 128);
 							auto s = static_cast<unsigned short int>(length);
-							for (auto c = sizeof(s) - 1; c >= 0; c--) {
+							for (int c = sizeof(s) - 1; c >= 0; c--) {
 								*p++ = (s >> (8 * c)) % 256;
 							}
 						}
@@ -278,7 +278,7 @@ namespace SL {
 						std::uniform_int_distribution<unsigned short> dist(0, 255);
 						std::random_device rd;
 						unsigned char mask[MASKSIZE];
-						for (size_t c = 0; c < sizeof(mask); c++) {
+						for (int c = 0; c < sizeof(mask); c++) {
 							mask[c] = *p++ = static_cast<unsigned char>(dist(rd));
 						}
 						size_t c = 0;

@@ -45,7 +45,6 @@ namespace SL {
 				{
 					std::lock_guard<std::mutex> lock(_NewClientLock);
 					_NewClients.push_back(socket);
-
 				}
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
@@ -101,7 +100,7 @@ namespace SL {
 				if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
 			}
 			virtual void OnKey(Input::KeyEvent* m)override {
-				if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateKeyboardEvent(*m);
+				if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
 			}
 
 			int Run() {
@@ -126,20 +125,20 @@ namespace SL {
 						//check mouse img first
 						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
 							OnMouseImg(mouseimg.get());
-							mouseimg = Input::get_MouseImage();
+							mouseimg = std::move(Input::get_MouseImage());
 							mouseimgtimer = curtime;
 						}
 						//check mouse pos next
 						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
 							OnMousePos(mousepos.get());
-							mousepos = Input::get_MousePosition();
+							mousepos = std::move(Input::get_MousePosition());
 							mouseimgtimer = curtime;
 						}
 
 						//check screen next
 						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config->ScreenImageCaptureRate && is_ready(screenimg)) {
 							OnScreen(screenimg.get());
-							screenimg = Capturing::get_ScreenImage();
+							screenimg = std::move(Capturing::get_ScreenImage());
 							screenimgtimer = curtime;
 						}
 					}

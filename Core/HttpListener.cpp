@@ -36,15 +36,13 @@ namespace SL {
 							_config->WWWRoot.pop_back();
 						}
 #ifndef __ANDROID__
-                        try{
-                            boost::filesystem::path p(boost::filesystem::canonical(_config->WWWRoot));
-                        } 
-                        catch(std::exception ex){
-                            SL_RAT_LOG(Utilities::FATAL_log_level, "No wwwroot Folder Found!");
-                        }    
-                        
-}
-						_config->WWWRoot = p.string();
+						try {
+							boost::filesystem::path p(boost::filesystem::canonical(_config->WWWRoot));
+							_config->WWWRoot = p.string();
+						}
+						catch (std::exception ex) {
+							SL_RAT_LOG(Utilities::FATAL_log_level, "No wwwroot Folder Found!");
+						}
 #endif
 					}
 					virtual ~HttpServerImpl() {
@@ -60,12 +58,12 @@ namespace SL {
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
 						UNUSED(socket);
 						auto requestedpath = packet->Header[HttpHeader::HTTP_PATH];
-						
+
 						auto params = requestedpath.find('?');
 						if (params != requestedpath.npos) {
 							requestedpath = requestedpath.substr(0, params);
 						}
-						
+
 						//sanitize path below. SImple for right now, 
 						std::transform(begin(requestedpath), end(requestedpath), begin(requestedpath), [](const char& elem) {
 							if ((elem >= 'a' && elem <= 'z') || (elem >= 'A' && elem <= 'Z') || (elem >= '0' && elem <= '9') || elem == ' ' || elem == '_' || elem == '.' || elem == '/' || elem == '\\') {
@@ -90,7 +88,7 @@ namespace SL {
 #else 
 
 					Packet GetContent(std::string path) {
-						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP GetContent "<<path);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP GetContent " << path);
 						if (path == "/") path = _config->WWWRoot + "/index.html";
 						else path = _config->WWWRoot + path;
 						try {
@@ -152,12 +150,12 @@ namespace SL {
 					}
 					void Start() {
 						if (_config->HttpListenPort > 0) {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting http socket Listening on port "<< _config->HttpListenPort);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting http socket Listening on port " << _config->HttpListenPort);
 							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config->HttpListenPort, _io_service);
 							_TCPListener->Start();
 						}
 						if (_config->HttpTLSListenPort > 0) {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port "<< _config->HttpTLSListenPort);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port " << _config->HttpTLSListenPort);
 
 							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config->HttpTLSListenPort, _io_service);
 							_TLSTCPListener->Start();

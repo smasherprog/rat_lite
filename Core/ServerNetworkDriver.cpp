@@ -103,7 +103,7 @@ namespace SL {
 				}
 				void SendMouse(ISocket * socket, const Utilities::Image & img) {
 					Utilities::Point r(Utilities::Point(img.Width(), img.Height()));
-					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), sizeof(r) + img.size());
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(sizeof(r) + img.size()));
 					memcpy(p.Payload, &r, sizeof(r));
 					memcpy(p.Payload + sizeof(r), img.data(), img.size());
 					if (socket == nullptr)	SendToAll(p);

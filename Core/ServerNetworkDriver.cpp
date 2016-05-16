@@ -35,12 +35,14 @@ namespace SL {
 				std::vector<char> _CompressBuffer;
 
 				void KeyboardEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+                    UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::KeyEvent));
 					_IServerDriver->OnKey((Input::KeyEvent*) p->Payload);
 					
 				}
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+                     UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::MouseEvent));
 					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
@@ -84,7 +86,8 @@ namespace SL {
 
 				std::vector<std::shared_ptr<ISocket>> GetClients() {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
-					return _Clients;
+					auto tmp= _Clients;
+                    return tmp;
 				}
 				void SendScreenDif(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img) {
 					auto p(ExtractImageRect(r, img));

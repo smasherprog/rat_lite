@@ -124,14 +124,14 @@ namespace SL {
 					if (_ServerNetworkDriver.ClientCount()>0) {
 						//check mouse img first
 						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
-							OnMouseImg(mouseimg.get());
-							mouseimg = std::move(Input::get_MouseImage());
+							//OnMouseImg(mouseimg.get());
+							//mouseimg = std::move(Input::get_MouseImage());
 							mouseimgtimer = curtime;
 						}
 						//check mouse pos next
 						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
-							OnMousePos(mousepos.get());
-							mousepos = std::move(Input::get_MousePosition());
+							//OnMousePos(mousepos.get());
+							//mousepos = std::move(Input::get_MousePosition());
 							mouseimgtimer = curtime;
 						}
 

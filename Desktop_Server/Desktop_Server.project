@@ -7,7 +7,6 @@
     <File Name="ConnectionInfoWindow.cpp"/>
     <File Name="ConnectionInfoWindow.h"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
@@ -101,4 +100,7 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug">
+    <Project Name="Core"/>
+  </Dependencies>
 </CodeLite_Project>

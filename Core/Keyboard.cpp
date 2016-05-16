@@ -299,7 +299,7 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 	if (ev.Key & 0xf000) {//special key, needs to be mapped to platform specific code
 		ev.Key = Map_ToPlatformKey(ev.Key);
 	}//must be ascii char, do a check to make sure it is actually an ascii char. Below are the hex values of ascii chars
-	else if ( !(ev.Key == 0x0008 || ev.Key == 0x0009 || ev.Key == 0x000d || (ev.Key >= 0x0020 && ev.Key >= 0x007f)) ) {
+	else if ( ev.Key != 0x0008 && ev.Key != 0x0009 && ev.Key != 0x000d && !(ev.Key >= 0x0020 && ev.Key <= 0x007f)) {
 		SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "Recevied a key event which is outside of the asci char set");
 		return;
 	}
@@ -331,7 +331,7 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 	if (keycode == 0) return;
 	XTestGrabControl(display, True);
 
-	//XTestFakeKeyEvent(display, keycode, ev.PressData == Keyboard::Press::DOWN ? True : False, 0);
+	XTestFakeKeyEvent(display, keycode, ev.PressData == Keyboard::Press::DOWN ? True : False, 0);
 	XSync(display, False);
 	XTestGrabControl(display, False);
 	XCloseDisplay(display);

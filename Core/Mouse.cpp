@@ -4,7 +4,6 @@
 #include <assert.h>
 #include "Logging.h"
 
-
 namespace SL
 {
 	namespace Remote_Access_Library
@@ -142,10 +141,6 @@ namespace SL
 			}
 #elif __linux__
 
-
-#include <X11/Xlib.h>
-#include <X11/extensions/Xfixes.h>
-
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
 			{
 				auto display = XOpenDisplay(NULL);
@@ -204,10 +199,10 @@ std::future<SL::Remote_Access_Library::Utilities::Point> SL::Remote_Access_Libra
 void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEvent & m)
 {
 
-	SL_RAT_LOG(std::string("SetMouseEvent EventData:") + std::to_string(m.EventData) + std::string(" ScrollDelta: ") + std::to_string(m.ScrollDelta) + std::string(" PressData: ") + std::to_string(m.PressData), Utilities::Logging_Levels::INFO_log_level);
+	SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level,"SetMouseEvent EventData:"<<m.EventData<<" ScrollDelta: "<<m.ScrollDelta<<" PressData: "<<m.PressData);
 	assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
 
-#if defined _WIN32
+#if _WIN32
 
 	INPUT input;
 	memset(&input, 0, sizeof(input));
@@ -242,7 +237,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 
 	SendInput(1, &input, sizeof(input));
 	if (m.PressData == Input::Mouse::Press::DBLCLICK) SendInput(1, &input, sizeof(input));
-#elif defined __APPLE__
+#elif __APPLE__
 	CGPoint new_pos;
 	CGEventErr err;
 	new_pos.x = m.Pos.X;
@@ -253,8 +248,55 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 #elif __linux__
 
 	auto display = XOpenDisplay(NULL);
-	auto root = DefaultRootWindow(display);
-	XWarpPointer(display, None, root, 0, 0, 0, 0, m.Pos.X, m.Pos.Y);
+    XTestFakeMotionEvent(display, 0, m.Pos.X, m.Pos.Y,0);
+    
+	
+    
+    switch (m.EventData) {
+	case Input::Mouse::Events::LEFT:
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button1,False, 0 );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button1,True, 0 );
+		else {//double click
+            XTestFakeButtonEvent(display, Button1,False, 0 );
+            XTestFakeButtonEvent(display, Button1,True, 0 );
+            XTestFakeButtonEvent(display, Button1,False, 0 );
+            XTestFakeButtonEvent(display, Button1,True, 0 );
+        }
+		break;
+	case Input::Mouse::Events::MIDDLE:
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button2,False, 0 );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button2,True, 0 );
+		else {//double click
+            XTestFakeButtonEvent(display, Button2,False, 0 );
+            XTestFakeButtonEvent(display, Button2,True, 0 );
+            XTestFakeButtonEvent(display, Button2,False, 0 );
+            XTestFakeButtonEvent(display, Button2,True, 0 );
+        }
+		break;
+	case Input::Mouse::Events::RIGHT:
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button3,False, 0 );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button3,True, 0 );
+		else {//double click
+            XTestFakeButtonEvent(display, Button3,False, 0 );
+            XTestFakeButtonEvent(display, Button3,True, 0 );
+            XTestFakeButtonEvent(display, Button3,False, 0 );
+            XTestFakeButtonEvent(display, Button3,True, 0 );
+        }
+		break;
+	case Input::Mouse::Events::SCROLL:
+        if(m.ScrollDelta <0){
+            XTestFakeButtonEvent(display, Button4,True, 0 );  
+            XTestFakeButtonEvent(display, Button4,False, 0 );   
+        } else {
+             XTestFakeButtonEvent(display, Button5,True, 0 );  
+            XTestFakeButtonEvent(display, Button5,False, 0 );   
+        }
+        
+		break;
+	default:
+		break;
+	}
+    
 	XCloseDisplay(display);
 
 #endif

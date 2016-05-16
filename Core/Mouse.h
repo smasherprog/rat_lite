@@ -12,8 +12,8 @@ namespace SL {
 			namespace Mouse {
 				enum Events : unsigned int {
 					LEFT,
-					RIGHT,
 					MIDDLE,
+                    RIGHT,
 					SCROLL,
 					NO_EVENTDATA
 				};

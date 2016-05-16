@@ -15,7 +15,7 @@ namespace SL {
 			class WebSocketListener {
 			public:
 		
-				WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config);
+				WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config);
 				~WebSocketListener();
 				WebSocketListener(const WebSocketListener&) = delete;
 				WebSocketListener(WebSocketListener&&) = delete;

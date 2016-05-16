@@ -14,7 +14,7 @@ namespace SL {
 				INTERNAL::HttpServerImpl* _HttpServerImpl;
 			public:
 
-				HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config);
+				HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config);
 				//no copy allowed
 				HttpListener(const HttpListener&) = delete;
 				HttpListener(HttpListener&&) = delete;

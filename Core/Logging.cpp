@@ -1,20 +1,25 @@
 #include "stdafx.h"
 #include "Logging.h"
+#include <iostream>
 
 #if __ANDROID__
-#include <android/log.h>
-#define APPNAME "Remote_Access_Library"
 
-void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels level, std::string file, std::string line, std::string func)
+#define APPNAME "Remote_Access_Library"
+#include <android/log.h>
+
+#endif
+
+void SL::Remote_Access_Library::Utilities::Log(Logging_Levels level, const char* file, int line, const char* func, std::ostringstream& data)
 {
-	auto msg = Logging_level_Names[level] + ":";
-	msg += " File: " + file;
-	msg += " Line: " + line;
-	msg += " Func: " + func;
-	msg += " Msg: " + str;
+
+#if __ANDROID__
+
+	std::ostringstream buffer;
+	buffer << Logging_level_Names[level] << ": FILE: " << file << " Line: " << line << " Func: " << func << " Msg: " << data.str();
+	auto msg = buffer.str();
 	switch (level) {
 	case(Debug_log_level):
-		__android_log_print(ANDROID_LOG_DEBUG, APPNAME,"%s", msg.c_str());
+		__android_log_print(ANDROID_LOG_DEBUG, APPNAME, "%s", msg.c_str());
 		break;
 	case(ERROR_log_level):
 		__android_log_print(ANDROID_LOG_ERROR, APPNAME, "%s", msg.c_str());
@@ -31,20 +36,15 @@ void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels l
 	default:
 		__android_log_print(ANDROID_LOG_INFO, APPNAME, "%s", msg.c_str());
 
-	}
-}
+				}
+
+
 #else 
-#include <iostream>
-void SL::Remote_Access_Library::Utilities::Log(std::string str, Logging_Levels level, std::string file, std::string line, std::string func)
-{
-	auto msg = Logging_level_Names[level] + ":";
-	msg += " File: " + file;
-	msg += " Line: " + line;
-	msg += " Func: " + func;
-	msg += " Msg: " + str;
-	std::cout << msg << std::endl;
-}
+	std::cout << Logging_level_Names[level] << ": FILE: " << file << " Line: " << line << " Func: " << func << " Msg: " << data.str() << std::endl;
+
 #endif
+
+			}
 
 #ifdef BOOST_NO_EXCEPTIONS
 //must provide custom definition to catch the exceptions thrown
@@ -52,7 +52,7 @@ namespace boost {
 	void throw_exception(std::exception const & e)
 	{
 		SL_RAT_LOG(e.what(), SL::Remote_Access_Library::Utilities::Logging_Levels::ERROR_log_level);
-		
+
 	}
 }
 #endif

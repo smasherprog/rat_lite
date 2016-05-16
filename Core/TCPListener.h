@@ -33,12 +33,13 @@ namespace SL {
 						{
 							//boost::asio::ip::tcp::no_delay option(true);
 							//_socket.set_option(option);
-							SL_RAT_LOG("Servicing new connection .. ", Utilities::Logging_Levels::INFO_log_level);
+							
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Servicing new connection .. ");
 							std::make_shared<DERIVED_BASESOCKET>(_driver, _socket)->connect(nullptr, nullptr);
 							Start();
 						}
 						else {
-							SL_RAT_LOG("Exiting asyncaccept", Utilities::Logging_Levels::INFO_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
 						}
 					});
 				}
@@ -93,7 +94,7 @@ namespace SL {
 							});
 						}
 						else {
-							SL_RAT_LOG("Exiting asyncaccept", Utilities::Logging_Levels::INFO_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
 						}
 					});
 				}

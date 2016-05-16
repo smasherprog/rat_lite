@@ -19,6 +19,8 @@ namespace SL {
 				unsigned int MousePositionCaptureRate = 50;// measured in ms
 				unsigned int ScreenImageCaptureRate = 100;// measured in ms
 
+				bool IgnoreIncomingMouseEvents = false;
+				bool IgnoreIncomingKeyboardEvents = false;
 			};
 		}
 	}

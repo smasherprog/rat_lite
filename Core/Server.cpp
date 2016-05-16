@@ -11,7 +11,7 @@
 #include "Packet.h"
 #include "Server_Config.h"
 #include <string.h>
-
+#include "Keyboard.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -23,32 +23,28 @@ namespace SL {
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
 			std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastMouse;
 
-			Utilities::Point LastMousePos;
+			Utilities::Point LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 			Network::ServerNetworkDriver _ServerNetworkDriver;
 			Network::IBaseNetworkDriver* _IUserNetworkDriver;
 
-			bool _Keepgoing;
+			bool _Keepgoing= true;
 			std::mutex _NewClientLock;
 			std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
-			Server_Status Status;
-			Network::Server_Config _Config;
+			Server_Status _Status = Server_Status::SERVER_STOPPED;
+			std::shared_ptr<Network::Server_Config> _Config;
 
-			ServerImpl(Network::Server_Config& config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
+			ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
 			{
-				LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
-				_Keepgoing = true;
-				Status = Server_Status::SERVER_STOPPED;
 			}
 
 			virtual ~ServerImpl() {
-				Status = Server_Status::SERVER_STOPPED;
+				_Status = Server_Status::SERVER_STOPPED;
 				_Keepgoing = false;
 			}
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
 				{
 					std::lock_guard<std::mutex> lock(_NewClientLock);
 					_NewClients.push_back(socket);
-
 				}
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
@@ -59,7 +55,7 @@ namespace SL {
 
 			virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
 				if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnReceive(socket, packet);
-				else SL_RAT_LOG(std::string("OnReceive Unknown Packet ") + std::to_string(packet->Packet_Type), Utilities::Logging_Levels::INFO_log_level);
+				else SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive Unknown Packet "<<packet->Packet_Type);
 			}
 
 			void OnScreen(std::shared_ptr<Utilities::Image> img)
@@ -101,12 +97,14 @@ namespace SL {
 
 
 			virtual void OnMouse(Input::MouseEvent* m) override {
-				Input::SimulateMouseEvent(*m);
+				if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
+			}
+			virtual void OnKey(Input::KeyEvent* m)override {
+				if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
 			}
 
-
 			int Run() {
-				Status = Server_Status::SERVER_RUNNING;
+				_Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start();
 
 #if !__ANDROID__
@@ -123,50 +121,51 @@ namespace SL {
 				while (_Keepgoing) {
 #if !__ANDROID__
 					auto curtime = std::chrono::steady_clock::now();
+					if (_ServerNetworkDriver.ClientCount()>0) {
+						//check mouse img first
+						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
+							//OnMouseImg(mouseimg.get());
+							//mouseimg = std::move(Input::get_MouseImage());
+							mouseimgtimer = curtime;
+						}
+						//check mouse pos next
+						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
+							//OnMousePos(mousepos.get());
+							//mousepos = std::move(Input::get_MousePosition());
+							mouseimgtimer = curtime;
+						}
 
-					//check mouse img first
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config.MouseImageCaptureRate && is_ready(mouseimg)) {
-						OnMouseImg(mouseimg.get());
-						mouseimg = Input::get_MouseImage();
-						mouseimgtimer = curtime;
-					}
-					//check mouse pos next
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config.MousePositionCaptureRate && is_ready(mousepos)) {
-						OnMousePos(mousepos.get());
-						mousepos = Input::get_MousePosition();
-						mouseimgtimer = curtime;
-					}
-
-					//check screen next
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config.ScreenImageCaptureRate && is_ready(screenimg)) {
-						OnScreen(screenimg.get());
-						screenimg = Capturing::get_ScreenImage();
-						screenimgtimer = curtime;
+						//check screen next
+						if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config->ScreenImageCaptureRate && is_ready(screenimg)) {
+							OnScreen(screenimg.get());
+							screenimg = std::move(Capturing::get_ScreenImage());
+							screenimgtimer = curtime;
+						}
 					}
 #endif
 					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 				}
 				_ServerNetworkDriver.Stop();
 
-				Status = Server_Status::SERVER_STOPPED;
+				_Status = Server_Status::SERVER_STOPPED;
 				return 0;
 			}
 			void Stop(bool block) {
 				_Keepgoing = false;
 				if (block) {
-					while (Status != Server_Status::SERVER_STOPPED) {
+					while (_Status != Server_Status::SERVER_STOPPED) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(20));
 					}
 				}
 			}
 			Server_Status get_Status() const {
-				return Status;
+				return _Status;
 			}
 		};
 	}
 }
 
-SL::Remote_Access_Library::Server::Server(Network::Server_Config& config, Network::IBaseNetworkDriver* parent)
+SL::Remote_Access_Library::Server::Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent)
 {
 	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }

@@ -25,19 +25,24 @@ namespace SL {
 					std::shared_ptr<TCPListener<ssl_socket, HttpSocket<ssl_socket>>> _TLSTCPListener;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
-					Server_Config _config;
+					std::shared_ptr<Network::Server_Config> _config;
 
-					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
+					HttpServerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config) :
 						_IBaseNetworkDriver(netevent), _io_service(io_service), _config(config) {
-						if (_config.WWWRoot.empty()) {
-							_config.WWWRoot = "/wwwwroot/";
+						if (_config->WWWRoot.empty()) {
+							_config->WWWRoot = "/wwwwroot/";
 						}
-						else if (_config.WWWRoot.back() == '/' || _config.WWWRoot.back() == '\\') {
-							_config.WWWRoot.pop_back();
+						else if (_config->WWWRoot.back() == '/' || _config->WWWRoot.back() == '\\') {
+							_config->WWWRoot.pop_back();
 						}
 #ifndef __ANDROID__
-						boost::filesystem::path p(boost::filesystem::canonical(_config.WWWRoot));
-						_config.WWWRoot = p.string();
+						try {
+							boost::filesystem::path p(boost::filesystem::canonical(_config->WWWRoot));
+							_config->WWWRoot = p.string();
+						}
+						catch (std::exception ex) {
+							SL_RAT_LOG(Utilities::FATAL_log_level, "No wwwroot Folder Found!");
+						}
 #endif
 					}
 					virtual ~HttpServerImpl() {
@@ -45,20 +50,20 @@ namespace SL {
 					}
 
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-						socket->set_ReadTimeout(_config.Read_Timeout);
-						socket->set_WriteTimeout(_config.Write_Timeout);
-						SL_RAT_LOG("HTTP OnConnect", Utilities::Logging_Levels::INFO_log_level);
+						socket->set_ReadTimeout(_config->Read_Timeout);
+						socket->set_WriteTimeout(_config->Write_Timeout);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP OnConnect");
 					}
 					//below will need to be moved out into its own class, but for now this is faster
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
 						UNUSED(socket);
 						auto requestedpath = packet->Header[HttpHeader::HTTP_PATH];
-						
+
 						auto params = requestedpath.find('?');
 						if (params != requestedpath.npos) {
 							requestedpath = requestedpath.substr(0, params);
 						}
-						
+
 						//sanitize path below. SImple for right now, 
 						std::transform(begin(requestedpath), end(requestedpath), begin(requestedpath), [](const char& elem) {
 							if ((elem >= 'a' && elem <= 'z') || (elem >= 'A' && elem <= 'Z') || (elem >= '0' && elem <= '9') || elem == ' ' || elem == '_' || elem == '.' || elem == '/' || elem == '\\') {
@@ -72,7 +77,7 @@ namespace SL {
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
 						UNUSED(socket);
-						SL_RAT_LOG("HTTP Close", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP Close");
 					}
 #ifdef __ANDROID__
 
@@ -83,11 +88,11 @@ namespace SL {
 #else 
 
 					Packet GetContent(std::string path) {
-						SL_RAT_LOG(std::string("HTTP GetContent ") + path, Utilities::Logging_Levels::INFO_log_level);
-						if (path == "/") path = _config.WWWRoot + "/index.html";
-						else path = _config.WWWRoot + path;
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP GetContent " << path);
+						if (path == "/") path = _config->WWWRoot + "/index.html";
+						else path = _config->WWWRoot + path;
 						try {
-							boost::filesystem::path p(boost::filesystem::canonical(path, _config.WWWRoot));
+							boost::filesystem::path p(boost::filesystem::canonical(path, _config->WWWRoot));
 							auto tesert = p.string();
 							if (boost::filesystem::exists(p) && boost::filesystem::is_regular_file(p))
 							{
@@ -127,13 +132,13 @@ namespace SL {
 							}
 						}
 						catch (std::exception e) {
-							SL_RAT_LOG(e.what(), Utilities::Logging_Levels::ERROR_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, e.what());
 						}
 						return Get404Page();
 					}
 #endif
 					Packet Get404Page() {
-						SL_RAT_LOG("HTTP OnReceive Get404Page", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP OnReceive Get404Page");
 
 						std::string sHTML = "<html><body><h1>404 Not Found</h1><p>There's nothing here.</p></body></html>";
 						Packet pack(static_cast<unsigned int>(PACKET_TYPES::HTTP_MSG), static_cast<unsigned int>(sHTML.size()));
@@ -144,15 +149,15 @@ namespace SL {
 						return pack;
 					}
 					void Start() {
-						if (_config.HttpListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting http socket Listening on port ") + std::to_string(_config.HttpListenPort), Utilities::Logging_Levels::INFO_log_level);
-							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config.HttpListenPort, _io_service);
+						if (_config->HttpListenPort > 0) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting http socket Listening on port " << _config->HttpListenPort);
+							_TCPListener = std::make_shared<TCPListener<socket, HttpSocket<socket>>>(this, _config->HttpListenPort, _io_service);
 							_TCPListener->Start();
 						}
-						if (_config.HttpTLSListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting TLS http socket Listening on port ") + std::to_string( _config.HttpTLSListenPort), Utilities::Logging_Levels::INFO_log_level);
+						if (_config->HttpTLSListenPort > 0) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port " << _config->HttpTLSListenPort);
 
-							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config.HttpTLSListenPort, _io_service);
+							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, HttpSocket<ssl_socket>>>(this, _config->HttpTLSListenPort, _io_service);
 							_TLSTCPListener->Start();
 						}
 					}
@@ -167,7 +172,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config)
+SL::Remote_Access_Library::Network::HttpListener::HttpListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config)
 {
 	_HttpServerImpl = new INTERNAL::HttpServerImpl(netevent, io_service, config);
 }

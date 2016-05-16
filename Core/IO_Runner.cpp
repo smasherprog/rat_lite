@@ -12,13 +12,13 @@ namespace SL {
 				boost::asio::io_service io_service;
 				IO_RunnerImpl() :work(io_service) { 
 					io_servicethread = std::thread([this]() {
-						SL_RAT_LOG("Starting io_service Factory", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting io_service Factory");
 						boost::system::error_code ec;
 						io_service.run(ec);
 						if (ec) {
-							SL_RAT_LOG(ec.message(), Utilities::Logging_Levels::ERROR_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level,ec.message());
 						}
-						SL_RAT_LOG("stopping io_service Factory", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "stopping io_service Factory" );
 					});
 				}
 				~IO_RunnerImpl()

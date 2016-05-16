@@ -15,18 +15,18 @@ namespace SL {
 				public:
 					std::shared_ptr<TCPListener<socket, WebSocket<socket>>> _TCPListener;
 					std::shared_ptr<TCPListener<ssl_socket, WebSocket<ssl_socket>>> _TLSTCPListener;
-					Server_Config _config;
+					std::shared_ptr<Network::Server_Config> _config;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::io_service& _io_service;
-					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config) :
+					WebSocketListinerImpl(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config) :
 						_config(config), _IBaseNetworkDriver(netevent),  _io_service(io_service){ }
 					virtual ~WebSocketListinerImpl() {
 						Stop();
 					}
 					virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-						SL_RAT_LOG("websocket OnConnect", Utilities::Logging_Levels::INFO_log_level);
-						socket->set_ReadTimeout(_config.Read_Timeout);
-						socket->set_WriteTimeout(_config.Write_Timeout);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "websocket OnConnect");
+						socket->set_ReadTimeout(_config->Read_Timeout);
+						socket->set_WriteTimeout(_config->Write_Timeout);
 						_IBaseNetworkDriver->OnConnect(socket);
 				
 						/*	std::string testing = "sdfdf";
@@ -38,19 +38,19 @@ namespace SL {
 					_IBaseNetworkDriver->OnReceive(socket, packet);
 					}
 					virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
-						SL_RAT_LOG("websocket Close", Utilities::Logging_Levels::INFO_log_level);
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "websocket Close");
 						_IBaseNetworkDriver->OnClose(socket);
 					}
 					void Start() {
-						if (_config.WebSocketListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting Web socket Listening on port ") + std::to_string(_config.WebSocketListenPort), Utilities::Logging_Levels::INFO_log_level);
-							_TCPListener = std::make_shared<TCPListener<socket, WebSocket<socket>>>(this, _config.WebSocketListenPort, _io_service);
+						if (_config->WebSocketListenPort > 0) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting Web socket Listening on port "<<_config->WebSocketListenPort);
+							_TCPListener = std::make_shared<TCPListener<socket, WebSocket<socket>>>(this, _config->WebSocketListenPort, _io_service);
 							_TCPListener->Start();
 						}
-						if (_config.WebSocketTLSListenPort > 0) {
-							SL_RAT_LOG(std::string("Starting TLS Web socket Listening on port ") + std::to_string( _config.WebSocketTLSListenPort), Utilities::Logging_Levels::INFO_log_level);
+						if (_config->WebSocketTLSListenPort > 0) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS Web socket Listening on port "<< _config->WebSocketTLSListenPort);
 	
-							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, WebSocket<ssl_socket>>>(this, _config.WebSocketTLSListenPort, _io_service);
+							_TLSTCPListener = std::make_shared<TCPListener<ssl_socket, WebSocket<ssl_socket>>>(this, _config->WebSocketTLSListenPort, _io_service);
 							_TLSTCPListener->Start();
 						}
 
@@ -66,7 +66,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::WebSocketListener::WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, Server_Config& config)
+SL::Remote_Access_Library::Network::WebSocketListener::WebSocketListener(IBaseNetworkDriver* netevent, boost::asio::io_service& io_service, std::shared_ptr<Network::Server_Config> config)
 {
 	_WebSocketListinerImpl = new INTERNAL::WebSocketListinerImpl(netevent, io_service, config);
 }

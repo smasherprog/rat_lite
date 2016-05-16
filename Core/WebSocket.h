@@ -71,11 +71,11 @@ namespace SL {
 
 					boost::asio::async_write(this->_socket, *write_buffer, [this, write_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
-							SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Sent Handshake bytes "<<bytes_transferred);
 							std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
 							boost::asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [this, read_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
-									SL_RAT_LOG(std::string("Read Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
+									SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Read Handshake bytes "<<bytes_transferred);
 									std::istream stream(read_buffer.get());
 									this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
 									if (Crypto::Base64::decode(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETACCEPT]) == *accept_sha1) {
@@ -101,7 +101,7 @@ namespace SL {
 					boost::asio::async_read_until(this->_socket, *read_buffer, "\r\n\r\n", [self, read_buffer, this](const boost::system::error_code& ec, size_t bytes_transferred) {
 						UNUSED(bytes_transferred);
 						if (!ec) {
-							SL_RAT_LOG(std::string("Read Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Read Handshake bytes "<<bytes_transferred);
 
 							std::istream stream(read_buffer.get());
 							this->_SocketImpl.Header = std::move(HttpHeader::Parse("1.1", stream));
@@ -117,7 +117,7 @@ namespace SL {
 							handshake << HttpHeader::HTTP_SECWEBSOCKETACCEPT << HttpHeader::HTTP_KEYVALUEDELIM << Crypto::Base64::encode(Crypto::SHA1(this->_SocketImpl.Header[HttpHeader::HTTP_SECWEBSOCKETKEY] + ws_magic_string)) << HttpHeader::HTTP_ENDLINE << HttpHeader::HTTP_ENDLINE;
 							boost::asio::async_write(this->_socket, *write_buffer, [this, self, write_buffer](const boost::system::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
-									SL_RAT_LOG(std::string("Sent Handshake bytes ") + std::to_string(bytes_transferred), Utilities::Logging_Levels::INFO_log_level);
+									SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Sent Handshake bytes "<<bytes_transferred );
 									this->_SocketImpl.get_Driver()->OnConnect(self);
 									readheader();
 
@@ -157,9 +157,9 @@ namespace SL {
 							auto readbytes = (_readheaderbuffer[1] & 127) == 126 ? 2 : ((_readheaderbuffer[1] & 127) == 127 ? 8 : 0);
 							if (readbytes != 0) {
 								boost::asio::async_read(this->_socket, boost::asio::buffer(_readheaderbuffer, readbytes), [this, self, readbytes](const boost::system::error_code& ec, size_t bytes_transferred) {
-									
+									UNUSED(bytes_transferred);
 									if (!ec) {
-										assert(readbytes == bytes_transferred);
+										assert(static_cast<size_t>(readbytes) == bytes_transferred);
 										for (int c = 0; c < readbytes; c++) {
 											this->_SocketImpl.ReadPacketHeader.Payload_Length += _readheaderbuffer[c] << (8 * (readbytes - 1 - c));
 										}
@@ -206,7 +206,7 @@ namespace SL {
 								send_close(status, msg);
 							}
 							else if ((_recv_fin_rsv_opcode & 0x0f) == 9) {//ping
-								SL_RAT_LOG("Ping Received", Utilities::Logging_Levels::INFO_log_level);
+								SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Ping Received");
 								auto writeheader(std::make_shared<std::vector<unsigned char>>());
 								writeheader->resize(2);
 								auto p(writeheader->data());
@@ -266,9 +266,12 @@ namespace SL {
 						else {
 							*p++ = 126 + (this->_SocketImpl.Server ? 0 : 128);
 							auto s = static_cast<unsigned short int>(length);
-							for (int c = sizeof(s) - 1; c >= 0; c--) {
+                            int c = sizeof(s) - 1;
+                            int counter=0;
+							for (; c >= 0; c--, counter++) {
 								*p++ = (s >> (8 * c)) % 256;
 							}
+                            
 						}
 					}
 					else {
@@ -278,7 +281,7 @@ namespace SL {
 						std::uniform_int_distribution<unsigned short> dist(0, 255);
 						std::random_device rd;
 						unsigned char mask[MASKSIZE];
-						for (int c = 0; c < sizeof(mask); c++) {
+						for (size_t c = 0; c < sizeof(mask); c++) {
 							mask[c] = *p++ = static_cast<unsigned char>(dist(rd));
 						}
 						size_t c = 0;

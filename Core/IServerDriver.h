@@ -6,6 +6,7 @@ namespace SL {
 	namespace Remote_Access_Library {
 		namespace Input {
 			struct MouseEvent;
+			struct KeyEvent;
 		}
 		namespace Utilities {
 			class Point;
@@ -21,6 +22,7 @@ namespace SL {
 
 
 				virtual void OnMouse(Input::MouseEvent* m) = 0;
+				virtual void OnKey(Input::KeyEvent* m) = 0;
 
 			};
 		}

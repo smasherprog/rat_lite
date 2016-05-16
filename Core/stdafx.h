@@ -12,7 +12,28 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
 
+#elif __APPLE__
+
+#elif __ANDROID__
+
+#elif __linux__
+
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xlibint.h>
+#include <X11/keysym.h>
+#include <X11/Xutil.h>
+#include <sys/shm.h>
+#include <X11/extensions/XTest.h>
+#include <X11/extensions/Xfixes.h>
+#include <X11/extensions/XShm.h>
+
+
 #endif
+
+
+
+
 #include <future>
 #include <chrono>
 

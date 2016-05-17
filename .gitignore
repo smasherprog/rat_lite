@@ -23,7 +23,7 @@ bld/
 .gradle/
 [Jj]ni[Ll]ibs/
 .vs/
-
+.codelite/
 *.tlog
 .vs/
 # Roslyn cache directories

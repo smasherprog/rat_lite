@@ -235,7 +235,7 @@ var SL;
                     0,
                     0,
                     0,
-                    0x36,
+                    0x60,
                     0x31,
                     0x27,
                     0x33,
@@ -338,8 +338,8 @@ var SL;
             ;
             (function (MouseEvents) {
                 MouseEvents[MouseEvents["LEFT"] = 0] = "LEFT";
-                MouseEvents[MouseEvents["RIGHT"] = 1] = "RIGHT";
-                MouseEvents[MouseEvents["MIDDLE"] = 2] = "MIDDLE";
+                MouseEvents[MouseEvents["MIDDLE"] = 1] = "MIDDLE";
+                MouseEvents[MouseEvents["RIGHT"] = 2] = "RIGHT";
                 MouseEvents[MouseEvents["SCROLL"] = 3] = "SCROLL";
                 MouseEvents[MouseEvents["NO_EVENTDATA"] = 4] = "NO_EVENTDATA";
             })(Input.MouseEvents || (Input.MouseEvents = {}));
@@ -424,6 +424,7 @@ var SL;
                     this._dst_port = _dst_port;
                     this._ScaleImage = false;
                     this._DivRootId = 'SLRATROOTID123'; //this is an id used internally to double check if a canvas has allready been inserted 
+                    this._LeftMouseStatus = Input.MousePress.UP;
                     this.Start = function () {
                         var testroot = document.getElementById(_this._DivRootId);
                         if (testroot !== null) {
@@ -490,11 +491,11 @@ var SL;
                         }
                         return out;
                     };
-                    this.CancelTouchClickTimer = function () {
-                        if (_this.TouchTimer != null) {
-                            clearTimeout(_this.TouchTimer);
+                    this.ontouchend = function (ev) {
+                        if (_this._LeftMouseStatus == Input.MousePress.DOWN) {
+                            _this._LeftMouseStatus = Input.MousePress.UP;
+                            _this.handlemouse(0, Input.MousePress.UP, _this.pointerEventToXY(ev), 0);
                         }
-                        _this.TouchTimer = null;
                     };
                     this.ontouchstart = function (ev) {
                         if (ev.touches.length == 1) {
@@ -503,6 +504,22 @@ var SL;
                     };
                     this.ontouchmove = function (ev) {
                         _this.CancelTouchClickTimer();
+                        if (ev.touches.length == 1) {
+                            if (_this._LeftMouseStatus == Input.MousePress.UP) {
+                                _this._LeftMouseStatus = Input.MousePress.DOWN;
+                                _this.handlemouse(0, Input.MousePress.DOWN, _this.pointerEventToXY(ev), 0);
+                            }
+                        }
+                        if (_this._LeftMouseStatus == Input.MousePress.DOWN) {
+                            _this.handlemouse(-1, Input.MousePress.NO_PRESS_DATA, _this.pointerEventToXY(ev), 0);
+                            ev.preventDefault();
+                        }
+                    };
+                    this.CancelTouchClickTimer = function () {
+                        if (_this.TouchTimer != null) {
+                            clearTimeout(_this.TouchTimer);
+                        }
+                        _this.TouchTimer = null;
                     };
                     this.onmousedown = function (ev) {
                         _this.handlemouse(ev.button, Input.MousePress.DOWN, _this.pointerEventToXY(ev), 0);
@@ -557,12 +574,16 @@ var SL;
                             var scale = _this.GetScalingFactor();
                             _this._HTMLCanvasScreenImage.width = _this._OriginalImage.width * scale;
                             _this._HTMLCanvasScreenImage.height = _this._OriginalImage.height * scale;
+                            _this._HTMLDivRoot.style.width = _this._HTMLCanvasScreenImage.width + 'px';
+                            _this._HTMLDivRoot.style.height = _this._HTMLCanvasScreenImage.height + 'px';
                             _this._HTMLCanvasScreenImage.getContext("2d").drawImage(_this._OriginalImage, 0, 0, _this._HTMLCanvasScreenImage.width, _this._HTMLCanvasScreenImage.height);
                         }
                         else if (!_this._ScaleImage && _this._OriginalImage != null) {
                             if (_this._HTMLCanvasScreenImage.height != _this._OriginalImage.height || _this._HTMLCanvasScreenImage.width != _this._OriginalImage.width) {
                                 _this._HTMLCanvasScreenImage.width = _this._OriginalImage.width;
                                 _this._HTMLCanvasScreenImage.height = _this._OriginalImage.height;
+                                _this._HTMLDivRoot.style.width = _this._HTMLCanvasScreenImage.width + 'px';
+                                _this._HTMLDivRoot.style.height = _this._HTMLCanvasScreenImage.height + 'px';
                                 _this._HTMLCanvasScreenImage.getContext("2d").drawImage(_this._OriginalImage, 0, 0);
                             }
                         }
@@ -598,13 +619,17 @@ var SL;
                         i.onload = function () {
                             if (self._ScaleImage) {
                                 var scale = self.GetScalingFactor();
-                                self._HTMLCanvasScreenImage.width = i.width * scale;
-                                self._HTMLCanvasScreenImage.height = i.height * scale;
+                                self._HTMLDivRoot.scrollWidth = self._HTMLCanvasScreenImage.width = i.width * scale;
+                                self._HTMLDivRoot.scrollHeight = self._HTMLCanvasScreenImage.height = i.height * scale;
+                                self._HTMLDivRoot.style.width = self._HTMLCanvasScreenImage.width + 'px';
+                                self._HTMLDivRoot.style.height = self._HTMLCanvasScreenImage.height + 'px';
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0, self._HTMLCanvasScreenImage.width, self._HTMLCanvasScreenImage.height);
                             }
                             else {
                                 self._HTMLCanvasScreenImage.width = i.width;
                                 self._HTMLCanvasScreenImage.height = i.height;
+                                self._HTMLDivRoot.style.width = self._HTMLCanvasScreenImage.width + 'px';
+                                self._HTMLDivRoot.style.height = self._HTMLCanvasScreenImage.height + 'px';
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0);
                             }
                             self._OriginalImage = i;
@@ -652,7 +677,7 @@ var SL;
                     window.addEventListener("keydown", this.onkeydown);
                     window.addEventListener("keyup", this.onkeyup);
                     window.addEventListener("dblclick", this.ondblclick);
-                    // window.addEventListener("touchend", this.ontouchend);
+                    window.addEventListener("touchend", this.ontouchend);
                     window.addEventListener("touchstart", this.ontouchstart);
                     window.addEventListener("touchmove", this.ontouchmove);
                 }
@@ -662,7 +687,7 @@ var SL;
                         self.TouchTimer = setTimeout(function () {
                             self.CancelTouchClickTimer();
                             self.handlemouse(0, Input.MousePress.DOWN, pos, 0);
-                            // self.handlemouse(0, Input.MousePress.UP, pos, 0);
+                            self.handlemouse(0, Input.MousePress.UP, pos, 0);
                         }, 500);
                     }
                     else {

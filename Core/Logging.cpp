@@ -43,7 +43,6 @@ void SL::Remote_Access_Library::Utilities::Log(Logging_Levels level, const char*
 	std::cout << Logging_level_Names[level] << ": FILE: " << file << " Line: " << line << " Func: " << func << " Msg: " << data.str() << std::endl;
 
 #endif
-
 			}
 
 #ifdef BOOST_NO_EXCEPTIONS

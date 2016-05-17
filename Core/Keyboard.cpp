@@ -314,7 +314,7 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 
 	input.ki.dwFlags = ev.PressData == Keyboard::Press::UP ? KEYEVENTF_KEYUP : 0;
 	input.ki.wVk = ev.Key;
-	//SendInput(1, &input, sizeof(input));
+	SendInput(1, &input, sizeof(input));
 
 #elif __APPLE__
 

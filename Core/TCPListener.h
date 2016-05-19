@@ -7,6 +7,7 @@
 #include <type_traits>
 #include "Logging.h"
 
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -19,7 +20,7 @@ namespace SL {
 				//MUST BE an std::shared_ptr otherwise it will crash
 				TCPListener(IBaseNetworkDriver* driver, unsigned short port, boost::asio::io_service& io_service) :
 					_driver(driver), _acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-					_socket(io_service){
+					_socket(io_service) {
 
 				}
 				~TCPListener() {
@@ -33,7 +34,7 @@ namespace SL {
 						{
 							//boost::asio::ip::tcp::no_delay option(true);
 							//_socket.set_option(option);
-							
+
 							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Servicing new connection .. ");
 							std::make_shared<DERIVED_BASESOCKET>(_driver, _socket)->connect(nullptr, nullptr);
 							Start();
@@ -63,7 +64,7 @@ namespace SL {
 				//MUST BE an std::shared_ptr otherwise it will crash
 				TCPListener(IBaseNetworkDriver* driver, unsigned short port, boost::asio::io_service& io_service) :
 					_driver(driver), _io_service(io_service), _acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-					 _context(boost::asio::ssl::context::tlsv12) {
+					_context(boost::asio::ssl::context::tlsv12) {
 
 					_context.set_options(
 						boost::asio::ssl::context::default_workarounds
@@ -83,7 +84,7 @@ namespace SL {
 
 					auto _socket = std::make_shared<DERIVED_BASESOCKET>(_driver, _io_service, _context);
 					_acceptor.async_accept(_socket->get_socket().lowest_layer(), [self, this, _socket](const boost::system::error_code& ec)
-					{	
+					{
 						if (!ec)
 						{
 							_socket->get_socket().async_handshake(boost::asio::ssl::stream_base::server, [self, this, _socket](const boost::system::error_code& ec) {

@@ -175,8 +175,10 @@ namespace SL {
 				Packet ExtractImageRect(Utilities::Rect& r, const Utilities::Image & img) {
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
-					auto set = TJSAMP_420;
-					auto maxsize = std::max(tjBufSize(r.Width, r.Height, TJSAMP_420), static_cast<unsigned long>(r.Width *r.Height* Utilities::Image::DefaultStride()));
+
+					auto set = _Config->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
+
+					auto maxsize = std::max(tjBufSize(r.Width, r.Height, set), static_cast<unsigned long>(r.Width *r.Height* Utilities::Image::DefaultStride()));
 					auto _jpegSize = maxsize;
 
 					_CompressBuffer.reserve(r.Width* r.Height*Utilities::Image::DefaultStride());
@@ -194,7 +196,7 @@ namespace SL {
 					auto colorencoding = TJPF_BGRX;
 #endif
 
-					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &_jpegSize, set, 70, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+					if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &_jpegSize, set, _Config->ImageCompressionSetting, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
 					//	std::cout << "Sending " << r << std::endl;

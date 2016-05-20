@@ -74,6 +74,12 @@ namespace SL {
 					*/
 
 				}
+				virtual std::string get_ip()const override {
+					return _socket.lowest_layer().remote_endpoint().address().to_string();
+				}
+				virtual unsigned short get_port() const override {
+					return _socket.lowest_layer().remote_endpoint().port();
+				}
 
 				virtual void set_ReadTimeout(int s)override {
 					assert(s > 0);

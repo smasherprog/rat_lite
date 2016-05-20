@@ -31,6 +31,11 @@ namespace SL {
 				//s in in seconds
 				virtual void set_WriteTimeout(int s) = 0;
 
+				virtual std::string get_ip() const = 0;
+				virtual unsigned short get_port() const = 0;
+
+
+
 			protected:
 				//called before OnConnect Called
 				virtual void handshake() = 0;

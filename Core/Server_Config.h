@@ -19,6 +19,10 @@ namespace SL {
 				unsigned int MousePositionCaptureRate = 50;// measured in ms
 				unsigned int ScreenImageCaptureRate = 100;// measured in ms
 
+				//Image Settings
+				bool SendGrayScaleImages = false;//this will improve bandwith usage
+				int ImageCompressionSetting = 70;// this is [0, 100]    = [WORST, BEST]
+
 				bool IgnoreIncomingMouseEvents = false;
 				bool IgnoreIncomingKeyboardEvents = false;
 			};

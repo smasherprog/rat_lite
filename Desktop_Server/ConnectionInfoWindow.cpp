@@ -6,6 +6,8 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Tooltip.H>
+#include <FL/x.H>               // needed for fl_display
 
 #include <memory>
 #include <string>
@@ -19,6 +21,7 @@
 #include "../Core/ApplicationDirectory.h"
 #include "../Core/ISocket.h"
 #include "LogWindow.h"
+#include "SliderInput.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -30,12 +33,19 @@ namespace SL {
 				Fl_Button* StartStopBtn = nullptr;
 				Fl_Menu_Bar *_MenuBar = nullptr;
 				Fl_Check_Button* _GrayScaleImage = nullptr;
+				Fl_Check_Button* _IgnoreIncomingMouse = nullptr;
+				Fl_Check_Button* _IgnoreIncomingKeyboard = nullptr;
 
 				Fl_File_Chooser* _FolderBrowser = nullptr;
 				Fl_Check_Button* _IgnoreIncomingMouseEvents_Checkbox = nullptr;
 
 				std::shared_ptr<Network::Server_Config> config;
 				std::unique_ptr<LogWindow> _LogWindow;
+				SliderInput* _ImageQualitySlider = nullptr;
+				SliderInput* _MouseCaptureRateSlider = nullptr;
+				SliderInput* _MousePositionCaptureRate = nullptr;
+				SliderInput* _ScreenCaptureRate = nullptr;
+
 				std::weak_ptr<Server> _Server;
 				std::thread Runner;
 
@@ -81,6 +91,7 @@ namespace SL {
 						shrd->Stop(false);
 						ptr->StartStopBtn->label("Start");
 						ptr->_LogWindow->AddMessage("Stopping Service");
+						ptr->StartStopBtn->color(FL_GREEN);
 					}
 					else {
 						auto config = ptr->config;
@@ -92,6 +103,7 @@ namespace SL {
 							shrdptr->Run();
 						});
 						ptr->StartStopBtn->label("Stop");
+						ptr->StartStopBtn->color(FL_BLUE);
 					}
 				}
 				static void Menu_CB(Fl_Widget*w, void*data) {
@@ -110,23 +122,104 @@ namespace SL {
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->SendGrayScaleImages = p->_GrayScaleImage->value() == 1;
 				}
+				static void SIgnoreIncomingMouseCB(Fl_Widget*w, void*data) {
+					auto p = (ConnectionInfoWindowImpl*)data;
+					p->config->IgnoreIncomingMouseEvents = p->_IgnoreIncomingMouse->value() == 1;
+				}
+				static void SIgnoreIncomingKeyboardCB(Fl_Widget*w, void*data) {
+					auto p = (ConnectionInfoWindowImpl*)data;
+					p->config->IgnoreIncomingKeyboardEvents = p->_IgnoreIncomingKeyboard->value() == 1;
+				}
+				static void _ImageQualitySliderCB(Fl_Widget*w, void*data) {
+					auto p = (ConnectionInfoWindowImpl*)data;
+					p->config->ImageCompressionSetting = p->_ImageQualitySlider->value();
+				}
+				static void _MouseCaptureRateSliderCB(Fl_Widget*w, void*data) {
+					auto p = (ConnectionInfoWindowImpl*)data;
+					p->config->MouseImageCaptureRate = p->_MouseCaptureRateSlider->value() * 1000;
+				}
+				static void _MousePositionCaptureRateCB(Fl_Widget*w, void*data) {
+					auto p = (ConnectionInfoWindowImpl*)data;
+					p->config->MousePositionCaptureRate = p->_MousePositionCaptureRate->value();
+				}
+				static void _ScreenCaptureRateCB(Fl_Widget*w, void*data) {
+					auto p = (ConnectionInfoWindowImpl*)data;
+					p->config->ScreenImageCaptureRate = p->_ScreenCaptureRate->value();
+				}
 				void Init() {
+					auto colwidth = 500;
+					auto startleft = 200;
 					auto workingy = 0;
-					cWindow = new Fl_Window(400, 420, 400, 300, "Server Settings");
+					cWindow = new Fl_Window(400, 400, colwidth, 300, "Server Settings");
+#ifdef WIN32
+					cWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
+#endif
+
 					_MenuBar = new Fl_Menu_Bar(0, 0, cWindow->w(), 30);
 					_MenuBar->add("File/Quit", 0, Menu_CB, (void*)this);
 					_MenuBar->add("File/Log", 0, Menu_CB, (void*)this);
 					workingy += 30;
 
-					_GrayScaleImage = new Fl_Check_Button(70, workingy, 100, 14, " GrayScale");
+					_GrayScaleImage = new Fl_Check_Button(startleft, workingy, colwidth- startleft, 20, " GrayScale");
 					_GrayScaleImage->align(FL_ALIGN_LEFT);
 					_GrayScaleImage->callback(SGrayScaleImageCB, this);
+					_GrayScaleImage->value(config->SendGrayScaleImages ==1);
+					workingy += 24;
+
+					_IgnoreIncomingMouse = new Fl_Check_Button(startleft, workingy, colwidth - startleft, 20, " Ignore Incoming Mouse");
+					_IgnoreIncomingMouse->tooltip("When this is checked, mouse commands send in will be ignored.");
+					_IgnoreIncomingMouse->align(FL_ALIGN_LEFT);
+					_IgnoreIncomingMouse->callback(SIgnoreIncomingMouseCB, this);
+					_IgnoreIncomingMouse->value(config->IgnoreIncomingMouseEvents == 1);
+					workingy += 24;
+
+					_IgnoreIncomingKeyboard = new Fl_Check_Button(startleft, workingy, colwidth - startleft, 20, " Ignore Incoming Keyboard");
+					_IgnoreIncomingKeyboard->tooltip("When this is checked, mouse commands send in will be ignored.");
+					_IgnoreIncomingKeyboard->align(FL_ALIGN_LEFT);
+					_IgnoreIncomingKeyboard->callback(SIgnoreIncomingKeyboardCB, this);
+					_IgnoreIncomingKeyboard->value(config->IgnoreIncomingKeyboardEvents == 1);
+					workingy += 24;
+
+					_ImageQualitySlider = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Image Quality Level");
+					_ImageQualitySlider->tooltip("This is the quality level used by the system for images");
+					_ImageQualitySlider->align(FL_ALIGN_LEFT);
+					_ImageQualitySlider->bounds(10, 100);
+					_ImageQualitySlider->callback(_ImageQualitySliderCB, this);
+					_ImageQualitySlider->value(config->ImageCompressionSetting);
+					workingy += 24;
+
+					_MouseCaptureRateSlider = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Mouse Capture Rate");
+					_MouseCaptureRateSlider->tooltip("This controls the rate at which the mouse Image is captured. Measured in Seconds");
+					_MouseCaptureRateSlider->align(FL_ALIGN_LEFT);
+					_MouseCaptureRateSlider->bounds(1, 5);
+					_MouseCaptureRateSlider->callback(_MouseCaptureRateSliderCB, this);
+					_MouseCaptureRateSlider->value(config->MouseImageCaptureRate/1000);
+					workingy += 24;
+
+					_MousePositionCaptureRate = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Mouse Movement Capture");
+					_MousePositionCaptureRate->tooltip("This controls how often the mouse is checked for movement. Measured in Milliseconds");
+					_MousePositionCaptureRate->align(FL_ALIGN_LEFT);
+					_MousePositionCaptureRate->bounds(50, 1000);
+					_MousePositionCaptureRate->callback(_MousePositionCaptureRateCB, this);
+					_MousePositionCaptureRate->value(config->MousePositionCaptureRate);
+					workingy += 24;
+
+					_ScreenCaptureRate = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Screen Capture Rate");
+					_ScreenCaptureRate->tooltip("This controls how often the screen is captured. Measured in milliseconds");
+					_ScreenCaptureRate->align(FL_ALIGN_LEFT);
+					_ScreenCaptureRate->bounds(100, 1000);
+					_ScreenCaptureRate->callback(_ScreenCaptureRateCB, this);
+					_ScreenCaptureRate->value(config->ScreenImageCaptureRate);
+
+
 
 					workingy += 30;
-					StartStopBtn = new Fl_Button(200, cWindow->h()-30, 80, 30, "Start");
+					StartStopBtn = new Fl_Button(0, cWindow->h()-30, cWindow->w(), 30, "Start");
 					StartStopBtn->callback(toggle_service, this);
+					StartStopBtn->color(FL_GREEN);
 					workingy = StartStopBtn->h() + 4;
-					cWindow->resizable(_MenuBar);
+
+					Fl_Tooltip::enable();
 					cWindow->end();
 					cWindow->show();
 					_LogWindow = std::make_unique<LogWindow>();

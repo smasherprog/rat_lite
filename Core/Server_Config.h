@@ -25,6 +25,7 @@ namespace SL {
 
 				bool IgnoreIncomingMouseEvents = false;
 				bool IgnoreIncomingKeyboardEvents = false;
+
 			};
 		}
 	}

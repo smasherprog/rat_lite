@@ -331,6 +331,14 @@
   <ItemGroup>
     <ClInclude Include="ConnectionInfoWindow.h" />
     <ClInclude Include="LogWindow.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="SliderInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Desktop_Server.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,9 +4,9 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
-#include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Tooltip.H>
+#include <Fl/Fl_Check_Button.H>
 #include <FL/x.H>               // needed for fl_display
 
 #include <memory>
@@ -36,7 +36,6 @@ namespace SL {
 				Fl_Check_Button* _IgnoreIncomingMouse = nullptr;
 				Fl_Check_Button* _IgnoreIncomingKeyboard = nullptr;
 
-				Fl_File_Chooser* _FolderBrowser = nullptr;
 				Fl_Check_Button* _IgnoreIncomingMouseEvents_Checkbox = nullptr;
 
 				std::shared_ptr<Network::Server_Config> config;
@@ -73,7 +72,8 @@ namespace SL {
 					_LogWindow->AddMessage(os.str());
 				}
 				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& pack) {
-
+                    UNUSED(socket);
+                    UNUSED(pack);
 				}
 				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) {
 					std::ostringstream os;
@@ -82,7 +82,7 @@ namespace SL {
 				}
 
 				static void toggle_service(Fl_Widget* o, void* userdata) {
-
+                    UNUSED(o);
 					auto ptr = ((ConnectionInfoWindowImpl*)userdata);
 
 					auto shrd = ptr->_Server.lock();//elevate to shared ptr
@@ -107,6 +107,7 @@ namespace SL {
 					}
 				}
 				static void Menu_CB(Fl_Widget*w, void*data) {
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->Menu_CB2();
 				}
@@ -119,30 +120,37 @@ namespace SL {
 					if (strcmp(picked, "File/Log") == 0)  _LogWindow->Show();
 				}
 				static void SGrayScaleImageCB(Fl_Widget*w, void*data) {
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->SendGrayScaleImages = p->_GrayScaleImage->value() == 1;
 				}
-				static void SIgnoreIncomingMouseCB(Fl_Widget*w, void*data) {
+				static void SIgnoreIncomingMouseCB(Fl_Widget*w, void*data) { 
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->IgnoreIncomingMouseEvents = p->_IgnoreIncomingMouse->value() == 1;
 				}
-				static void SIgnoreIncomingKeyboardCB(Fl_Widget*w, void*data) {
+				static void SIgnoreIncomingKeyboardCB(Fl_Widget*w, void*data) { 
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->IgnoreIncomingKeyboardEvents = p->_IgnoreIncomingKeyboard->value() == 1;
 				}
 				static void _ImageQualitySliderCB(Fl_Widget*w, void*data) {
+                     UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->ImageCompressionSetting = p->_ImageQualitySlider->value();
 				}
 				static void _MouseCaptureRateSliderCB(Fl_Widget*w, void*data) {
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->MouseImageCaptureRate = p->_MouseCaptureRateSlider->value() * 1000;
 				}
 				static void _MousePositionCaptureRateCB(Fl_Widget*w, void*data) {
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->MousePositionCaptureRate = p->_MousePositionCaptureRate->value();
 				}
 				static void _ScreenCaptureRateCB(Fl_Widget*w, void*data) {
+                    UNUSED(w);
 					auto p = (ConnectionInfoWindowImpl*)data;
 					p->config->ScreenImageCaptureRate = p->_ScreenCaptureRate->value();
 				}

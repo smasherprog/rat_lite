@@ -6,6 +6,9 @@
     <File Name="main.cpp"/>
     <File Name="ConnectionInfoWindow.cpp"/>
     <File Name="ConnectionInfoWindow.h"/>
+    <File Name="LogWindow.cpp"/>
+    <File Name="LogWindow.h"/>
+    <File Name="SliderInput.h"/>
   </VirtualDirectory>
   <Dependencies Name="Release"/>
   <Dependencies Name="Debug">
@@ -22,7 +25,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-Wmain;-g;-O0;-W;-std=c++14;-std=c++11;-Wall;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-Wmain;-g;-O0;-W;-std=c++14;-Wall;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="-Wl, -Bstatic -lCore -Wl, -Bdynamic $(shell fltk-config --ldflags) -lboost_filesystem -lboost_system -lboost_thread -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes -lXtst" Required="yes">
@@ -41,6 +44,8 @@
       <PreBuild/>
       <PostBuild>
         <Command Enabled="yes">cp ../wwwroot/ $(OutDir) -r -f</Command>
+        <Command Enabled="yes">cp Desktop_Server.desktop $(OutDir) -f</Command>
+        <Command Enabled="yes">cp icon1.ico $(OutDir) -f</Command>
       </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>

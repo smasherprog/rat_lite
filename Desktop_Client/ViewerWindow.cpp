@@ -194,7 +194,7 @@ namespace SL {
 					case FL_DRAG:
 					case FL_MOUSEWHEEL:
 					case FL_MOVE:
-						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Input::Mouse::Events::NO_EVENTDATA, Input::Mouse::Press::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
 						break;
 					case FL_KEYDOWN:
 						return handle_key(e, Input::Keyboard::Press::DOWN);

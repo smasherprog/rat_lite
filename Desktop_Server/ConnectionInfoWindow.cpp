@@ -7,6 +7,7 @@
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Tooltip.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/x.H>               // needed for fl_display
 
 #include <memory>

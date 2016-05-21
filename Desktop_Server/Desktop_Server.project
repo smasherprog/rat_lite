@@ -45,7 +45,7 @@
       <PostBuild>
         <Command Enabled="yes">cp ../wwwroot/ $(OutDir) -r -f</Command>
         <Command Enabled="yes">cp Desktop_Server.desktop $(OutDir) -f</Command>
-        <Command Enabled="yes">cp icon1.ico $(OutDir) -f</Command>
+        <Command Enabled="yes">cp Desktop_Server.ico $(OutDir) -f</Command>
       </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>

@@ -9,6 +9,7 @@
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Logging.h"
+#include "Keyboard.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -119,6 +120,11 @@ namespace SL {
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
 				}
+				void SendKey(const Input::KeyEvent & m) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::KEYEVENT), sizeof(m));
+					memcpy(p.Payload, &m, sizeof(m));
+					_Socket->send(p);
+				}
 				bool ConnectedToSelf() const {
 					return _ConectedToSelf;	
 				}
@@ -146,6 +152,11 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::Start()
 void SL::Remote_Access_Library::Network::ClientNetworkDriver::Stop()
 {
 	_ClientNetworkDriverImpl->Stop();
+}
+
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendKey(const Input::KeyEvent & m)
+{
+	_ClientNetworkDriverImpl->SendKey(m);
 }
 
 void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const Input::MouseEvent& m)

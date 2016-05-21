@@ -43,7 +43,7 @@ namespace SL {
 
 			public:
 
-				MyCanvas(int X, int Y, int W, int H, const char*L = 0) : Fl_Widget(X, Y, W, H, L) {}
+				MyCanvas(int X, int Y, int W, int H, const char * title) : Fl_Widget(X, Y, W, H, title) {}
 				virtual void draw() override {
 
 					if (_ScaledImage) {
@@ -182,19 +182,19 @@ namespace SL {
 
 				}
 
-				virtual int handle(int e) override {
+				int handle(int e) override {
 					switch (e) {
 
 					case FL_PUSH:
-						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::DOWN, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::DOWN, Fl::event_x() + _Fl_Scroll->xposition(), Fl::event_y() + _Fl_Scroll->yposition());
 						break;
 					case FL_RELEASE:
-						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::UP, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Fl::event_button(), Input::Mouse::Press::UP, Fl::event_x() + _Fl_Scroll->xposition(), Fl::event_y() + _Fl_Scroll->yposition());
 						break;
 					case FL_DRAG:
 					case FL_MOUSEWHEEL:
 					case FL_MOVE:
-						handle_mouse(e, Input::Mouse::Events::NO_EVENTDATA, Input::Mouse::Press::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
+						handle_mouse(e, Input::Mouse::Events::NO_EVENTDATA, Input::Mouse::Press::NO_PRESS_DATA, Fl::event_x() + _Fl_Scroll->xposition(), Fl::event_y() + _Fl_Scroll->yposition());
 						break;
 					case FL_KEYDOWN:
 						return handle_key(e, Input::Keyboard::Press::DOWN);
@@ -222,8 +222,10 @@ namespace SL {
 					if (t >= 'a' && t <= 'z') key= static_cast<unsigned int>(t - ('a' - 'A'));
 
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
-					
-
+					Input::KeyEvent k;
+					k.Key = t;
+					k.PressData = press;
+					_ClientNetworkDriver.SendKey(k);
 					return 1;
 				}
 				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {

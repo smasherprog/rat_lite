@@ -26,6 +26,7 @@ class SliderInput : public Fl_Group {
 	}
 
 	static void Slider_CB(Fl_Widget *w, void *data) {
+        UNUSED(w);
 		((SliderInput*)data)->Slider_CB2();
 	}
 
@@ -42,6 +43,7 @@ class SliderInput : public Fl_Group {
 		}
 	}
 	static void Input_CB(Fl_Widget *w, void *data) {
+        UNUSED(w);
 		((SliderInput*)data)->Input_CB2();
 	}
 

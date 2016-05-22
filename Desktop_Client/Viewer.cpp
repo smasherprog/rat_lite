@@ -2,7 +2,7 @@
 //
 
 #include <FL/Fl.H>
-#include "ConnectWindow.h"
+#include "../Core/ConnectWindow.h"
 
 int main(int argc, char **argv) {
 	Fl::args(argc, argv);

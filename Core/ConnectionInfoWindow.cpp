@@ -1,6 +1,6 @@
 
-#include "../Core/stdafx.h"
-#include "ConnectionInfoWindow.h"
+#include "stdafx.h"
+
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
@@ -15,11 +15,12 @@
 #include <stdio.h>
 #include <sstream>
 
-#include "../Core/IBaseNetworkDriver.h"
-#include "../Core/Server.h"
-#include "../Core/Server_Config.h"
-#include "../Core/ApplicationDirectory.h"
-#include "../Core/ISocket.h"
+#include "ConnectionInfoWindow.h"
+#include "IBaseNetworkDriver.h"
+#include "Server.h"
+#include "Server_Config.h"
+#include "ApplicationDirectory.h"
+#include "ISocket.h"
 #include "LogWindow.h"
 #include "SliderInput.h"
 

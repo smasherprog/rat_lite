@@ -211,4 +211,14 @@
   </Settings>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>
+  <VirtualDirectory Name="Client">
+    <VirtualDirectory Name="UI">
+      <File Name="ConnectWindow.cpp"/>
+      <File Name="ConnectWindow.h"/>
+      <File Name="ImageControl.cpp"/>
+      <File Name="ImageControl.h"/>
+      <File Name="ViewerController.cpp"/>
+      <File Name="ViewerController.h"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
 </CodeLite_Project>

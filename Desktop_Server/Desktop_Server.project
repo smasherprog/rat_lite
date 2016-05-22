@@ -4,11 +4,6 @@
   <Dependencies/>
   <VirtualDirectory Name="src">
     <File Name="main.cpp"/>
-    <File Name="ConnectionInfoWindow.cpp"/>
-    <File Name="ConnectionInfoWindow.h"/>
-    <File Name="LogWindow.cpp"/>
-    <File Name="LogWindow.h"/>
-    <File Name="SliderInput.h"/>
   </VirtualDirectory>
   <Dependencies Name="Release"/>
   <Dependencies Name="Debug">

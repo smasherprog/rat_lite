@@ -57,7 +57,7 @@ namespace SL {
 					});
 					
 
-					//launch compression on another thread
+					//launch compression on another thread, this should improve throughput
 			/*		auto sharedpack = std::make_shared<Packet>(std::move(pack));
 					auto compressingpacket = std::async(std::launch::async, [sharedpack, this, self]() { return std::make_shared<Packet>(std::move(this->compress(*sharedpack)));  }).share();
 
@@ -93,12 +93,13 @@ namespace SL {
 
 				//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
 				virtual bool closed() override {
+
 					return _SocketImpl.Closed || !_socket.lowest_layer().is_open();
 				}
 				virtual void close_Socket(std::string reason) override {
 
-					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: "<<reason);
 					if (closed()) return;
+                    SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: "<<reason);
 					_SocketImpl.Closed = true;
 					_SocketImpl.CancelTimers();
 					_SocketImpl.get_Driver()->OnClose(this->shared_from_this());

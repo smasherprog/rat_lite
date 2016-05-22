@@ -1,6 +1,6 @@
 
 #include <FL/Fl.H>
-#include "ConnectionInfoWindow.h"
+#include "../Core/ConnectionInfoWindow.h"
 
 int main(int argc, char **argv) {
 	Fl::args(argc, argv);

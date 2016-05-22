@@ -3,11 +3,7 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="ConnectWindow.cpp"/>
-    <File Name="ConnectWindow.h"/>
     <File Name="Viewer.cpp"/>
-    <File Name="ViewerWindow.cpp"/>
-    <File Name="ViewerWindow.h"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>

@@ -60,9 +60,12 @@ namespace SL {
 				}
 				virtual void OnClose(const std::shared_ptr<ISocket>& socket)override {
 					_IServerDriver->OnClose(socket);
+                    
 					std::lock_guard<std::mutex> lock(_ClientsLock);
+                    
 					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&socket](const std::shared_ptr<ISocket>& p) { return p == socket; }), _Clients.end());
-				}
+				
+                }
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override
 				{

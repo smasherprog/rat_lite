@@ -1,5 +1,5 @@
-#include "../Core/stdafx.h"
-#include "ConnectionInfoWindow.h"
+#include "stdafx.h"
+
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Multi_Browser.H>
@@ -9,8 +9,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <sstream>
-#include "LogWindow.h"
 
+#include "LogWindow.h"
+#include "ConnectionInfoWindow.h"
 
 namespace SL {
 	namespace Remote_Access_Library {

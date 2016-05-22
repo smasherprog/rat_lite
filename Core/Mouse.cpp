@@ -200,8 +200,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 {
 
 	SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level,"SetMouseEvent EventData:"<<m.EventData<<" ScrollDelta: "<<m.ScrollDelta<<" PressData: "<<m.PressData);
-	assert(m.ScrollDelta >= -1 && m.ScrollDelta <= 1);//scroll data can either be -1, 0, or 1
-
+	
 #if _WIN32
 
 	INPUT input;
@@ -246,7 +245,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 #elif __ANDROID__
 
 #elif __linux__
-
+    
 	auto display = XOpenDisplay(NULL);
     XTestFakeMotionEvent(display, 0, m.Pos.X, m.Pos.Y,0);
     
@@ -254,42 +253,46 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
     
     switch (m.EventData) {
 	case Input::Mouse::Events::LEFT:
-		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button1,False, 0 );
-		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button1,True, 0 );
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button1,False, CurrentTime);
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button1,True,CurrentTime);
 		else {//double click
-            XTestFakeButtonEvent(display, Button1,False, 0 );
-            XTestFakeButtonEvent(display, Button1,True, 0 );
-            XTestFakeButtonEvent(display, Button1,False, 0 );
-            XTestFakeButtonEvent(display, Button1,True, 0 );
+            XTestFakeButtonEvent(display, Button1,True, CurrentTime);
+            XTestFakeButtonEvent(display, Button1,False, CurrentTime);
+            XTestFakeButtonEvent(display, Button1,True, CurrentTime );
+            XTestFakeButtonEvent(display, Button1,False, CurrentTime );
         }
 		break;
 	case Input::Mouse::Events::MIDDLE:
-		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button2,False, 0 );
-		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button2,True, 0 );
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button2,False, CurrentTime);
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button2,True, CurrentTime);
 		else {//double click
-            XTestFakeButtonEvent(display, Button2,False, 0 );
-            XTestFakeButtonEvent(display, Button2,True, 0 );
-            XTestFakeButtonEvent(display, Button2,False, 0 );
-            XTestFakeButtonEvent(display, Button2,True, 0 );
+            XTestFakeButtonEvent(display, Button2,True, CurrentTime);
+            XTestFakeButtonEvent(display, Button2,False, CurrentTime);
+            XTestFakeButtonEvent(display, Button2,True, CurrentTime);
+            XTestFakeButtonEvent(display, Button2,False, CurrentTime);
         }
 		break;
 	case Input::Mouse::Events::RIGHT:
-		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button3,False, 0 );
-		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button3,True, 0 );
+		if (m.PressData == Input::Mouse::Press::UP) XTestFakeButtonEvent(display, Button3,False, CurrentTime );
+		else if (m.PressData == Input::Mouse::Press::DOWN) XTestFakeButtonEvent(display, Button3,True, CurrentTime);
 		else {//double click
-            XTestFakeButtonEvent(display, Button3,False, 0 );
-            XTestFakeButtonEvent(display, Button3,True, 0 );
-            XTestFakeButtonEvent(display, Button3,False, 0 );
-            XTestFakeButtonEvent(display, Button3,True, 0 );
+            XTestFakeButtonEvent(display, Button3,True, CurrentTime);
+            XTestFakeButtonEvent(display, Button3,False, CurrentTime);
+            XTestFakeButtonEvent(display, Button3,True,CurrentTime );
+            XTestFakeButtonEvent(display, Button3,False, CurrentTime);
         }
 		break;
 	case Input::Mouse::Events::SCROLL:
         if(m.ScrollDelta <0){
-            XTestFakeButtonEvent(display, Button4,True, 0 );  
-            XTestFakeButtonEvent(display, Button4,False, 0 );   
-        } else {
-             XTestFakeButtonEvent(display, Button5,True, 0 );  
-            XTestFakeButtonEvent(display, Button5,False, 0 );   
+            for(auto i=0;i< abs(m.ScrollDelta) && i< 5; i++){///cap at 5
+                XTestFakeButtonEvent(display, Button4,True, CurrentTime );  
+                XTestFakeButtonEvent(display, Button4,False, CurrentTime); 
+            }   
+        } else if(m.ScrollDelta>0) {
+             for(auto i=0;i< m.ScrollDelta && i< 5; i++){///cap at 5
+                XTestFakeButtonEvent(display, Button5,True, CurrentTime );  
+                XTestFakeButtonEvent(display, Button5,False, CurrentTime); 
+            }     
         }
         
 		break;

@@ -28,6 +28,15 @@
     <Filter Include="wwwroot">
       <UniqueIdentifier>{486bb838-570a-425a-aaa3-9d059b12d301}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Server\UI">
+      <UniqueIdentifier>{8f3d15ca-8ab5-4daf-898e-08ef5f4335ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client">
+      <UniqueIdentifier>{0cff58b9-104b-4950-96d4-029c6f3306a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client\UI">
+      <UniqueIdentifier>{78b17f96-21b4-4fc2-8fb5-47a658a53ae3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp">
@@ -96,6 +105,15 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)Keyboard.cpp">
       <Filter>Capturing</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ViewerController.cpp">
+      <Filter>Client\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ConnectWindow.cpp">
+      <Filter>Client\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImageControl.cpp">
+      <Filter>Client\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +252,15 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)Keyboard.h">
       <Filter>Capturing</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImageControl.h">
+      <Filter>Client\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ViewerController.h">
+      <Filter>Client\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ConnectWindow.h">
+      <Filter>Client\UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -103,6 +103,13 @@
   <VirtualDirectory Name="Server">
     <File Name="Server.cpp"/>
     <File Name="Server.h"/>
+    <VirtualDirectory Name="UI">
+      <File Name="ConnectionInfoWindow.cpp"/>
+      <File Name="ConnectionInfoWindow.h"/>
+      <File Name="LogWindow.cpp"/>
+      <File Name="LogWindow.h"/>
+      <File Name="SliderInput.h"/>
+    </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="Utilities">
     <File Name="ApplicationDirectory.cpp"/>
@@ -204,4 +211,14 @@
   </Settings>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>
+  <VirtualDirectory Name="Client">
+    <VirtualDirectory Name="UI">
+      <File Name="ConnectWindow.cpp"/>
+      <File Name="ConnectWindow.h"/>
+      <File Name="ImageControl.cpp"/>
+      <File Name="ImageControl.h"/>
+      <File Name="ViewerController.cpp"/>
+      <File Name="ViewerController.h"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
 </CodeLite_Project>

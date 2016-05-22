@@ -1,12 +1,15 @@
 #pragma once
 #include "IBaseNetworkDriver.h"
 #include <memory>
-#include "Mouse.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Utilities {
 			class Point;
+		}
+		namespace Input {
+			struct MouseEvent;
+			struct KeyEvent;
 		}
 		namespace Network {
 			class IClientDriver;
@@ -24,6 +27,7 @@ namespace SL {
 				//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
 				void Stop();
 
+				void SendKey(const Input::KeyEvent& m);
 				void SendMouse(const Input::MouseEvent& m);
 				bool ConnectedToSelf() const;
 			};

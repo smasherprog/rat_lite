@@ -321,16 +321,19 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConnectionInfoWindow.cpp" />
-    <ClCompile Include="LogWindow.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConnectionInfoWindow.h" />
-    <ClInclude Include="LogWindow.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Desktop_Server.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Desktop_Server.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

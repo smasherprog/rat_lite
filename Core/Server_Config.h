@@ -25,6 +25,9 @@ namespace SL {
 
 				bool IgnoreIncomingMouseEvents = false;
 				bool IgnoreIncomingKeyboardEvents = false;
+
+				std::string Password;//if this is set, a password is required to connect to this server
+
 			};
 		}
 	}

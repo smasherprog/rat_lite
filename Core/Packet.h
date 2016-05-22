@@ -2,6 +2,7 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <iostream>
 
 namespace SL {
 	namespace Remote_Access_Library {

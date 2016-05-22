@@ -90,6 +90,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 
 std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::Resize(const std::shared_ptr<Image>& inimg, int height, int width, Image_Resamples resample)
 {
+    UNUSED(resample);
 	/*
 	TODO ADD SUPPORT FOR LINEAR AND BICUBIC RESAMPLE.. They are in commented out code above and below
 	*/

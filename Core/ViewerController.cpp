@@ -65,7 +65,7 @@ namespace SL {
 					_ImageControl = new ImageControl(0, 0, 900, 700, nullptr, std::move(info));
 					_Fl_Scroll->end();
 					end();
-					resizable();
+					resizable(this);
 					show();
 
 				}
@@ -217,7 +217,7 @@ SL::Remote_Access_Library::UI::ViewerController::ViewerController(const char * d
 }
 
 SL::Remote_Access_Library::UI::ViewerController::~ViewerController() {
-	delete _ViewerControllerImpl;
+
 }
 
 void SL::Remote_Access_Library::UI::ViewerController::ScaleView(bool b)

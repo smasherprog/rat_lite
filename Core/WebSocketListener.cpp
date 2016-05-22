@@ -29,10 +29,7 @@ namespace SL {
 						socket->set_WriteTimeout(_config->Write_Timeout);
 						_IBaseNetworkDriver->OnConnect(socket);
 				
-						/*	std::string testing = "sdfdf";
-							Packet p(static_cast<unsigned int>(PACKET_TYPES::WEBSOCKET_TEXT), testing.size());
-							memcpy(p.Payload, testing.c_str(), testing.size());
-							socket->send(p);*/
+					
 					}
 					virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& packet)  override {
 					_IBaseNetworkDriver->OnReceive(socket, packet);

@@ -9,6 +9,7 @@
 #include <FL/Fl_RGB_Image.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Scroll.H>
+#include <FL/Fl_Box.H>
 
 #include <mutex>
 #include <assert.h>
@@ -17,7 +18,7 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
-			class ImageControlImpl : public Fl_Widget {
+			class ImageControlImpl : public Fl_Box {
 				std::shared_ptr<Utilities::Image> _OriginalImage;//this is the original image, kept to resize the scaled if needed
 				std::shared_ptr<Utilities::Image> _ScaledImage;
 				std::mutex _ImageLock;
@@ -38,7 +39,7 @@ namespace SL {
 
 			public:
 
-				ImageControlImpl(int X, int Y, int W, int H, const char * title, ImageControlInfo&& info) : Fl_Widget(X, Y, W, H, title), _ImageControlInfo(std::move(info)){}
+				ImageControlImpl(int X, int Y, int W, int H, const char * title, ImageControlInfo&& info) : Fl_Box(X, Y, W, H, title), _ImageControlInfo(std::move(info)){}
 				virtual ~ImageControlImpl() {
 
 				}
@@ -131,8 +132,9 @@ namespace SL {
 					_MousePos = m;
 					if (_ScaledImage) {//need to scale the mouse pos as well
 						auto scalefactor = GetScaleFactor();
-						_MousePos.X = static_cast<int>(static_cast<float>(_MousePos.X)*scalefactor);
-						_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y)*scalefactor);
+						
+						_MousePos.X = static_cast<int>(static_cast<float>( _MousePos.X - _ImageControlInfo._Scroller->xposition())*scalefactor);
+						_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y - _ImageControlInfo._Scroller->yposition())*scalefactor);
 					}
 				}
 				void ScaleImage(bool b) {
@@ -140,7 +142,7 @@ namespace SL {
 				}
 				virtual int handle(int e) override {
 					switch (e) {
-
+					
 					case FL_PUSH:
 						_ImageControlInfo._MouseCallback(e, Fl::event_button(), Input::Mouse::Press::DOWN, Fl::event_x() + _ImageControlInfo._Scroller->xposition(), Fl::event_y() + _ImageControlInfo._Scroller->yposition());
 						break;
@@ -158,10 +160,12 @@ namespace SL {
 					case FL_KEYUP:
 						_ImageControlInfo._KeyCallback(e, Input::Keyboard::Press::UP);
 						return 1;
+					case FL_FOCUS:
+						return 1;
 					default:
 						break;
 					};
-					return Fl_Widget::handle(e);
+					return Fl_Box::handle(e);
 				}
 
 			};

@@ -1,6 +1,6 @@
 #ifndef CRYPTO_HPP
 #define	CRYPTO_HPP
-
+#include <memory>
 #include <string>
 #include <math.h>
 
@@ -9,11 +9,18 @@
 #include <openssl/sha.h>
 #include <openssl/md5.h>
 
+#include <openssl/x509v3.h>
+
 namespace SL {
 
 	namespace Remote_Access_Library {
 		//type must support size(), resize() and operator[]
 		namespace Crypto {
+
+
+
+			bool CreateCertificate(char* savelocation, unsigned char *country, unsigned  char *companyname, unsigned  char *commonname, int bits = 3072, int Serial = 0, int DaysValid = 365);
+
 			namespace Base64 {
 				template<class type>
 				void encode(const type& ascii, type& base64) {

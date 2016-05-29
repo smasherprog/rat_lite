@@ -50,7 +50,7 @@ namespace SL {
 }
 
 
-std::unordered_map<std::string, std::string> SL::Remote_Access_Library::Network::HttpHeader::Parse(std::string defaultheaderversion, std::istream& stream)
+std::unordered_map<std::string, std::string> SL::Remote_Access_Library::Network::Parse(std::string defaultheaderversion, std::istream& stream)
 {
 	std::unordered_map<std::string, std::string> header;
 	std::string line;

@@ -27,7 +27,7 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
-			class ConnectionInfoWindowImpl : public Network::IBaseNetworkDriver {
+			class ConnectionInfoWindowImpl : public Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>> {
 			public:
 
 				Fl_Window* cWindow = nullptr;
@@ -52,8 +52,8 @@ namespace SL {
 				ConnectionInfoWindowImpl() {
 					//init defaults
 					config = std::make_shared<Network::Server_Config>();
-					config->WebSocketListenPort = 6001;// listen for websockets
-					config->HttpListenPort = 8080;
+					config->WebSocketTLSListenPort = 6001;// listen for websockets
+					config->HttpTLSListenPort = 8080;
 					auto searchpath = executable_path(nullptr);
 					auto exeindex = searchpath.find_last_of('\\');
 					if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');
@@ -67,9 +67,15 @@ namespace SL {
 					if (shrd) shrd->Stop(true);
 					if (Runner.joinable()) Runner.join();
 				}
+
+				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override {
+					UNUSED(socket);
+					
+					return true;
+				}
 				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
 					std::ostringstream os;
-					os << "User Connected! Ip: " << socket->get_ip() << " port: " << socket->get_port();
+					os << "User Connected! Ip: " << socket->get_ipv4_address() << " port: " << socket->get_port();
 					_LogWindow->AddMessage(os.str());
 				}
 				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& pack) {
@@ -78,7 +84,7 @@ namespace SL {
 				}
 				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) {
 					std::ostringstream os;
-					os << "User Disconnected! Ip: " << socket->get_ip() << " port: " << socket->get_port();
+					os << "User Disconnected! Ip: " << socket->get_ipv4_address() << " port: " << socket->get_port();
 					_LogWindow->AddMessage(os.str());
 				}
 

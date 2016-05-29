@@ -13,9 +13,6 @@
     <Filter Include="Network\Socket">
       <UniqueIdentifier>{8b3afb65-5f91-4240-a859-f7e716d0879d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Network\Listener">
-      <UniqueIdentifier>{338cd425-2ff6-4579-b558-33c892c248eb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Network\Driver">
       <UniqueIdentifier>{41d7a51a-817b-4289-86d3-eb10e9048315}</UniqueIdentifier>
     </Filter>
@@ -44,21 +41,6 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)Screen.cpp">
       <Filter>Capturing</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)IO_Runner.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)SocketImpl.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)HttpListener.cpp">
-      <Filter>Network\Listener</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)WebSocketListener.cpp">
-      <Filter>Network\Listener</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.cpp">
       <Filter>Network\Driver</Filter>
@@ -115,6 +97,27 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ImageControl.cpp">
       <Filter>Client\UI</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.cpp">
+      <Filter>Server\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)LogWindow.cpp">
+      <Filter>Server\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)WSSocket.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)HttpsSocket.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.cpp">
+      <Filter>Network\Driver</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -126,41 +129,14 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)IO_Runner.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)Server_Config.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SocketStats.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)HttpSocket.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)ISocket.h">
       <Filter>Network\Socket</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SocketImpl.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)TCPSocket.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)HttpListener.h">
-      <Filter>Network\Listener</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)TCPListener.h">
-      <Filter>Network\Listener</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)WebSocketListener.h">
-      <Filter>Network\Listener</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)IBaseNetworkDriver.h">
       <Filter>Network\Driver</Filter>
@@ -181,9 +157,6 @@
       <Filter>Server</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)crypto.hpp">
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)MediaTypes.h">
@@ -261,6 +234,33 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectWindow.h">
       <Filter>Client\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.h">
+      <Filter>Server\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)LogWindow.h">
+      <Filter>Server\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SliderInput.h">
+      <Filter>Server\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)WSSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)HttpsSocket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)IHttpsDriver.h">
+      <Filter>Network\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

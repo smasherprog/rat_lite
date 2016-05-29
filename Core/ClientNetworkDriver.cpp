@@ -1,24 +1,26 @@
 #include "stdafx.h"
 #include "ClientNetworkDriver.h"
-#include "WebSocket.h"
+#include "WSSocket.h"
 #include "Shapes.h"
 #include "IClientDriver.h"
 #include "Image.h"
 #include "Packet.h"
-#include "IO_Runner.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Logging.h"
 #include "Keyboard.h"
+#include "ISocket.h"
+
+#include <assert.h>
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 
-			class ClientNetworkDriverImpl : public IBaseNetworkDriver {
+			class ClientNetworkDriverImpl : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
 				IClientDriver* _IClientDriver;
-				std::shared_ptr<Network::WebSocket<socket>> _Socket;
-				std::unique_ptr<IO_Runner> _IO_Runner;
+				std::shared_ptr<Network::WSSocket> _Socket;
+
 				std::string _dst_host, _dst_port;
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
@@ -68,29 +70,27 @@ namespace SL {
 
 				}
 				bool _ConectedToSelf = false;
-
+				std::shared_ptr<Network::Server_Config> _Config;
 			public:
-				ClientNetworkDriverImpl(IClientDriver* r, const char * dst_host, const char * dst_port) : _IClientDriver(r), _dst_host(dst_host), _dst_port(dst_port) {
+				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Server_Config> config, const char * dst_host, const char * dst_port) : _IClientDriver(r), _Config(config), _dst_host(dst_host), _dst_port(dst_port) {
 
 				}
+				
 				void Start() {
 					Stop();
-					_IO_Runner = std::move(std::make_unique<IO_Runner>());
-					_Socket = std::make_shared<WebSocket<socket>>(this, _IO_Runner->get_io_service());
-					_Socket->connect(_dst_host.c_str(), _dst_port.c_str());
+					_Socket = WSSocket::connect(this, _dst_host.c_str(), _dst_port.c_str());
 					_ConectedToSelf = (std::string("127.0.0.1") == _dst_host) || (std::string("localhost") == _dst_host) || (std::string("::1") == _dst_host);
 
 				}
 				
 				void Stop() {
-					if (_Socket) _Socket->close_Socket("Stopping Listener");
+					if (_Socket) _Socket->close("Stopping Listener");
 					_Socket.reset();
-					if (_IO_Runner) _IO_Runner->Stop();
-					_IO_Runner.reset();
 				}
 				virtual ~ClientNetworkDriverImpl() {
 					Stop();
 				}
+				virtual bool ValidateUntrustedCert(const std::shared_ptr<ISocket>& socket)override { UNUSED(socket); return true; }
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnConnect(socket); }
 				virtual void OnClose(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnClose(socket); }
 
@@ -134,7 +134,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, const char * dst_host, const char * dst_port) : _ClientNetworkDriverImpl(std::make_unique<ClientNetworkDriverImpl>(r, dst_host, dst_port))
+SL::Remote_Access_Library::Network::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, std::shared_ptr<Network::Server_Config> config, const char * dst_host, const char * dst_port) : _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r, config, dst_host, dst_port))
 {
 
 }
@@ -142,6 +142,7 @@ SL::Remote_Access_Library::Network::ClientNetworkDriver::ClientNetworkDriver(ICl
 SL::Remote_Access_Library::Network::ClientNetworkDriver::~ClientNetworkDriver()
 {
 	Stop();
+	delete _ClientNetworkDriverImpl;
 }
 
 void SL::Remote_Access_Library::Network::ClientNetworkDriver::Start()

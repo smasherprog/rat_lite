@@ -619,8 +619,8 @@ var SL;
                         i.onload = function () {
                             if (self._ScaleImage) {
                                 var scale = self.GetScalingFactor();
-                                self._HTMLDivRoot.scrollWidth = self._HTMLCanvasScreenImage.width = i.width * scale;
-                                self._HTMLDivRoot.scrollHeight = self._HTMLCanvasScreenImage.height = i.height * scale;
+                                self._HTMLCanvasScreenImage.width = i.width * scale;
+                                self._HTMLCanvasScreenImage.height = i.height * scale;
                                 self._HTMLDivRoot.style.width = self._HTMLCanvasScreenImage.width + 'px';
                                 self._HTMLDivRoot.style.height = self._HTMLCanvasScreenImage.height + 'px';
                                 self._HTMLCanvasScreenImage.getContext("2d").drawImage(i, 0, 0, self._HTMLCanvasScreenImage.width, self._HTMLCanvasScreenImage.height);

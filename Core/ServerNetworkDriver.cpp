@@ -3,30 +3,25 @@
 #include "Image.h"
 #include "Shapes.h"
 #include "Packet.h"
-#include "TCPSocket.h"
 #include "IServerDriver.h"
 #include "Server_Config.h"
-#include "WebSocketListener.h"
-#include "IO_Runner.h"
-#include "TCPListener.h"
-#include "HttpListener.h"
+#include "WSSocket.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Keyboard.h"
+#include "Logging.h"
+
 #include <mutex>
+#include <assert.h>
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 
-			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
+			class ServerNetworkDriverImpl : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
 
-				std::shared_ptr<WebSocketListener> _WebSocketListener;
-
-				std::unique_ptr<HttpListener> _HttptListener;
-
-				std::unique_ptr<IO_Runner> _IO_Runner;
-
+				std::shared_ptr<WSSListener> _Listener;
+			
 				IServerDriver* _IServerDriver;
 
 				std::vector<std::shared_ptr<ISocket>> _Clients;
@@ -35,14 +30,14 @@ namespace SL {
 				std::vector<char> _CompressBuffer;
 
 				void KeyboardEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-                    UNUSED(socket);
+					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::KeyEvent));
 					_IServerDriver->OnKey((Input::KeyEvent*) p->Payload);
-					
+
 				}
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-                     UNUSED(socket);
+					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::MouseEvent));
 					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
@@ -53,6 +48,11 @@ namespace SL {
 				virtual ~ServerNetworkDriverImpl() {
 					Stop();
 				}
+				virtual bool ValidateUntrustedCert(const std::shared_ptr<ISocket>& socket) override {
+					UNUSED(socket);
+					return true;
+				}
+
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
 					_IServerDriver->OnConnect(socket);
 					std::lock_guard<std::mutex> lock(_ClientsLock);
@@ -60,12 +60,12 @@ namespace SL {
 				}
 				virtual void OnClose(const std::shared_ptr<ISocket>& socket)override {
 					_IServerDriver->OnClose(socket);
-                    
+
 					std::lock_guard<std::mutex> lock(_ClientsLock);
-                    
+
 					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&socket](const std::shared_ptr<ISocket>& p) { return p == socket; }), _Clients.end());
-				
-                }
+
+				}
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override
 				{
@@ -76,7 +76,7 @@ namespace SL {
 					case static_cast<unsigned int>(PACKET_TYPES::KEYEVENT) :
 						KeyboardEvent(socket, p);
 						break;
-						
+
 					default:
 						_IServerDriver->OnReceive(socket, p);//pass up the chain
 						break;
@@ -89,8 +89,8 @@ namespace SL {
 
 				std::vector<std::shared_ptr<ISocket>> GetClients() {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
-					auto tmp= _Clients;
-                    return tmp;
+					auto tmp = _Clients;
+					return tmp;
 				}
 				void SendScreenDif(ISocket * socket, Utilities::Rect & r, const Utilities::Image & img) {
 					auto p(ExtractImageRect(r, img));
@@ -138,16 +138,9 @@ namespace SL {
 
 				void Start() {
 					Stop();
-
-					_IO_Runner = std::make_unique<IO_Runner>();
-					if (_Config->WebSocketListenPort > 0) {
-
-						_HttptListener = std::make_unique<HttpListener>(this, _IO_Runner->get_io_service(), _Config);
-						_WebSocketListener = std::make_unique<WebSocketListener>(this, _IO_Runner->get_io_service(), _Config);
+					if (_Config->WebSocketTLSListenPort > 0) {
+						_Listener = std::make_unique<WSSListener>(this, _Config);
 					}
-					_HttptListener->Start();
-					_WebSocketListener->Start();
-
 				}
 				void Stop() {
 					std::vector<std::shared_ptr<ISocket>> copyclients;
@@ -156,11 +149,9 @@ namespace SL {
 						copyclients = std::move(_Clients);//move all of the clients to a new vector
 						_Clients.clear();//clear the internal client listing
 					}
-					std::for_each(begin(copyclients), end(copyclients), [](const std::shared_ptr<ISocket>& o) { o->close_Socket("ShuttingDown"); });
+					std::for_each(begin(copyclients), end(copyclients), [](const std::shared_ptr<ISocket>& o) { o->close("ShuttingDown"); });
 					copyclients.clear();
-					_HttptListener.reset();
-					_WebSocketListener.reset();
-					_IO_Runner.reset();
+					_Listener.reset();
 
 				}
 				void ExtractImageRect(Utilities::Rect r, const Utilities::Image & img, std::vector<char>& outbuffer) {
@@ -211,13 +202,14 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Network::ServerNetworkDriver::ServerNetworkDriver(Network::IServerDriver * r, std::shared_ptr<Network::Server_Config> config) : _ServerNetworkDriverImpl(std::make_unique<ServerNetworkDriverImpl>(config, r))
+SL::Remote_Access_Library::Network::ServerNetworkDriver::ServerNetworkDriver(Network::IServerDriver * r, std::shared_ptr<Network::Server_Config> config) : _ServerNetworkDriverImpl(new ServerNetworkDriverImpl(config, r))
 {
 
 }
 SL::Remote_Access_Library::Network::ServerNetworkDriver::~ServerNetworkDriver()
 {
-	_ServerNetworkDriverImpl.reset();
+	Stop();
+	delete _ServerNetworkDriverImpl;
 }
 
 

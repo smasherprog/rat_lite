@@ -5,14 +5,15 @@
 #include "Image.h"
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
-#include <thread>
-#include <mutex>
 #include "Logging.h"
 #include "Packet.h"
 #include "Server_Config.h"
-#include <string.h>
 #include "Keyboard.h"
+#include "IBaseNetworkDriver.h"
 
+#include <thread>
+#include <mutex>
+#include <string.h>
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
@@ -25,7 +26,7 @@ namespace SL {
 
 			Utilities::Point LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 			Network::ServerNetworkDriver _ServerNetworkDriver;
-			Network::IBaseNetworkDriver* _IUserNetworkDriver;
+			Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* _IUserNetworkDriver;
 
 			bool _Keepgoing= true;
 			std::mutex _NewClientLock;
@@ -33,13 +34,17 @@ namespace SL {
 			Server_Status _Status = Server_Status::SERVER_STOPPED;
 			std::shared_ptr<Network::Server_Config> _Config;
 
-			ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
+			ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
 			{
 			}
 
 			virtual ~ServerImpl() {
 				_Status = Server_Status::SERVER_STOPPED;
 				_Keepgoing = false;
+			}
+			virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override {
+				UNUSED(socket);
+				return true;
 			}
 			virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
 				{
@@ -165,7 +170,7 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Server::Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent)
+SL::Remote_Access_Library::Server::Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* parent)
 {
 	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }

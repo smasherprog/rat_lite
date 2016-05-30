@@ -121,6 +121,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)RA_Server.cpp">
       <Filter>Server</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.cpp">
+      <Filter>Server\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -268,6 +271,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Client_Config.h">
       <Filter>Client</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.h">
+      <Filter>Server\UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">
@@ -275,8 +281,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
-      <Filter>wwwroot</Filter>
-    </CustomBuild>
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
   </ItemGroup>
 </Project>

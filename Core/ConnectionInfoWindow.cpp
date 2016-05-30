@@ -26,6 +26,7 @@
 #include "ISocket.h"
 #include "LogWindow.h"
 #include "SliderInput.h"
+#include "GenerateCertificateWindow.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -44,7 +45,6 @@ namespace SL {
 					Fl_Check_Button* _IgnoreIncomingKeyboard = nullptr;
 
 					Fl_Input* _FullPathToCertificate = nullptr;
-
 					Fl_Input* _FullPathToPrivateKey = nullptr;
 					Fl_Secret_Input* _PasswordToPrivateKey = nullptr;
 
@@ -52,6 +52,8 @@ namespace SL {
 
 					std::shared_ptr<Network::Server_Config> config;
 					std::unique_ptr<LogWindow> _LogWindow;
+					std::unique_ptr<GenerateCertificateWindow> _GenerateCertificateWindow;
+
 					SliderInput* _ImageQualitySlider = nullptr;
 					SliderInput* _MouseCaptureRateSlider = nullptr;
 					SliderInput* _MousePositionCaptureRate = nullptr;
@@ -146,7 +148,7 @@ namespace SL {
 					static void GenerateCerts(Fl_Widget*w, void*data) {
 						UNUSED(w);
 						auto p = (ConnectionInfoWindowImpl*)data;
-						//GENERATE CERT STUFF MM KAY!!
+						p->_GenerateCertificateWindow->Show();
 					}
 					static void SGrayScaleImageCB(Fl_Widget*w, void*data) {
 						UNUSED(w);
@@ -230,8 +232,9 @@ namespace SL {
 
 
 					void Init() {
-						auto colwidth = 500;
+						auto colwidth = 800;
 						auto startleft = 200;
+						auto leftside = 200;
 						auto workingy = 0;
 						cWindow = new Fl_Window(400, 400, colwidth, 300, "Server Settings");
 #ifdef WIN32
@@ -244,27 +247,27 @@ namespace SL {
 						_MenuBar->add("File/Log", 0, Menu_CB, (void*)this);
 						workingy += 30;
 
-						_GrayScaleImage = new Fl_Check_Button(startleft, workingy, colwidth - startleft, 20, " GrayScale");
+						_GrayScaleImage = new Fl_Check_Button(leftside, workingy, colwidth - startleft, 20, " GrayScale");
 						_GrayScaleImage->align(FL_ALIGN_LEFT);
 						_GrayScaleImage->callback(SGrayScaleImageCB, this);
 						_GrayScaleImage->value(config->SendGrayScaleImages == 1);
 						workingy += 24;
 
-						_IgnoreIncomingMouse = new Fl_Check_Button(startleft, workingy, colwidth - startleft, 20, " Ignore Incoming Mouse");
+						_IgnoreIncomingMouse = new Fl_Check_Button(leftside, workingy, colwidth - startleft, 20, " Ignore Incoming Mouse");
 						_IgnoreIncomingMouse->tooltip("When this is checked, mouse commands send in will be ignored.");
 						_IgnoreIncomingMouse->align(FL_ALIGN_LEFT);
 						_IgnoreIncomingMouse->callback(SIgnoreIncomingMouseCB, this);
 						_IgnoreIncomingMouse->value(config->IgnoreIncomingMouseEvents == 1);
 						workingy += 24;
 
-						_IgnoreIncomingKeyboard = new Fl_Check_Button(startleft, workingy, colwidth - startleft, 20, " Ignore Incoming Keyboard");
+						_IgnoreIncomingKeyboard = new Fl_Check_Button(leftside, workingy, colwidth - startleft, 20, " Ignore Incoming Keyboard");
 						_IgnoreIncomingKeyboard->tooltip("When this is checked, mouse commands send in will be ignored.");
 						_IgnoreIncomingKeyboard->align(FL_ALIGN_LEFT);
 						_IgnoreIncomingKeyboard->callback(SIgnoreIncomingKeyboardCB, this);
 						_IgnoreIncomingKeyboard->value(config->IgnoreIncomingKeyboardEvents == 1);
 						workingy += 24;
 
-						_ImageQualitySlider = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Image Quality Level");
+						_ImageQualitySlider = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Image Quality Level");
 						_ImageQualitySlider->tooltip("This is the quality level used by the system for images");
 						_ImageQualitySlider->align(FL_ALIGN_LEFT);
 						_ImageQualitySlider->bounds(10, 100);
@@ -272,7 +275,7 @@ namespace SL {
 						_ImageQualitySlider->value(config->ImageCompressionSetting);
 						workingy += 24;
 
-						_MouseCaptureRateSlider = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Mouse Capture Rate");
+						_MouseCaptureRateSlider = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Mouse Capture Rate");
 						_MouseCaptureRateSlider->tooltip("This controls the rate at which the mouse Image is captured. Measured in Seconds");
 						_MouseCaptureRateSlider->align(FL_ALIGN_LEFT);
 						_MouseCaptureRateSlider->bounds(1, 5);
@@ -280,7 +283,7 @@ namespace SL {
 						_MouseCaptureRateSlider->value(config->MouseImageCaptureRate / 1000);
 						workingy += 24;
 
-						_MousePositionCaptureRate = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Mouse Movement Capture");
+						_MousePositionCaptureRate = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Mouse Movement Capture");
 						_MousePositionCaptureRate->tooltip("This controls how often the mouse is checked for movement. Measured in Milliseconds");
 						_MousePositionCaptureRate->align(FL_ALIGN_LEFT);
 						_MousePositionCaptureRate->bounds(50, 1000);
@@ -288,7 +291,7 @@ namespace SL {
 						_MousePositionCaptureRate->value(config->MousePositionCaptureRate);
 						workingy += 24;
 
-						_ScreenCaptureRate = new SliderInput(startleft, workingy, colwidth - startleft, 20, " Screen Capture Rate");
+						_ScreenCaptureRate = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Screen Capture Rate");
 						_ScreenCaptureRate->tooltip("This controls how often the screen is captured. Measured in milliseconds");
 						_ScreenCaptureRate->align(FL_ALIGN_LEFT);
 						_ScreenCaptureRate->bounds(100, 1000);
@@ -297,21 +300,21 @@ namespace SL {
 						workingy += 24;
 
 					
-						_FullPathToCertificate = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Path to Certificate: ");
+						_FullPathToCertificate = new Fl_Input(leftside, workingy, colwidth - startleft, 20, "Path to Certificate: ");
 						_FullPathToCertificate->tooltip("This is the full path to the certificate file");
 						_FullPathToCertificate->align(FL_ALIGN_LEFT);
 						_FullPathToCertificate->readonly(1);
 						_FullPathToCertificate->callback(_FullPathToCertificateCB, this);
 						workingy += 24;
 
-						_FullPathToPrivateKey = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Path to Private Key: ");
+						_FullPathToPrivateKey = new Fl_Input(leftside, workingy, colwidth - startleft, 20, "Path to Private Key: ");
 						_FullPathToPrivateKey->tooltip("This is the full path to the private key file");
 						_FullPathToPrivateKey->align(FL_ALIGN_LEFT);
 						_FullPathToPrivateKey->readonly(1);
 						_FullPathToPrivateKey->callback(_FullPathToPrivateKeyCB,this);
 						workingy += 24;
 
-						_PasswordToPrivateKey = new Fl_Secret_Input(startleft, workingy, colwidth - startleft, 20, "Private Key Password: ");
+						_PasswordToPrivateKey = new Fl_Secret_Input(leftside, workingy, colwidth - startleft, 20, "Private Key Password: ");
 						_PasswordToPrivateKey->tooltip("This is the password needed to open the Private Keyfile");
 						_PasswordToPrivateKey->align(FL_ALIGN_LEFT);
 						_PasswordToPrivateKey->callback(_PasswordToPrivateKeyCB, this);
@@ -323,11 +326,23 @@ namespace SL {
 						StartStopBtn->color(FL_GREEN);
 						workingy = StartStopBtn->h() + 4;
 
+					
+
 						Fl_Tooltip::enable();
 						cWindow->end();
 						cWindow->show();
+				
 						_LogWindow = std::make_unique<LogWindow>();
 						_LogWindow->set_MaxLines(100);
+
+						_GenerateCertificateWindow = std::make_unique<GenerateCertificateWindow>(config, [this](bool created) {
+							fl_alert("Successfully gnerated self-signed certificate!");
+							if (created) {
+								this->_FullPathToCertificate->value(config->FullPathToCertificate.c_str());
+								this->_FullPathToPrivateKey->value(config->FullPathToPrivateKey.c_str());
+								this->_PasswordToPrivateKey->value(config->PasswordToPrivateKey.c_str());
+							}
+						});
 					}
 
 				};

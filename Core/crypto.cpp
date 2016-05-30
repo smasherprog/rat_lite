@@ -165,7 +165,7 @@ SL::Remote_Access_Library::Crypto::CertSaveLocation SL::Remote_Access_Library::C
 	assert(!saveloc.empty());
 	svloc.Private_Key = saveloc + info.filename + "_private.pem";
 
-	if (!fopen_s(&cry.priv_keyfile, svloc.Private_Key.c_str(), "wb")) {
+	if (fopen_s(&cry.priv_keyfile, svloc.Private_Key.c_str(), "wb")!=0) {
 		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Failed to open the Private Key File '" << svloc.Private_Key << "' for writing!");
 		svloc.Private_Key = "";
 		return svloc;
@@ -180,9 +180,9 @@ SL::Remote_Access_Library::Crypto::CertSaveLocation SL::Remote_Access_Library::C
 		NULL,               /* callback for requesting a password */
 		NULL                /* data to pass to the callback */
 	);
-	svloc.Certificate = saveloc + info.filename + "_cert.pem";
+	svloc.Certificate = saveloc + info.filename + "_cert.crt";
 
-	if (!fopen_s(&cry.certfile, svloc.Certificate.c_str(), "wb")) {
+	if (fopen_s(&cry.certfile, svloc.Certificate.c_str(), "wb") != 0) {
 		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Failed to open the Certificate File '" << svloc.Certificate << "' for writing!");
 		svloc.Certificate = "";
 		return svloc;
@@ -222,7 +222,7 @@ std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(const std::st
 	std::string ret;
 	if (!SL::File_Exists(fullpathtocert)) return std::string("The certificate file does not exist!");
 	CertRAII f;
-	if (fopen_s(&f.certfile, fullpathtocert.c_str(), "rb")) return std::string("Cannot open the certificate file for reading!");
+	if (fopen_s(&f.certfile, fullpathtocert.c_str(), "rb") != 0) return std::string("Cannot open the certificate file for reading!");
 	f.x509Certificate = PEM_read_X509(f.certfile, NULL, NULL, NULL);
 	if(f.x509Certificate==NULL)  return std::string("Loaded the Certifiate file, but could not read the certificate information. It might be invalid!");
 	return ret;
@@ -233,7 +233,7 @@ std::string SL::Remote_Access_Library::Crypto::ValidatePrivateKey(const std::str
 	std::string ret;
 	if (!SL::File_Exists(fullpathtoprivatekey)) return std::string("The Private key file does not exist!");
 	PrivateKeyRAII f;
-	if (fopen_s(&f.priv_keyfile, fullpathtoprivatekey.c_str(), "rb")) return std::string("Cannot open the Private key file for reading!");
+	if (fopen_s(&f.priv_keyfile, fullpathtoprivatekey.c_str(), "rb") != 0) return std::string("Cannot open the Private key file for reading!");
 
 	f.PrivateKey = PEM_read_PrivateKey(f.priv_keyfile, NULL, NULL, (void*)password.c_str());
 	if (f.PrivateKey == NULL) {

@@ -41,6 +41,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpsSocket.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsSocket.h" />

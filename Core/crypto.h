@@ -56,14 +56,14 @@ namespace SL {
 			std::string ValidateCertificate(const std::string& fullpathtocert);
 			std::string ValidatePrivateKey(const std::string& fullpathtoprivatekey, std::string& password);
 
-			const std::string dhparams = "-----BEGIN DH PARAMETERS-----"
-				"MIIBCAKCAQEAzPjrDCNwq0bYz5xi72GM4EoWjqwmaAXFcY7vR6+nDpeeKpeYg8XS"
-				"tdjCwyaIRaYO3tzZxTbjdgnCbksVQrRKscefnba5zguqnqvaGL7rHNwdqaQq7rTp"
-				"KGdva8BKIaE9fq2q0OaZpBWE7KtVdraF5+CnvEj4AJqxGgZ/OtP+Y3UPTIcjoIve"
-				"2ss+XbvHGvcZ+RmyYeHmmQbWyqNyoUgrMzfGOHUvY6x9fcl/DvCSIpVn8qRK+3+n"
-				"64R3OAMcxNK7ONGSL3q6DRVTUXTNch9W+TKOYAppKtdyemoUAMleXD3F282BUwqL"
-				"f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg=="
-				"-----END DH PARAMETERS-----";
+			const std::string dhparams = "-----BEGIN DH PARAMETERS-----\n"
+				"MIIBCAKCAQEAzPjrDCNwq0bYz5xi72GM4EoWjqwmaAXFcY7vR6+nDpeeKpeYg8XS\n"
+				"tdjCwyaIRaYO3tzZxTbjdgnCbksVQrRKscefnba5zguqnqvaGL7rHNwdqaQq7rTp\n"
+				"KGdva8BKIaE9fq2q0OaZpBWE7KtVdraF5+CnvEj4AJqxGgZ/OtP+Y3UPTIcjoIve\n"
+				"2ss+XbvHGvcZ+RmyYeHmmQbWyqNyoUgrMzfGOHUvY6x9fcl/DvCSIpVn8qRK+3+n\n"
+				"64R3OAMcxNK7ONGSL3q6DRVTUXTNch9W+TKOYAppKtdyemoUAMleXD3F282BUwqL\n"
+				"f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==\n"
+				"-----END DH PARAMETERS-----\n";
 
 			namespace Base64 {
 				template<class type>

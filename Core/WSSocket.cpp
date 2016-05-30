@@ -30,7 +30,7 @@ namespace SL {
 					io_servicethread = std::thread([this]() {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting io_service Factory");
 						boost::system::error_code ec;
-						io_service.run(ec);
+						this->io_service.run(ec);
 						if (ec) {
 							SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
 						}
@@ -665,58 +665,65 @@ namespace SL {
 				std::shared_ptr<Network::Server_Config> _config;
 				std::shared_ptr<WSSAsio_Context> _WSSAsio_Context;
 				IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver;
-
+				boost::asio::const_buffer DhParams;
 				WebSocketListinerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSListenPort)),
 					_config(config),
 					_WSSAsio_Context(asiocontext),
-					_IBaseNetworkDriver(netevent)
-					{
-						_WSSAsio_Context->ssl_context.set_options(
-							boost::asio::ssl::context::default_workarounds
-							| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
-							| boost::asio::ssl::context::single_dh_use);
-					
-					_WSSAsio_Context->ssl_context.set_password_callback(bind(&WebSocketListinerImpl::get_password, this));
-					auto b = boost::asio::buffer(Crypto::dhparams);
-					_WSSAsio_Context->ssl_context.use_tmp_dh(b);
-					_WSSAsio_Context->ssl_context.use_certificate_chain_file(config->FullPathToCertificate);
-					_WSSAsio_Context->ssl_context.use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem);
-				
-					}
-					std::string get_password() const
-					{
-						return _config->Password;
-					}
-					virtual ~WebSocketListinerImpl() {
-						Stop();
-					}
+					_IBaseNetworkDriver(netevent),
+					DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
+				{
+					_WSSAsio_Context->ssl_context.set_options(
+						boost::asio::ssl::context::default_workarounds
+						| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
+						| boost::asio::ssl::context::single_dh_use);
+					boost::system::error_code ec;
+					_WSSAsio_Context->ssl_context.set_password_callback(bind(&WebSocketListinerImpl::get_password, this), ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error "<<ec.message());
+					ec.clear();
+					_WSSAsio_Context->ssl_context.use_tmp_dh(DhParams, ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
+					ec.clear();
+					_WSSAsio_Context->ssl_context.use_certificate_chain_file(config->FullPathToCertificate, ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
+					ec.clear();
+					_WSSAsio_Context->ssl_context.use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem, ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());
+					ec.clear();
+				}
+				std::string get_password() const
+				{
+					return _config->PasswordToPrivateKey;
+				}
+				virtual ~WebSocketListinerImpl() {
+					Stop();
+				}
 
-					void Start() {
-						auto self(shared_from_this());
-						auto sock = std::make_shared<WSSocketImpl>(_IBaseNetworkDriver, _WSSAsio_Context);
-						auto _socket = std::make_shared<WSSocket>(sock);
-						_acceptor.async_accept(sock->_socket.lowest_layer(), [self, _socket, sock](const boost::system::error_code& ec)
+				void Start() {
+					auto self(shared_from_this());
+					auto sock = std::make_shared<WSSocketImpl>(_IBaseNetworkDriver, _WSSAsio_Context);
+					auto _socket = std::make_shared<WSSocket>(sock);
+					_acceptor.async_accept(sock->_socket.lowest_layer(), [self, _socket, sock](const boost::system::error_code& ec)
+					{
+						if (!ec)
 						{
-							if (!ec)
-							{
-								sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, _socket, sock](const boost::system::error_code& ec) {
-									if (!ec) {
-										sock->_Server = true;
-										sock->handshake();
-									}
-									self->Start();
-								});
-							}
-							else {
-								SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
-							}
-						});
-					}
-					void Stop() {
-						_acceptor.close();
-						_WSSAsio_Context->Stop();
-					}
+							sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, _socket, sock](const boost::system::error_code& ec) {
+								if (!ec) {
+									sock->_Server = true;
+									sock->handshake();
+								}
+								self->Start();
+							});
+						}
+						else {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
+						}
+					});
+				}
+				void Stop() {
+					_acceptor.close();
+					_WSSAsio_Context->Stop();
+				}
 			};
 
 		}

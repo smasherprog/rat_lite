@@ -11,6 +11,7 @@
 #include <FL/x.H>               // needed for fl_display
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Secret_Input.H>
+#include <FL/Fl_Native_File_Chooser.H>
 
 #include <memory>
 #include <string>
@@ -188,38 +189,31 @@ namespace SL {
 					static void _FullPathToCertificateCB(Fl_Widget*w, void*data) {
 						UNUSED(w);
 						auto p = (ConnectionInfoWindowImpl*)data;
-						Fl_File_Chooser chooser(".",                        // directory
-							"Certificate Filec (*.crt,*.pem)",                        // filter
-							Fl_File_Chooser::SINGLE,     // chooser type
-							"Select the Certificate file");        // title
-						chooser.preview(0);//no preview
-						chooser.show();
-						// Block until user picks something.
-						while (chooser.shown())
-						{
-							Fl::wait();
-						}
-						if (chooser.value() == NULL) return;//cancel was hit
-						p->_FullPathToCertificate->value(chooser.value());
-						p->config->FullPathToCertificate = chooser.value();
+						Fl_Native_File_Chooser chooser;
+						chooser.title("Select the file location to save the Cert and Key");
+						chooser.type(Fl_Native_File_Chooser::BROWSE_FILE);
+						
+						chooser.filter("Certificate Files\t*.{crt,pem}");
+						auto action = chooser.show();
+						if (action == -1 || action == 1) return;//cancel was hit
+
+						p->_FullPathToCertificate->value(chooser.filename());
+						p->config->FullPathToCertificate = chooser.filename();
 					}
 					static void _FullPathToPrivateKeyCB(Fl_Widget*w, void*data) {
 						UNUSED(w);
 						auto p = (ConnectionInfoWindowImpl*)data;
-						Fl_File_Chooser chooser(".",                        // directory
-							"Private Key Files (*.key,*.pem)",                        // filter
-							Fl_File_Chooser::SINGLE,     // chooser type
-							"Select the Private Key file");        // title
-						chooser.preview(0);//no preview
-						chooser.show();
-						// Block until user picks something.
-						while (chooser.shown())
-						{
-							Fl::wait();
-						}
-						if (chooser.value() == NULL) return;//cancel was hit
-						p->_FullPathToPrivateKey->value(chooser.value());
-						p->config->FullPathToPrivateKey = chooser.value();
+
+						Fl_Native_File_Chooser chooser;
+						chooser.title("Select the Private Key file");
+						chooser.type(Fl_Native_File_Chooser::BROWSE_FILE);
+
+						chooser.filter("Private Key Files\t*.{key,pem}");
+						auto action = chooser.show();
+						if (action == -1 || action == 1) return;//cancel was hit
+
+						p->_FullPathToPrivateKey->value(chooser.filename());
+						p->config->FullPathToPrivateKey = chooser.filename();
 					}
 
 					static void _PasswordToPrivateKeyCB(Fl_Widget*w, void*data) {

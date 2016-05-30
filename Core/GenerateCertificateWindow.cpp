@@ -94,9 +94,10 @@ namespace SL {
 						_bitstrength = new Fl_Input_Choice(startleft, workingy, colwidth - startleft, 20, "Encryption Strength: ");
 						_bitstrength->tooltip("Certificate Encryption Strength");
 						_bitstrength->align(FL_ALIGN_LEFT);
-						_bitstrength->add("128");
-						_bitstrength->add("192");
-						_bitstrength->add("256");
+						_bitstrength->add("128 bit");
+						_bitstrength->add("192 bit");
+						_bitstrength->add("256 bit");
+						_bitstrength->value(0);
 						workingy += 24;
 
 						StartStopBtn = new Fl_Button(0, h() - 30, w(), 30, "Generate");

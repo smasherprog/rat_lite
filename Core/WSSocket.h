@@ -17,12 +17,6 @@ namespace SL {
 
 				WSSListener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<Network::Server_Config> config);
 				~WSSListener();
-				WSSListener(const WSSListener&) = delete;
-				WSSListener(WSSListener&&) = delete;
-				//no copy allowed
-				WSSListener& operator=(WSSListener&&) = delete;
-				WSSListener& operator=(const WSSListener&) = delete;
-
 			};
 
 			class WSSocketImpl;

@@ -57,7 +57,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)MediaTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Screen.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Server.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)RA_Server.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ServerNetworkDriver.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -68,6 +68,7 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Client_Config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\bitstream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\divsufsort.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_private.h" />
@@ -105,7 +106,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Screen.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Server.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)RA_Server.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ServerNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Server_Config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Shapes.h" />

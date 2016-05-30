@@ -28,6 +28,12 @@ namespace SL {
 
 				std::string Password;//if this is set, a password is required to connect to this server
 
+
+
+				//CRYPTO SETTINGS
+				std::string FullPathToCertificate;
+				std::string FullPathToPrivateKey;
+				std::string PasswordToPrivateKey;
 			};
 		}
 	}

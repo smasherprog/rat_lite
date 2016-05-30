@@ -16,15 +16,7 @@ namespace SL {
 			public:
 
 				HttpsListener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent,  std::shared_ptr<Network::Server_Config> config);
-				//no copy allowed
-				HttpsListener(const HttpsListener&) = delete;
-				HttpsListener(HttpsListener&&) = delete;
-				//no copy allowed
-				HttpsListener& operator=(HttpsListener&&) = delete;
-				HttpsListener& operator=(const HttpsListener&) = delete;
 				~HttpsListener();
-
-
 
 			};
 

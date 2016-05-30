@@ -34,6 +34,9 @@
     <Filter Include="Client\UI">
       <UniqueIdentifier>{78b17f96-21b4-4fc2-8fb5-47a658a53ae3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Crypto">
+      <UniqueIdentifier>{4f017616-975a-42a2-a515-f69d0622ef74}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp">
@@ -47,9 +50,6 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)ServerNetworkDriver.cpp">
       <Filter>Network\Driver</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Server.cpp">
-      <Filter>Server</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)ApplicationDirectory.cpp">
       <Filter>Utilities</Filter>
@@ -109,14 +109,17 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpsSocket.cpp">
       <Filter>Network\Socket</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.cpp">
       <Filter>Network\Driver</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp">
+      <Filter>Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)RA_Server.cpp">
+      <Filter>Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,9 +130,6 @@
       <Filter>Capturing</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)Packet.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Server_Config.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SocketStats.h">
@@ -152,9 +152,6 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)ServerNetworkDriver.h">
       <Filter>Network\Driver</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Server.h">
-      <Filter>Server</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h">
       <Filter>Utilities</Filter>
@@ -250,9 +247,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsSocket.h">
       <Filter>Network\Socket</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.h">
       <Filter>Network\Driver</Filter>
     </ClInclude>
@@ -262,6 +256,18 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h">
+      <Filter>Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Server_Config.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)RA_Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Client_Config.h">
+      <Filter>Client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">
@@ -269,6 +275,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+      <Filter>wwwroot</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

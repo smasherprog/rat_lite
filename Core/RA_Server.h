@@ -29,6 +29,7 @@ namespace SL {
 				int Run();
 				void Stop(bool block);
 				Server_Status get_Status()const;
+				static std::string Validate_Settings(std::shared_ptr<Network::Server_Config> config);
 
 #if __ANDROID__
 				void OnImage(char* buf, int width, int height);

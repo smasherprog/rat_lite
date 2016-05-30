@@ -10,10 +10,12 @@
 #include "Server_Config.h"
 #include "Keyboard.h"
 #include "IBaseNetworkDriver.h"
+#include "crypto.h"
 
 #include <thread>
 #include <mutex>
 #include <string.h>
+#include <assert.h>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -193,6 +195,17 @@ void SL::Remote_Access_Library::Server::RA_Server::Stop(bool block)
 SL::Remote_Access_Library::Server_Status SL::Remote_Access_Library::Server::RA_Server::get_Status() const
 {
 	return _ServerImpl->get_Status();
+}
+
+std::string SL::Remote_Access_Library::Server::RA_Server::Validate_Settings(std::shared_ptr<Network::Server_Config> config)
+{
+	std::string ret;
+	assert(config.get()!=nullptr);
+	ret += Crypto::ValidateCertificate(config->FullPathToCertificate);
+	ret += Crypto::ValidatePrivateKey(config->FullPathToPrivateKey, config->PasswordToPrivateKey);
+	if (!SL::Directory_Exists(config->WWWRoot)) ret += "You must supply a valid folder for wwwroot!\n";
+
+	return ret;
 }
 #if __ANDROID__
 void SL::Remote_Access_Library::Server::RA_Server::OnImage(char* buf, int width, int height)

@@ -2,12 +2,15 @@
 #include "stdafx.h"
 
 #include <FL/Fl.H>
+#include <FL/fl_ask.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Tooltip.H>
 #include <Fl/Fl_Check_Button.H>
 #include <FL/x.H>               // needed for fl_display
+#include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Secret_Input.H>
 
 #include <memory>
 #include <string>
@@ -39,6 +42,11 @@ namespace SL {
 					Fl_Check_Button* _GrayScaleImage = nullptr;
 					Fl_Check_Button* _IgnoreIncomingMouse = nullptr;
 					Fl_Check_Button* _IgnoreIncomingKeyboard = nullptr;
+
+					Fl_Input* _FullPathToCertificate = nullptr;
+
+					Fl_Input* _FullPathToPrivateKey = nullptr;
+					Fl_Secret_Input* _PasswordToPrivateKey = nullptr;
 
 					Fl_Check_Button* _IgnoreIncomingMouseEvents_Checkbox = nullptr;
 
@@ -105,15 +113,21 @@ namespace SL {
 						}
 						else {
 							auto config = ptr->config;
-							if (ptr->Runner.joinable()) ptr->Runner.join();
-							ptr->_LogWindow->AddMessage("Starting Service");
-							ptr->Runner = std::thread([ptr, config]() {
-								auto shrdptr = std::make_shared<RA_Server>(config, ptr);
-								ptr->_Server = shrdptr;//assign the weak ptr for tracking
-								shrdptr->Run();
-							});
-							ptr->StartStopBtn->label("Stop");
-							ptr->StartStopBtn->color(FL_BLUE);
+							auto ret = RA_Server::Validate_Settings(config);//check settings
+							if (!ret.empty()) {
+								fl_alert("%s", ret.c_str());
+							}
+							else {
+								if (ptr->Runner.joinable()) ptr->Runner.join();
+								ptr->_LogWindow->AddMessage("Starting Service");
+								ptr->Runner = std::thread([ptr, config]() {
+									auto shrdptr = std::make_shared<RA_Server>(config, ptr);
+									ptr->_Server = shrdptr;//assign the weak ptr for tracking
+									shrdptr->Run();
+								});
+								ptr->StartStopBtn->label("Stop");
+								ptr->StartStopBtn->color(FL_BLUE);
+							}
 						}
 					}
 					static void Menu_CB(Fl_Widget*w, void*data) {
@@ -128,6 +142,11 @@ namespace SL {
 						// How to handle callbacks..
 						if (strcmp(picked, "File/Quit") == 0) Fl::delete_widget(cWindow);
 						if (strcmp(picked, "File/Log") == 0)  _LogWindow->Show();
+					}
+					static void GenerateCerts(Fl_Widget*w, void*data) {
+						UNUSED(w);
+						auto p = (ConnectionInfoWindowImpl*)data;
+						//GENERATE CERT STUFF MM KAY!!
 					}
 					static void SGrayScaleImageCB(Fl_Widget*w, void*data) {
 						UNUSED(w);
@@ -164,6 +183,52 @@ namespace SL {
 						auto p = (ConnectionInfoWindowImpl*)data;
 						p->config->ScreenImageCaptureRate = p->_ScreenCaptureRate->value();
 					}
+					static void _FullPathToCertificateCB(Fl_Widget*w, void*data) {
+						UNUSED(w);
+						auto p = (ConnectionInfoWindowImpl*)data;
+						Fl_File_Chooser chooser(".",                        // directory
+							"Certificate Filec (*.crt,*.pem)",                        // filter
+							Fl_File_Chooser::SINGLE,     // chooser type
+							"Select the Certificate file");        // title
+						chooser.preview(0);//no preview
+						chooser.show();
+						// Block until user picks something.
+						while (chooser.shown())
+						{
+							Fl::wait();
+						}
+						if (chooser.value() == NULL) return;//cancel was hit
+						p->_FullPathToCertificate->value(chooser.value());
+						p->config->FullPathToCertificate = chooser.value();
+					}
+					static void _FullPathToPrivateKeyCB(Fl_Widget*w, void*data) {
+						UNUSED(w);
+						auto p = (ConnectionInfoWindowImpl*)data;
+						Fl_File_Chooser chooser(".",                        // directory
+							"Private Key Files (*.key,*.pem)",                        // filter
+							Fl_File_Chooser::SINGLE,     // chooser type
+							"Select the Private Key file");        // title
+						chooser.preview(0);//no preview
+						chooser.show();
+						// Block until user picks something.
+						while (chooser.shown())
+						{
+							Fl::wait();
+						}
+						if (chooser.value() == NULL) return;//cancel was hit
+						p->_FullPathToPrivateKey->value(chooser.value());
+						p->config->FullPathToPrivateKey = chooser.value();
+					}
+
+					static void _PasswordToPrivateKeyCB(Fl_Widget*w, void*data) {
+						UNUSED(w);
+						auto p = (ConnectionInfoWindowImpl*)data;
+						p->config->PasswordToPrivateKey = p->_PasswordToPrivateKey->value();
+					}
+
+					
+
+
 					void Init() {
 						auto colwidth = 500;
 						auto startleft = 200;
@@ -175,6 +240,7 @@ namespace SL {
 
 						_MenuBar = new Fl_Menu_Bar(0, 0, cWindow->w(), 30);
 						_MenuBar->add("File/Quit", 0, Menu_CB, (void*)this);
+						_MenuBar->add("Certificate/Generate", 0, GenerateCerts, (void*)this);
 						_MenuBar->add("File/Log", 0, Menu_CB, (void*)this);
 						workingy += 30;
 
@@ -228,8 +294,28 @@ namespace SL {
 						_ScreenCaptureRate->bounds(100, 1000);
 						_ScreenCaptureRate->callback(_ScreenCaptureRateCB, this);
 						_ScreenCaptureRate->value(config->ScreenImageCaptureRate);
+						workingy += 24;
 
+					
+						_FullPathToCertificate = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Path to Certificate: ");
+						_FullPathToCertificate->tooltip("This is the full path to the certificate file");
+						_FullPathToCertificate->align(FL_ALIGN_LEFT);
+						_FullPathToCertificate->readonly(1);
+						_FullPathToCertificate->callback(_FullPathToCertificateCB, this);
+						workingy += 24;
 
+						_FullPathToPrivateKey = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Path to Private Key: ");
+						_FullPathToPrivateKey->tooltip("This is the full path to the private key file");
+						_FullPathToPrivateKey->align(FL_ALIGN_LEFT);
+						_FullPathToPrivateKey->readonly(1);
+						_FullPathToPrivateKey->callback(_FullPathToPrivateKeyCB,this);
+						workingy += 24;
+
+						_PasswordToPrivateKey = new Fl_Secret_Input(startleft, workingy, colwidth - startleft, 20, "Private Key Password: ");
+						_PasswordToPrivateKey->tooltip("This is the password needed to open the Private Keyfile");
+						_PasswordToPrivateKey->align(FL_ALIGN_LEFT);
+						_PasswordToPrivateKey->callback(_PasswordToPrivateKeyCB, this);
+						workingy += 24;
 
 						workingy += 30;
 						StartStopBtn = new Fl_Button(0, cWindow->h() - 30, cWindow->w(), 30, "Start");

@@ -72,6 +72,7 @@ namespace SL {
 
 					cWindow = new Fl_Window(400, 420, 300, 70, "Connect to Host");
 					bInput = new Fl_Input(50, 0, 150, 30, "Host: ");
+				
 					checkbx = new Fl_Check_Button(60, 40, 100, 14, " Scaling");
 					checkbx->align(FL_ALIGN_LEFT);
 					checkbx->callback(setscale, this);

@@ -53,6 +53,9 @@ namespace SL {
 			std::string Createdhparams(std::string savelocation, std::string filename, int bits = 3072);
 			//below is a 3072 bit dhparm I generated. This does not need to be kept secret.. it takes some time to generate these . . . 
 
+			std::string ValidateCertificate(const std::string& fullpathtocert);
+			std::string ValidatePrivateKey(const std::string& fullpathtoprivatekey, std::string& password);
+
 			const std::string dhparams = "-----BEGIN DH PARAMETERS-----"
 				"MIIBCAKCAQEAzPjrDCNwq0bYz5xi72GM4EoWjqwmaAXFcY7vR6+nDpeeKpeYg8XS"
 				"tdjCwyaIRaYO3tzZxTbjdgnCbksVQrRKscefnba5zguqnqvaGL7rHNwdqaQq7rTp"

@@ -60,11 +60,13 @@ namespace SL {
 			public:
 
 				WSSocketImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netdriver, std::shared_ptr<WSSAsio_Context> impl) :
-					_socket(_WSSAsio_Context->io_service, _WSSAsio_Context->ssl_context),
-					_read_deadline(_WSSAsio_Context->io_service),
-					_write_deadline(_WSSAsio_Context->io_service),
-					_io_service(_WSSAsio_Context->io_service),
-					_IBaseNetworkDriver(netdriver)
+
+					_socket(impl->io_service, impl->ssl_context),
+					_read_deadline(impl->io_service),
+					_write_deadline(impl->io_service),
+					_io_service(impl->io_service),
+					_IBaseNetworkDriver(netdriver),
+					_WSSAsio_Context(impl)
 				{
 					_read_deadline.expires_at(boost::posix_time::pos_infin);
 					_write_deadline.expires_at(boost::posix_time::pos_infin);

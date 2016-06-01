@@ -10,6 +10,7 @@
 #include "Logging.h"
 #include "Keyboard.h"
 #include "ISocket.h"
+#include "Client_Config.h"
 
 #include <assert.h>
 
@@ -21,7 +22,8 @@ namespace SL {
 				IClientDriver* _IClientDriver;
 				std::shared_ptr<Network::WSSocket> _Socket;
 
-				std::string _dst_host, _dst_port;
+				std::string _dst_host;
+
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
@@ -70,15 +72,15 @@ namespace SL {
 
 				}
 				bool _ConectedToSelf = false;
-				std::shared_ptr<Network::Server_Config> _Config;
+				std::shared_ptr<Network::Client_Config> _Config;
 			public:
-				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Server_Config> config, const char * dst_host, const char * dst_port) : _IClientDriver(r), _Config(config), _dst_host(dst_host), _dst_port(dst_port) {
+				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : _IClientDriver(r), _Config(config), _dst_host(dst_host){
 
 				}
 				
 				void Start() {
 					Stop();
-					_Socket = WSSocket::connect(this, _dst_host.c_str(), _dst_port.c_str());
+					_Socket = WSSocket::connect(_Config.get(), this, _dst_host.c_str());
 					_ConectedToSelf = (std::string("127.0.0.1") == _dst_host) || (std::string("localhost") == _dst_host) || (std::string("::1") == _dst_host);
 
 				}
@@ -134,7 +136,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, std::shared_ptr<Network::Server_Config> config, const char * dst_host, const char * dst_port) : _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r, config, dst_host, dst_port))
+SL::Remote_Access_Library::Network::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r, config, dst_host))
 {
 
 }

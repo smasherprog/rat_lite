@@ -17,6 +17,7 @@
 #include "crypto.h"
 #include "Logging.h"
 #include "Server_Config.h"
+#include "Client_Config.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -564,7 +565,23 @@ namespace SL {
 						if (ec) self->close(std::string("send_close ") + ec.message());
 					});
 				}
+				bool verify_certificate(bool preverified, boost::asio::ssl::verify_context& ctx)
+				{
+					// The verify callback can be used to check whether the certificate that is
+					// being presented is valid for the peer. For example, RFC 2818 describes
+					// the steps involved in doing this for HTTPS. Consult the OpenSSL
+					// documentation for more details. Note that the callback is called once
+					// for each certificate in the certificate chain, starting from the root
+					// certificate authority.
 
+					// In this example we will simply print the certificate's subject name.
+					char subject_name[256];
+					X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+					X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+					std::cout << "Verifying " << subject_name << "\n";
+
+					return preverified;
+				}
 
 			};
 
@@ -621,20 +638,41 @@ unsigned short SL::Remote_Access_Library::Network::WSSocket::get_port() const
 {
 	return _WSSocketImpl->get_port();
 }
-
-std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_Library::Network::WSSocket::connect(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char * host, const char * port)
+bool verify_certificate(bool preverified,
+	boost::asio::ssl::verify_context& ctx)
 {
-	auto sock = std::make_shared<WSSocketImpl>(driver, std::make_shared<WSSAsio_Context>());
+	// The verify callback can be used to check whether the certificate that is
+	// being presented is valid for the peer. For example, RFC 2818 describes
+	// the steps involved in doing this for HTTPS. Consult the OpenSSL
+	// documentation for more details. Note that the callback is called once
+	// for each certificate in the certificate chain, starting from the root
+	// certificate authority.
+
+	// In this example we will simply print the certificate's subject name.
+	char subject_name[256];
+	X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+	X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+	std::cout << "Verifying " << subject_name << "\n";
+
+	return preverified;
+}
+
+std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_Library::Network::WSSocket::connect(Client_Config* config, IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char * host)
+{
+	auto io_runner = std::make_shared<WSSAsio_Context>();
+	auto sock = std::make_shared<WSSocketImpl>(driver, io_runner);
 	auto _socket = std::make_shared<WSSocket>(sock);
+	io_runner->ssl_context.load_verify_file(config->FullPathToCertificate);
 
 	sock->_Host = host != nullptr ? host : "";
-	sock->_Port = port != nullptr ? port : "";
+	sock->_Port = std::to_string(config->WebSocketTLSLPort);
 	assert(sock->_Host.size() > 2);
 	assert(sock->_Port.size() > 0);
 	sock->_Server = false;
 
 	boost::asio::ip::tcp::resolver resolver(sock->_io_service);
-	boost::asio::ip::tcp::resolver::query query(host, port);
+
+	boost::asio::ip::tcp::resolver::query query(sock->_Host, sock->_Port);
 	boost::system::error_code ercode;
 	auto endpoint = resolver.resolve(query, ercode);
 	if (ercode) {
@@ -642,10 +680,22 @@ std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_
 	}
 	else {
 
+		sock->_socket.set_verify_mode(boost::asio::ssl::verify_peer);
+		sock->_socket.set_verify_callback(std::bind(&WSSocketImpl::verify_certificate, sock.get(), std::placeholders::_1, std::placeholders::_2));
 		boost::asio::async_connect(sock->_socket.lowest_layer(), endpoint, [sock](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator)
 		{
-			if (!sock->closed()) {
-				sock->handshake();
+			if (!ec)
+			{
+				sock->_socket.async_handshake(boost::asio::ssl::stream_base::client, [sock](const boost::system::error_code& ec) {
+					if (!ec)
+					{
+						if (!sock->closed()) {
+							sock->handshake();
+						}
+						else sock->close(std::string("!sock->closed() "));
+					}
+					else sock->close(std::string("async_handshake ") + ec.message());
+				});
 			}
 			else sock->close(std::string("async_connect ") + ec.message());
 		});
@@ -669,7 +719,7 @@ namespace SL {
 				IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver;
 				boost::asio::const_buffer DhParams;
 				WebSocketListinerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
-					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSListenPort)),
+					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort)),
 					_config(config),
 					_WSSAsio_Context(asiocontext),
 					_IBaseNetworkDriver(netevent),
@@ -681,7 +731,7 @@ namespace SL {
 						| boost::asio::ssl::context::single_dh_use);
 					boost::system::error_code ec;
 					_WSSAsio_Context->ssl_context.set_password_callback(bind(&WebSocketListinerImpl::get_password, this), ec);
-					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error "<<ec.message());
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
 					ec.clear();
 					_WSSAsio_Context->ssl_context.use_tmp_dh(DhParams, ec);
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());

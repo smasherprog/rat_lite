@@ -44,54 +44,54 @@ namespace SL {
 					std::function<void(bool)> CertGenCB;
 
 					GenerateCertificateWindowImpl(std::shared_ptr<Network::Server_Config> ptr, std::function<void(bool)>& certgen) : Fl_Window(400, 400, 800, 250, "Generate Self-Signed Certificate"), Config(ptr), CertGenCB(certgen) {
-						auto colwidth = 800;
+					
 						auto startleft = 200;
 						auto workingy = 0;
 
-						_FullPathToSaveFolder = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Path to Certificate: ");
+						_FullPathToSaveFolder = new Fl_Input(startleft, workingy, w() - startleft, 20, "Path to Certificate: ");
 						_FullPathToSaveFolder->tooltip("This is the full path to the certificate file");
 						_FullPathToSaveFolder->align(FL_ALIGN_LEFT);
 						_FullPathToSaveFolder->readonly(1);
 						_FullPathToSaveFolder->callback(_FullPathToSaveFolderCB, this);
 						workingy += 24;
 
-						_Filename = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Filename Prefix: ");
+						_Filename = new Fl_Input(startleft, workingy, w() - startleft, 20, "Filename Prefix: ");
 						_Filename->tooltip("This will be the prefix for the filename");
 						_Filename->align(FL_ALIGN_LEFT);
 						workingy += 24;
 
-						_PasswordToPrivateKey = new Fl_Secret_Input(startleft, workingy, colwidth - startleft, 20, "Private Key Password: ");
+						_PasswordToPrivateKey = new Fl_Secret_Input(startleft, workingy, w() - startleft, 20, "Private Key Password: ");
 						_PasswordToPrivateKey->tooltip("This is the password needed to open the Private Keyfile");
 						_PasswordToPrivateKey->align(FL_ALIGN_LEFT);
 						_PasswordToPrivateKey->callback(_PasswordToPrivateKeyCB, this);
 						workingy += 24;
 
-						_CommonName = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Common Name: ");
+						_CommonName = new Fl_Input(startleft, workingy, w() - startleft, 20, "Common Name: ");
 						_CommonName->tooltip("This should be the domain name of the host: i.e.  google.com    or      cnn.com      or localhost");
 						_CommonName->align(FL_ALIGN_LEFT);
 						_CommonName->value("localhost");
 						workingy += 24;
 
-						_CompanyName = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Company Name: ");
+						_CompanyName = new Fl_Input(startleft, workingy, w() - startleft, 20, "Company Name: ");
 						_CompanyName->tooltip("This should be the name of your organization: Microsoft, or Bank of America.");
 						_CompanyName->align(FL_ALIGN_LEFT);
 						_CompanyName->value("Company Name");
 						workingy += 24;
 
-						_Country = new Fl_Input(startleft, workingy, colwidth - startleft, 20, "Country: ");
+						_Country = new Fl_Input(startleft, workingy, w() - startleft, 20, "Country: ");
 						_Country->tooltip("This should be the Country your Organization");
 						_Country->align(FL_ALIGN_LEFT);
 						_Country->value("USA");
 						workingy += 24;
 
-						_DaysValid = new Fl_Value_Input(startleft, workingy, colwidth - startleft, 20, "Days Valid: ");
+						_DaysValid = new Fl_Value_Input(startleft, workingy, w() - startleft, 20, "Days Valid: ");
 						_DaysValid->tooltip("Days this certificate should be valid.");
 						_DaysValid->align(FL_ALIGN_LEFT);
 						_DaysValid->range(1, 365 * 5);
 						_DaysValid->value(365.0);
 						workingy += 24;
 
-						_bitstrength = new Fl_Input_Choice(startleft, workingy, colwidth - startleft, 20, "Encryption Strength: ");
+						_bitstrength = new Fl_Input_Choice(startleft, workingy, w() - startleft, 20, "Encryption Strength: ");
 						_bitstrength->tooltip("Certificate Encryption Strength");
 						_bitstrength->align(FL_ALIGN_LEFT);
 						_bitstrength->add("128 bit");

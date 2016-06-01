@@ -14,13 +14,13 @@ namespace SL {
 		namespace Network {
 			class IClientDriver;
 			class ClientNetworkDriverImpl;
-			struct Server_Config;
+			struct Client_Config;
 
 			class ClientNetworkDriver {
 				ClientNetworkDriverImpl* _ClientNetworkDriverImpl;
 
 			public:
-				ClientNetworkDriver(IClientDriver* r, std::shared_ptr<Server_Config> config, const char* dst_host, const char* dst_port);
+				ClientNetworkDriver(IClientDriver* r, std::shared_ptr<Client_Config> config, const char* dst_host);
 				virtual ~ClientNetworkDriver();
 
 				//after creating ServerNetworkDriver, Start() must be called to start the network processessing

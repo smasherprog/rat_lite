@@ -147,8 +147,8 @@ namespace SL {
 					return pack;
 				}
 				void Start() {
-					if (_config->HttpTLSListenPort > 0) {
-						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port " << _config->HttpTLSListenPort);
+					if (_config->HttpTLSPort > 0) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port " << _config->HttpTLSPort);
 						_Listener = std::make_shared<HttpsListener>(this, _config);
 					}
 				}

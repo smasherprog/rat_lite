@@ -11,6 +11,7 @@ namespace SL {
 			class WebSocketListinerImpl;
 			class Packet;
 			struct Server_Config;
+			struct Client_Config;
 			class WSSListener {
 				std::shared_ptr<WebSocketListinerImpl> _WebSocketListinerImpl;
 			public:
@@ -43,7 +44,7 @@ namespace SL {
 				virtual std::string get_ipv4_address() const override;
 				virtual unsigned short get_port() const override;
 			
-				static std::shared_ptr<WSSocket> connect(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char* host, const char* port);
+				static std::shared_ptr<WSSocket> connect(Client_Config* config, IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char* host);
 
 			};
 		}

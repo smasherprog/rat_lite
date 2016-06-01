@@ -66,8 +66,8 @@ namespace SL {
 					ConnectionInfoWindowImpl() {
 						//init defaults
 						config = std::make_shared<Network::Server_Config>();
-						config->WebSocketTLSListenPort = 6001;// listen for websockets
-						config->HttpTLSListenPort = 8080;
+						config->WebSocketTLSLPort = 6001;// listen for websockets
+						config->HttpTLSPort = 8080;
 						auto searchpath = executable_path(nullptr);
 						auto exeindex = searchpath.find_last_of('\\');
 						if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');

@@ -138,7 +138,7 @@ namespace SL {
 
 				void Start() {
 					Stop();
-					if (_Config->WebSocketTLSListenPort > 0) {
+					if (_Config->WebSocketTLSLPort > 0) {
 						_Listener = std::make_unique<WSSListener>(this, _Config);
 					}
 				}

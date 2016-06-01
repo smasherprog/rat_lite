@@ -396,7 +396,7 @@ namespace SL {
 				HttpsServerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<HTTPSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 					_IBaseNetworkDriver(netevent),
 					_config(config),
-					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSListenPort))
+					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort))
 				{
 					asiocontext->ssl_context.set_options(
 						boost::asio::ssl::context::default_workarounds

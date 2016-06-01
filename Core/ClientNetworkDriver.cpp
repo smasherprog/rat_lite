@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ClientNetworkDriver.h"
-#include "WSSocket.h"
+#include "WebSocket.h"
 #include "Shapes.h"
 #include "IClientDriver.h"
 #include "Image.h"
@@ -20,7 +20,7 @@ namespace SL {
 
 			class ClientNetworkDriverImpl : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
 				IClientDriver* _IClientDriver;
-				std::shared_ptr<Network::WSSocket> _Socket;
+				std::shared_ptr<Network::ISocket> _Socket;
 
 				std::string _dst_host;
 
@@ -80,21 +80,29 @@ namespace SL {
 				
 				void Start() {
 					Stop();
-					_Socket = WSSocket::connect(_Config.get(), this, _dst_host.c_str());
+					WebSocket::Connect(_Config.get(), this, _dst_host.c_str());
 					_ConectedToSelf = (std::string("127.0.0.1") == _dst_host) || (std::string("localhost") == _dst_host) || (std::string("::1") == _dst_host);
 
 				}
 				
 				void Stop() {
 					if (_Socket) _Socket->close("Stopping Listener");
-					_Socket.reset();
+					_Socket.reset();//decrement count
 				}
 				virtual ~ClientNetworkDriverImpl() {
 					Stop();
 				}
-				virtual bool ValidateUntrustedCert(const std::shared_ptr<ISocket>& socket)override { UNUSED(socket); return true; }
-				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnConnect(socket); }
-				virtual void OnClose(const std::shared_ptr<ISocket>& socket) override { _IClientDriver->OnClose(socket); }
+				virtual bool ValidateUntrustedCert(const std::shared_ptr<ISocket>& socket) override { 
+					UNUSED(socket);
+					return true;
+				}
+				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override { 
+					_Socket = socket;
+					_IClientDriver->OnConnect(socket); 
+				}
+				virtual void OnClose(const std::shared_ptr<ISocket>& socket) override {
+					_IClientDriver->OnClose(socket); 
+				}
 
 				virtual void OnReceive(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) override {
 
@@ -118,11 +126,19 @@ namespace SL {
 
 				}
 				void SendMouse(const Input::MouseEvent& m) {
+					if (!_Socket) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendMouse called on a socket that is not open yet");
+						return;
+					}
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(m));
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
 				}
 				void SendKey(const Input::KeyEvent & m) {
+					if (!_Socket) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
+						return;
+					}
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::KEYEVENT), sizeof(m));
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);

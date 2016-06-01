@@ -1,5 +1,15 @@
 #include "stdafx.h"
-#include "WSSocket.h"
+#include "WebSocket.h"
+#include "Packet.h"
+#include "Compression/zstd.h"
+#include "Logging.h"
+#include "HttpHeader.h"
+#include "crypto.h"
+#include "Logging.h"
+#include "Server_Config.h"
+#include "Client_Config.h"
+#include "ISocket.h"
+
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/deadline_timer.hpp>
@@ -10,14 +20,7 @@
 #include <memory>
 #include <random>
 
-#include "Packet.h"
-#include "Compression/zstd.h"
-#include "Logging.h"
-#include "HttpHeader.h"
-#include "crypto.h"
-#include "Logging.h"
-#include "Server_Config.h"
-#include "Client_Config.h"
+
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -78,6 +81,7 @@ namespace SL {
 
 
 				virtual ~WSSocketImpl() {
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "~WSSocketImpl");
 					CancelTimers();
 				}
 				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
@@ -168,8 +172,8 @@ namespace SL {
 					});
 				}
 				virtual void close(std::string reason) override {
-					if (closed()) return;
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: " << reason);
+					if (closed()) return;
 					_Closed = true;
 					CancelTimers();
 					_IBaseNetworkDriver->OnClose(shared_from_this());
@@ -286,6 +290,7 @@ namespace SL {
 							std::shared_ptr<boost::asio::streambuf> read_buffer(new boost::asio::streambuf);
 							boost::asio::async_read_until(self->_socket, *read_buffer, "\r\n\r\n", [read_buffer, accept_sha1, self](const boost::system::error_code& ec, size_t bytes_transferred) {
 								if (!ec) {
+									self->writeexpire_from_now(0);//make sure to reset the write timmer
 									SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Read Handshake bytes " << bytes_transferred);
 									std::istream stream(read_buffer.get());
 									self->_Header = std::move(Parse("1.1", stream));
@@ -307,7 +312,7 @@ namespace SL {
 
 				void readheader()
 				{
-					readexpire_from_now(_readtimeout);
+					readexpire_from_now(0);
 					auto self(shared_from_this());
 					boost::asio::async_read(_socket, boost::asio::buffer(_readheaderbuffer, 2), [self](const boost::system::error_code& ec, size_t bytes_transferred) {
 						if (!ec) {
@@ -589,79 +594,11 @@ namespace SL {
 	}
 }
 
-
-
-SL::Remote_Access_Library::Network::WSSocket::WSSocket(std::shared_ptr<WSSocketImpl> impl)
-	: _WSSocketImpl(impl) { }
-
-SL::Remote_Access_Library::Network::WSSocket::~WSSocket()
-{
-	_WSSocketImpl->close("~WSSocket");//make sure the lower level closes
-}
-
-void SL::Remote_Access_Library::Network::WSSocket::send(Packet & pack)
-{
-	_WSSocketImpl->send(pack);
-}
-
-void SL::Remote_Access_Library::Network::WSSocket::close(std::string reason)
-{
-	_WSSocketImpl->close(reason);
-}
-
-bool SL::Remote_Access_Library::Network::WSSocket::closed()
-{
-	return _WSSocketImpl->closed();
-}
-
-SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Network::WSSocket::get_SocketStats() const
-{
-	return _WSSocketImpl->get_SocketStats();
-}
-
-void SL::Remote_Access_Library::Network::WSSocket::set_ReadTimeout(int s)
-{
-	_WSSocketImpl->set_ReadTimeout(s);
-}
-
-void SL::Remote_Access_Library::Network::WSSocket::set_WriteTimeout(int s)
-{
-	_WSSocketImpl->set_WriteTimeout(s);
-}
-
-std::string SL::Remote_Access_Library::Network::WSSocket::get_ipv4_address() const
-{
-	return _WSSocketImpl->get_ipv4_address();
-}
-
-unsigned short SL::Remote_Access_Library::Network::WSSocket::get_port() const
-{
-	return _WSSocketImpl->get_port();
-}
-bool verify_certificate(bool preverified,
-	boost::asio::ssl::verify_context& ctx)
-{
-	// The verify callback can be used to check whether the certificate that is
-	// being presented is valid for the peer. For example, RFC 2818 describes
-	// the steps involved in doing this for HTTPS. Consult the OpenSSL
-	// documentation for more details. Note that the callback is called once
-	// for each certificate in the certificate chain, starting from the root
-	// certificate authority.
-
-	// In this example we will simply print the certificate's subject name.
-	char subject_name[256];
-	X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-	X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
-	std::cout << "Verifying " << subject_name << "\n";
-
-	return preverified;
-}
-
-std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_Library::Network::WSSocket::connect(Client_Config* config, IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char * host)
+void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* config, IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char * host)
 {
 	auto io_runner = std::make_shared<WSSAsio_Context>();
 	auto sock = std::make_shared<WSSocketImpl>(driver, io_runner);
-	auto _socket = std::make_shared<WSSocket>(sock);
+
 	io_runner->ssl_context.load_verify_file(config->FullPathToCertificate);
 
 	sock->_Host = host != nullptr ? host : "";
@@ -676,7 +613,7 @@ std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_
 	boost::system::error_code ercode;
 	auto endpoint = resolver.resolve(query, ercode);
 	if (ercode) {
-		_socket->close(std::string("async_connect ") + ercode.message());
+		sock->close(std::string("async_connect ") + ercode.message());
 	}
 	else {
 
@@ -700,7 +637,6 @@ std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_
 			else sock->close(std::string("async_connect ") + ec.message());
 		});
 	}
-	return _socket;
 }
 
 
@@ -709,87 +645,88 @@ std::shared_ptr<SL::Remote_Access_Library::Network::WSSocket> SL::Remote_Access_
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
+			namespace WebSocket {
+				class ListinerImpl : public std::enable_shared_from_this<ListinerImpl> {
+				public:
 
-			class WebSocketListinerImpl : public std::enable_shared_from_this<WebSocketListinerImpl> {
-			public:
-
-				boost::asio::ip::tcp::acceptor _acceptor;
-				std::shared_ptr<Network::Server_Config> _config;
-				std::shared_ptr<WSSAsio_Context> _WSSAsio_Context;
-				IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver;
-				boost::asio::const_buffer DhParams;
-				WebSocketListinerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
-					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort)),
-					_config(config),
-					_WSSAsio_Context(asiocontext),
-					_IBaseNetworkDriver(netevent),
-					DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
-				{
-					_WSSAsio_Context->ssl_context.set_options(
-						boost::asio::ssl::context::default_workarounds
-						| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
-						| boost::asio::ssl::context::single_dh_use);
-					boost::system::error_code ec;
-					_WSSAsio_Context->ssl_context.set_password_callback(bind(&WebSocketListinerImpl::get_password, this), ec);
-					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
-					ec.clear();
-					_WSSAsio_Context->ssl_context.use_tmp_dh(DhParams, ec);
-					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
-					ec.clear();
-					_WSSAsio_Context->ssl_context.use_certificate_chain_file(config->FullPathToCertificate, ec);
-					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
-					ec.clear();
-					_WSSAsio_Context->ssl_context.use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem, ec);
-					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());
-					ec.clear();
-				}
-				std::string get_password() const
-				{
-					return _config->PasswordToPrivateKey;
-				}
-				virtual ~WebSocketListinerImpl() {
-					Stop();
-				}
-
-				void Start() {
-					auto self(shared_from_this());
-					auto sock = std::make_shared<WSSocketImpl>(_IBaseNetworkDriver, _WSSAsio_Context);
-					auto _socket = std::make_shared<WSSocket>(sock);
-					_acceptor.async_accept(sock->_socket.lowest_layer(), [self, _socket, sock](const boost::system::error_code& ec)
+					boost::asio::ip::tcp::acceptor _acceptor;
+					std::shared_ptr<Network::Server_Config> _config;
+					std::shared_ptr<WSSAsio_Context> _WSSAsio_Context;
+					IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver;
+					boost::asio::const_buffer DhParams;
+					ListinerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
+						_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->WebSocketTLSLPort)),
+						_config(config),
+						_WSSAsio_Context(asiocontext),
+						_IBaseNetworkDriver(netevent),
+						DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
 					{
-						if (!ec)
-						{
-							sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, _socket, sock](const boost::system::error_code& ec) {
-								if (!ec) {
-									sock->_Server = true;
-									sock->handshake();
-								}
-								self->Start();
-							});
-						}
-						else {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
-						}
-					});
-				}
-				void Stop() {
-					_acceptor.close();
-					_WSSAsio_Context->Stop();
-				}
-			};
+						_WSSAsio_Context->ssl_context.set_options(
+							boost::asio::ssl::context::default_workarounds
+							| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
+							| boost::asio::ssl::context::single_dh_use);
+						boost::system::error_code ec;
+						_WSSAsio_Context->ssl_context.set_password_callback(bind(&ListinerImpl::get_password, this), ec);
+						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
+						ec.clear();
+						_WSSAsio_Context->ssl_context.use_tmp_dh(DhParams, ec);
+						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
+						ec.clear();
+						_WSSAsio_Context->ssl_context.use_certificate_chain_file(config->FullPathToCertificate, ec);
+						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
+						ec.clear();
+						_WSSAsio_Context->ssl_context.use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem, ec);
+						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());
+						ec.clear();
+					}
+					virtual ~ListinerImpl() {
+						Stop();
+					}
+					std::string get_password() const
+					{
+						return _config->PasswordToPrivateKey;
+					}
 
+
+					void Start() {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting Accept");
+						auto self(shared_from_this());
+						auto sock = std::make_shared<WSSocketImpl>(_IBaseNetworkDriver, _WSSAsio_Context);
+						sock->_Server = true;
+						_acceptor.async_accept(sock->_socket.lowest_layer(), [self, sock](const boost::system::error_code& ec)
+						{
+							if (!ec)
+							{
+								sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, sock](const boost::system::error_code& ec) {
+									if (!ec) {
+										sock->handshake();
+									}
+									self->Start();
+								});
+							}
+							else {
+								SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
+							}
+						});
+					}
+					void Stop() {
+						_acceptor.close();
+						_WSSAsio_Context->Stop();
+					}
+				};
+			}
 		}
 	}
 }
 
 
-SL::Remote_Access_Library::Network::WSSListener::WSSListener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<Network::Server_Config> config)
+SL::Remote_Access_Library::Network::WebSocket::Listener::Listener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<Network::Server_Config> config)
 {
-	_WebSocketListinerImpl = std::make_shared<WebSocketListinerImpl>(netevent, std::make_shared<WSSAsio_Context>(), config);
-	_WebSocketListinerImpl->Start();
+	_ListinerImpl = std::make_shared<ListinerImpl>(netevent, std::make_shared<WSSAsio_Context>(), config);
+	_ListinerImpl->Start();
 }
 
-SL::Remote_Access_Library::Network::WSSListener::~WSSListener()
+SL::Remote_Access_Library::Network::WebSocket::Listener::~Listener()
 {
-	_WebSocketListinerImpl->Stop();
+	_ListinerImpl->Stop();
 }

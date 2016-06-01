@@ -64,7 +64,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)ViewerController.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)WSSocket.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)WebSocket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h" />
@@ -116,7 +116,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SocketStats.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)stdafx.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ViewerController.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)WSSocket.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">

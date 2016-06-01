@@ -5,11 +5,12 @@
 #include "Packet.h"
 #include "IServerDriver.h"
 #include "Server_Config.h"
-#include "WSSocket.h"
+#include "WebSocket.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Keyboard.h"
 #include "Logging.h"
+#include "ISocket.h"
 
 #include <mutex>
 #include <assert.h>
@@ -20,7 +21,7 @@ namespace SL {
 
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
 
-				std::shared_ptr<WSSListener> _Listener;
+				std::shared_ptr<WebSocket::Listener> _Listener;
 			
 				IServerDriver* _IServerDriver;
 
@@ -139,7 +140,7 @@ namespace SL {
 				void Start() {
 					Stop();
 					if (_Config->WebSocketTLSLPort > 0) {
-						_Listener = std::make_unique<WSSListener>(this, _Config);
+						_Listener = std::make_unique<WebSocket::Listener>(this, _Config);
 					}
 				}
 				void Stop() {

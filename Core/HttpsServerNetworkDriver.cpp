@@ -8,7 +8,10 @@
 #include "Packet.h"
 #include "MediaTypes.h"
 
+#ifndef __ANDROID__
 #include <boost/filesystem.hpp>
+#endif
+
 #include <string>
 #include <algorithm>
 

@@ -4,9 +4,6 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Utilities {
-			class Point;
-		}
 		namespace Input {
 			struct MouseEvent;
 			struct KeyEvent;

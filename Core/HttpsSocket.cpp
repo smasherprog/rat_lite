@@ -102,6 +102,7 @@ namespace SL {
 				std::string _Host;
 				std::string _Port;
 				bool _Closed = true;
+				bool _Writing = false;
 				int _readtimeout = 5;
 				int _writetimeout = 5;
 				unsigned int _ReadPayload_Length;
@@ -130,11 +131,8 @@ namespace SL {
 					{
 						auto outgoingempty = self->_OutgoingPackets.empty();
 						self->_OutgoingPackets.push_back({ compack, beforesize });
-						if (outgoingempty)
-						{
-							self->writeexpire_from_now(30);
-							self->writeheader();
-						}
+						self->writeheader();
+						
 					});
 				}
 
@@ -242,6 +240,8 @@ namespace SL {
 
 				void writeheader()
 				{
+					if (_Writing) return;//already writing
+					_Writing = true;
 					writeexpire_from_now(_writetimeout);
 					auto& pack = _OutgoingPackets.front().Pack;
 					//the headers below are required... 
@@ -286,6 +286,7 @@ namespace SL {
 					{
 						if (!ec && !self->closed())
 						{
+							self->_Writing = false;
 							assert(byteswritten == packet->Payload_Length);
 							if (!self->_OutgoingPackets.empty()) {
 								self->writeheader();
@@ -345,14 +346,14 @@ namespace SL {
 
 				boost::asio::ip::tcp::acceptor _acceptor;
 				std::shared_ptr<Network::Server_Config> _config;
-				std::shared_ptr<HTTPSAsio_Context> _WSSAsio_Context;
+				std::shared_ptr<HTTPSAsio_Context> _HTTPSAsio_Context;
 				std::shared_ptr<boost::asio::ssl::context> sslcontext;
 				IBaseNetworkDriver* _IBaseNetworkDriver;
 				boost::asio::const_buffer DhParams;
 				HttpsServerImpl(IBaseNetworkDriver* netevent, std::shared_ptr<HTTPSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort)),
 					_config(config),
-					_WSSAsio_Context(asiocontext),
+					_HTTPSAsio_Context(asiocontext),
 					sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12)),
 					_IBaseNetworkDriver(netevent),
 					DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
@@ -388,7 +389,7 @@ namespace SL {
 				void Start() {
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting Accept");
 					auto self(shared_from_this());
-					auto sock = std::make_shared<HttpsSocketImpl>(_IBaseNetworkDriver, _WSSAsio_Context->io_service, sslcontext);
+					auto sock = std::make_shared<HttpsSocketImpl>(_IBaseNetworkDriver, _HTTPSAsio_Context->io_service, sslcontext);
 					sock->_Server = true;
 					_acceptor.async_accept(sock->_socket.lowest_layer(), [self, sock](const boost::system::error_code& ec)
 					{
@@ -408,7 +409,7 @@ namespace SL {
 				}
 				void Stop() {
 					_acceptor.close();
-					_WSSAsio_Context->Stop();
+					_HTTPSAsio_Context->Stop();
 				}
 			};
 		}

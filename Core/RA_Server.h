@@ -23,7 +23,7 @@ namespace SL {
 				std::shared_ptr<ServerImpl> _ServerImpl;
 			public:
 				// to extend your own functionality, pass a pointer to a class derived from Network::IUserNetworkDriver. This class will receive the events and you can extend your own functionality
-				RA_Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* parent = nullptr);
+				RA_Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent = nullptr);
 				~RA_Server();
 
 				int Run();

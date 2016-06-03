@@ -18,11 +18,11 @@ namespace SL {
 					std::shared_ptr<ListinerImpl> _ListinerImpl;
 				public:
 
-					Listener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<Network::Server_Config> config);
+					Listener(IBaseNetworkDriver* netevent, std::shared_ptr<Network::Server_Config> config);
 					~Listener();
 				};
 
-				void Connect(Client_Config* config, IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char* host);
+				void Connect(Client_Config* config, IBaseNetworkDriver* driver, const char* host);
 
 			}
 

@@ -35,7 +35,7 @@ namespace SL {
 
 
 			namespace UI {
-				class ConnectionInfoWindowImpl : public Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>> {
+				class ConnectionInfoWindowImpl : public Network::IBaseNetworkDriver {
 				public:
 
 					Fl_Window* cWindow = nullptr;
@@ -96,7 +96,7 @@ namespace SL {
 						UNUSED(socket);
 						UNUSED(pack);
 					}
-					virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) {
+					virtual void OnClose(const Network::ISocket* socket) {
 						std::ostringstream os;
 						os << "User Disconnected! Ip: " << socket->get_ipv4_address() << " port: " << socket->get_port();
 						_LogWindow->AddMessage(os.str());

@@ -8,6 +8,7 @@
 #include "HttpHeader.h"
 #include "Logging.h"
 #include "Packet.h"
+#include "crypto.h"
 
 #ifndef __ANDROID__
 #include <boost/filesystem.hpp>
@@ -30,14 +31,16 @@ namespace SL {
 
 			public:
 
-				HTTPSAsio_Context() : work(io_service), ssl_context(boost::asio::ssl::context::tlsv12) {
+				HTTPSAsio_Context() : work(io_service) {
 					io_servicethread = std::thread([this]() {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting io_service Factory");
+
 						boost::system::error_code ec;
-						io_service.run(ec);
+						this->io_service.run(ec);
 						if (ec) {
 							SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
 						}
+
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "stopping io_service Factory");
 					});
 				}
@@ -53,11 +56,9 @@ namespace SL {
 				boost::asio::io_service io_service;
 				std::thread io_servicethread;
 				boost::asio::io_service::work work;
-				boost::asio::ssl::context ssl_context;
+
 
 			};
-
-
 
 
 
@@ -66,11 +67,10 @@ namespace SL {
 				std::shared_ptr<HTTPSAsio_Context> _WSSAsio_Context;
 			public:
 
-				HttpsSocketImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netdriver, std::shared_ptr<HTTPSAsio_Context> impl) :
-					_socket(_WSSAsio_Context->io_service, _WSSAsio_Context->ssl_context),
-					_read_deadline(_WSSAsio_Context->io_service),
-					_write_deadline(_WSSAsio_Context->io_service),
-					_io_service(_WSSAsio_Context->io_service),
+				HttpsSocketImpl(IBaseNetworkDriver* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
+					_socket(io_service, *sslcontext),
+					_read_deadline(io_service),
+					_write_deadline(io_service),
 					_IBaseNetworkDriver(netdriver)
 				{
 					_read_deadline.expires_at(boost::posix_time::pos_infin);
@@ -81,14 +81,17 @@ namespace SL {
 				}
 
 
-				~HttpsSocketImpl() {
+				virtual ~HttpsSocketImpl() {
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "~HttpsSocketImpl");
 					CancelTimers();
+					close("~HttpsSocketImpl");
 				}
 
-
+				std::shared_ptr<boost::asio::ssl::context> _ssl_context;
 				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
-				boost::asio::io_service& _io_service;
-				IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver = nullptr;
+
+				IBaseNetworkDriver* _IBaseNetworkDriver = nullptr;
+
 
 				std::deque<OutgoingPacket> _OutgoingPackets;
 				std::vector<char> _IncomingBuffer;
@@ -123,7 +126,7 @@ namespace SL {
 					auto self(shared_from_this());
 					auto beforesize = pack.Payload_Length;
 					auto compack(std::make_shared<Packet>(std::move(pack)));
-					_io_service.post([self, compack, beforesize]()
+					_socket.get_io_service().post([self, compack, beforesize]()
 					{
 						auto outgoingempty = self->_OutgoingPackets.empty();
 						self->_OutgoingPackets.push_back({ compack, beforesize });
@@ -175,7 +178,7 @@ namespace SL {
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: " << reason);
 					_Closed = true;
 					CancelTimers();
-					_IBaseNetworkDriver->OnClose(shared_from_this());
+					_IBaseNetworkDriver->OnClose(this);
 					boost::system::error_code ec;
 					_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 					_socket.lowest_layer().close();
@@ -331,103 +334,69 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Network::HttpsSocket::HttpsSocket(std::shared_ptr<HttpsSocketImpl> impl)
-	: _HttpsSocketImpl(impl) { }
-
-SL::Remote_Access_Library::Network::HttpsSocket::~HttpsSocket()
-{
-	_HttpsSocketImpl->close("~WSSocket");//make sure the lower level closes
-}
-
-void SL::Remote_Access_Library::Network::HttpsSocket::send(Packet & pack)
-{
-	_HttpsSocketImpl->send(pack);
-}
-
-bool SL::Remote_Access_Library::Network::HttpsSocket::closed()
-{
-	return 	_HttpsSocketImpl->closed();
-}
-
-SL::Remote_Access_Library::Network::SocketStats SL::Remote_Access_Library::Network::HttpsSocket::get_SocketStats() const
-{
-	return 	_HttpsSocketImpl->get_SocketStats();
-}
-
-void SL::Remote_Access_Library::Network::HttpsSocket::set_ReadTimeout(int s)
-{
-	_HttpsSocketImpl->set_ReadTimeout(s);
-}
-
-void SL::Remote_Access_Library::Network::HttpsSocket::set_WriteTimeout(int s)
-{
-	_HttpsSocketImpl->set_WriteTimeout(s);
-}
-
-std::string SL::Remote_Access_Library::Network::HttpsSocket::get_ipv4_address() const
-{
-	return _HttpsSocketImpl->get_ipv4_address();
-}
-
-unsigned short SL::Remote_Access_Library::Network::HttpsSocket::get_port() const
-{
-	return _HttpsSocketImpl->get_port();
-}
-
-void SL::Remote_Access_Library::Network::HttpsSocket::close(std::string reason)
-{
-	_HttpsSocketImpl->close(reason);
-}
-
-
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
+
 
 			class HttpsServerImpl : public std::enable_shared_from_this<HttpsServerImpl> {
 			public:
 
 				boost::asio::ip::tcp::acceptor _acceptor;
 				std::shared_ptr<Network::Server_Config> _config;
-				std::shared_ptr<HTTPSAsio_Context> _Asio_Context;
-				IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver;
-
-				HttpsServerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<HTTPSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
-					_IBaseNetworkDriver(netevent),
+				std::shared_ptr<HTTPSAsio_Context> _WSSAsio_Context;
+				std::shared_ptr<boost::asio::ssl::context> sslcontext;
+				IBaseNetworkDriver* _IBaseNetworkDriver;
+				boost::asio::const_buffer DhParams;
+				HttpsServerImpl(IBaseNetworkDriver* netevent, std::shared_ptr<HTTPSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
+					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort)),
 					_config(config),
-					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort))
+					_WSSAsio_Context(asiocontext),
+					sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12)),
+					_IBaseNetworkDriver(netevent),
+					DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
 				{
-					asiocontext->ssl_context.set_options(
+
+					sslcontext->set_options(
 						boost::asio::ssl::context::default_workarounds
 						| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
 						| boost::asio::ssl::context::single_dh_use);
-
-					//_context.set_password_callback(bind(&server::get_password, this))
-					//_context.use_certificate_chain_file("server.pem");
-					//_context.use_private_key_file("server.pem", boost::asio::ssl::context::pem);
-					//_context.use_tmp_dh_file("dh2048.pem");
-				}
-				std::string get_password() const
-				{
-					return "test";
+					boost::system::error_code ec;
+					sslcontext->set_password_callback(bind(&HttpsServerImpl::get_password, this), ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
+					ec.clear();
+					sslcontext->use_tmp_dh(DhParams, ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
+					ec.clear();
+					sslcontext->use_certificate_chain_file(config->FullPathToCertificate, ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
+					ec.clear();
+					sslcontext->use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem, ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());
+					ec.clear();
 				}
 				virtual ~HttpsServerImpl() {
 					Stop();
 				}
+				std::string get_password() const
+				{
+					return _config->PasswordToPrivateKey;
+				}
+
 
 				void Start() {
-
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting Accept");
 					auto self(shared_from_this());
-					auto sock = std::make_shared<HttpsSocketImpl>(_IBaseNetworkDriver, _Asio_Context);
-					auto _socket = std::make_shared<HttpsSocket>(sock);
-					_acceptor.async_accept(sock->_socket.lowest_layer(), [self, _socket, sock](const boost::system::error_code& ec)
+					auto sock = std::make_shared<HttpsSocketImpl>(_IBaseNetworkDriver, _WSSAsio_Context->io_service, sslcontext);
+					sock->_Server = true;
+					_acceptor.async_accept(sock->_socket.lowest_layer(), [self, sock](const boost::system::error_code& ec)
 					{
 						if (!ec)
 						{
-							sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, _socket, sock](const boost::system::error_code& ec) {
+							sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, sock](const boost::system::error_code& ec) {
 								if (!ec) {
-									sock->start();
+									sock->readheader();
 								}
 								self->Start();
 							});
@@ -439,16 +408,16 @@ namespace SL {
 				}
 				void Stop() {
 					_acceptor.close();
-					_Asio_Context->Stop();
+					_WSSAsio_Context->Stop();
 				}
 			};
-
 		}
+
 	}
 }
 
 
-SL::Remote_Access_Library::Network::HttpsListener::HttpsListener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<Network::Server_Config> config)
+SL::Remote_Access_Library::Network::HttpsListener::HttpsListener(IBaseNetworkDriver* netevent, std::shared_ptr<Network::Server_Config> config)
 {
 	_HttpsServerImpl = std::make_shared<HttpsServerImpl>(netevent, std::make_shared<HTTPSAsio_Context>(), config);
 	_HttpsServerImpl->Start();

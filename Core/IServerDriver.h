@@ -10,7 +10,7 @@ namespace SL {
 		namespace Network {
 			class ISocket;
 			class Packet;
-			class IServerDriver : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
+			class IServerDriver : public IBaseNetworkDriver{
 			public:
 				virtual ~IServerDriver() {}
 

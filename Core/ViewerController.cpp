@@ -138,7 +138,7 @@ namespace SL {
 					UNUSED(packet);
 				}
 
-				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) override
+				virtual void OnClose(const Network::ISocket* socket) override
 				{
 					UNUSED(socket);
 					Close();

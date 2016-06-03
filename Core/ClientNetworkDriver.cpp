@@ -18,7 +18,7 @@ namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 
-			class ClientNetworkDriverImpl : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
+			class ClientNetworkDriverImpl : public IBaseNetworkDriver {
 				IClientDriver* _IClientDriver;
 				std::shared_ptr<Network::ISocket> _Socket;
 
@@ -100,7 +100,7 @@ namespace SL {
 					_Socket = socket;
 					_IClientDriver->OnConnect(socket); 
 				}
-				virtual void OnClose(const std::shared_ptr<ISocket>& socket) override {
+				virtual void OnClose(const ISocket* socket) override {
 					_IClientDriver->OnClose(socket); 
 				}
 

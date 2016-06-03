@@ -73,7 +73,7 @@ namespace SL {
 					return socket->send(sendpack);
 
 				}
-				virtual void OnClose(const std::shared_ptr<ISocket>& socket)  override {
+				virtual void OnClose(const ISocket* socket)  override {
 					UNUSED(socket);
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "HTTP Close");
 				}

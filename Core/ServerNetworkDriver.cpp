@@ -6,6 +6,7 @@
 #include "IServerDriver.h"
 #include "Server_Config.h"
 #include "WebSocket.h"
+#include "HttpsSocket.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Keyboard.h"
@@ -19,10 +20,10 @@ namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
 
-			class ServerNetworkDriverImpl : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
+			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
 
 				std::shared_ptr<WebSocket::Listener> _Listener;
-			
+
 				IServerDriver* _IServerDriver;
 
 				std::vector<std::shared_ptr<ISocket>> _Clients;
@@ -59,12 +60,12 @@ namespace SL {
 					std::lock_guard<std::mutex> lock(_ClientsLock);
 					_Clients.push_back(socket);
 				}
-				virtual void OnClose(const std::shared_ptr<ISocket>& socket)override {
+				virtual void OnClose(const ISocket* socket)override {
 					_IServerDriver->OnClose(socket);
 
 					std::lock_guard<std::mutex> lock(_ClientsLock);
 
-					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&socket](const std::shared_ptr<ISocket>& p) { return p == socket; }), _Clients.end());
+					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&socket](const std::shared_ptr<ISocket>& p) { return p.get() == socket; }), _Clients.end());
 
 				}
 
@@ -142,6 +143,7 @@ namespace SL {
 					if (_Config->WebSocketTLSLPort > 0) {
 						_Listener = std::make_unique<WebSocket::Listener>(this, _Config);
 					}
+
 				}
 				void Stop() {
 					std::vector<std::shared_ptr<ISocket>> copyclients;

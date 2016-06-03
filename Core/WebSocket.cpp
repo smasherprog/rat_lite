@@ -65,7 +65,7 @@ namespace SL {
 				
 			public:
 
-				WSSocketImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
+				WSSocketImpl(IBaseNetworkDriver* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
 					_socket(io_service, *sslcontext),
 					_read_deadline(io_service),
 					_write_deadline(io_service),
@@ -87,7 +87,7 @@ namespace SL {
 				std::shared_ptr<boost::asio::ssl::context> _ssl_context;
 				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
 				
-				IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver = nullptr;
+				IBaseNetworkDriver* _IBaseNetworkDriver = nullptr;
 
 				std::deque<OutgoingPacket> _OutgoingPackets;
 				SocketStats _SocketStats;
@@ -173,7 +173,7 @@ namespace SL {
 					if (closed()) return;
 					_Closed = true;
 					CancelTimers();
-					_IBaseNetworkDriver->OnClose(shared_from_this());
+					_IBaseNetworkDriver->OnClose(this);
 					boost::system::error_code ec;
 					_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 					_socket.lowest_layer().close();
@@ -594,7 +594,7 @@ namespace SL {
 	}
 }
 
-void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* config, IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* driver, const char * host)
+void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* config, IBaseNetworkDriver* driver, const char * host)
 {
 	static std::unique_ptr<WSSAsio_Context> io_runner;
 	if(!io_runner) io_runner = std::make_unique<WSSAsio_Context>();
@@ -656,9 +656,9 @@ namespace SL {
 					std::shared_ptr<Network::Server_Config> _config;
 					std::shared_ptr<WSSAsio_Context> _WSSAsio_Context;
 					std::shared_ptr<boost::asio::ssl::context> sslcontext;
-					IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* _IBaseNetworkDriver;
+					IBaseNetworkDriver* _IBaseNetworkDriver;
 					boost::asio::const_buffer DhParams;
-					ListinerImpl(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
+					ListinerImpl(IBaseNetworkDriver* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 						_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->WebSocketTLSLPort)),
 						_config(config),
 						_WSSAsio_Context(asiocontext),
@@ -726,7 +726,7 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Network::WebSocket::Listener::Listener(IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>>* netevent, std::shared_ptr<Network::Server_Config> config)
+SL::Remote_Access_Library::Network::WebSocket::Listener::Listener(IBaseNetworkDriver* netevent, std::shared_ptr<Network::Server_Config> config)
 {
 	_ListinerImpl = std::make_shared<ListinerImpl>(netevent, std::make_shared<WSSAsio_Context>(), config);
 	_ListinerImpl->Start();

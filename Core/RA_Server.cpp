@@ -4,6 +4,7 @@
 #include "Mouse.h"
 #include "Image.h"
 #include "ServerNetworkDriver.h"
+#include "HttpsServerNetworkDriver.h"
 #include "IServerDriver.h"
 #include "Logging.h"
 #include "Packet.h"
@@ -27,7 +28,8 @@ namespace SL {
 
 				Utilities::Point LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
 				Network::ServerNetworkDriver _ServerNetworkDriver;
-				Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* _IUserNetworkDriver;
+				Network::HttpsServerNetworkDriver _HttpsServerNetworkDriver;
+				Network::IBaseNetworkDriver* _IUserNetworkDriver;
 
 				bool _Keepgoing = true;
 				std::mutex _NewClientLock;
@@ -35,7 +37,8 @@ namespace SL {
 				Server_Status _Status = Server_Status::SERVER_STOPPED;
 				std::shared_ptr<Network::Server_Config> _Config;
 
-				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* parent) : _ServerNetworkDriver(this, config), _IUserNetworkDriver(parent), _Config(config)
+				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
+					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
 				{
 				}
 
@@ -55,7 +58,7 @@ namespace SL {
 					if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 				}
 
-				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket)override {
+				virtual void OnClose(const Network::ISocket* socket)override {
 					if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 				}
 
@@ -112,7 +115,7 @@ namespace SL {
 				int Run() {
 					_Status = Server_Status::SERVER_RUNNING;
 					_ServerNetworkDriver.Start();
-
+					_HttpsServerNetworkDriver.Start();
 #if !__ANDROID__
 					auto mouseimg(Input::get_MouseImage());
 					auto mousepos(Input::get_MousePosition());
@@ -151,6 +154,7 @@ namespace SL {
 #endif
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					}
+					_HttpsServerNetworkDriver.Stop();
 					_ServerNetworkDriver.Stop();
 
 					_Status = Server_Status::SERVER_STOPPED;
@@ -172,7 +176,7 @@ namespace SL {
 	}
 }
 
-SL::Remote_Access_Library::Server::RA_Server::RA_Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver<std::shared_ptr<Network::ISocket>, std::shared_ptr<Network::Packet>>* parent)
+SL::Remote_Access_Library::Server::RA_Server::RA_Server(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent)
 {
 	_ServerImpl = std::make_shared<ServerImpl>(config, parent);
 }

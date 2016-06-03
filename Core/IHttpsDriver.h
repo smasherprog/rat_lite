@@ -8,7 +8,7 @@ namespace SL {
 	
 			class ISocket;
 			class Packet;
-			class IHttpsDriver : public IBaseNetworkDriver<std::shared_ptr<ISocket>, std::shared_ptr<Packet>> {
+			class IHttpsDriver : public IBaseNetworkDriver {
 			public:
 
 				virtual ~IHttpsDriver() {}

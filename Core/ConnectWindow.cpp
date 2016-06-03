@@ -69,6 +69,14 @@ namespace SL {
 					
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					std::string host = ptr->bInput->value();
+					if (host.empty()) {
+						fl_alert("You must enter a hostname");
+						return;
+					}
+					if (host.size()<2) {
+						fl_alert("You must enter a hostname");
+						return;
+					}
 					ptr->connectbtn->label("Connecting . . .");
 					ptr->bInput->deactivate();
 					ptr->connectbtn->deactivate();

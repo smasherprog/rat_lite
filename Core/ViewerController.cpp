@@ -9,6 +9,7 @@
 #include "Keyboard.h"
 #include "Logging.h"
 #include "ImageControl.h"
+#include "Client_Config.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -32,9 +33,9 @@ namespace SL {
 				ImageControl* _ImageControl = nullptr;
 
 				Fl_Scroll* _Fl_Scroll = nullptr;
-				
-				Network::ClientNetworkDriver _ClientNetworkDriver;
 
+				Network::ClientNetworkDriver _ClientNetworkDriver;
+				std::shared_ptr<Network::Client_Config> _Config;
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
 				float MaxFPS = 30.0f;
@@ -51,7 +52,7 @@ namespace SL {
 					auto wnd = (ViewerControllerImpl*)widget;
 					wnd->Close();
 				}
-				ViewerControllerImpl(const char* dst_host, const char*  dst_port) :Fl_Double_Window(900, 700, "Remote Host"), _ClientNetworkDriver(this, dst_host, dst_port)
+				ViewerControllerImpl(std::shared_ptr<Network::Client_Config> config, const char* dst_host) : Fl_Double_Window(900, 700, "Remote Host"), _Config(config), _ClientNetworkDriver(this, config, dst_host)
 				{
 
 					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
@@ -72,15 +73,15 @@ namespace SL {
 				virtual ~ViewerControllerImpl() {
 					_ClientNetworkDriver.Stop();
 				}
-		
+
 
 				void handle_key(int e, Input::Keyboard::Press press) {
 					auto key = Fl::event_key();
 					auto text = Fl::event_text();
 					auto len = Fl::event_length();
 					auto t = *text;
-					if (t >= '0' && t < 'Z') key= static_cast<unsigned int>(t);
-					if (t >= 'a' && t <= 'z') key= static_cast<unsigned int>(t - ('a' - 'A'));
+					if (t >= '0' && t < 'Z') key = static_cast<unsigned int>(t);
+					if (t >= 'a' && t <= 'z') key = static_cast<unsigned int>(t - ('a' - 'A'));
 
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
 					Input::KeyEvent k;
@@ -120,7 +121,12 @@ namespace SL {
 						_ClientNetworkDriver.SendMouse(ev);//sending input to yourself will lead to an infinite loop...
 					}
 				}
-			
+				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override
+				{
+					UNUSED(socket);
+					return true;
+				}
+
 				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override
 				{
 					UNUSED(socket);
@@ -132,7 +138,7 @@ namespace SL {
 					UNUSED(packet);
 				}
 
-				virtual void OnClose(const std::shared_ptr<Network::ISocket>& socket) override
+				virtual void OnClose(const Network::ISocket* socket) override
 				{
 					UNUSED(socket);
 					Close();
@@ -211,8 +217,9 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::UI::ViewerController::ViewerController(const char * dst_host, const char * dst_port) {
-	_ViewerControllerImpl = new ViewerControllerImpl(dst_host, dst_port);
+SL::Remote_Access_Library::UI::ViewerController::ViewerController(std::shared_ptr<Network::Client_Config> config, const char * dst_host) {
+
+	_ViewerControllerImpl = new ViewerControllerImpl(config, dst_host);
 	_ViewerControllerImpl->_ClientNetworkDriver.Start();
 }
 

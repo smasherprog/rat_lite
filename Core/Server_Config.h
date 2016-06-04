@@ -1,17 +1,12 @@
 #pragma once
 #include <string>
+#include "Client_Config.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Network {
-			struct Server_Config {
-				//both the viewer and web client communicate over web sockets.
-				unsigned short WebSocketListenPort = 0;
-				unsigned short WebSocketTLSListenPort = 0;
-				unsigned int Read_Timeout = 5;//in seconds
-				unsigned int Write_Timeout = 5;//in seconds
-				unsigned short HttpListenPort = 0;
-				unsigned short HttpTLSListenPort = 0;
+			struct Server_Config: Client_Config {
+
 				//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
 				std::string WWWRoot;
 				
@@ -26,8 +21,9 @@ namespace SL {
 				bool IgnoreIncomingMouseEvents = false;
 				bool IgnoreIncomingKeyboardEvents = false;
 
-				std::string Password;//if this is set, a password is required to connect to this server
-
+				//CRYPTO SETTINGS
+				std::string FullPathToPrivateKey;
+				std::string PasswordToPrivateKey;
 			};
 		}
 	}

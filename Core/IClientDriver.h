@@ -9,9 +9,11 @@ namespace SL {
 			class Point;
 		}
 		namespace Network {
+			class ISocket;
+			class Packet;
 			class IClientDriver : public IBaseNetworkDriver {
 			public:
-				IClientDriver() {}
+
 				virtual ~IClientDriver() {}
 				virtual void OnReceive_ImageDif(const std::shared_ptr<ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) = 0;
 				virtual void OnReceive_Image(const std::shared_ptr<ISocket>& socket,std::shared_ptr<Utilities::Image>& img) = 0;

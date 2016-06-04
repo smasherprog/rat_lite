@@ -1,6 +1,5 @@
-#ifndef CRYPTO_HPP
-#define	CRYPTO_HPP
-
+#pragma once
+#include <memory>
 #include <string>
 #include <math.h>
 
@@ -14,6 +13,56 @@ namespace SL {
 	namespace Remote_Access_Library {
 		//type must support size(), resize() and operator[]
 		namespace Crypto {
+			//thiks initializes all of the openssl library..
+			//the destructor ensures proper cleanup
+			namespace INTERNAL {
+				extern bool Started;
+			}
+			class Initer {
+				
+			public:
+				
+				Initer();
+				~Initer();
+			};
+		
+
+			struct CertInfo {
+				std::string savelocation;//the folder you want to save the key and cert to
+				std::string password;//this is the password used to encrypt the private key, this is good practice. It means a password is needed to read it
+				std::string filename; //should only be a filename without an extension, i.e:     selfsigned
+
+				std::string country;
+				std::string companyname;
+				std::string commonname;
+			
+				int bits = 3072;
+				int Serial = 0;
+				int DaysValid = 365;
+
+			};
+			struct CertSaveLocation {
+				std::string Certificate;
+				std::string Private_Key;
+			};
+			//if the strings inside CertSaveLocation are empty, the function failed
+			CertSaveLocation CreateCertificate(const CertInfo& info);
+			//if the strings returned is empty, the function failed!
+			//THIS FUNCTION TAKES A LONG TIME TO GENERATE SO BE PATIENT.. 
+			std::string Createdhparams(std::string savelocation, std::string filename, int bits = 3072);
+			//below is a 3072 bit dhparm I generated. This does not need to be kept secret.. it takes some time to generate these . . . 
+
+			std::string ValidateCertificate(const std::string& fullpathtocert);
+			std::string ValidatePrivateKey(const std::string& fullpathtoprivatekey, std::string& password);
+
+			const std::string dhparams = "-----BEGIN DH PARAMETERS-----\n"
+				"MIIBCAKCAQEAzPjrDCNwq0bYz5xi72GM4EoWjqwmaAXFcY7vR6+nDpeeKpeYg8XS\n"
+				"tdjCwyaIRaYO3tzZxTbjdgnCbksVQrRKscefnba5zguqnqvaGL7rHNwdqaQq7rTp\n"
+				"KGdva8BKIaE9fq2q0OaZpBWE7KtVdraF5+CnvEj4AJqxGgZ/OtP+Y3UPTIcjoIve\n"
+				"2ss+XbvHGvcZ+RmyYeHmmQbWyqNyoUgrMzfGOHUvY6x9fcl/DvCSIpVn8qRK+3+n\n"
+				"64R3OAMcxNK7ONGSL3q6DRVTUXTNch9W+TKOYAppKtdyemoUAMleXD3F282BUwqL\n"
+				"f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==\n"
+				"-----END DH PARAMETERS-----\n";
 			namespace Base64 {
 				template<class type>
 				void encode(const type& ascii, type& base64) {
@@ -141,5 +190,3 @@ namespace SL {
 		}
 	}
 }
-#endif	/* CRYPTO_HPP */
-

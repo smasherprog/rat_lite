@@ -4,9 +4,6 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Utilities {
-			class Point;
-		}
 		namespace Input {
 			struct MouseEvent;
 			struct KeyEvent;
@@ -14,12 +11,13 @@ namespace SL {
 		namespace Network {
 			class IClientDriver;
 			class ClientNetworkDriverImpl;
+			struct Client_Config;
 
 			class ClientNetworkDriver {
-				std::unique_ptr<ClientNetworkDriverImpl> _ClientNetworkDriverImpl;
+				ClientNetworkDriverImpl* _ClientNetworkDriverImpl;
 
 			public:
-				ClientNetworkDriver(IClientDriver* r, const char* dst_host, const char* dst_port);
+				ClientNetworkDriver(IClientDriver* r, std::shared_ptr<Client_Config> config, const char* dst_host);
 				virtual ~ClientNetworkDriver();
 
 				//after creating ServerNetworkDriver, Start() must be called to start the network processessing

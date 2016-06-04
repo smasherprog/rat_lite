@@ -1,0 +1,3 @@
+echo npm install ntypescript -g
+npm install ntypescript -g
+echo Done updating...

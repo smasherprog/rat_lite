@@ -16,7 +16,7 @@ namespace SL {
 			class ISocket;
 
 			class ServerNetworkDriver {
-				std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
+				ServerNetworkDriverImpl* _ServerNetworkDriverImpl;
 
 			public:
 				ServerNetworkDriver(IServerDriver * r, std::shared_ptr<Network::Server_Config> config);

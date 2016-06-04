@@ -36,6 +36,8 @@
 
 #include <future>
 #include <chrono>
+#include <fstream>
+#include <sys/stat.h>
 
 #define UNUSED(x) (void)(x)
 
@@ -43,4 +45,20 @@ template<typename R>
 bool is_ready(std::future<R> const& f)
 {
 	return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+}
+namespace SL {
+	inline bool File_Exists(const std::string& name) {
+		std::ifstream f(name.c_str());
+		return f.good();
+	}
+	inline bool Directory_Exists(const std::string& path)
+	{
+		struct stat info;
+		if (stat(path.c_str(), &info) != 0)
+			return false;
+		else if (info.st_mode & S_IFDIR)
+			return true;
+		else
+			return false;
+	}
 }

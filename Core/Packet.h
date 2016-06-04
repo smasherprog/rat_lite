@@ -55,6 +55,11 @@ namespace SL {
 				~Packet() {
 					if (_owns_Payload) delete[] Payload;
 				}
+				std::string get_HeaderValue(const std::string& key) const {
+					auto k = Header.find(key);
+					if (k != Header.end()) return k->second;
+					else return "";//NO THROW PLEASE!
+				}
 				unsigned int Packet_Type;
 				unsigned int Payload_Length;
 				char* Payload;
@@ -65,6 +70,16 @@ namespace SL {
 				os << " Packet_Type=" << r.Packet_Type << ", Payload_Length=" << r.Payload_Length;
 				return os;
 			}
+
+			struct OutgoingPacket {
+				std::shared_ptr<Network::Packet> Pack;
+				unsigned int UncompressedLength;
+			};
+			struct PacketHeader {
+				unsigned int Packet_Type;
+				unsigned int Payload_Length;
+				unsigned int UncompressedLength;
+			};
 		}
 	}
 }

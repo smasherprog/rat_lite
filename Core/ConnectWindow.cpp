@@ -9,6 +9,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
 #include <FL/fl_ask.H>
+#undef CREATE
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/Fl_Menu_Bar.H>
 
@@ -66,7 +67,7 @@ namespace SL {
 					connectbtn->label("Connect");
 				}
 				static void try_connect_frm(Fl_Widget* o, void* userdata) {
-					
+					 UNUSED(o);
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					std::string host = ptr->bInput->value();
 					if (host.empty()) {
@@ -84,6 +85,7 @@ namespace SL {
 					th.detach();
 				}
 				static void setscale(Fl_Widget* o, void* userdata) {
+                    UNUSED(o);
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					if (ptr->checkbx && ptr->_MainWindow) ptr->_MainWindow->ScaleView(ptr->checkbx->value() == 1);
 				}

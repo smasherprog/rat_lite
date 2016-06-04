@@ -37,6 +37,7 @@
 #include <future>
 #include <chrono>
 #include <fstream>
+#include <sys/stat.h>
 
 #define UNUSED(x) (void)(x)
 

@@ -68,10 +68,7 @@
     <File Name="Compression/zstd_static.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Network">
-    <File Name="IO_Runner.cpp"/>
-    <File Name="IO_Runner.h"/>
     <File Name="Packet.h"/>
-    <File Name="Server_Config.h"/>
     <File Name="SocketStats.h"/>
     <VirtualDirectory Name="Driver">
       <File Name="ClientNetworkDriver.cpp"/>
@@ -81,48 +78,61 @@
       <File Name="IServerDriver.h"/>
       <File Name="ServerNetworkDriver.cpp"/>
       <File Name="ServerNetworkDriver.h"/>
-    </VirtualDirectory>
-    <VirtualDirectory Name="Listener">
-      <File Name="HttpListener.cpp"/>
-      <File Name="HttpListener.h"/>
-      <File Name="TCPListener.h"/>
-      <File Name="WebSocketListener.cpp"/>
-      <File Name="WebSocketListener.h"/>
+      <File Name="HttpsServerNetworkDriver.cpp"/>
+      <File Name="HttpsServerNetworkDriver.h"/>
+      <File Name="IHttpsDriver.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="Socket">
-      <File Name="HttpHeader.cpp"/>
-      <File Name="HttpHeader.h"/>
-      <File Name="HttpSocket.h"/>
       <File Name="ISocket.h"/>
-      <File Name="TCPSocket.h"/>
       <File Name="WebSocket.h"/>
-      <File Name="SocketImpl.cpp"/>
-      <File Name="SocketImpl.h"/>
+      <File Name="HttpsSocket.cpp"/>
+      <File Name="HttpsSocket.h"/>
+      <File Name="WebSocket.cpp"/>
     </VirtualDirectory>
+    <File Name="HttpHeader.cpp"/>
+    <File Name="HttpHeader.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Server">
-    <File Name="Server.cpp"/>
-    <File Name="Server.h"/>
     <VirtualDirectory Name="UI">
       <File Name="ConnectionInfoWindow.cpp"/>
       <File Name="ConnectionInfoWindow.h"/>
       <File Name="LogWindow.cpp"/>
       <File Name="LogWindow.h"/>
       <File Name="SliderInput.h"/>
+      <File Name="GenerateCertificateWindow.cpp"/>
+      <File Name="GenerateCertificateWindow.h"/>
     </VirtualDirectory>
+    <File Name="Server_Config.h"/>
+    <File Name="RA_Server.cpp"/>
+    <File Name="RA_Server.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Utilities">
     <File Name="ApplicationDirectory.cpp"/>
     <File Name="ApplicationDirectory.h"/>
-    <File Name="crypto.hpp"/>
     <File Name="Image.cpp"/>
     <File Name="Image.h"/>
     <File Name="MediaTypes.cpp"/>
     <File Name="MediaTypes.h"/>
     <File Name="Shapes.h"/>
-    <File Name="ThreadPool.h"/>
     <File Name="Logging.cpp"/>
     <File Name="Logging.h"/>
+  </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
+  <VirtualDirectory Name="Client">
+    <VirtualDirectory Name="UI">
+      <File Name="ConnectWindow.cpp"/>
+      <File Name="ConnectWindow.h"/>
+      <File Name="ImageControl.cpp"/>
+      <File Name="ImageControl.h"/>
+      <File Name="ViewerController.cpp"/>
+      <File Name="ViewerController.h"/>
+    </VirtualDirectory>
+    <File Name="Client_Config.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="Crypto">
+    <File Name="crypto.h"/>
+    <File Name="crypto.cpp"/>
   </VirtualDirectory>
   <Settings Type="Static Library">
     <GlobalSettings>
@@ -209,16 +219,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
-  <VirtualDirectory Name="Client">
-    <VirtualDirectory Name="UI">
-      <File Name="ConnectWindow.cpp"/>
-      <File Name="ConnectWindow.h"/>
-      <File Name="ImageControl.cpp"/>
-      <File Name="ImageControl.h"/>
-      <File Name="ViewerController.cpp"/>
-      <File Name="ViewerController.h"/>
-    </VirtualDirectory>
-  </VirtualDirectory>
 </CodeLite_Project>

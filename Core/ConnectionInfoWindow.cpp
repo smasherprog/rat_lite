@@ -9,8 +9,8 @@
 #include <FL/Fl_Tooltip.H>
 #include <Fl/Fl_Check_Button.H>
 #include <FL/x.H>               // needed for fl_display
-#include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Secret_Input.H>
+#undef CREATE
 #include <FL/Fl_Native_File_Chooser.H>
 
 #include <memory>

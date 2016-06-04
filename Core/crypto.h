@@ -1,5 +1,4 @@
-#ifndef CRYPTO_HPP
-#define	CRYPTO_HPP
+#pragma once
 #include <memory>
 #include <string>
 #include <math.h>
@@ -64,7 +63,6 @@ namespace SL {
 				"64R3OAMcxNK7ONGSL3q6DRVTUXTNch9W+TKOYAppKtdyemoUAMleXD3F282BUwqL\n"
 				"f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==\n"
 				"-----END DH PARAMETERS-----\n";
-
 			namespace Base64 {
 				template<class type>
 				void encode(const type& ascii, type& base64) {
@@ -192,5 +190,3 @@ namespace SL {
 		}
 	}
 }
-#endif	
-

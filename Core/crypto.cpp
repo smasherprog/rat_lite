@@ -7,9 +7,6 @@
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
-#ifndef OPENSSL_NO_ENGINE
-#include <openssl/engine.h>
-#endif
 bool SL::Remote_Access_Library::Crypto::INTERNAL::Started = false;
 
 
@@ -120,7 +117,7 @@ SL::Remote_Access_Library::Crypto::CertSaveLocation SL::Remote_Access_Library::C
 		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Failed EVP_PKEY_assign_RSA");
 		return svloc;
 	}
-
+    
 	X509_set_version(cry.x509Certificate, 2);
 	ASN1_INTEGER_set(X509_get_serialNumber(cry.x509Certificate), info.Serial);
 	X509_gmtime_adj(X509_get_notBefore(cry.x509Certificate), 0);
@@ -143,15 +140,16 @@ SL::Remote_Access_Library::Crypto::CertSaveLocation SL::Remote_Access_Library::C
 	X509_set_issuer_name(cry.x509Certificate, name);
 
 	/* Add various extensions: standard extensions */
-	add_ext(cry.x509Certificate, NID_basic_constraints, "critical,CA:TRUE");
-	add_ext(cry.x509Certificate, NID_key_usage, "critical,keyCertSign,cRLSign");
+    
+	add_ext(cry.x509Certificate, NID_basic_constraints, (char*)"critical,CA:TRUE");
+	add_ext(cry.x509Certificate, NID_key_usage, (char*)"critical,keyCertSign,cRLSign");
 
-	add_ext(cry.x509Certificate, NID_subject_key_identifier, "hash");
+	add_ext(cry.x509Certificate, NID_subject_key_identifier, (char*)"hash");
 
 	/* Some Netscape specific extensions */
-	add_ext(cry.x509Certificate, NID_netscape_cert_type, "sslCA");
+	add_ext(cry.x509Certificate, NID_netscape_cert_type, (char*)"sslCA");
 
-	add_ext(cry.x509Certificate, NID_netscape_comment, "example comment extension");
+	add_ext(cry.x509Certificate, NID_netscape_comment, (char*)"example comment extension");
 
 	if (!X509_sign(cry.x509Certificate, cry.PrivateKey, EVP_sha256())) {
 		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Failed to sign the certifiate!");
@@ -164,8 +162,8 @@ SL::Remote_Access_Library::Crypto::CertSaveLocation SL::Remote_Access_Library::C
 
 	assert(!saveloc.empty());
 	svloc.Private_Key = saveloc + info.filename + "_private.pem";
-
-	if (fopen_s(&cry.priv_keyfile, svloc.Private_Key.c_str(), "wb")!=0) {
+    cry.priv_keyfile = fopen(svloc.Private_Key.c_str(), "wb");
+    if(cry.priv_keyfile!=NULL){
 		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Failed to open the Private Key File '" << svloc.Private_Key << "' for writing!");
 		svloc.Private_Key = "";
 		return svloc;
@@ -182,17 +180,13 @@ SL::Remote_Access_Library::Crypto::CertSaveLocation SL::Remote_Access_Library::C
 	);
 	svloc.Certificate = saveloc + info.filename + "_cert.crt";
 
-	if (fopen_s(&cry.certfile, svloc.Certificate.c_str(), "wb") != 0) {
+	cry.certfile = fopen(svloc.Certificate.c_str(), "wb");
+    if(cry.certfile!=NULL){
 		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Failed to open the Certificate File '" << svloc.Certificate << "' for writing!");
 		svloc.Certificate = "";
 		return svloc;
 	}
-	PEM_write_X509(
-		cry.certfile,   /* write the certificate to the file we've opened */
-		cry.x509Certificate /* our certificate */
-	);
-	return svloc;
-
+    return svloc;
 }
 
 std::string SL::Remote_Access_Library::Crypto::Createdhparams(std::string savelocation, std::string filename, int bits)
@@ -222,7 +216,9 @@ std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(const std::st
 	std::string ret;
 	if (!SL::File_Exists(fullpathtocert)) return std::string("The certificate file does not exist!");
 	CertRAII f;
-	if (fopen_s(&f.certfile, fullpathtocert.c_str(), "rb") != 0) return std::string("Cannot open the certificate file for reading!");
+    f.certfile = fopen(fullpathtocert.c_str(), "rb");
+    
+	if (f.certfile == NULL) return std::string("Cannot open the certificate file for reading!");
 	f.x509Certificate = PEM_read_X509(f.certfile, NULL, NULL, NULL);
 	if(f.x509Certificate==NULL)  return std::string("Loaded the Certifiate file, but could not read the certificate information. It might be invalid!");
 	return ret;
@@ -233,7 +229,8 @@ std::string SL::Remote_Access_Library::Crypto::ValidatePrivateKey(const std::str
 	std::string ret;
 	if (!SL::File_Exists(fullpathtoprivatekey)) return std::string("The Private key file does not exist!");
 	PrivateKeyRAII f;
-	if (fopen_s(&f.priv_keyfile, fullpathtoprivatekey.c_str(), "rb") != 0) return std::string("Cannot open the Private key file for reading!");
+    f.priv_keyfile = fopen(fullpathtoprivatekey.c_str(), "rb");
+	if (f.priv_keyfile ==NULL) return std::string("Cannot open the Private key file for reading!");
 
 	f.PrivateKey = PEM_read_PrivateKey(f.priv_keyfile, NULL, NULL, (void*)password.c_str());
 	if (f.PrivateKey == NULL) {

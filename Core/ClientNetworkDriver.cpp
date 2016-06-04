@@ -19,11 +19,15 @@ namespace SL {
 		namespace Network {
 
 			class ClientNetworkDriverImpl : public IBaseNetworkDriver {
+                
 				IClientDriver* _IClientDriver;
+                std::shared_ptr<Network::Client_Config> _Config;
 				std::shared_ptr<Network::ISocket> _Socket;
-
-				std::string _dst_host;
-
+                std::string _dst_host;
+				
+                bool _ConectedToSelf;
+				
+                
 				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
@@ -71,10 +75,10 @@ namespace SL {
 					_IClientDriver->OnReceive_Image(socket, img);
 
 				}
-				bool _ConectedToSelf = false;
-				std::shared_ptr<Network::Client_Config> _Config;
+			
 			public:
-				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : _IClientDriver(r), _Config(config), _dst_host(dst_host){
+				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : 
+                _IClientDriver(r), _Config(config), _dst_host(dst_host), _ConectedToSelf(false){
 
 				}
 				

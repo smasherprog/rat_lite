@@ -598,7 +598,7 @@ void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* confi
 {
 	static std::unique_ptr<WSSAsio_Context> io_runner;
 	if(!io_runner) io_runner = std::make_unique<WSSAsio_Context>();
-	auto sslcontext = std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
+	auto sslcontext = std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11);
 	sslcontext->load_verify_file(config->FullPathToCertificate);
 
 	auto sock = std::make_shared<WSSocketImpl>(driver, io_runner->io_service, sslcontext);
@@ -662,7 +662,7 @@ namespace SL {
 						_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->WebSocketTLSLPort)),
 						_config(config),
 						_WSSAsio_Context(asiocontext),
-						sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12)),
+						sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11)),
 						_IBaseNetworkDriver(netevent),
 						DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
 					{
@@ -707,11 +707,14 @@ namespace SL {
 									if (!ec) {
 										sock->handshake();
 									}
+									else {
+										SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "async_handshake Error: " << ec.message());
+									}
 									self->Start();
 								});
 							}
 							else {
-								SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
+								SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept " << ec.message());
 							}
 						});
 					}

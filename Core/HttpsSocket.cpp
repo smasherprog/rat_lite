@@ -354,14 +354,14 @@ namespace SL {
 					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort)),
 					_config(config),
 					_HTTPSAsio_Context(asiocontext),
-					sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12)),
+					sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11_server)),
 					_IBaseNetworkDriver(netevent),
 					DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
 				{
 
 					sslcontext->set_options(
 						boost::asio::ssl::context::default_workarounds
-						| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
+						| boost::asio::ssl::context::no_sslv3
 						| boost::asio::ssl::context::single_dh_use);
 					boost::system::error_code ec;
 					sslcontext->set_password_callback(bind(&HttpsServerImpl::get_password, this), ec);
@@ -397,13 +397,16 @@ namespace SL {
 						{
 							sock->_socket.async_handshake(boost::asio::ssl::stream_base::server, [self, sock](const boost::system::error_code& ec) {
 								if (!ec) {
-									sock->readheader();
+									sock->start();
+								} else {
+									
+									SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "async_handshake Error: " << ec.message());
 								}
 								self->Start();
 							});
 						}
 						else {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept");
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Exiting asyncaccept "<< ec.message());
 						}
 					});
 				}
@@ -413,7 +416,6 @@ namespace SL {
 				}
 			};
 		}
-
 	}
 }
 

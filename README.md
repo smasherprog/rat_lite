@@ -5,7 +5,7 @@
 Simple  (download and press build -- no complicated steps)
 </li>
 <li>
-Cross-platform:Win, Linux, Modern Web Browsers, Andriod, IOS(Probably not IOS, but maybe)
+Cross-platform:Windows desktop, windows phone, Linux, Modern Web Browsers, Andriod, Mac desktop, iphone
 </li>
 <li>
 Performance 

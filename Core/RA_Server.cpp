@@ -205,8 +205,8 @@ std::string SL::Remote_Access_Library::Server::RA_Server::Validate_Settings(std:
 {
 	std::string ret;
 	assert(config.get()!=nullptr);
-	ret += Crypto::ValidateCertificate(config->FullPathToCertificate);
-	ret += Crypto::ValidatePrivateKey(config->FullPathToPrivateKey, config->PasswordToPrivateKey);
+	ret += Crypto::ValidateCertificate(config->Public_Certficate.get());
+	ret += Crypto::ValidatePrivateKey(config->Private_Key.get(), config->PasswordToPrivateKey);
 	if (!SL::Directory_Exists(config->WWWRoot)) ret += "You must supply a valid folder for wwwroot!\n";
 
 	return ret;

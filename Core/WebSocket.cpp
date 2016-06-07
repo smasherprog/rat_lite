@@ -9,6 +9,7 @@
 #include "Server_Config.h"
 #include "Client_Config.h"
 #include "ISocket.h"
+#include "ICrypoLoader.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -599,10 +600,10 @@ void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* confi
 	static std::unique_ptr<WSSAsio_Context> io_runner;
 	if(!io_runner) io_runner = std::make_unique<WSSAsio_Context>();
 	auto sslcontext = std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11);
-	sslcontext->load_verify_file(config->FullPathToCertificate);
+	boost::asio::const_buffer cert(config->Public_Certficate->get_buffer(), config->Public_Certficate->get_size());
+	sslcontext->add_certificate_authority(cert);
 
 	auto sock = std::make_shared<WSSocketImpl>(driver, io_runner->io_service, sslcontext);
-	
 
 	sock->_Host = host != nullptr ? host : "";
 	sock->_Port = std::to_string(config->WebSocketTLSLPort);
@@ -657,16 +658,14 @@ namespace SL {
 					std::shared_ptr<WSSAsio_Context> _WSSAsio_Context;
 					std::shared_ptr<boost::asio::ssl::context> sslcontext;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
-					boost::asio::const_buffer DhParams;
+					
 					ListinerImpl(IBaseNetworkDriver* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 						_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->WebSocketTLSLPort)),
 						_config(config),
 						_WSSAsio_Context(asiocontext),
 						sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11)),
-						_IBaseNetworkDriver(netevent),
-						DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
+						_IBaseNetworkDriver(netevent)
 					{
-
 						sslcontext->set_options(
 							boost::asio::ssl::context::default_workarounds
 							| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
@@ -675,13 +674,19 @@ namespace SL {
 						sslcontext->set_password_callback(bind(&ListinerImpl::get_password, this), ec);
 						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
 						ec.clear();
-						sslcontext->use_tmp_dh(DhParams, ec);
+						boost::asio::const_buffer dhparams(Crypto::dhparams.data(), Crypto::dhparams.size());
+
+						sslcontext->use_tmp_dh(dhparams, ec);
 						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
 						ec.clear();
-						sslcontext->use_certificate_chain_file(config->FullPathToCertificate, ec);
+						boost::asio::const_buffer cert(config->Public_Certficate->get_buffer(), config->Public_Certficate->get_size());
+						sslcontext->use_certificate_chain(cert, ec);
+
 						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
 						ec.clear();
-						sslcontext->use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem, ec);
+
+						boost::asio::const_buffer privkey(config->Private_Key->get_buffer(), config->Private_Key->get_size());
+						sslcontext->use_private_key(privkey, boost::asio::ssl::context::pem, ec);
 						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());
 						ec.clear();
 					}

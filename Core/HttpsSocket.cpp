@@ -8,6 +8,7 @@
 #include "Logging.h"
 #include "Packet.h"
 #include "crypto.h"
+#include "ICrypoLoader.h"
 
 #ifndef __ANDROID__
 #include <boost/filesystem.hpp>
@@ -348,14 +349,13 @@ namespace SL {
 				std::shared_ptr<HTTPSAsio_Context> _HTTPSAsio_Context;
 				std::shared_ptr<boost::asio::ssl::context> sslcontext;
 				IBaseNetworkDriver* _IBaseNetworkDriver;
-				boost::asio::const_buffer DhParams;
+
 				HttpsServerImpl(IBaseNetworkDriver* netevent, std::shared_ptr<HTTPSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 					_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->HttpTLSPort)),
 					_config(config),
 					_HTTPSAsio_Context(asiocontext),
 					sslcontext(std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11_server)),
-					_IBaseNetworkDriver(netevent),
-					DhParams(Crypto::dhparams.data(), Crypto::dhparams.size())
+					_IBaseNetworkDriver(netevent)
 				{
 
 					sslcontext->set_options(
@@ -366,13 +366,19 @@ namespace SL {
 					sslcontext->set_password_callback(bind(&HttpsServerImpl::get_password, this), ec);
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
 					ec.clear();
-					sslcontext->use_tmp_dh(DhParams, ec);
+					boost::asio::const_buffer dhparams(Crypto::dhparams.data(), Crypto::dhparams.size());
+
+					sslcontext->use_tmp_dh(dhparams, ec);
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
 					ec.clear();
-					sslcontext->use_certificate_chain_file(config->FullPathToCertificate, ec);
+					boost::asio::const_buffer cert(config->Public_Certficate->get_buffer(), config->Public_Certficate->get_size());
+					sslcontext->use_certificate_chain(cert, ec);
+
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
 					ec.clear();
-					sslcontext->use_private_key_file(config->FullPathToPrivateKey, boost::asio::ssl::context::pem, ec);
+
+					boost::asio::const_buffer privkey(config->Private_Key->get_buffer(), config->Private_Key->get_size());
+					sslcontext->use_private_key(privkey, boost::asio::ssl::context::pem, ec);
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());
 					ec.clear();
 				}

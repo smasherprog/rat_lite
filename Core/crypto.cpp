@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "crypto.h"
 #include "Logging.h"
+#include "ICrypoLoader.h"
 
 #include <assert.h>
 
@@ -44,28 +45,8 @@ namespace SL {
 				DH *dh = nullptr;
 				BIO *outfile = nullptr;
 			};
-			class CertRAII {
-			public:
-				CertRAII() {
-				}
-				~CertRAII() {
-					if (x509Certificate) X509_free(x509Certificate);
-					if (certfile) fclose(certfile);
-				}
-				X509* x509Certificate = nullptr;
-				FILE* certfile = nullptr;
-			};
-			class PrivateKeyRAII {
-			public:
-				PrivateKeyRAII() {
-				}
-				~PrivateKeyRAII() {
-					if (PrivateKey) EVP_PKEY_free(PrivateKey);
-					if (priv_keyfile) fclose(priv_keyfile);
-				}
-				EVP_PKEY* PrivateKey = nullptr;
-				FILE* priv_keyfile = nullptr;
-			};
+		
+	
 		}
 
 	}
@@ -211,31 +192,29 @@ std::string SL::Remote_Access_Library::Crypto::Createdhparams(std::string savelo
 	return keyloc;
 }
 
-std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(const std::string & fullpathtocert)
+std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(ICrypoLoader* certficate)
 {
 	std::string ret;
-	if (!SL::File_Exists(fullpathtocert)) return std::string("The certificate file does not exist!");
-	CertRAII f;
-    f.certfile = fopen(fullpathtocert.c_str(), "rb");
-    
-	if (f.certfile == NULL) return std::string("Cannot open the certificate file for reading!");
-	f.x509Certificate = PEM_read_X509(f.certfile, NULL, NULL, NULL);
-	if(f.x509Certificate==NULL)  return std::string("Loaded the Certifiate file, but could not read the certificate information. It might be invalid!");
+
+	auto mem = BIO_new(BIO_s_mem());
+	BIO_puts(mem, certficate->get_buffer());
+	auto cert = PEM_read_bio_X509(mem, NULL, NULL, NULL);
+	if(cert ==NULL)  ret+= std::string("Loaded the Certifiate, but could not read the certificate information. It might be invalid!");
+	if (mem) BIO_free(mem);
+	if (cert) X509_free(cert);
 	return ret;
 }
 
-std::string SL::Remote_Access_Library::Crypto::ValidatePrivateKey(const std::string & fullpathtoprivatekey, std::string & password)
+std::string SL::Remote_Access_Library::Crypto::ValidatePrivateKey(ICrypoLoader* private_key, std::string & password)
 {
 	std::string ret;
-	if (!SL::File_Exists(fullpathtoprivatekey)) return std::string("The Private key file does not exist!");
-	PrivateKeyRAII f;
-    f.priv_keyfile = fopen(fullpathtoprivatekey.c_str(), "rb");
-	if (f.priv_keyfile ==NULL) return std::string("Cannot open the Private key file for reading!");
+	auto mem = BIO_new(BIO_s_mem());
+	BIO_puts(mem, private_key->get_buffer());
 
-	f.PrivateKey = PEM_read_PrivateKey(f.priv_keyfile, NULL, NULL, (void*)password.c_str());
-	if (f.PrivateKey == NULL) {
-		return std::string("Invalid Password or file is invalid!");
-	}
+	auto privkey = PEM_read_bio_PrivateKey(mem, NULL, NULL, (void*)password.c_str());
+	if (privkey == NULL)  ret += std::string("Loaded the Private Key, but there was an error. Either the private key is invalid or the password is!");
+	if (mem) BIO_free(mem);
+	if (privkey) EVP_PKEY_free(privkey);
 	return ret;
 }
 

@@ -28,6 +28,9 @@
 #include "LogWindow.h"
 #include "SliderInput.h"
 #include "GenerateCertificateWindow.h"
+#include "crypto.h"
+#include "FileCrypoLoader.h"
+#include "InMemoryCrypoLoader.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -116,6 +119,17 @@ namespace SL {
 						}
 						else {
 							auto config = ptr->config;
+
+#if defined(DEBUG) || defined(_DEBUG)
+
+							if (!config->Private_Key || !config->Public_Certficate || config->Password.empty()) {
+								config->Private_Key = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::InMemoryCrypoLoader>(Crypto::private_key.data(), Crypto::private_key.size()));
+								config->Public_Certficate = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::InMemoryCrypoLoader>(Crypto::cert.data(), Crypto::cert.size()));
+								config->PasswordToPrivateKey = Crypto::private_key_password;
+							}
+
+#endif
+
 							auto ret = RA_Server::Validate_Settings(config);//check settings
 							if (!ret.empty()) {
 								fl_alert("%s", ret.c_str());
@@ -192,13 +206,14 @@ namespace SL {
 						Fl_Native_File_Chooser chooser;
 						chooser.title("Select the file location to save the Cert and Key");
 						chooser.type(Fl_Native_File_Chooser::BROWSE_FILE);
-						
+
 						chooser.filter("Certificate Files\t*.{crt,pem}");
 						auto action = chooser.show();
 						if (action == -1 || action == 1) return;//cancel was hit
 
 						p->_FullPathToCertificate->value(chooser.filename());
-						p->config->FullPathToCertificate = chooser.filename();
+
+						p->config->Public_Certficate = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::FileCrypoLoader>(chooser.filename()));
 					}
 					static void _FullPathToPrivateKeyCB(Fl_Widget*w, void*data) {
 						UNUSED(w);
@@ -213,7 +228,8 @@ namespace SL {
 						if (action == -1 || action == 1) return;//cancel was hit
 
 						p->_FullPathToPrivateKey->value(chooser.filename());
-						p->config->FullPathToPrivateKey = chooser.filename();
+						p->config->Private_Key = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::FileCrypoLoader>(chooser.filename()));
+
 					}
 
 					static void _PasswordToPrivateKeyCB(Fl_Widget*w, void*data) {
@@ -222,7 +238,7 @@ namespace SL {
 						p->config->PasswordToPrivateKey = p->_PasswordToPrivateKey->value();
 					}
 
-					
+
 
 
 					void Init() {
@@ -293,7 +309,7 @@ namespace SL {
 						_ScreenCaptureRate->value(config->ScreenImageCaptureRate);
 						workingy += 24;
 
-					
+
 						_FullPathToCertificate = new Fl_Input(leftside, workingy, colwidth - startleft, 20, "Path to Certificate: ");
 						_FullPathToCertificate->tooltip("This is the full path to the certificate file");
 						_FullPathToCertificate->align(FL_ALIGN_LEFT);
@@ -305,7 +321,7 @@ namespace SL {
 						_FullPathToPrivateKey->tooltip("This is the full path to the private key file");
 						_FullPathToPrivateKey->align(FL_ALIGN_LEFT);
 						_FullPathToPrivateKey->readonly(1);
-						_FullPathToPrivateKey->callback(_FullPathToPrivateKeyCB,this);
+						_FullPathToPrivateKey->callback(_FullPathToPrivateKeyCB, this);
 						workingy += 24;
 
 						_PasswordToPrivateKey = new Fl_Secret_Input(leftside, workingy, colwidth - startleft, 20, "Private Key Password: ");
@@ -320,23 +336,16 @@ namespace SL {
 						StartStopBtn->color(FL_GREEN);
 						workingy = StartStopBtn->h() + 4;
 
-					
+
 
 						Fl_Tooltip::enable();
 						cWindow->end();
 						cWindow->show();
-				
+
 						_LogWindow = std::make_unique<LogWindow>();
 						_LogWindow->set_MaxLines(100);
 
-						_GenerateCertificateWindow = std::make_unique<GenerateCertificateWindow>(config, [this](bool created) {
-							fl_alert("Successfully gnerated self-signed certificate!");
-							if (created) {
-								this->_FullPathToCertificate->value(config->FullPathToCertificate.c_str());
-								this->_FullPathToPrivateKey->value(config->FullPathToPrivateKey.c_str());
-								this->_PasswordToPrivateKey->value(config->PasswordToPrivateKey.c_str());
-							}
-						});
+						_GenerateCertificateWindow = std::make_unique<GenerateCertificateWindow>();
 					}
 
 				};

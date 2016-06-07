@@ -124,6 +124,12 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)WebSocket.cpp">
       <Filter>Network\Socket</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)FileCrypoLoader.cpp">
+      <Filter>Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)InMemoryCrypoLoader.cpp">
+      <Filter>Crypto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -273,6 +279,15 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h">
       <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ICrypoLoader.h">
+      <Filter>Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileCrypoLoader.h">
+      <Filter>Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)InMemoryCrypoLoader.h">
+      <Filter>Crypto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

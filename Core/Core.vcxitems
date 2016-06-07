@@ -41,6 +41,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)FileCrypoLoader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpHeader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.cpp" />
@@ -52,6 +53,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)ImageControl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)InMemoryCrypoLoader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Keyboard.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Logging.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)LogWindow.cpp" />
@@ -90,15 +92,18 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileCrypoLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpHeader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsSocket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IBaseNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IClientDriver.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ICrypoLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IHttpsDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Image.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ImageControl.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)InMemoryCrypoLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IServerDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ISocket.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Keyboard.h" />
@@ -121,7 +126,8 @@
   <ItemGroup>
     <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
       <FileType>Document</FileType>
-      <Command>ntsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
+      <Command>npm install ntypescript -g
+ntypescript $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
       <Outputs>Core.js</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
       <LinkObjects>false</LinkObjects>

@@ -2,6 +2,10 @@
 #include "ConnectWindow.h"
 #include "ViewerController.h"
 #include "Client_Config.h"
+#include "crypto.h"
+#include "ICrypoLoader.h"
+#include "FileCrypoLoader.h"
+#include "InMemoryCrypoLoader.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -58,6 +62,14 @@ namespace SL {
 						ptr->Host = host.substr(0, portspecified);
 					}
 					else ptr->Host = host;
+#if defined(DEBUG) || defined(_DEBUG)
+
+					if (!ptr->_Config->Public_Certficate) {
+						ptr->_Config->Public_Certficate = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::InMemoryCrypoLoader>(Crypto::cert.data(), Crypto::cert.size()));
+					}
+
+#endif
+
 					Fl::awake(DoConnect, ptr);//make sure to switch to the GUI thread
 				}
 
@@ -99,7 +111,8 @@ namespace SL {
 					chooser.filter("Certificate Files\t*.{crt,pem}");
 					auto action = chooser.show();
 					if (action == -1 || action == 1) return;//cancel was hit
-					p->_Config->FullPathToCertificate = chooser.filename();
+
+					p->_Config->Public_Certficate = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::FileCrypoLoader>(chooser.filename()));
 				}
 				static void Menu_CB(Fl_Widget*w, void*data) {
 					UNUSED(w);

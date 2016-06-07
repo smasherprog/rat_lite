@@ -22,7 +22,7 @@ namespace SL {
 				bool IgnoreIncomingKeyboardEvents = false;
 
 				//CRYPTO SETTINGS
-				std::string FullPathToPrivateKey;
+				std::shared_ptr<Crypto::ICrypoLoader> Private_Key;
 				std::string PasswordToPrivateKey;
 			};
 		}

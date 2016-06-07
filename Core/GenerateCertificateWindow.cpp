@@ -41,10 +41,8 @@ namespace SL {
 
 					Fl_Button* StartStopBtn = nullptr;
 
-					std::shared_ptr<Network::Server_Config> Config;
-					std::function<void(bool)> CertGenCB;
 
-					GenerateCertificateWindowImpl(std::shared_ptr<Network::Server_Config> ptr, std::function<void(bool)>& certgen) : Fl_Window(400, 400, 800, 250, "Generate Self-Signed Certificate"), Config(ptr), CertGenCB(certgen) {
+					GenerateCertificateWindowImpl() : Fl_Window(400, 400, 800, 250, "Generate Self-Signed Certificate"){
 					
 						auto startleft = 200;
 						auto workingy = 0;
@@ -64,7 +62,6 @@ namespace SL {
 						_PasswordToPrivateKey = new Fl_Secret_Input(startleft, workingy, w() - startleft, 20, "Private Key Password: ");
 						_PasswordToPrivateKey->tooltip("This is the password needed to open the Private Keyfile");
 						_PasswordToPrivateKey->align(FL_ALIGN_LEFT);
-						_PasswordToPrivateKey->callback(_PasswordToPrivateKeyCB, this);
 						workingy += 24;
 
 						_CommonName = new Fl_Input(startleft, workingy, w() - startleft, 20, "Common Name: ");
@@ -149,10 +146,7 @@ namespace SL {
 
 						auto saved = Crypto::CreateCertificate(info);
 						if (!saved.Certificate.empty() && !saved.Private_Key.empty()) {
-							p->Config->FullPathToCertificate = saved.Certificate;
-							p->Config->FullPathToPrivateKey = saved.Private_Key;
-							p->Config->PasswordToPrivateKey = info.password;
-							p->CertGenCB(true);
+							fl_alert("Successfully generated a certificate!");
 							p->hide();
 						}
 					}
@@ -169,11 +163,6 @@ namespace SL {
 						p->_FullPathToSaveFolder->value(chooser.filename());
 					}
 
-					static void _PasswordToPrivateKeyCB(Fl_Widget*w, void*data) {
-						UNUSED(w);
-						auto p = (GenerateCertificateWindowImpl*)data;
-						p->Config->PasswordToPrivateKey = p->_PasswordToPrivateKey->value();
-					}
 					void Show() {
 						this->show();
 					}
@@ -187,9 +176,9 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::Server::UI::GenerateCertificateWindow::GenerateCertificateWindow(std::shared_ptr<Network::Server_Config> ptr, std::function<void(bool)> certgen)
+SL::Remote_Access_Library::Server::UI::GenerateCertificateWindow::GenerateCertificateWindow()
 {
-	_GenerateCertificateWindowImpl = new GenerateCertificateWindowImpl(ptr, certgen);
+	_GenerateCertificateWindowImpl = new GenerateCertificateWindowImpl();
 
 }
 SL::Remote_Access_Library::Server::UI::GenerateCertificateWindow::~GenerateCertificateWindow()

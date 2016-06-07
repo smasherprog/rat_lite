@@ -27,6 +27,7 @@ namespace SL {
 				IServerDriver* _IServerDriver;
 
 				std::vector<std::shared_ptr<ISocket>> _Clients;
+				std::vector<std::shared_ptr<ISocket>> _PendingClients;
 				std::mutex _ClientsLock;
 				std::shared_ptr<Network::Server_Config> _Config;
 				std::vector<char> _CompressBuffer;
@@ -56,6 +57,10 @@ namespace SL {
 				}
 
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
+					if (_Clients.size() > _Config->MaxNumConnections) {
+						socket->close("CLosing due to max number of connections!");
+						return;
+					}
 					_IServerDriver->OnConnect(socket);
 					std::lock_guard<std::mutex> lock(_ClientsLock);
 					_Clients.push_back(socket);

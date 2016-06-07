@@ -63,6 +63,9 @@ namespace SL {
 					SliderInput* _MousePositionCaptureRate = nullptr;
 					SliderInput* _ScreenCaptureRate = nullptr;
 
+					SliderInput* _MaxNumConnections = nullptr;
+					Fl_Input* _PasswordToConnect = nullptr;
+
 					std::weak_ptr<RA_Server> _Server;
 					std::thread Runner;
 
@@ -200,6 +203,18 @@ namespace SL {
 						auto p = (ConnectionInfoWindowImpl*)data;
 						p->config->ScreenImageCaptureRate = p->_ScreenCaptureRate->value();
 					}
+					static void _PasswordToConnectCB(Fl_Widget*w, void*data) {
+						UNUSED(w);
+						auto p = (ConnectionInfoWindowImpl*)data;
+						p->config->Password = p->_PasswordToConnect->value();
+					}
+					static void _MaxNumConnectionsCB(Fl_Widget*w, void*data) {
+						UNUSED(w);
+						auto p = (ConnectionInfoWindowImpl*)data;
+						p->config->MaxNumConnections = p->_MaxNumConnections->value();
+					}
+					
+
 					static void _FullPathToCertificateCB(Fl_Widget*w, void*data) {
 						UNUSED(w);
 						auto p = (ConnectionInfoWindowImpl*)data;
@@ -246,7 +261,7 @@ namespace SL {
 						auto startleft = 200;
 						auto leftside = 200;
 						auto workingy = 0;
-						cWindow = new Fl_Window(400, 400, colwidth, 300, "Server Settings");
+						cWindow = new Fl_Window(400, 400, colwidth, 400, "Server Settings");
 #ifdef WIN32
 						cWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
 #endif
@@ -307,6 +322,21 @@ namespace SL {
 						_ScreenCaptureRate->bounds(100, 1000);
 						_ScreenCaptureRate->callback(_ScreenCaptureRateCB, this);
 						_ScreenCaptureRate->value(config->ScreenImageCaptureRate);
+						workingy += 24;
+
+						_PasswordToConnect = new Fl_Input(leftside, workingy, colwidth - startleft, 20, "Password to Connect: ");
+						_PasswordToConnect->tooltip("This is the password required to connect to this server. If none is supplied, anyone is allowed through.");
+						_PasswordToConnect->align(FL_ALIGN_LEFT);
+						_PasswordToConnect->callback(_PasswordToConnectCB, this);
+						workingy += 24;
+
+
+						_MaxNumConnections = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Max Num Connections");
+						_MaxNumConnections->tooltip("How many connections will this server allow through?");
+						_MaxNumConnections->align(FL_ALIGN_LEFT);
+						_MaxNumConnections->bounds(0, 10);
+						_MaxNumConnections->callback(_MaxNumConnectionsCB, this);
+						_MaxNumConnections->value(config->MaxNumConnections);
 						workingy += 24;
 
 

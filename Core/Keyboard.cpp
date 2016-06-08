@@ -160,6 +160,13 @@ unsigned int Map_ToPlatformKey(unsigned int key) {
 #elif __linux__
 unsigned int Map_ToPlatformKey(unsigned int key) {
     switch (key) {
+    case (FL_BackSpace):
+		return  XK_BackSpace;
+    case (FL_Tab):
+		return XK_Tab;
+    case (FL_Enter):
+		return XK_Return;
+     
 	case (FL_Help):
 		return XK_Help;
 	case (FL_Shift_L):
@@ -298,10 +305,11 @@ void SL::Remote_Access_Library::Input::SimulateKeyboardEvent(KeyEvent ev)
 	if (ev.Key & 0xf000) {//special key, needs to be mapped to platform specific code
 		ev.Key = Map_ToPlatformKey(ev.Key);
 	}//must be ascii char, do a check to make sure it is actually an ascii char. Below are the hex values of ascii chars
-	else if ( ev.Key != 0x0008 && ev.Key != 0x0009 && ev.Key != 0x000d && ev.Key != 0x0020 && ev.Key != 0x0027  && !(ev.Key >= 0x002b && ev.Key <= 0x007f)) {
+    else if (ev.Key != 0x0020 && ev.Key != 0x0027  && !(ev.Key >= 0x002b && ev.Key <= 0x007f)) {
 		SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "Recevied a key event which is outside of the asci char set");
 		return;
 	}
+    
 	if (ev.Key == 0) {//no mapping available
 		SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "No Mapping Available for key");
 		return;
@@ -326,14 +334,15 @@ hkl
 
 	auto display = XOpenDisplay(NULL);
 	auto keycode = XKeysymToKeycode(display, ev.Key);
-    SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "AFter XKeysymToKeycode '"<<keycode<<"'");
+   SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "AFter XKeysymToKeycode '"<<keycode<<"'");
 	if (keycode == 0) return;
-	XTestGrabControl(display, True);
+	//XTestGrabControl(display, True);
 
-	XTestFakeKeyEvent(display, keycode, ev.PressData == Keyboard::Press::DOWN ? True : False, 0);
-	XSync(display, False);
-	XTestGrabControl(display, False);
+	XTestFakeKeyEvent(display, keycode, ev.PressData == Keyboard::Press::DOWN ? True : False, CurrentTime);
+	//XSync(display, True);
+	//XTestGrabControl(display, False);
 	XCloseDisplay(display);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 #endif
 

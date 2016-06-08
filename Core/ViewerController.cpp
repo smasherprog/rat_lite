@@ -33,9 +33,10 @@ namespace SL {
 				ImageControl* _ImageControl = nullptr;
 
 				Fl_Scroll* _Fl_Scroll = nullptr;
-
+                
+                std::shared_ptr<Network::Client_Config> _Config;
 				Network::ClientNetworkDriver _ClientNetworkDriver;
-				std::shared_ptr<Network::Client_Config> _Config;
+				
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
 				float MaxFPS = 30.0f;
@@ -76,6 +77,7 @@ namespace SL {
 
 
 				void handle_key(int e, Input::Keyboard::Press press) {
+                    UNUSED(e);
 					auto key = Fl::event_key();
 					auto text = Fl::event_text();
 					auto len = Fl::event_length();
@@ -199,7 +201,8 @@ namespace SL {
 					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 				}
 				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
-					if (_HasFocus && !_CursorHidden) {
+					UNUSED(socket);
+                    if (_HasFocus && !_CursorHidden) {
 						Fl::awake(awakenhidecursor, this);
 						_CursorHidden = true;
 					}
@@ -208,6 +211,7 @@ namespace SL {
 				}
 
 				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
+                    UNUSED(socket);
 					_ImageControl->SetMousePosition(*pos);
 				}
 			};

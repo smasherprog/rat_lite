@@ -133,6 +133,11 @@
   <VirtualDirectory Name="Crypto">
     <File Name="crypto.h"/>
     <File Name="crypto.cpp"/>
+    <File Name="FileCrypoLoader.cpp"/>
+    <File Name="FileCrypoLoader.h"/>
+    <File Name="ICrypoLoader.h"/>
+    <File Name="InMemoryCrypoLoader.cpp"/>
+    <File Name="InMemoryCrypoLoader.h"/>
   </VirtualDirectory>
   <Settings Type="Static Library">
     <GlobalSettings>

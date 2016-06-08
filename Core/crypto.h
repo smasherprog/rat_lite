@@ -65,7 +65,8 @@ f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 -----END DH PARAMETERS-----)";
 
 
-#if defined(DEBUG)  || defined(_DEBUG)
+#if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
+
 			//THIS SHOULD ONLY BE USED IN DEBUG MODE FOR EASE OF TESTING!!!!
 			//DO NOT USE THIS IN PRODUCTION!!
 			const std::string cert = R"(-----BEGIN CERTIFICATE-----

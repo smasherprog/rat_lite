@@ -123,7 +123,7 @@ namespace SL {
 						else {
 							auto config = ptr->config;
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG)
 
 							if (!config->Private_Key || !config->Public_Certficate || config->Password.empty()) {
 								config->Private_Key = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::InMemoryCrypoLoader>(Crypto::private_key.data(), Crypto::private_key.size()));

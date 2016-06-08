@@ -21,7 +21,7 @@ namespace SL {
 				bool IgnoreIncomingMouseEvents = false;
 				bool IgnoreIncomingKeyboardEvents = false;
 
-				int MaxNumConnections = 10;//
+				unsigned int MaxNumConnections = 10;//
 
 				//CRYPTO SETTINGS
 				std::shared_ptr<Crypto::ICrypoLoader> Private_Key;

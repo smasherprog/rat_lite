@@ -195,7 +195,7 @@ std::string SL::Remote_Access_Library::Crypto::Createdhparams(std::string savelo
 std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(ICrypoLoader* certficate)
 {
 	std::string ret;
-
+  
 	auto mem = BIO_new(BIO_s_mem());
 	BIO_puts(mem, certficate->get_buffer());
 	auto cert = PEM_read_bio_X509(mem, NULL, NULL, NULL);

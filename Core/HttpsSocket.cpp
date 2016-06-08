@@ -90,7 +90,7 @@ namespace SL {
 				std::shared_ptr<boost::asio::ssl::context> _ssl_context;
 				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
 
-				IBaseNetworkDriver* _IBaseNetworkDriver = nullptr;
+				IBaseNetworkDriver* _IBaseNetworkDriver;
 
 
 				std::deque<OutgoingPacket> _OutgoingPackets;
@@ -129,7 +129,6 @@ namespace SL {
 					auto compack(std::make_shared<Packet>(std::move(pack)));
 					_socket.get_io_service().post([self, compack, beforesize]()
 					{
-						auto outgoingempty = self->_OutgoingPackets.empty();
 						self->_OutgoingPackets.push_back({ compack, beforesize });
 						self->writeheader();
 						

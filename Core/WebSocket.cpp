@@ -68,9 +68,9 @@ namespace SL {
 
 				WSSocketImpl(IBaseNetworkDriver* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
 					_socket(io_service, *sslcontext),
-					_read_deadline(io_service),
-					_write_deadline(io_service),
-					_IBaseNetworkDriver(netdriver)
+					_IBaseNetworkDriver(netdriver),
+                    _read_deadline(io_service),
+					_write_deadline(io_service)
 				{
 					_read_deadline.expires_at(boost::posix_time::pos_infin);
 					_write_deadline.expires_at(boost::posix_time::pos_infin);

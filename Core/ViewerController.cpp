@@ -82,17 +82,17 @@ namespace SL {
 					auto text = Fl::event_text();
 					auto len = Fl::event_length();
 					auto t = *text;
-					if (t >= '0' && t < 'Z') key = static_cast<unsigned int>(t);
-					if (t >= 'a' && t <= 'z') key = static_cast<unsigned int>(t - ('a' - 'A'));
-
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
+
+					if (t >= 'A' && t < 'Z') key = static_cast<unsigned int>(t + ('a' - 'A'));					
+
 					Input::KeyEvent k;
-					k.Key = t;
+					k.Key = key;
 					k.PressData = press;
 					_ClientNetworkDriver.SendKey(k);
 				}
 				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {
-
+	
 					auto scale = _ImageControl->GetScaleFactor();
 
 					Input::MouseEvent ev;

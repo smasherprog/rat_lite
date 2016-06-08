@@ -145,10 +145,12 @@ namespace SL {
 					
 					case FL_PUSH:
 						_ImageControlInfo._MouseCallback(e, Fl::event_button(), Input::Mouse::Press::DOWN, Fl::event_x() + _ImageControlInfo._Scroller->xposition(), Fl::event_y() + _ImageControlInfo._Scroller->yposition());
-						break;
+						return 1;
 					case FL_RELEASE:
 						_ImageControlInfo._MouseCallback(e, Fl::event_button(), Input::Mouse::Press::UP, Fl::event_x() + _ImageControlInfo._Scroller->xposition(), Fl::event_y() + _ImageControlInfo._Scroller->yposition());
-						break;
+						break;	
+					case FL_ENTER:
+						return 1;
 					case FL_DRAG:
 					case FL_MOUSEWHEEL:
 					case FL_MOVE:
@@ -161,6 +163,7 @@ namespace SL {
 						_ImageControlInfo._KeyCallback(e, Input::Keyboard::Press::UP);
 						return 1;
 					case FL_FOCUS:
+				
 						return 1;
 					default:
 						break;

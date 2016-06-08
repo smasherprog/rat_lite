@@ -14,6 +14,14 @@
 #if  _WIN32
 unsigned int Map_ToPlatformKey(unsigned int key) {
 	switch (key) {
+
+	case (FL_BackSpace):
+		return  VK_BACK;
+	case (FL_Tab):
+		return VK_TAB;
+	case (FL_Enter):
+		return VK_RETURN;
+
 	case (FL_Help):
 		return VK_HELP;
 	case (FL_Shift_L):

@@ -69,9 +69,10 @@ namespace SL {
 
 				HttpsSocketImpl(IBaseNetworkDriver* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
 					_socket(io_service, *sslcontext),
+                    _IBaseNetworkDriver(netdriver),
 					_read_deadline(io_service),
-					_write_deadline(io_service),
-					_IBaseNetworkDriver(netdriver)
+					_write_deadline(io_service)
+					
 				{
 					_read_deadline.expires_at(boost::posix_time::pos_infin);
 					_write_deadline.expires_at(boost::posix_time::pos_infin);
@@ -92,11 +93,11 @@ namespace SL {
 
 				IBaseNetworkDriver* _IBaseNetworkDriver;
 
-
-				std::deque<OutgoingPacket> _OutgoingPackets;
-				std::vector<char> _IncomingBuffer;
 				boost::asio::deadline_timer _read_deadline;
 				boost::asio::deadline_timer _write_deadline;
+                
+				std::deque<OutgoingPacket> _OutgoingPackets;
+				std::vector<char> _IncomingBuffer;
 				std::unordered_map<std::string, std::string> _Header;
 				bool _Server = false;
 				std::string _Host;

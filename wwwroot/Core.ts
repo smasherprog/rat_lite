@@ -38,10 +38,10 @@ module SL {
                 DOWN
             };
             export enum SpecialKeys {
+                NO_PRESS_DATA,
                 ALT,
                 CTRL,
-                SHIFT,
-                NO_PRESS_DATA
+                SHIFT
             };
             export class KeyEvent {
                 constructor(public PressData: KeyPress, public Key: number, public SpecialKey: SpecialKeys) { }
@@ -315,17 +315,18 @@ module SL {
             };
 
             export enum MouseEvents {
+                NO_EVENTDATA,
                 LEFT,
                 MIDDLE,
                 RIGHT,
-                SCROLL,
-                NO_EVENTDATA
+                SCROLL
+               
             };
             export enum MousePress {
+                NO_PRESS_DATA,
                 UP,
                 DOWN,
-                DBLCLICK,
-                NO_PRESS_DATA
+                DBLCLICK               
             };
             export class MouseEvent {
 

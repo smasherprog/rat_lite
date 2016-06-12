@@ -15,9 +15,13 @@
 
 unsigned int Map_ToPlatformKey(unsigned int key) {
 	if (key >= 0x0030 && key <= 0x0039) return key;//VK_0 - VK_9 are the same as ASCII '0' - '9' (0x30 - 0x39)
-	if (key >= 0x0041 && key <= 0x005A) {//VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A)
+	else if (key >= 0x0041 && key <= 0x005A) {//VK_A - VK_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A)
+		return key;// regular ascii alphabet characters
+	}
+	else if (key >= 0x0061 && key <= 0x007a) {
 		return key - static_cast<unsigned int>('a' - 'A');//on windows, the keys are always in CAPS...
 	}
+
 	switch (key) {
 
 	case (FL_BackSpace):
@@ -29,7 +33,7 @@ unsigned int Map_ToPlatformKey(unsigned int key) {
 	case(' '):
 		return VK_SPACE;
 
-	case('+'):
+	case('='):
 		return VK_OEM_PLUS;
 	case(','):
 		return VK_OEM_COMMA;
@@ -37,6 +41,8 @@ unsigned int Map_ToPlatformKey(unsigned int key) {
 		return VK_OEM_MINUS;
 	case('.'):
 		return VK_OEM_PERIOD;
+	case (';'):
+		return VK_OEM_1;
 	case('/'):
 		return VK_OEM_2;
 	case('`'):
@@ -172,6 +178,40 @@ unsigned int Map_ToPlatformKey(unsigned int key) {
 		return VK_F24;
 	case (FL_Num_Lock):
 		return VK_NUMLOCK;
+	case (FL_KP +'0'):
+		return VK_NUMPAD0;
+	case (FL_KP + '1'):
+		return VK_NUMPAD1;
+	case (FL_KP + '2'):
+		return VK_NUMPAD2;
+	case (FL_KP + '3'):
+		return VK_NUMPAD3;
+	case (FL_KP + '4'):
+		return VK_NUMPAD4;
+	case (FL_KP + '5'):
+		return VK_NUMPAD5;
+	case (FL_KP + '6'):
+		return VK_NUMPAD6;
+	case (FL_KP + '7'):
+		return VK_NUMPAD7;
+	case (FL_KP + '8'):
+		return VK_NUMPAD8;
+	case (FL_KP + '9'):
+		return VK_NUMPAD9;
+	case (FL_KP + '/'):
+		return VK_DIVIDE;
+	case (FL_KP + '*'):
+		return VK_MULTIPLY;
+	case (FL_KP + '-'):
+		return VK_SUBTRACT;
+	case (FL_KP + '+'):
+		return VK_ADD;
+	case (FL_KP + '.'):
+		return VK_DECIMAL;
+
+	case (FL_KP_Enter):
+		return VK_RETURN;
+
 	case (FL_Scroll_Lock):
 		return VK_SCROLL;
 	case (FL_Volume_Down):

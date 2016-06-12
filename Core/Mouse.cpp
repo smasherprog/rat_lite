@@ -23,7 +23,7 @@ namespace SL
 				auto capturedc = RAIIHDC(CreateCompatibleDC(desktopdc.get()));
 				auto capturebmp = RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), 32, 32)); // 32 x 32 is the biggest allowed for windows...
 				if (!desktopdc || !capturedc || !capturebmp) {
-					SL_RAT_LOG(Utilities::ERROR_log_level, "Couldnt get Init DC!");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Couldnt get Init DC!");
 					return Utilities::Image::CreateImage(0, 0);
 				}
 					
@@ -33,24 +33,43 @@ namespace SL
 				CURSORINFO cursorInfo;
 				cursorInfo.cbSize = sizeof(cursorInfo);
 				if (GetCursorInfo(&cursorInfo) == FALSE) {
-					SL_RAT_LOG(Utilities::ERROR_log_level, "GetCursorInfo == FALSE");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE");
 					return Utilities::Image::CreateImage(0, 0);
 				}
 				ICONINFOEXA ii = { 0 };
 				ii.cbSize = sizeof(ii);
 				if (GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
-					SL_RAT_LOG(Utilities::ERROR_log_level, "GetIconInfoEx == FALSE");
+					//this tends to fail on hyper-v enviornments generating alot of noise. so lower its level to Info..
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE");
 					return Utilities::Image::CreateImage(0, 0);
 				}
 				auto colorbmp = RAIIHBITMAP(ii.hbmColor); // make sure this is cleaned up properly
 				auto maskbmp = RAIIHBITMAP(ii.hbmMask); // make sure this is cleaned up properly
 				if (DrawIcon(capturedc.get(), 0, 0, cursorInfo.hCursor) == FALSE) {
-					SL_RAT_LOG(Utilities::ERROR_log_level, "DrawIcon == FALSE");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "DrawIcon == FALSE");
 					return Utilities::Image::CreateImage(0, 0);
 				}
-				int height = 32;
-				int width = 32;
-				
+				BITMAP bm;
+				int height = 0;
+				int width = 0;
+				if (ii.hbmColor != NULL) {
+					if (GetObject(colorbmp.get(), sizeof(bm), &bm) != NULL) {
+						height = bm.bmHeight;
+						width = bm.bmWidth;
+					}
+				}
+				else if (ii.hbmMask != NULL) {
+					if (GetObject(maskbmp.get(), sizeof(bm), &bm) != NULL) {
+						height = bm.bmHeight / 2;
+						width = bm.bmWidth;
+					}
+				}
+				if (height <= 0 || width <= 0 || height > 32 || width > 32) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Cursor dimensions are outside normal sizes, could be an error");
+					return Utilities::Image::CreateImage(0, 0);
+				}
+
+
 				BITMAPINFOHEADER bi;
 				memset(&bi, 0, sizeof(bi));
 
@@ -95,11 +114,18 @@ namespace SL
 				Utilities::Point pos;
 				CURSORINFO cursorInfo;
 				cursorInfo.cbSize = sizeof(cursorInfo);
-				GetCursorInfo(&cursorInfo);
+				if(GetCursorInfo(&cursorInfo) == FALSE) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE");
+					return pos;
+				}
 
-				ICONINFOEX ii = { 0 };
+				ICONINFOEXA ii = { 0 };
 				ii.cbSize = sizeof(ii);
-				GetIconInfoEx(cursorInfo.hCursor, &ii);
+				if(GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
+					//this tends to fail on hyper-v enviornments generating alot of noise. so lower its level to Info..
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE");
+					return pos;
+				}
 				auto colorbmp = RAIIHBITMAP(ii.hbmColor); // make sure this is cleaned up properly
 				auto maskbmp = RAIIHBITMAP(ii.hbmMask); // make sure this is cleaned up properly
 

@@ -83,12 +83,13 @@ namespace SL {
 					auto len = Fl::event_length();
 					auto t = *text;
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
-
+					//make sure to map all keys to their lower case equivelents. 
 					if (t >= 'A' && t < 'Z') key = static_cast<unsigned int>(t + ('a' - 'A'));					
 
 					Input::KeyEvent k;
 					k.Key = key;
 					k.PressData = press;
+					k.SpecialKey = Input::Keyboard::Specials::NO_PRESS_DATA;
 					_ClientNetworkDriver.SendKey(k);
 				}
 				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {

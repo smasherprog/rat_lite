@@ -11,17 +11,18 @@ namespace SL {
 		namespace Input {
 			namespace Mouse {
 				enum Events : unsigned int {
+					NO_EVENTDATA,
 					LEFT,
 					MIDDLE,
                     RIGHT,
-					SCROLL,
-					NO_EVENTDATA
+					SCROLL
+					
 				};
 				enum Press : unsigned int {
+					NO_PRESS_DATA,
 					UP,
 					DOWN,
-					DBLCLICK,
-					NO_PRESS_DATA
+					DBLCLICK
 				};
 
 			}

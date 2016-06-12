@@ -8,11 +8,11 @@ namespace SL {
 					UP,
 					DOWN
 				};
-				enum Specials : unsigned int {
+				enum Specials : unsigned int {	
+					NO_PRESS_DATA,
 					ALT,
 					CTRL,
-					SHIFT,
-					NO_PRESS_DATA
+					SHIFT
 				};
 			}
 

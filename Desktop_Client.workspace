@@ -4,7 +4,7 @@
   <Project Name="Core" Path="Core/Core.project" Active="No"/>
   <Project Name="Desktop_Client" Path="Desktop_Client/Desktop_Client.project"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="yes">
+    <WorkspaceConfiguration Name="Debug" Selected="no">
       <Environment/>
       <Project Name="Client" ConfigName="Debug"/>
       <Project Name="Core" ConfigName="Debug"/>

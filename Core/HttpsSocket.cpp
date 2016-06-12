@@ -377,6 +377,10 @@ namespace SL {
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
 					ec.clear();
 
+					sslcontext->set_default_verify_paths(ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_default_verify_paths error " << ec.message());
+					ec.clear();
+
 					boost::asio::const_buffer privkey(config->Private_Key->get_buffer(), config->Private_Key->get_size());
 					sslcontext->use_private_key(privkey, boost::asio::ssl::context::pem, ec);
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_private_key_file error " << ec.message());

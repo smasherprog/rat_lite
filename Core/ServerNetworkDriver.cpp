@@ -57,7 +57,7 @@ namespace SL {
 				}
 
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-					if (_Clients.size() > _Config->MaxNumConnections) {
+					if (_Clients.size() > static_cast<size_t>(_Config->MaxNumConnections) ){
 						socket->close("CLosing due to max number of connections!");
 						return;
 					}

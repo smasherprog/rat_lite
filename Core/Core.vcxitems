@@ -126,8 +126,10 @@
   <ItemGroup>
     <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
       <FileType>Document</FileType>
-      <Command>npm install ntypescript -g
-ntypescript $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
+      <Command>call npm install ntypescript -g
+
+
+call ntsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
       <Outputs>Core.js</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
       <LinkObjects>false</LinkObjects>

@@ -33,9 +33,10 @@ namespace SL {
 				ImageControl* _ImageControl = nullptr;
 
 				Fl_Scroll* _Fl_Scroll = nullptr;
-
+                
+                std::shared_ptr<Network::Client_Config> _Config;
 				Network::ClientNetworkDriver _ClientNetworkDriver;
-				std::shared_ptr<Network::Client_Config> _Config;
+				
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
 				float MaxFPS = 30.0f;
@@ -76,21 +77,23 @@ namespace SL {
 
 
 				void handle_key(int e, Input::Keyboard::Press press) {
+                    UNUSED(e);
 					auto key = Fl::event_key();
 					auto text = Fl::event_text();
 					auto len = Fl::event_length();
 					auto t = *text;
-					if (t >= '0' && t < 'Z') key = static_cast<unsigned int>(t);
-					if (t >= 'a' && t <= 'z') key = static_cast<unsigned int>(t - ('a' - 'A'));
-
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
+					//make sure to map all keys to their lower case equivelents. 
+					if (t >= 'A' && t < 'Z') key = static_cast<unsigned int>(t + ('a' - 'A'));					
+
 					Input::KeyEvent k;
-					k.Key = t;
+					k.Key = key;
 					k.PressData = press;
+					k.SpecialKey = Input::Keyboard::Specials::NO_PRESS_DATA;
 					_ClientNetworkDriver.SendKey(k);
 				}
 				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {
-
+	
 					auto scale = _ImageControl->GetScaleFactor();
 
 					Input::MouseEvent ev;
@@ -199,7 +202,8 @@ namespace SL {
 					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 				}
 				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
-					if (_HasFocus && !_CursorHidden) {
+					UNUSED(socket);
+                    if (_HasFocus && !_CursorHidden) {
 						Fl::awake(awakenhidecursor, this);
 						_CursorHidden = true;
 					}
@@ -208,6 +212,7 @@ namespace SL {
 				}
 
 				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
+                    UNUSED(socket);
 					_ImageControl->SetMousePosition(*pos);
 				}
 			};

@@ -56,21 +56,21 @@ namespace SL {
 				boost::asio::io_service io_service;
 				std::thread io_servicethread;
 				boost::asio::io_service::work work;
-				
+
 
 			};
 
 
 			class WSSocketImpl : public ISocket, public std::enable_shared_from_this<WSSocketImpl> {
 			private:
-				
+
 			public:
 
 				WSSocketImpl(IBaseNetworkDriver* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
 					_socket(io_service, *sslcontext),
+					_IBaseNetworkDriver(netdriver),
 					_read_deadline(io_service),
-					_write_deadline(io_service),
-					_IBaseNetworkDriver(netdriver)
+					_write_deadline(io_service)
 				{
 					_read_deadline.expires_at(boost::posix_time::pos_infin);
 					_write_deadline.expires_at(boost::posix_time::pos_infin);
@@ -87,7 +87,7 @@ namespace SL {
 				}
 				std::shared_ptr<boost::asio::ssl::context> _ssl_context;
 				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
-				
+
 				IBaseNetworkDriver* _IBaseNetworkDriver;
 
 				std::deque<OutgoingPacket> _OutgoingPackets;
@@ -164,7 +164,7 @@ namespace SL {
 					auto compack(std::make_shared<Packet>(std::move(compress(pack))));
 					_socket.get_io_service().post([self, compack, beforesize]()
 					{
-				
+
 						self->_OutgoingPackets.push_back({ compack, beforesize });
 						self->writeWSheader();
 					});
@@ -598,10 +598,24 @@ namespace SL {
 void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* config, IBaseNetworkDriver* driver, const char * host)
 {
 	static std::unique_ptr<WSSAsio_Context> io_runner;
-	if(!io_runner) io_runner = std::make_unique<WSSAsio_Context>();
+	if (!io_runner) io_runner = std::make_unique<WSSAsio_Context>();
+
 	auto sslcontext = std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv11);
 	boost::asio::const_buffer cert(config->Public_Certficate->get_buffer(), config->Public_Certficate->get_size());
-	sslcontext->add_certificate_authority(cert);
+	boost::system::error_code ec;
+	sslcontext->add_certificate_authority(cert, ec);
+	if (ec) {
+		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "add_certificate_authority error " << ec.message());
+		return;
+	}
+	ec.clear();
+
+	sslcontext->set_default_verify_paths(ec);
+	if (ec) {
+		SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_default_verify_paths error " << ec.message());
+		return;
+	}
+	ec.clear();
 
 	auto sock = std::make_shared<WSSocketImpl>(driver, io_runner->io_service, sslcontext);
 
@@ -620,6 +634,7 @@ void SL::Remote_Access_Library::Network::WebSocket::Connect(Client_Config* confi
 		sock->close(std::string("async_connect ") + ercode.message());
 	}
 	else {
+
 
 		sock->_socket.set_verify_mode(boost::asio::ssl::verify_peer);
 		sock->_socket.set_verify_callback(std::bind(&WSSocketImpl::verify_certificate, sock.get(), std::placeholders::_1, std::placeholders::_2));
@@ -658,7 +673,7 @@ namespace SL {
 					std::shared_ptr<WSSAsio_Context> _WSSAsio_Context;
 					std::shared_ptr<boost::asio::ssl::context> sslcontext;
 					IBaseNetworkDriver* _IBaseNetworkDriver;
-					
+
 					ListinerImpl(IBaseNetworkDriver* netevent, std::shared_ptr<WSSAsio_Context> asiocontext, std::shared_ptr<Network::Server_Config> config) :
 						_acceptor(asiocontext->io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config->WebSocketTLSLPort)),
 						_config(config),
@@ -679,10 +694,14 @@ namespace SL {
 						sslcontext->use_tmp_dh(dhparams, ec);
 						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_tmp_dh error " << ec.message());
 						ec.clear();
+
 						boost::asio::const_buffer cert(config->Public_Certficate->get_buffer(), config->Public_Certficate->get_size());
 						sslcontext->use_certificate_chain(cert, ec);
-
 						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
+						ec.clear();
+
+						sslcontext->set_default_verify_paths(ec);
+						if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_default_verify_paths error " << ec.message());
 						ec.clear();
 
 						boost::asio::const_buffer privkey(config->Private_Key->get_buffer(), config->Private_Key->get_size());

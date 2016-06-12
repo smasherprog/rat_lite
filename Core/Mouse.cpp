@@ -21,39 +21,54 @@ namespace SL
 			{
 				auto desktopdc = RAIIHDC(GetDC(NULL));
 				auto capturedc = RAIIHDC(CreateCompatibleDC(desktopdc.get()));
-				auto capturebmp = RAIIHBITMAP(
-					CreateCompatibleBitmap(desktopdc.get(), 32, 32)); // 32 x 32 is the biggest allowed for windows...
-				if (!desktopdc || !capturedc || !capturebmp)
+				auto capturebmp = RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), 32, 32)); // 32 x 32 is the biggest allowed for windows...
+				if (!desktopdc || !capturedc || !capturebmp) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Couldnt get Init DC!");
 					return Utilities::Image::CreateImage(0, 0);
+				}
+					
 
 				auto originalBmp = SelectObject(capturedc.get(), capturebmp.get());
 
 				CURSORINFO cursorInfo;
 				cursorInfo.cbSize = sizeof(cursorInfo);
-				if (GetCursorInfo(&cursorInfo) == FALSE)
+				if (GetCursorInfo(&cursorInfo) == FALSE) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE");
 					return Utilities::Image::CreateImage(0, 0);
-
-				ICONINFOEX ii = { 0 };
+				}
+				ICONINFOEXA ii = { 0 };
 				ii.cbSize = sizeof(ii);
-				if (GetIconInfoEx(cursorInfo.hCursor, &ii) == FALSE)
+				if (GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
+					//this tends to fail on hyper-v enviornments generating alot of noise. so lower its level to Info..
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE");
 					return Utilities::Image::CreateImage(0, 0);
+				}
 				auto colorbmp = RAIIHBITMAP(ii.hbmColor); // make sure this is cleaned up properly
 				auto maskbmp = RAIIHBITMAP(ii.hbmMask); // make sure this is cleaned up properly
-				if (DrawIcon(capturedc.get(), 0, 0, cursorInfo.hCursor) == FALSE)
+				if (DrawIcon(capturedc.get(), 0, 0, cursorInfo.hCursor) == FALSE) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "DrawIcon == FALSE");
 					return Utilities::Image::CreateImage(0, 0);
+				}
 				BITMAP bm;
 				int height = 0;
-				bm.bmWidth = 32;
+				int width = 0;
 				if (ii.hbmColor != NULL) {
-					GetObject(colorbmp.get(), sizeof(bm), &bm);
-					height = bm.bmHeight;
-
+					if (GetObject(colorbmp.get(), sizeof(bm), &bm) != NULL) {
+						height = bm.bmHeight;
+						width = bm.bmWidth;
+					}
 				}
 				else if (ii.hbmMask != NULL) {
-					GetObject(maskbmp.get(), sizeof(bm), &bm);
-					height = bm.bmHeight / 2;
+					if (GetObject(maskbmp.get(), sizeof(bm), &bm) != NULL) {
+						height = bm.bmHeight / 2;
+						width = bm.bmWidth;
+					}
 				}
-				int width = bm.bmWidth;
+				if (height <= 0 || width <= 0 || height > 32 || width > 32) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Cursor dimensions are outside normal sizes, could be an error");
+					return Utilities::Image::CreateImage(0, 0);
+				}
+
 
 				BITMAPINFOHEADER bi;
 				memset(&bi, 0, sizeof(bi));
@@ -72,6 +87,7 @@ namespace SL
 				bi.biSizeImage = ((width * bi.biBitCount + 31) / 32) * 4 * height;
 
 				auto retimg(Utilities::Image::CreateImage(width, height));
+
 				GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)height, retimg->data(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
 				SelectObject(capturedc.get(), originalBmp);
@@ -98,11 +114,18 @@ namespace SL
 				Utilities::Point pos;
 				CURSORINFO cursorInfo;
 				cursorInfo.cbSize = sizeof(cursorInfo);
-				GetCursorInfo(&cursorInfo);
+				if(GetCursorInfo(&cursorInfo) == FALSE) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE");
+					return pos;
+				}
 
-				ICONINFOEX ii = { 0 };
+				ICONINFOEXA ii = { 0 };
 				ii.cbSize = sizeof(ii);
-				GetIconInfoEx(cursorInfo.hCursor, &ii);
+				if(GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
+					//this tends to fail on hyper-v enviornments generating alot of noise. so lower its level to Info..
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE");
+					return pos;
+				}
 				auto colorbmp = RAIIHBITMAP(ii.hbmColor); // make sure this is cleaned up properly
 				auto maskbmp = RAIIHBITMAP(ii.hbmMask); // make sure this is cleaned up properly
 

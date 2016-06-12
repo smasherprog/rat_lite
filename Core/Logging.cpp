@@ -40,6 +40,11 @@ void SL::Remote_Access_Library::Utilities::Log(Logging_Levels level, const char*
 
 
 #else 
+
+
+
+
+
 	std::cout << Logging_level_Names[level] << ": FILE: " << file << " Line: " << line << " Func: " << func << " Msg: " << data.str() << std::endl;
 
 #endif

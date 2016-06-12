@@ -69,9 +69,10 @@ namespace SL {
 
 				HttpsSocketImpl(IBaseNetworkDriver* netdriver, boost::asio::io_service& io_service, std::shared_ptr<boost::asio::ssl::context> sslcontext) :
 					_socket(io_service, *sslcontext),
+                    _IBaseNetworkDriver(netdriver),
 					_read_deadline(io_service),
-					_write_deadline(io_service),
-					_IBaseNetworkDriver(netdriver)
+					_write_deadline(io_service)
+					
 				{
 					_read_deadline.expires_at(boost::posix_time::pos_infin);
 					_write_deadline.expires_at(boost::posix_time::pos_infin);
@@ -90,13 +91,13 @@ namespace SL {
 				std::shared_ptr<boost::asio::ssl::context> _ssl_context;
 				boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
 
-				IBaseNetworkDriver* _IBaseNetworkDriver = nullptr;
+				IBaseNetworkDriver* _IBaseNetworkDriver;
 
-
-				std::deque<OutgoingPacket> _OutgoingPackets;
-				std::vector<char> _IncomingBuffer;
 				boost::asio::deadline_timer _read_deadline;
 				boost::asio::deadline_timer _write_deadline;
+                
+				std::deque<OutgoingPacket> _OutgoingPackets;
+				std::vector<char> _IncomingBuffer;
 				std::unordered_map<std::string, std::string> _Header;
 				bool _Server = false;
 				std::string _Host;
@@ -129,7 +130,6 @@ namespace SL {
 					auto compack(std::make_shared<Packet>(std::move(pack)));
 					_socket.get_io_service().post([self, compack, beforesize]()
 					{
-						auto outgoingempty = self->_OutgoingPackets.empty();
 						self->_OutgoingPackets.push_back({ compack, beforesize });
 						self->writeheader();
 						
@@ -375,6 +375,10 @@ namespace SL {
 					sslcontext->use_certificate_chain(cert, ec);
 
 					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "use_certificate_chain_file error " << ec.message());
+					ec.clear();
+
+					sslcontext->set_default_verify_paths(ec);
+					if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "set_default_verify_paths error " << ec.message());
 					ec.clear();
 
 					boost::asio::const_buffer privkey(config->Private_Key->get_buffer(), config->Private_Key->get_size());

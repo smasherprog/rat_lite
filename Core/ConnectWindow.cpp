@@ -62,7 +62,7 @@ namespace SL {
 						ptr->Host = host.substr(0, portspecified);
 					}
 					else ptr->Host = host;
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG)
 
 					if (!ptr->_Config->Public_Certficate) {
 						ptr->_Config->Public_Certficate = std::static_pointer_cast<Crypto::ICrypoLoader>(std::make_shared<Crypto::InMemoryCrypoLoader>(Crypto::cert.data(), Crypto::cert.size()));

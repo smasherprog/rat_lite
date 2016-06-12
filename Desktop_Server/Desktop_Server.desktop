@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RDP Desktop Server
+Comment=The best RDP viewer Period
+TryExec=Desktop_Server
+Exec=Desktop_Server
+Icon=Desktop_Server.ico

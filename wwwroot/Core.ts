@@ -38,10 +38,10 @@ module SL {
                 DOWN
             };
             export enum SpecialKeys {
+                NO_PRESS_DATA,
                 ALT,
                 CTRL,
-                SHIFT,
-                NO_PRESS_DATA
+                SHIFT
             };
             export class KeyEvent {
                 constructor(public PressData: KeyPress, public Key: number, public SpecialKey: SpecialKeys) { }
@@ -63,12 +63,12 @@ module SL {
                     0, // [5]
                     0xff68,//"HELP", // [6]
                     0, // [7]
-                    8,//"BACK_SPACE", // [8]
-                    9,//"TAB", // [9]
+                    0xff08,//"BACK_SPACE", // [8]
+                    0xff09,//"TAB", // [9]
                     0, // [10]
                     0, // [11]
                     0,//"CLEAR", // [12]
-                    0x000d,//"ENTER", // [13]
+                    0xff0d,//"ENTER", // [13]
                     0, // [14]
                     0, // [15]
                     0xffe1,//"SHIFT", // [16]
@@ -231,7 +231,7 @@ module SL {
                     0x2d,//"HYPHEN_MINUS", // [173]
                     0x5b,//"OPEN_CURLY_BRACKET", // [174]
                     0x5d,//"CLOSE_CURLY_BRACKET", // [175]
-                    0x27,//"TILDE", // [176]
+                    0x60,//"TILDE", // [176]
                     0, // [177]
                     0, // [178]
                     0, // [179]
@@ -315,17 +315,18 @@ module SL {
             };
 
             export enum MouseEvents {
+                NO_EVENTDATA,
                 LEFT,
                 MIDDLE,
                 RIGHT,
-                SCROLL,
-                NO_EVENTDATA
+                SCROLL
+               
             };
             export enum MousePress {
+                NO_PRESS_DATA,
                 UP,
                 DOWN,
-                DBLCLICK,
-                NO_PRESS_DATA
+                DBLCLICK               
             };
             export class MouseEvent {
 

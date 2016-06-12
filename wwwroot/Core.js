@@ -53,10 +53,10 @@ var SL;
             var KeyPress = Input.KeyPress;
             ;
             (function (SpecialKeys) {
-                SpecialKeys[SpecialKeys["ALT"] = 0] = "ALT";
-                SpecialKeys[SpecialKeys["CTRL"] = 1] = "CTRL";
-                SpecialKeys[SpecialKeys["SHIFT"] = 2] = "SHIFT";
-                SpecialKeys[SpecialKeys["NO_PRESS_DATA"] = 3] = "NO_PRESS_DATA";
+                SpecialKeys[SpecialKeys["NO_PRESS_DATA"] = 0] = "NO_PRESS_DATA";
+                SpecialKeys[SpecialKeys["ALT"] = 1] = "ALT";
+                SpecialKeys[SpecialKeys["CTRL"] = 2] = "CTRL";
+                SpecialKeys[SpecialKeys["SHIFT"] = 3] = "SHIFT";
             })(Input.SpecialKeys || (Input.SpecialKeys = {}));
             var SpecialKeys = Input.SpecialKeys;
             ;
@@ -83,12 +83,12 @@ var SL;
                     0,
                     0xff68,
                     0,
-                    8,
-                    9,
+                    0xff08,
+                    0xff09,
                     0,
                     0,
                     0,
-                    0x000d,
+                    0xff0d,
                     0,
                     0,
                     0xffe1,
@@ -251,7 +251,7 @@ var SL;
                     0x2d,
                     0x5b,
                     0x5d,
-                    0x27,
+                    0x60,
                     0,
                     0,
                     0,
@@ -337,19 +337,19 @@ var SL;
             Input.KeyEvent = KeyEvent;
             ;
             (function (MouseEvents) {
-                MouseEvents[MouseEvents["LEFT"] = 0] = "LEFT";
-                MouseEvents[MouseEvents["MIDDLE"] = 1] = "MIDDLE";
-                MouseEvents[MouseEvents["RIGHT"] = 2] = "RIGHT";
-                MouseEvents[MouseEvents["SCROLL"] = 3] = "SCROLL";
-                MouseEvents[MouseEvents["NO_EVENTDATA"] = 4] = "NO_EVENTDATA";
+                MouseEvents[MouseEvents["NO_EVENTDATA"] = 0] = "NO_EVENTDATA";
+                MouseEvents[MouseEvents["LEFT"] = 1] = "LEFT";
+                MouseEvents[MouseEvents["MIDDLE"] = 2] = "MIDDLE";
+                MouseEvents[MouseEvents["RIGHT"] = 3] = "RIGHT";
+                MouseEvents[MouseEvents["SCROLL"] = 4] = "SCROLL";
             })(Input.MouseEvents || (Input.MouseEvents = {}));
             var MouseEvents = Input.MouseEvents;
             ;
             (function (MousePress) {
-                MousePress[MousePress["UP"] = 0] = "UP";
-                MousePress[MousePress["DOWN"] = 1] = "DOWN";
-                MousePress[MousePress["DBLCLICK"] = 2] = "DBLCLICK";
-                MousePress[MousePress["NO_PRESS_DATA"] = 3] = "NO_PRESS_DATA";
+                MousePress[MousePress["NO_PRESS_DATA"] = 0] = "NO_PRESS_DATA";
+                MousePress[MousePress["UP"] = 1] = "UP";
+                MousePress[MousePress["DOWN"] = 2] = "DOWN";
+                MousePress[MousePress["DBLCLICK"] = 3] = "DBLCLICK";
             })(Input.MousePress || (Input.MousePress = {}));
             var MousePress = Input.MousePress;
             ;

@@ -231,7 +231,7 @@ module SL {
                     0x2d,//"HYPHEN_MINUS", // [173]
                     0x5b,//"OPEN_CURLY_BRACKET", // [174]
                     0x5d,//"CLOSE_CURLY_BRACKET", // [175]
-                    0x27,//"TILDE", // [176]
+                    0x60,//"TILDE", // [176]
                     0, // [177]
                     0, // [178]
                     0, // [179]

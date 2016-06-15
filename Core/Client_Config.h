@@ -15,6 +15,7 @@ namespace SL {
 				unsigned short WebSocketTLSLPort = 6001;
 				unsigned int Read_Timeout = 5;//in seconds
 				unsigned int Write_Timeout = 5;//in seconds
+				bool Share_Clipboard = true;//share your clipboard?
 
 				std::string Password;//this is the password to connect to the endpoint or that the server requrires before allowing the connection 
 

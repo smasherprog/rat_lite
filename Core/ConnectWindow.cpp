@@ -6,6 +6,7 @@
 #include "ICrypoLoader.h"
 #include "FileCrypoLoader.h"
 #include "InMemoryCrypoLoader.h"
+#include "Logging.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -37,8 +38,11 @@ namespace SL {
 				std::shared_ptr<Network::Client_Config> _Config;
 				ConnectWindowImpl() :Fl_Window(400, 420, 350, 110, "Connect to Host") {
 					_Config = std::make_shared<Network::Client_Config>();
+					_Config->Share_Clipboard = true;
 				}
-
+				virtual ~ConnectWindowImpl() {
+				
+				}
 				static void Failed_to_reach_host(void* userdata) {
 					auto ptr = ((ConnectWindowImpl*)userdata);
 					std::string msg = std::string(ptr->bInput->value()) + std::string(" could not be resolved");
@@ -119,9 +123,12 @@ namespace SL {
 					auto p = (ConnectWindowImpl*)data;
 					Fl::delete_widget(p);
 				}
+			
+
 				void Init() {
 					auto workingy = 0;
 					auto startleft = 80;
+					
 
 					_MenuBar = new Fl_Menu_Bar(0, 0, w(), 30);
 					_MenuBar->add("File/Quit", 0, Menu_CB, (void*)this);

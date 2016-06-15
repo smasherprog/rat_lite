@@ -194,10 +194,14 @@ std::string SL::Remote_Access_Library::Crypto::Createdhparams(std::string savelo
 
 std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(ICrypoLoader* certficate)
 {
+	
+	if(!certficate)return std::string("No certificate data available!");
+	auto b = certficate->get_buffer();
+	if (!b) return std::string("No certificate data available!");
+
 	std::string ret;
-  
 	auto mem = BIO_new(BIO_s_mem());
-	BIO_puts(mem, certficate->get_buffer());
+	BIO_puts(mem, b);
 	auto cert = PEM_read_bio_X509(mem, NULL, NULL, NULL);
 	if(cert ==NULL)  ret+= std::string("Loaded the Certifiate, but could not read the certificate information. It might be invalid!");
 	if (mem) BIO_free(mem);
@@ -207,10 +211,14 @@ std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(ICrypoLoader*
 
 std::string SL::Remote_Access_Library::Crypto::ValidatePrivateKey(ICrypoLoader* private_key, std::string & password)
 {
+	
+	if (!private_key)return std::string("No Private Key data available!");
+	auto b = private_key->get_buffer();
+	if (!b) return std::string("No Private Key data available!");
+
 	std::string ret;
 	auto mem = BIO_new(BIO_s_mem());
-	BIO_puts(mem, private_key->get_buffer());
-
+	BIO_puts(mem, b);
 	auto privkey = PEM_read_bio_PrivateKey(mem, NULL, NULL, (void*)password.c_str());
 	if (privkey == NULL)  ret += std::string("Loaded the Private Key, but there was an error. Either the private key is invalid or the password is!");
 	if (mem) BIO_free(mem);

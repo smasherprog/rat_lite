@@ -40,9 +40,11 @@ namespace SL {
 				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
 					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
 				{
+					Fl::add_clipboard_notify(clip_callback, this);
 				}
 
 				virtual ~ServerImpl() {
+					Fl::remove_clipboard_notify(clip_callback);
 					_Status = Server_Status::SERVER_STOPPED;
 					_Keepgoing = false;
 				}
@@ -104,6 +106,19 @@ namespace SL {
 					_ServerNetworkDriver.SendMouse(nullptr, p);
 				}
 
+				static void clip_callback(int source, void *data) {
+					auto p = (ServerImpl*)data;
+
+					if (source == 1 && p->_Config->Share_Clipboard) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Clipboard Changed!");
+						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains plain text");
+						}
+						else if (Fl::clipboard_contains(Fl::clipboard_image)) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains Image Data");
+						}
+					}
+				}
 
 				virtual void OnMouse(Input::MouseEvent* m) override {
 					if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);

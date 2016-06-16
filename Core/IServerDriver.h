@@ -16,7 +16,7 @@ namespace SL {
 
 				virtual void OnMouse(Input::MouseEvent* m) = 0;
 				virtual void OnKey(Input::KeyEvent* m) = 0;
-
+				virtual void OnClipboardText(const char* data, unsigned int len) = 0;
 			};
 		}
 	}

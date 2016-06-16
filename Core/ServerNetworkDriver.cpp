@@ -44,6 +44,13 @@ namespace SL {
 					assert(p->Payload_Length == sizeof(Input::MouseEvent));
 					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
 				}
+				void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					UNUSED(socket);
+					assert(p->Payload_Length == sizeof(Input::MouseEvent));
+					_IServerDriver->OnClipboardText(p->Payload, p->Payload_Length);
+				}
+
+
 			public:
 				ServerNetworkDriverImpl(std::shared_ptr<Network::Server_Config> config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
 
@@ -57,7 +64,7 @@ namespace SL {
 				}
 
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-					if (_Clients.size() > static_cast<size_t>(_Config->MaxNumConnections) ){
+					if (_Clients.size() > static_cast<size_t>(_Config->MaxNumConnections)) {
 						socket->close("CLosing due to max number of connections!");
 						return;
 					}
@@ -83,7 +90,10 @@ namespace SL {
 					case static_cast<unsigned int>(PACKET_TYPES::KEYEVENT) :
 						KeyboardEvent(socket, p);
 						break;
-
+					case static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT) :
+						ClipboardTextEvent(socket, p);
+						break;
+				
 					default:
 						_IServerDriver->OnReceive(socket, p);//pass up the chain
 						break;
@@ -122,13 +132,17 @@ namespace SL {
 				void SendMouse(ISocket * socket, const Utilities::Point& pos)
 				{
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
-					p.Packet_Type = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
 					memcpy(p.Payload, &pos, sizeof(pos));
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
 
+				void SendClipboardText(ISocket * socket, const char* data, unsigned int len) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT), len, (char*)data, false);
+					if (socket == nullptr) SendToAll(p);
+					else socket->send(p);
 
+				}
 
 				void SendToAll(Packet& packet) {
 					for (auto& c : GetClients()) {
@@ -249,6 +263,9 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket 
 	_ServerNetworkDriverImpl->SendMouse(socket, pos);
 }
 
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendClipboardText(ISocket * socket, const char* data, unsigned int len) {
+	_ServerNetworkDriverImpl->SendClipboardText(socket, data, len);
+}
 
 std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>> SL::Remote_Access_Library::Network::ServerNetworkDriver::GetClients()
 {

@@ -17,6 +17,7 @@ namespace SL {
 				MOUSEIMAGE,
 				KEYEVENT,
 				MOUSEEVENT,
+				CLIPBOARDTEXTEVENT,
 				//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
 				LAST_PACKET_TYPE
 			};

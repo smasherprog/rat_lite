@@ -138,5 +138,4 @@ call ntsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
     </CustomBuild>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html" />
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)copydeps.targets" />
 </Project>

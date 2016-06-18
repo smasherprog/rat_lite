@@ -3,7 +3,7 @@
 #include "Image.h"
 #include "ClientNetworkDriver.h"
 #include "Packet.h"
-#include "ISocket.h"
+
 #include "IClientDriver.h"
 #include "Mouse.h"
 #include "Keyboard.h"
@@ -11,6 +11,8 @@
 #include "ImageControl.h"
 #include "Client_Config.h"
 #include "Clipboard.h"
+#include "SocketStats.h"
+#include "ISocket.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -150,20 +152,21 @@ namespace SL {
 					Close();
 				}
 		
-				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
+				virtual void OnReceive_Image(std::shared_ptr<Utilities::Image>& img) override
 				{
-					UNUSED(socket);
+					
 					_ImageControl->SetImage(img);
 					Fl::awake(awakenredraw, this);
 
 				}
 
-				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {
+				virtual void OnReceive_ImageDif(Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {
 					_ImageControl->SetImageDif(pos, img);
 					Fl::awake(awakenredraw, this);
 					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 						_NetworkStatsTimer = std::chrono::steady_clock::now();
-						auto stats = socket->get_SocketStats();
+                        
+						auto stats = _ClientNetworkDriver.get_Socket()->get_SocketStats();
 						std::string st = "Client ";
 						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " Kbs Received ";
 						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " Kbs Sent";
@@ -177,8 +180,8 @@ namespace SL {
 					}
 
 				}
-				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
-					UNUSED(socket);
+				virtual void OnReceive_MouseImage( std::shared_ptr<Utilities::Image>& img)override {
+					
 					if (_HasFocus && !_CursorHidden) {
 						Fl::awake(awakenhidecursor, this);
 						_CursorHidden = true;
@@ -187,12 +190,12 @@ namespace SL {
 					Fl::awake(awakenredraw, this);
 				}
 
-				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
-					UNUSED(socket);
+				virtual void OnReceive_MousePos(Utilities::Point* pos)override {
+					
 					_ImageControl->SetMousePosition(*pos);
 				}
-				virtual void  OnReceive_ClipboardText(const std::shared_ptr<Network::ISocket>& socket, const char* data, unsigned int len) override {
-					UNUSED(socket);
+				virtual void  OnReceive_ClipboardText(const char* data, unsigned int len) override {
+				
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
 					Fl::copy(data, static_cast<int>(len), 1);
 				}

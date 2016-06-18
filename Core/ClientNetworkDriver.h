@@ -29,6 +29,7 @@ namespace SL {
 				void SendMouse(const Input::MouseEvent& m);
 				void SendClipboardText(const char* data, unsigned int len);
 
+                std::shared_ptr<ISocket> get_Socket()const;
 				bool ConnectedToSelf() const;
 			};
 		}

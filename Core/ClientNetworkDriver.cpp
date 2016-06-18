@@ -9,8 +9,8 @@
 #include "Mouse.h"
 #include "Logging.h"
 #include "Keyboard.h"
-#include "ISocket.h"
 #include "Client_Config.h"
+#include "ISocket.h"
 
 #include <assert.h>
 
@@ -28,17 +28,17 @@ namespace SL {
                 bool _ConectedToSelf;
 				
                 
-				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void MouseImage(std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
-					_IClientDriver->OnReceive_MouseImage(socket, img);
+					_IClientDriver->OnReceive_MouseImage(img);
 				}
 
-				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void MousePos(std::shared_ptr<Packet>& p) {
 					assert(p->Payload_Length == sizeof(Utilities::Point));
-					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);
+					_IClientDriver->OnReceive_MousePos((Utilities::Point*)p->Payload);
 				}
-				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void ScreenImageDif(std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
@@ -54,10 +54,10 @@ namespace SL {
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
-					_IClientDriver->OnReceive_ImageDif(socket, imgrect->Origin, img);
+					_IClientDriver->OnReceive_ImageDif(imgrect->Origin, img);
 
 				}
-				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void ScreenImage(std::shared_ptr<Packet>& p) {
 
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
@@ -72,12 +72,12 @@ namespace SL {
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
-					_IClientDriver->OnReceive_Image(socket, img);
+					_IClientDriver->OnReceive_Image(img);
 
 				}
-				void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
-					UNUSED(socket);
-					_IClientDriver->OnReceive_ClipboardText(socket, p->Payload, p->Payload_Length);
+				void ClipboardTextEvent(std::shared_ptr<Packet>& p) {
+				
+					_IClientDriver->OnReceive_ClipboardText(p->Payload, p->Payload_Length);
 				}
 
 			public:
@@ -116,19 +116,19 @@ namespace SL {
 
 					switch (p->Packet_Type) {
 					case static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGE) :
-						Image(socket, p);
+						ScreenImage(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGEDIF) :
-						ImageDif(socket, p);
+						ScreenImageDif(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE) :
-						MouseImage(socket, p);
+						MouseImage(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS) :
-						MousePos(socket, p);
+						MousePos(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT) :
-						ClipboardTextEvent(socket, p);
+						ClipboardTextEvent(p);
 						break;
 					default:
 						_IClientDriver->OnReceive(socket, p);//pass up the chain
@@ -165,6 +165,9 @@ namespace SL {
 				bool ConnectedToSelf() const {
 					return _ConectedToSelf;	
 				}
+                std::shared_ptr<ISocket> get_Socket()const{
+                    return _Socket;
+                }
 			};
 		}
 	}
@@ -205,6 +208,10 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const In
 bool SL::Remote_Access_Library::Network::ClientNetworkDriver::ConnectedToSelf() const {
 	return _ClientNetworkDriverImpl->ConnectedToSelf();
 }
+std::shared_ptr<SL::Remote_Access_Library::Network::ISocket> SL::Remote_Access_Library::Network::ClientNetworkDriver::get_Socket()const{
+    return _ClientNetworkDriverImpl->get_Socket();
+}
+
 void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
 	return _ClientNetworkDriverImpl->SendClipboardText(data, len);
 }

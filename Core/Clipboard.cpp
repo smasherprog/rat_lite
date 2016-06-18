@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "Clipboard.h"
-#include <FL/Fl_Widget.H>
 #include "Logging.h"
 
+#include <FL/Fl.H>
+#include <FL/Fl_Widget.H>
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Capturing {
@@ -52,4 +53,7 @@ SL::Remote_Access_Library::Capturing::Clipboard::Clipboard(const bool* is_clipsh
 SL::Remote_Access_Library::Capturing::Clipboard::~Clipboard()
 {
 	delete _ClipboardImpl;
+}
+void SL::Remote_Access_Library::Capturing::Clipboard::copy_to_clipboard(const char* data, int len){
+    Fl::copy(data, static_cast<int>(len), 1);
 }

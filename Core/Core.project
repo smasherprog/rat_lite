@@ -39,6 +39,8 @@
     <File Name="Screen.h"/>
     <File Name="Keyboard.cpp"/>
     <File Name="Keyboard.h"/>
+    <File Name="Clipboard.cpp"/>
+    <File Name="Clipboard.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Compression">
     <File Name="Compression/bitstream.h"/>

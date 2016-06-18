@@ -74,7 +74,7 @@ namespace SL {
 
 				virtual void OnReceive_ClipboardText(const char* data, unsigned int len) override {
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
-					Fl::copy(data, static_cast<int>(len), 1);
+                    Capturing::Clipboard::copy_to_clipboard(data, static_cast<int>(len));
 				}
 
 

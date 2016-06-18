@@ -66,7 +66,7 @@ public class Android_Server extends Activity {
 
 		TextView txt = (TextView) findViewById(R.id.ipareatext);
 		txt.setText(Utils.getIPAddress(true));
-
+	
 		// start projection
 		Button startButton = (Button) findViewById(R.id.startButton);
 		startButton.setOnClickListener(new OnClickListener() {

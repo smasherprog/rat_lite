@@ -74,6 +74,7 @@ namespace SL {
 						config = std::make_shared<Network::Server_Config>();
 						config->WebSocketTLSLPort = 6001;// listen for websockets
 						config->HttpTLSPort = 8080;
+						config->Share_Clipboard = true;
 						auto searchpath = executable_path(nullptr);
 						auto exeindex = searchpath.find_last_of('\\');
 						if (exeindex == searchpath.npos) exeindex = searchpath.find_last_of('/');

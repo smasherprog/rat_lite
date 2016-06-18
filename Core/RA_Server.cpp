@@ -40,11 +40,24 @@ namespace SL {
 				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
 					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
 				{
+					Fl::add_clipboard_notify(clip_callback, this);
 				}
 
 				virtual ~ServerImpl() {
+					Fl::remove_clipboard_notify(clip_callback);
 					_Status = Server_Status::SERVER_STOPPED;
 					_Keepgoing = false;
+				}
+				static void clip_callback(int source, void *data) {
+					auto p = (ServerImpl*)data;
+
+					if (source == 1 && p->_Config->Share_Clipboard) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Clipboard Changed!");
+						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains plain text");
+							p->_ServerNetworkDriver.SendClipboardText(nullptr, Fl::event_text(), Fl::event_length());
+						}
+					}
 				}
 				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override {
 					UNUSED(socket);
@@ -67,8 +80,34 @@ namespace SL {
 					else SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive Unknown Packet " << packet->Packet_Type);
 				}
 
-				void OnScreen(std::shared_ptr<Utilities::Image> img)
-				{
+				virtual void OnClipboardText(const char* data, unsigned int len) override {
+					Fl::copy(data, static_cast<int>(len), 1);
+				}
+
+
+				virtual void OnMouse(Input::MouseEvent* m) override {
+					if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
+				}
+				virtual void OnKey(Input::KeyEvent* m)override {
+					if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
+				}
+
+
+				void OnMousePos(Utilities::Point p) {
+					_ServerNetworkDriver.SendMouse(nullptr, p);
+				}
+				void OnMouseImg(std::shared_ptr<Utilities::Image> img) {
+					if (!LastMouse) {
+						_ServerNetworkDriver.SendMouse(nullptr, *img);
+					}
+					else {
+						if (memcmp(img->data(), LastMouse->data(), std::min(LastMouse->size(), img->size())) != 0) {
+							_ServerNetworkDriver.SendMouse(nullptr, *img);
+						}
+					}
+					LastMouse = img;
+				}
+				void OnScreen(std::shared_ptr<Utilities::Image> img) {
 					if (!_NewClients.empty()) {
 						//make sure to send the full screens to any new connects
 						std::lock_guard<std::mutex> lock(_NewClientLock);
@@ -85,31 +124,6 @@ namespace SL {
 						}
 					}
 					LastScreen = img;//swap
-				}
-
-
-				void OnMouseImg(std::shared_ptr<Utilities::Image> img)
-				{
-					if (!LastMouse) {
-						_ServerNetworkDriver.SendMouse(nullptr, *img);
-					}
-					else {
-						if (memcmp(img->data(), LastMouse->data(), std::min(LastMouse->size(), img->size())) != 0) {
-							_ServerNetworkDriver.SendMouse(nullptr, *img);
-						}
-					}
-					LastMouse = img;
-				}
-				void OnMousePos(Utilities::Point p) {
-					_ServerNetworkDriver.SendMouse(nullptr, p);
-				}
-
-
-				virtual void OnMouse(Input::MouseEvent* m) override {
-					if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
-				}
-				virtual void OnKey(Input::KeyEvent* m)override {
-					if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
 				}
 
 				int Run() {
@@ -204,7 +218,7 @@ SL::Remote_Access_Library::Server_Status SL::Remote_Access_Library::Server::RA_S
 std::string SL::Remote_Access_Library::Server::RA_Server::Validate_Settings(std::shared_ptr<Network::Server_Config> config)
 {
 	std::string ret;
-	assert(config.get()!=nullptr);
+	assert(config.get() != nullptr);
 	ret += Crypto::ValidateCertificate(config->Public_Certficate.get());
 	ret += Crypto::ValidatePrivateKey(config->Private_Key.get(), config->PasswordToPrivateKey);
 	if (!SL::Directory_Exists(config->WWWRoot)) ret += "You must supply a valid folder for wwwroot!\n";

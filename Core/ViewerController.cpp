@@ -69,12 +69,26 @@ namespace SL {
 					end();
 					resizable(this);
 					show();
-
+					Fl::add_clipboard_notify(clip_callback, this);
 				}
 				virtual ~ViewerControllerImpl() {
+					Fl::remove_clipboard_notify(clip_callback);
 					_ClientNetworkDriver.Stop();
 				}
 
+				static void clip_callback(int source, void *data) {
+					auto p = (ViewerControllerImpl*)data;
+
+					if (source == 1 && p->_Config->Share_Clipboard) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Clipboard Changed!");
+						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains plain text");
+						}
+						else if (Fl::clipboard_contains(Fl::clipboard_image)) {
+							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains Image Data");
+						}
+					}
+				}
 
 				void handle_key(int e, Input::Keyboard::Press press) {
                     UNUSED(e);

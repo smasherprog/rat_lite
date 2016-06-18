@@ -218,7 +218,7 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	outrects.reserve(rects.size());
 	outrects.push_back(rects[0]);
 	//horizontal scan
-	for (size_t i = 1; i < rects.size() - 1; i++) {
+	for (size_t i = 1; i < rects.size(); i++) {
 		if (outrects.back().right() == rects[i].left() && outrects.back().bottom() == rects[i].bottom()) {
 			outrects.back().right(rects[i].right());
 		}

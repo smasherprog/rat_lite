@@ -25,7 +25,6 @@ bld/
 .vs/
 .codelite/
 *.tlog
-.vs/
 # Roslyn cache directories
 *.ide/
 

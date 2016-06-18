@@ -2,6 +2,7 @@
 #include "InMemoryCrypoLoader.h"
 #include <vector>
 #include <assert.h>
+#include "Logging.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -17,7 +18,7 @@ namespace SL {
 				}
 				const char* get_buffer() {
 					//data cannot be empty!
-					assert(!Data.empty());
+					if(Data.empty()) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Data not found!");
 					return Data.data();
 				}
 				size_t get_size() {

@@ -39,7 +39,7 @@ namespace SL {
 
 			public:
 
-				ImageControlImpl(int X, int Y, int W, int H, const char * title, ImageControlInfo&& info) : Fl_Box(X, Y, W, H, title), _ImageControlInfo(std::move(info)){}
+				ImageControlImpl(int X, int Y, int W, int H, const char * title, ImageControlInfo&& info) : Fl_Box(X, Y, W, H, title), _ImageControlInfo(std::move(info)) {}
 				virtual ~ImageControlImpl() {
 
 				}
@@ -132,23 +132,30 @@ namespace SL {
 					_MousePos = m;
 					if (_ScaledImage) {//need to scale the mouse pos as well
 						auto scalefactor = GetScaleFactor();
-						
-						_MousePos.X = static_cast<int>(static_cast<float>( _MousePos.X - _ImageControlInfo._Scroller->xposition())*scalefactor);
+
+						_MousePos.X = static_cast<int>(static_cast<float>(_MousePos.X - _ImageControlInfo._Scroller->xposition())*scalefactor);
 						_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y - _ImageControlInfo._Scroller->yposition())*scalefactor);
 					}
 				}
 				void ScaleImage(bool b) {
 					_ScaleImage = b;
 				}
+				int pastedstuff() {
+					auto t = Fl::event_text();
+					auto len = Fl::event_length();
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "file drop event len: " << len << " text " << t);
+					return 1;
+				}
 				virtual int handle(int e) override {
 					switch (e) {
-					
+
+
 					case FL_PUSH:
 						_ImageControlInfo._MouseCallback(e, Fl::event_button(), Input::Mouse::Press::DOWN, Fl::event_x() + _ImageControlInfo._Scroller->xposition(), Fl::event_y() + _ImageControlInfo._Scroller->yposition());
 						return 1;
 					case FL_RELEASE:
 						_ImageControlInfo._MouseCallback(e, Fl::event_button(), Input::Mouse::Press::UP, Fl::event_x() + _ImageControlInfo._Scroller->xposition(), Fl::event_y() + _ImageControlInfo._Scroller->yposition());
-						break;	
+						break;
 					case FL_ENTER:
 						return 1;
 					case FL_DRAG:
@@ -163,8 +170,15 @@ namespace SL {
 						_ImageControlInfo._KeyCallback(e, Input::Keyboard::Press::UP);
 						return 1;
 					case FL_FOCUS:
-				
 						return 1;
+					case FL_PASTE:
+						return pastedstuff();
+					case FL_DND_ENTER:
+					case FL_DND_LEAVE:
+					case FL_DND_DRAG:
+					case FL_DND_RELEASE:
+						return 1;
+
 					default:
 						break;
 					};

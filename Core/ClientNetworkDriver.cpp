@@ -24,7 +24,7 @@ namespace SL {
                 std::shared_ptr<Network::Client_Config> _Config;
 				std::shared_ptr<Network::ISocket> _Socket;
                 std::string _dst_host;
-				
+				Utilities::Point _LastMousePosition;
                 bool _ConectedToSelf;
 				
                 
@@ -83,7 +83,7 @@ namespace SL {
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : 
                 _IClientDriver(r), _Config(config), _dst_host(dst_host), _ConectedToSelf(false){
-
+					memset(&_LastMousePosition, 0, sizeof(_LastMousePosition));
 				}
 				
 				void Start() {
@@ -141,6 +141,11 @@ namespace SL {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendMouse called on a socket that is not open yet");
 						return;
 					}
+					//do checks to prevent sending redundant mouse information about its position
+					if (m.EventData == Input::Mouse::NO_EVENTDATA && _LastMousePosition == m.Pos && m.PressData == Input::Mouse::NO_PRESS_DATA && m.ScrollDelta == 0) {
+						return;//already did this event
+					}
+					_LastMousePosition = m.Pos;
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(m));
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);

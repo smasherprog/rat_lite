@@ -130,6 +130,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)InMemoryCrypoLoader.cpp">
       <Filter>Crypto</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Clipboard.cpp">
+      <Filter>Capturing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -288,6 +291,9 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)InMemoryCrypoLoader.h">
       <Filter>Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Clipboard.h">
+      <Filter>Capturing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

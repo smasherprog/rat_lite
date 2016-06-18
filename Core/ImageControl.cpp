@@ -136,6 +136,12 @@ namespace SL {
 						_MousePos.X = static_cast<int>(static_cast<float>(_MousePos.X - _ImageControlInfo._Scroller->xposition())*scalefactor);
 						_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y - _ImageControlInfo._Scroller->yposition())*scalefactor);
 					}
+					if (_ImageControlInfo._Scroller->visible()) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Before " << _MousePos);
+						_MousePos.X -= _ImageControlInfo._Scroller->scrollbar_size();
+						_MousePos.Y -= _ImageControlInfo._Scroller->scrollbar_size();
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "After " << _MousePos);
+					}	
 				}
 				void ScaleImage(bool b) {
 					_ScaleImage = b;

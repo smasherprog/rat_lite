@@ -31,7 +31,8 @@ namespace SL {
 				std::mutex _ClientsLock;
 				std::shared_ptr<Network::Server_Config> _Config;
 				std::vector<char> _CompressBuffer;
-
+                Utilities::Point _LastMousePos;
+                
 				void KeyboardEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::KeyEvent));
@@ -52,7 +53,8 @@ namespace SL {
 
 
 			public:
-				ServerNetworkDriverImpl(std::shared_ptr<Network::Server_Config> config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
+				ServerNetworkDriverImpl(std::shared_ptr<Network::Server_Config> config, IServerDriver* svrd) : 
+                _IServerDriver(svrd), _Config(config), _LastMousePos(0, 0) {
 
 				}
 				virtual ~ServerNetworkDriverImpl() {
@@ -131,6 +133,8 @@ namespace SL {
 				}
 				void SendMouse(ISocket * socket, const Utilities::Point& pos)
 				{
+                    if(_LastMousePos == pos) return;//no need to send the same information
+                    else _LastMousePos = pos;//copy the last mouse pos
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
 					memcpy(p.Payload, &pos, sizeof(pos));
 					if (socket == nullptr) SendToAll(p);

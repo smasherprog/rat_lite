@@ -12,6 +12,7 @@
 #include "Keyboard.h"
 #include "IBaseNetworkDriver.h"
 #include "crypto.h"
+#include "Clipboard.h"
 
 #include <thread>
 #include <mutex>
@@ -21,6 +22,7 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Server {
+
 			class ServerImpl : public Network::IServerDriver {
 			public:
 				std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
@@ -40,25 +42,15 @@ namespace SL {
 				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
 					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
 				{
-					Fl::add_clipboard_notify(clip_callback, this);
+
 				}
 
 				virtual ~ServerImpl() {
-					Fl::remove_clipboard_notify(clip_callback);
+
 					_Status = Server_Status::SERVER_STOPPED;
 					_Keepgoing = false;
 				}
-				static void clip_callback(int source, void *data) {
-					auto p = (ServerImpl*)data;
 
-					if (source == 1 && p->_Config->Share_Clipboard) {
-						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Clipboard Changed!");
-						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains plain text");
-							p->_ServerNetworkDriver.SendClipboardText(nullptr, Fl::event_text(), Fl::event_length());
-						}
-					}
-				}
 				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override {
 					UNUSED(socket);
 					return true;
@@ -80,15 +72,16 @@ namespace SL {
 					else SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive Unknown Packet " << packet->Packet_Type);
 				}
 
-				virtual void OnClipboardText(const char* data, unsigned int len) override {
+				virtual void OnReceive_ClipboardText(const char* data, unsigned int len) override {
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
 					Fl::copy(data, static_cast<int>(len), 1);
 				}
 
 
-				virtual void OnMouse(Input::MouseEvent* m) override {
+				virtual void OnReceive_Mouse(Input::MouseEvent* m) override {
 					if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
 				}
-				virtual void OnKey(Input::KeyEvent* m)override {
+				virtual void OnReceive_Key(Input::KeyEvent* m)override {
 					if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
 				}
 
@@ -130,6 +123,7 @@ namespace SL {
 					_Status = Server_Status::SERVER_RUNNING;
 					_ServerNetworkDriver.Start();
 					_HttpsServerNetworkDriver.Start();
+
 #if !__ANDROID__
 					auto mouseimg(Input::get_MouseImage());
 					auto mousepos(Input::get_MousePosition());
@@ -138,6 +132,7 @@ namespace SL {
 
 					auto screenimg(Capturing::get_ScreenImage());
 					auto screenimgtimer = std::chrono::steady_clock::now();
+					auto clipboardmonitor = std::make_unique<Capturing::Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
 #endif
 
 

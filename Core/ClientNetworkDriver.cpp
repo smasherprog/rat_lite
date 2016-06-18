@@ -75,7 +75,11 @@ namespace SL {
 					_IClientDriver->OnReceive_Image(socket, img);
 
 				}
-			
+				void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					UNUSED(socket);
+					_IClientDriver->OnReceive_ClipboardText(socket, p->Payload, p->Payload_Length);
+				}
+
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : 
                 _IClientDriver(r), _Config(config), _dst_host(dst_host), _ConectedToSelf(false){
@@ -123,6 +127,9 @@ namespace SL {
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS) :
 						MousePos(socket, p);
 						break;
+					case static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT) :
+						ClipboardTextEvent(socket, p);
+						break;
 					default:
 						_IClientDriver->OnReceive(socket, p);//pass up the chain
 						break;
@@ -145,6 +152,14 @@ namespace SL {
 					}
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::KEYEVENT), sizeof(m));
 					memcpy(p.Payload, &m, sizeof(m));
+					_Socket->send(p);
+				}
+				void SendClipboardText(const char* data, unsigned int len) {
+					if (!_Socket) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
+						return;
+					}
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT), len, (char*)data, false);
 					_Socket->send(p);
 				}
 				bool ConnectedToSelf() const {
@@ -189,4 +204,7 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const In
 
 bool SL::Remote_Access_Library::Network::ClientNetworkDriver::ConnectedToSelf() const {
 	return _ClientNetworkDriverImpl->ConnectedToSelf();
+}
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
+	return _ClientNetworkDriverImpl->SendClipboardText(data, len);
 }

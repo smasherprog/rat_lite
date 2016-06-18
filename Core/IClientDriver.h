@@ -15,10 +15,11 @@ namespace SL {
 			public:
 
 				virtual ~IClientDriver() {}
-				virtual void OnReceive_ImageDif(const std::shared_ptr<ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) = 0;
-				virtual void OnReceive_Image(const std::shared_ptr<ISocket>& socket,std::shared_ptr<Utilities::Image>& img) = 0;
-				virtual void OnReceive_MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Utilities::Image>& img) = 0;
-				virtual void OnReceive_MousePos(const std::shared_ptr<ISocket>& socket, Utilities::Point* pos) = 0;
+				virtual void OnReceive_ImageDif(Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) = 0;
+				virtual void OnReceive_Image(std::shared_ptr<Utilities::Image>& img) = 0;
+				virtual void OnReceive_MouseImage(std::shared_ptr<Utilities::Image>& img) = 0;
+				virtual void OnReceive_MousePos(Utilities::Point* pos) = 0;
+				virtual void OnReceive_ClipboardText(const char* data, unsigned int len) = 0;
 	
 			};
 		}

@@ -27,6 +27,8 @@ namespace SL {
 
 				void SendKey(const Input::KeyEvent& m);
 				void SendMouse(const Input::MouseEvent& m);
+				void SendClipboardText(const char* data, unsigned int len);
+
 				bool ConnectedToSelf() const;
 			};
 		}

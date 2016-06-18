@@ -149,7 +149,7 @@ namespace SL {
 				}
 				Packet decompress(Packet& packet) {
 					Packet p(packet.Packet_Type, _ReadPacketHeader.UncompressedLength, std::move(packet.Header));
-					p.Payload_Length = static_cast<unsigned int>(ZSTD_decompress((p.Payload, _ReadPacketHeader.UncompressedLength, packet.Payload, packet.Payload_Length));
+					p.Payload_Length = static_cast<unsigned int>(ZSTD_decompress(p.Payload, _ReadPacketHeader.UncompressedLength, packet.Payload, packet.Payload_Length));
 					if (ZSTD_isError(p.Payload_Length) > 0) {
 						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ZSTD_getErrorName(p.Payload_Length));
 						return Packet(static_cast<unsigned int>(PACKET_TYPES::INVALID));//empty packet

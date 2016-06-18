@@ -8,7 +8,7 @@ namespace SL {
 		namespace UI {
 			class ViewerControllerImpl;
 			class ViewerController {
-				ViewerControllerImpl* _ViewerControllerImpl;
+				ViewerControllerImpl* _ViewerControllerImpl = nullptr;
 			public:
 				ViewerController(std::shared_ptr<Network::Client_Config> config, const char*  dst_host);
 				~ViewerController();

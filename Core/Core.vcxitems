@@ -17,6 +17,7 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)ApplicationDirectory.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Clipboard.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Compression\divsufsort.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -72,6 +73,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ApplicationDirectory.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Client_Config.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Clipboard.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\bitstream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\divsufsort.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_private.h" />
@@ -126,10 +128,7 @@
   <ItemGroup>
     <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
       <FileType>Document</FileType>
-      <Command>call npm install ntypescript -g
-
-
-call ntsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
+      <Command>call ntsc $(SolutionDir)wwwroot\Core.ts -t ES5</Command>
       <Outputs>Core.js</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
       <LinkObjects>false</LinkObjects>

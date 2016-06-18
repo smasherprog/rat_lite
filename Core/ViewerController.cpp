@@ -10,6 +10,7 @@
 #include "Logging.h"
 #include "ImageControl.h"
 #include "Client_Config.h"
+#include "Clipboard.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -36,7 +37,8 @@ namespace SL {
                 
                 std::shared_ptr<Network::Client_Config> _Config;
 				Network::ClientNetworkDriver _ClientNetworkDriver;
-				
+				std::unique_ptr<Capturing::Clipboard> Clipboard;
+
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
 				float MaxFPS = 30.0f;
@@ -53,9 +55,9 @@ namespace SL {
 					auto wnd = (ViewerControllerImpl*)widget;
 					wnd->Close();
 				}
-				ViewerControllerImpl(std::shared_ptr<Network::Client_Config> config, const char* dst_host) : Fl_Double_Window(900, 700, "Remote Host"), _Config(config), _ClientNetworkDriver(this, config, dst_host)
+				ViewerControllerImpl(std::shared_ptr<Network::Client_Config> config, const char* dst_host) : 
+					Fl_Double_Window(900, 700, "Remote Host"), _Config(config), _ClientNetworkDriver(this, config, dst_host)
 				{
-
 					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
@@ -69,27 +71,14 @@ namespace SL {
 					end();
 					resizable(this);
 					show();
-					Fl::add_clipboard_notify(clip_callback, this);
+					Clipboard = std::make_unique<Capturing::Clipboard>(&config->Share_Clipboard, [&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
+				
 				}
 				virtual ~ViewerControllerImpl() {
-					Fl::remove_clipboard_notify(clip_callback);
+					Clipboard.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
 					_ClientNetworkDriver.Stop();
 				}
-
-				static void clip_callback(int source, void *data) {
-					auto p = (ViewerControllerImpl*)data;
-
-					if (source == 1 && p->_Config->Share_Clipboard) {
-						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Clipboard Changed!");
-						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains plain text");
-						}
-						else if (Fl::clipboard_contains(Fl::clipboard_image)) {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains Image Data");
-						}
-					}
-				}
-
+				
 				void handle_key(int e, Input::Keyboard::Press press) {
                     UNUSED(e);
 					auto key = Fl::event_key();
@@ -160,6 +149,55 @@ namespace SL {
 					UNUSED(socket);
 					Close();
 				}
+		
+				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
+				{
+					UNUSED(socket);
+					_ImageControl->SetImage(img);
+					Fl::awake(awakenredraw, this);
+
+				}
+
+				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {
+					_ImageControl->SetImageDif(pos, img);
+					Fl::awake(awakenredraw, this);
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
+						_NetworkStatsTimer = std::chrono::steady_clock::now();
+						auto stats = socket->get_SocketStats();
+						std::string st = "Client ";
+						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " Kbs Received ";
+						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " Kbs Sent";
+						FPS = FrameCounter;
+						FrameCounter = 0;
+						st += " Fps: " + std::to_string(FPS);
+						LastStats = stats;
+						if (st.size() > sizeof(_Title) - 1) st = st.substr(0, sizeof(_Title) - 1);
+						memcpy(_Title, st.c_str(), st.size() + 1);
+						Fl::awake(awakensettitle, this);
+					}
+
+				}
+				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
+					UNUSED(socket);
+					if (_HasFocus && !_CursorHidden) {
+						Fl::awake(awakenhidecursor, this);
+						_CursorHidden = true;
+					}
+					_ImageControl->SetMouseImage(img);
+					Fl::awake(awakenredraw, this);
+				}
+
+				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
+					UNUSED(socket);
+					_ImageControl->SetMousePosition(*pos);
+				}
+				virtual void  OnReceive_ClipboardText(const std::shared_ptr<Network::ISocket>& socket, const char* data, unsigned int len) override {
+					UNUSED(socket);
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
+					Fl::copy(data, static_cast<int>(len), 1);
+				}
+
+
 				void Close() {
 					if (!_BeingClosed) {
 						Fl::delete_widget(this);
@@ -180,55 +218,17 @@ namespace SL {
 				{
 					_ImageControl->ScaleImage(b);
 				}
-				virtual void OnReceive_Image(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img) override
-				{
-					UNUSED(socket);
-					_ImageControl->SetImage(img);
-					Fl::awake(awakenredraw, this);
 
-				}
 				static void awakensettitle(void* data) {
 					auto imp = ((ViewerControllerImpl*)data);
 					if (imp->_BeingClosed) return;
 					imp->label(imp->_Title);
 				}
-				virtual void OnReceive_ImageDif(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {
-					_ImageControl->SetImageDif(pos, img);
-					Fl::awake(awakenredraw, this);
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
-						_NetworkStatsTimer = std::chrono::steady_clock::now();
-						auto stats = socket->get_SocketStats();
-						std::string st = "Client ";
-						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " Kbs Received ";
-						st += std::to_string((stats.NetworkBytesSent - LastStats.NetworkBytesSent) / 1000) + " Kbs Sent";
-						FPS = FrameCounter;
-						FrameCounter = 0;
-						st += " Fps: " + std::to_string(FPS);
-						LastStats = stats;
-						if (st.size() > sizeof(_Title) - 1) st = st.substr(0, sizeof(_Title) - 1);
-						memcpy(_Title, st.c_str(), st.size() + 1);
-						Fl::awake(awakensettitle, this);
-					}
-
-				}
 				static void awakenhidecursor(void* data) {
 					auto imp = ((ViewerControllerImpl*)data);
 					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 				}
-				virtual void OnReceive_MouseImage(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Utilities::Image>& img)override {
-					UNUSED(socket);
-                    if (_HasFocus && !_CursorHidden) {
-						Fl::awake(awakenhidecursor, this);
-						_CursorHidden = true;
-					}
-					_ImageControl->SetMouseImage(img);
-					Fl::awake(awakenredraw, this);
-				}
-
-				virtual void OnReceive_MousePos(const std::shared_ptr<Network::ISocket>& socket, Utilities::Point* pos)override {
-                    UNUSED(socket);
-					_ImageControl->SetMousePosition(*pos);
-				}
+		
 			};
 
 		}

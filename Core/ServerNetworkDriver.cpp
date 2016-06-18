@@ -35,19 +35,19 @@ namespace SL {
 				void KeyboardEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::KeyEvent));
-					_IServerDriver->OnKey((Input::KeyEvent*) p->Payload);
+					_IServerDriver->OnReceive_Key((Input::KeyEvent*) p->Payload);
 
 				}
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::MouseEvent));
-					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
+					_IServerDriver->OnReceive_Mouse((Input::MouseEvent*) p->Payload);
 				}
 				void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					UNUSED(socket);
-					assert(p->Payload_Length == sizeof(Input::MouseEvent));
-					_IServerDriver->OnClipboardText(p->Payload, p->Payload_Length);
+
+					_IServerDriver->OnReceive_ClipboardText(p->Payload, p->Payload_Length);
 				}
 
 
@@ -264,6 +264,7 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket 
 }
 
 void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendClipboardText(ISocket * socket, const char* data, unsigned int len) {
+	SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnSend_ClipboardText " << len);
 	_ServerNetworkDriverImpl->SendClipboardText(socket, data, len);
 }
 

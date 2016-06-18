@@ -32,6 +32,7 @@ namespace SL {
 				Network::ServerNetworkDriver _ServerNetworkDriver;
 				Network::HttpsServerNetworkDriver _HttpsServerNetworkDriver;
 				Network::IBaseNetworkDriver* _IUserNetworkDriver;
+				std::unique_ptr<Capturing::Clipboard> _Clipboard;
 
 				bool _Keepgoing = true;
 				std::mutex _NewClientLock;
@@ -42,11 +43,11 @@ namespace SL {
 				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
 					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
 				{
-
+					
 				}
 
 				virtual ~ServerImpl() {
-
+					_Clipboard.reset();//make sure to prevent race conditions
 					_Status = Server_Status::SERVER_STOPPED;
 					_Keepgoing = false;
 				}
@@ -74,7 +75,7 @@ namespace SL {
 
 				virtual void OnReceive_ClipboardText(const char* data, unsigned int len) override {
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
-                    Capturing::Clipboard::copy_to_clipboard(data, static_cast<int>(len));
+                    _Clipboard->copy_to_clipboard(data, static_cast<int>(len));
 				}
 
 
@@ -123,6 +124,7 @@ namespace SL {
 					_Status = Server_Status::SERVER_RUNNING;
 					_ServerNetworkDriver.Start();
 					_HttpsServerNetworkDriver.Start();
+					_Clipboard = std::make_unique<Capturing::Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
 
 #if !__ANDROID__
 					auto mouseimg(Input::get_MouseImage());
@@ -132,7 +134,7 @@ namespace SL {
 
 					auto screenimg(Capturing::get_ScreenImage());
 					auto screenimgtimer = std::chrono::steady_clock::now();
-					auto clipboardmonitor = std::make_unique<Capturing::Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
+				
 #endif
 
 

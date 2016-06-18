@@ -39,7 +39,7 @@ namespace SL {
                 
                 std::shared_ptr<Network::Client_Config> _Config;
 				Network::ClientNetworkDriver _ClientNetworkDriver;
-				std::unique_ptr<Capturing::Clipboard> Clipboard;
+				std::unique_ptr<Capturing::Clipboard> _Clipboard;
 
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
@@ -73,11 +73,11 @@ namespace SL {
 					end();
 					resizable(this);
 					show();
-					Clipboard = std::make_unique<Capturing::Clipboard>(&config->Share_Clipboard, [&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
+					_Clipboard = std::make_unique<Capturing::Clipboard>(&config->Share_Clipboard, [&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
 				
 				}
 				virtual ~ViewerControllerImpl() {
-					Clipboard.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
+					_Clipboard.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
 					_ClientNetworkDriver.Stop();
 				}
 				
@@ -195,9 +195,7 @@ namespace SL {
 					_ImageControl->SetMousePosition(*pos);
 				}
 				virtual void  OnReceive_ClipboardText(const char* data, unsigned int len) override {
-				
-					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
-					Fl::copy(data, static_cast<int>(len), 1);
+					_Clipboard->copy_to_clipboard(data, len);
 				}
 
 

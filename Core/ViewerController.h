@@ -12,8 +12,6 @@ namespace SL {
 			public:
 				ViewerController(std::shared_ptr<Network::Client_Config> config, const char*  dst_host);
 				~ViewerController();
-
-				void ScaleView(bool b);
 			};
 		}
 	}

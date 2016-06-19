@@ -103,7 +103,7 @@ namespace SL {
 				static void setscale(Fl_Widget* o, void* userdata) {
                     UNUSED(o);
 					auto ptr = ((ConnectWindowImpl*)userdata);
-					if (ptr->checkbx && ptr->_MainWindow) ptr->_MainWindow->ScaleView(ptr->checkbx->value() == 1);
+					if (ptr->checkbx) ptr->_Config->Scale_Image= ptr->checkbx->value() == 1;
 				}
 				static void _FullPathToCertifiateCB(Fl_Widget*w, void*data) {
 					UNUSED(w);

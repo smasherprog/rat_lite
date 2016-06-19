@@ -133,6 +133,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Clipboard.cpp">
       <Filter>Capturing</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)ScreenImageDriver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -295,6 +296,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Clipboard.h">
       <Filter>Capturing</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ScreenImageDriver.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">

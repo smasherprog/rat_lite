@@ -1,36 +1,37 @@
 #pragma once
-#include <memory>
-#include <functional>
-#include "../Core/Mouse.h"
-#include "../Core/Keyboard.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
-class Fl_Scroll;
+#include <vector>
+#include <string>
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Utilities {
-			class Point;
-			class Image;
-		}
 		namespace UI {
-			struct ImageControlInfo {
-				Fl_Scroll* _Scroller = nullptr;
-				std::function<void(int, int, Input::Mouse::Press, int, int)> _MouseCallback;
-				std::function<void(int, Input::Keyboard::Press)> _KeyCallback;
+			struct ScreenImageInfo {
+
+				std::function<int()> get_Top;
+				std::function<int()> get_Left;
+				std::function<int()> get_Height;
+
+				std::function<void(int, Input::Keyboard::Press)> OnKey;
+				std::function<void(int, int, Input::Mouse::Press, int, int)> OnMouse;
+				std::function<void(std::vector<std::string>&)> OnDND;//drag and drop. vector of strings
 			};
+
 			class ImageControlImpl;
 			class ImageControl {
 				ImageControlImpl* _ImageControlImpl;
 			public:
-				ImageControl(int X, int Y, int W, int H, const char * title, ImageControlInfo&& info);
+				ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info);
 				~ImageControl();
 
-				void ScaleImage(bool b);
-				void SetMousePosition(const Utilities::Point& m);
-				void SetMouseImage(const std::shared_ptr<Utilities::Image>& m);
-				float GetScaleFactor() const;
-				void SetImage(const std::shared_ptr<Utilities::Image>& m);
-				void SetImageDif(Utilities::Point pos, const std::shared_ptr<Utilities::Image>& img);
+				void OnResize(int W, int H, int SS);
+				bool is_ImageScaled() const;
+				void set_ScreenImage(std::shared_ptr<Utilities::Image>& img);
+				void set_ImageDifference(Utilities::Point& pos, const std::shared_ptr<Utilities::Image>& img);
+				void set_MouseImage(std::shared_ptr<Utilities::Image>& img);
+				void set_MousePosition(Utilities::Point* pos);
 
 			};
 		}

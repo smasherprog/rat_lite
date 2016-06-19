@@ -1,18 +1,19 @@
 #include "stdafx.h"
 #include "ViewerController.h"
 #include "Image.h"
-#include "ClientNetworkDriver.h"
-#include "Packet.h"
-
-#include "IClientDriver.h"
+#include "ImageControl.h"
 #include "Mouse.h"
 #include "Keyboard.h"
 #include "Logging.h"
 #include "ImageControl.h"
 #include "Client_Config.h"
-#include "Clipboard.h"
-#include "SocketStats.h"
 #include "ISocket.h"
+#include "SocketStats.h"
+#include "IClientDriver.h"
+#include "ClientNetworkDriver.h"
+#include "Packet.h"
+#include "Clipboard.h"
+#include "Shapes.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -30,17 +31,16 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace UI {
-			class ViewerControllerImpl : public Fl_Double_Window, public Network::IClientDriver
-			{
+			class ViewerControllerImpl : public Fl_Double_Window, Network::IClientDriver{
 			public:
 				ImageControl* _ImageControl = nullptr;
 
 				Fl_Scroll* _Fl_Scroll = nullptr;
-                
                 std::shared_ptr<Network::Client_Config> _Config;
-				Network::ClientNetworkDriver _ClientNetworkDriver;
-				std::unique_ptr<Capturing::Clipboard> _Clipboard;
 
+				std::unique_ptr<Capturing::Clipboard> _Clipboard;
+				Network::ClientNetworkDriver _ClientNetworkDriver;
+			
 				std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
 				std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
 				float MaxFPS = 30.0f;
@@ -58,29 +58,38 @@ namespace SL {
 					wnd->Close();
 				}
 				ViewerControllerImpl(std::shared_ptr<Network::Client_Config> config, const char* dst_host) : 
-					Fl_Double_Window(900, 700, "Remote Host"), _Config(config), _ClientNetworkDriver(this, config, dst_host)
+					Fl_Double_Window(900, 700, "Remote Host"), 
+					_Config(config),
+					_ClientNetworkDriver(this, config, dst_host)
 				{
 					_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 					callback(window_cb);
 					_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
-					ImageControlInfo info;
-					info._Scroller = _Fl_Scroll;
-					info._KeyCallback = [this](int e, Input::Keyboard::Press p) { this->handle_key(e, p); };
-					info._MouseCallback = [this](int e, int button, Input::Mouse::Press press, int x, int y) { this->handle_mouse(e, button, press, x, y); };
+	
+					ScreenImageInfo info;
+					info.get_Height = [this]() {return this->h(); };
+					info.get_Left = [this]() {return _Fl_Scroll->xposition(); };
+					info.get_Top = [this]() {return _Fl_Scroll->yposition(); };
+					info.OnKey = [this](int e, Input::Keyboard::Press p) { this->handle_key(e, p); };
+					info.OnMouse = [this](int e, int button, Input::Mouse::Press press, int x, int y) { this->handle_mouse(e, button, press, x, y); };
 
 					_ImageControl = new ImageControl(0, 0, 900, 700, nullptr, std::move(info));
 					_Fl_Scroll->end();
 					end();
 					resizable(this);
 					show();
+
 					_Clipboard = std::make_unique<Capturing::Clipboard>(&config->Share_Clipboard, [&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
-				
+
 				}
 				virtual ~ViewerControllerImpl() {
 					_Clipboard.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
 					_ClientNetworkDriver.Stop();
 				}
-				
+				virtual void resize(int X, int Y, int W, int H) override {
+					Fl_Window::resize(X, Y, W, H);
+					_ImageControl->OnResize(W, H, _Fl_Scroll->scrollbar_size());
+				}
 				void handle_key(int e, Input::Keyboard::Press press) {
                     UNUSED(e);
 					auto key = Fl::event_key();
@@ -98,11 +107,8 @@ namespace SL {
 					_ClientNetworkDriver.SendKey(k);
 				}
 				void handle_mouse(int e, int button, Input::Mouse::Press press, int x, int y) {
-	
-					auto scale = _ImageControl->GetScaleFactor();
-
 					Input::MouseEvent ev;
-					ev.Pos = Utilities::Point(static_cast<int>(static_cast<float>(x) / scale), static_cast<int>(static_cast<float>(y) / scale));
+					ev.Pos = Utilities::Point(x, y);
 					if (e == FL_MOUSEWHEEL) {
 						ev.ScrollDelta = Fl::event_dy();
 						ev.EventData = Input::Mouse::Events::SCROLL;
@@ -129,6 +135,32 @@ namespace SL {
 						_ClientNetworkDriver.SendMouse(ev);//sending input to yourself will lead to an infinite loop...
 					}
 				}
+				void Close() {
+					if (!_BeingClosed) {
+						Fl::delete_widget(this);
+						//this->hide();
+					}
+					_BeingClosed = true;
+				}
+				static void awakenredraw(void* data) {
+					auto imp = ((ViewerControllerImpl*)data);
+					if (imp->_BeingClosed) return;
+					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - imp->_FrameTimer).count() > imp->MaxFPS / 1000.0f) {
+						imp->_FrameTimer = std::chrono::steady_clock::now();
+						imp->FrameCounter += 1;
+						if (!imp->_BeingClosed) imp->redraw();
+					}
+				}
+				static void awakensettitle(void* data) {
+					auto imp = ((ViewerControllerImpl*)data);
+					if (imp->_BeingClosed) return;
+					imp->label(imp->_Title);
+				}
+				static void awakenhidecursor(void* data) {
+					auto imp = ((ViewerControllerImpl*)data);
+					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
+				}
+
 				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override
 				{
 					UNUSED(socket);
@@ -151,21 +183,19 @@ namespace SL {
 					UNUSED(socket);
 					Close();
 				}
-		
+
 				virtual void OnReceive_Image(std::shared_ptr<Utilities::Image>& img) override
 				{
-					
-					_ImageControl->SetImage(img);
+					_ImageControl->set_ScreenImage(img);
 					Fl::awake(awakenredraw, this);
-
 				}
 
 				virtual void OnReceive_ImageDif(Utilities::Point pos, std::shared_ptr<Utilities::Image>& img) override {
-					_ImageControl->SetImageDif(pos, img);
+					_ImageControl->set_ImageDifference(pos, img);
 					Fl::awake(awakenredraw, this);
 					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 						_NetworkStatsTimer = std::chrono::steady_clock::now();
-                        
+
 						auto stats = _ClientNetworkDriver.get_Socket()->get_SocketStats();
 						std::string st = "Client ";
 						st += std::to_string((stats.NetworkBytesReceived - LastStats.NetworkBytesReceived) / 1000) + " Kbs Received ";
@@ -180,56 +210,18 @@ namespace SL {
 					}
 
 				}
-				virtual void OnReceive_MouseImage( std::shared_ptr<Utilities::Image>& img)override {
-					
-					if (_HasFocus && !_CursorHidden) {
-						Fl::awake(awakenhidecursor, this);
-						_CursorHidden = true;
-					}
-					_ImageControl->SetMouseImage(img);
-					Fl::awake(awakenredraw, this);
+				virtual void OnReceive_MouseImage(std::shared_ptr<Utilities::Image>& img)override {
+					_ImageControl->set_MouseImage(img);
 				}
 
 				virtual void OnReceive_MousePos(Utilities::Point* pos)override {
-					
-					_ImageControl->SetMousePosition(*pos);
+					_ImageControl->set_MousePosition(pos);
 				}
 				virtual void  OnReceive_ClipboardText(const char* data, unsigned int len) override {
 					_Clipboard->copy_to_clipboard(data, len);
 				}
 
 
-				void Close() {
-					if (!_BeingClosed) {
-						Fl::delete_widget(this);
-						//this->hide();
-					}
-					_BeingClosed = true;
-				}
-				static void awakenredraw(void* data) {
-					auto imp = ((ViewerControllerImpl*)data);
-					if (imp->_BeingClosed) return;
-					if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - imp->_FrameTimer).count() > imp->MaxFPS / 1000.0f) {
-						imp->_FrameTimer = std::chrono::steady_clock::now();
-						imp->FrameCounter += 1;
-						if (!imp->_BeingClosed) imp->redraw();
-					}
-				}
-				void ScaleView(bool b)
-				{
-					_ImageControl->ScaleImage(b);
-				}
-
-				static void awakensettitle(void* data) {
-					auto imp = ((ViewerControllerImpl*)data);
-					if (imp->_BeingClosed) return;
-					imp->label(imp->_Title);
-				}
-				static void awakenhidecursor(void* data) {
-					auto imp = ((ViewerControllerImpl*)data);
-					imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
-				}
-		
 			};
 
 		}
@@ -245,9 +237,4 @@ SL::Remote_Access_Library::UI::ViewerController::ViewerController(std::shared_pt
 
 SL::Remote_Access_Library::UI::ViewerController::~ViewerController() {
 
-}
-
-void SL::Remote_Access_Library::UI::ViewerController::ScaleView(bool b)
-{
-	_ViewerControllerImpl->ScaleView(b);
 }

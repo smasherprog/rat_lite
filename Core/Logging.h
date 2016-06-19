@@ -27,3 +27,4 @@ std::ostringstream buffer; \
 buffer << msg; \
 SL::Remote_Access_Library::Utilities::Log(level, __FILE__, __LINE__, __func__, buffer);\
 }
+

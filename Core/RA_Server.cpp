@@ -95,7 +95,9 @@ namespace SL {
 						_ServerNetworkDriver.SendMouse(nullptr, *img);
 					}
 					else {
-						if (memcmp(img->data(), LastMouse->data(), std::min(LastMouse->size(), img->size())) != 0) {
+                        if(LastMouse->size() != img->size()) {
+                            _ServerNetworkDriver.SendMouse(nullptr, *img);
+                        } else if (memcmp(img->data(), LastMouse->data(), LastMouse->size()) != 0) {
 							_ServerNetworkDriver.SendMouse(nullptr, *img);
 						}
 					}

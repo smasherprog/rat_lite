@@ -6,6 +6,8 @@
 #include <FL/Fl_Widget.H>
 
 #include <mutex>
+#include <vector>
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Capturing {

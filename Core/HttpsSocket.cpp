@@ -35,12 +35,13 @@ namespace SL {
 					io_servicethread = std::thread([this]() {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting io_service Factory");
 
-						boost::system::error_code ec;
-						this->io_service.run(ec);
-						if (ec) {
-							SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
-						}
+					
+                    boost::system::error_code ec; 
 
+                    this->io_service.run(ec); 
+                    if (ec) { 
+                        SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message()); 
+                        } 
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "stopping io_service Factory");
 					});
 				}

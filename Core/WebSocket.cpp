@@ -175,6 +175,7 @@ namespace SL {
 					_Closed = true;
 					CancelTimers();
 					_IBaseNetworkDriver->OnClose(this);
+
 					boost::system::error_code ec;
 					_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 					_socket.lowest_layer().close();

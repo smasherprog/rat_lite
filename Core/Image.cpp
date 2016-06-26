@@ -4,6 +4,7 @@
 #include <iterator>
 #include <array>
 #include <string.h>
+#include "Logging.h"
 
 struct SL::Remote_Access_Library::Utilities::Image_Impl {
 	unsigned int height;
@@ -90,7 +91,7 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 
 std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_Library::Utilities::Image::Resize(const std::shared_ptr<Image>& inimg, int height, int width, Image_Resamples resample)
 {
-    UNUSED(resample);
+	UNUSED(resample);
 	/*
 	TODO ADD SUPPORT FOR LINEAR AND BICUBIC RESAMPLE.. They are in commented out code above and below
 	*/
@@ -103,8 +104,8 @@ std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> SL::Remote_Access_L
 	double x_ratio = inimg->Width() / (double)m_width;
 	double y_ratio = inimg->Height() / (double)m_height;
 	double px, py;
-	for (int i = 0; i<m_height; i++) {
-		for (int j = 0; j<m_width; j++) {
+	for (int i = 0; i < m_height; i++) {
+		for (int j = 0; j < m_width; j++) {
 			px = floor(j*x_ratio);
 			py = floor(i*y_ratio);
 			temp[(i*m_width) + j] = pixels[(int)((py*inimg->Width()) + px)];
@@ -175,12 +176,34 @@ void SanitizeRects(std::vector<SL::Remote_Access_Library::Utilities::Rect>& rect
 		//std::cout << r << std::endl;
 	}
 }
+struct Image_Range {
+	unsigned int row, col, col_end;//row_end is one passed the end
+};
+#define maxdist 256
+void Get_Range(Image_Range& prev_range, std::vector<int>& grid, unsigned int grid_width, unsigned int real_col_end) {
+
+	prev_range.row = prev_range.row / maxdist;
+	prev_range.col = prev_range.col / maxdist;
+	for (; prev_range.col < grid_width; prev_range.col++) {
+		if (grid[prev_range.row*grid_width + prev_range.col] != 1) {
+			prev_range.row *= maxdist;
+			prev_range.col *= maxdist;
+			auto poscolend = prev_range.col + maxdist;
+			prev_range.col_end = std::min(poscolend, real_col_end);
+			return;
+		}
+	}
+	prev_range.row *= maxdist;
+	prev_range.col *= maxdist;
+	prev_range.col_end = prev_range.col;
+}
+
 std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg)
 {
 
-	//auto start = std::chrono::steady_clock::now();
+	auto start = std::chrono::steady_clock::now();
 
-#define maxdist 128
+
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> rects;
 	if (oldimg.Width() != newimg.Width() || oldimg.Height() != newimg.Height() || newimg.Width() == 0 || newimg.Height() == 0) {
 		rects.push_back(Rect(Point(0, 0), newimg.Height(), newimg.Width()));
@@ -190,25 +213,28 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 	auto oldimg_ptr = (const int*)oldimg.data();
 	auto newimg_ptr = (const int*)newimg.data();
 
-	for (decltype(oldimg.Height()) row = 0; row < oldimg.Height(); row += maxdist) {
-		for (decltype(oldimg.Width()) col = 0; col < oldimg.Width(); col += maxdist) {
+	auto imgwidth = oldimg.Width();
+	auto imgheight = oldimg.Height();
 
-			for (decltype(row) y = row; y < maxdist + row && y < oldimg.Height(); y++) {
-				for (decltype(col) x = col; x < maxdist + col&& x < oldimg.Width(); x++) {
-					auto old = oldimg_ptr[y*oldimg.Width() + x];
-					auto ne = newimg_ptr[y*newimg.Width() + x];
+	for (decltype(imgheight) row = 0; row < imgheight; row += maxdist) {
+		for (decltype(imgwidth) col = 0; col < imgwidth; col += maxdist) {
+
+			for (decltype(row) y = row; y < maxdist + row && y < imgheight; y++) {
+				for (decltype(col) x = col; x < maxdist + col&& x <imgwidth; x++) {
+					auto old = oldimg_ptr[y*imgwidth + x];
+					auto ne = newimg_ptr[y*imgwidth + x];
 					if (ne != old) {
 						rects.push_back(Rect(Point(col, row), maxdist, maxdist));
 						y += maxdist;
-						break;//this will get out of the loop
+						x += maxdist;
 					}
 				}
 			}
 		}
 	}
 
-	//auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-	//std::cout << "It took " << elapsed.count() << " milliseconds to compare run GetDifs " << std::endl;
+	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+	//SL_RAT_LOG(Logging_Levels::INFO_log_level, "It took " << elapsed.count() << " milliseconds to compare run GetDifs ");
 
 	if (rects.size() <= 2) {
 		SanitizeRects(rects, newimg);

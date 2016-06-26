@@ -36,7 +36,6 @@ namespace SL {
 	namespace Remote_Access_Library {
 		namespace Server {
 
-
 			namespace UI {
 				class ConnectionInfoWindowImpl : public Network::IBaseNetworkDriver {
 				public:
@@ -55,15 +54,15 @@ namespace SL {
 					Fl_Check_Button* _IgnoreIncomingMouseEvents_Checkbox = nullptr;
 
 					std::shared_ptr<Network::Server_Config> config;
-					std::unique_ptr<LogWindow> _LogWindow;
+					std::unique_ptr<SL::Remote_Access_Library::UI::LogWindow> _LogWindow;
 					std::unique_ptr<GenerateCertificateWindow> _GenerateCertificateWindow;
 
-					SliderInput* _ImageQualitySlider = nullptr;
-					SliderInput* _MouseCaptureRateSlider = nullptr;
-					SliderInput* _MousePositionCaptureRate = nullptr;
-					SliderInput* _ScreenCaptureRate = nullptr;
+					SL::Remote_Access_Library::UI::SliderInput* _ImageQualitySlider = nullptr;
+					SL::Remote_Access_Library::UI::SliderInput* _MouseCaptureRateSlider = nullptr;
+					SL::Remote_Access_Library::UI::SliderInput* _MousePositionCaptureRate = nullptr;
+					SL::Remote_Access_Library::UI::SliderInput* _ScreenCaptureRate = nullptr;
 
-					SliderInput* _MaxNumConnections = nullptr;
+					SL::Remote_Access_Library::UI::SliderInput* _MaxNumConnections = nullptr;
 					Fl_Input* _PasswordToConnect = nullptr;
 
 					std::weak_ptr<RA_Server> _Server;
@@ -96,7 +95,7 @@ namespace SL {
 					}
 					virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
 						std::ostringstream os;
-						os << "User Connected! Ip: " << socket->get_ipv4_address() << " port: " << socket->get_port();
+						os << "User Connected! Ip: " << socket->get_address() << " port: " << socket->get_port();
 						_LogWindow->AddMessage(os.str());
 					}
 					virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& pack) {
@@ -105,7 +104,7 @@ namespace SL {
 					}
 					virtual void OnClose(const Network::ISocket* socket) {
 						std::ostringstream os;
-						os << "User Disconnected! Ip: " << socket->get_ipv4_address() << " port: " << socket->get_port();
+						os << "User Disconnected! Ip: " << socket->get_address() << " port: " << socket->get_port();
 						_LogWindow->AddMessage(os.str());
 					}
 
@@ -293,7 +292,7 @@ namespace SL {
 						_IgnoreIncomingKeyboard->value(config->IgnoreIncomingKeyboardEvents == 1);
 						workingy += 24;
 
-						_ImageQualitySlider = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Image Quality Level");
+						_ImageQualitySlider = new SL::Remote_Access_Library::UI::SliderInput(leftside, workingy, colwidth - startleft, 20, " Image Quality Level");
 						_ImageQualitySlider->tooltip("This is the quality level used by the system for images");
 						_ImageQualitySlider->align(FL_ALIGN_LEFT);
 						_ImageQualitySlider->bounds(10, 100);
@@ -301,7 +300,7 @@ namespace SL {
 						_ImageQualitySlider->value(config->ImageCompressionSetting);
 						workingy += 24;
 
-						_MouseCaptureRateSlider = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Mouse Capture Rate");
+						_MouseCaptureRateSlider = new SL::Remote_Access_Library::UI::SliderInput(leftside, workingy, colwidth - startleft, 20, " Mouse Capture Rate");
 						_MouseCaptureRateSlider->tooltip("This controls the rate at which the mouse Image is captured. Measured in Seconds");
 						_MouseCaptureRateSlider->align(FL_ALIGN_LEFT);
 						_MouseCaptureRateSlider->bounds(1, 5);
@@ -309,7 +308,7 @@ namespace SL {
 						_MouseCaptureRateSlider->value(config->MouseImageCaptureRate / 1000);
 						workingy += 24;
 
-						_MousePositionCaptureRate = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Mouse Movement Capture");
+						_MousePositionCaptureRate = new SL::Remote_Access_Library::UI::SliderInput(leftside, workingy, colwidth - startleft, 20, " Mouse Movement Capture");
 						_MousePositionCaptureRate->tooltip("This controls how often the mouse is checked for movement. Measured in Milliseconds");
 						_MousePositionCaptureRate->align(FL_ALIGN_LEFT);
 						_MousePositionCaptureRate->bounds(50, 1000);
@@ -317,7 +316,7 @@ namespace SL {
 						_MousePositionCaptureRate->value(config->MousePositionCaptureRate);
 						workingy += 24;
 
-						_ScreenCaptureRate = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Screen Capture Rate");
+						_ScreenCaptureRate = new SL::Remote_Access_Library::UI::SliderInput(leftside, workingy, colwidth - startleft, 20, " Screen Capture Rate");
 						_ScreenCaptureRate->tooltip("This controls how often the screen is captured. Measured in milliseconds");
 						_ScreenCaptureRate->align(FL_ALIGN_LEFT);
 						_ScreenCaptureRate->bounds(100, 1000);
@@ -332,7 +331,7 @@ namespace SL {
 						workingy += 24;
 
 
-						_MaxNumConnections = new SliderInput(leftside, workingy, colwidth - startleft, 20, " Max Num Connections");
+						_MaxNumConnections = new SL::Remote_Access_Library::UI::SliderInput(leftside, workingy, colwidth - startleft, 20, " Max Num Connections");
 						_MaxNumConnections->tooltip("How many connections will this server allow through?");
 						_MaxNumConnections->align(FL_ALIGN_LEFT);
 						_MaxNumConnections->bounds(0, 10);
@@ -373,7 +372,7 @@ namespace SL {
 						cWindow->end();
 						cWindow->show();
 
-						_LogWindow = std::make_unique<LogWindow>();
+						_LogWindow = std::make_unique<SL::Remote_Access_Library::UI::LogWindow>();
 						_LogWindow->set_MaxLines(100);
 
 						_GenerateCertificateWindow = std::make_unique<GenerateCertificateWindow>();

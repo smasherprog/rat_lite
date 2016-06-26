@@ -37,6 +37,9 @@
     <Filter Include="Crypto">
       <UniqueIdentifier>{4f017616-975a-42a2-a515-f69d0622ef74}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{a824893f-3076-4877-87a3-c36923e4e4a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Mouse.cpp">
@@ -100,12 +103,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.cpp">
       <Filter>Server\UI</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)LogWindow.cpp">
-      <Filter>Server\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)HttpsSocket.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.cpp">
       <Filter>Network\Driver</Filter>
     </ClCompile>
@@ -121,9 +118,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.cpp">
       <Filter>Server\UI</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)WebSocket.cpp">
-      <Filter>Network\Socket</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)FileCrypoLoader.cpp">
       <Filter>Crypto</Filter>
     </ClCompile>
@@ -133,7 +127,15 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Clipboard.cpp">
       <Filter>Capturing</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)ScreenImageDriver.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Socket.cpp">
+      <Filter>Network\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Shapes.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)LogWindow.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -248,15 +250,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.h">
       <Filter>Server\UI</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)LogWindow.h">
-      <Filter>Server\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)SliderInput.h">
-      <Filter>Server\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)HttpsSocket.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)HttpsServerNetworkDriver.h">
       <Filter>Network\Driver</Filter>
     </ClInclude>
@@ -281,9 +274,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)GenerateCertificateWindow.h">
       <Filter>Server\UI</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)WebSocket.h">
-      <Filter>Network\Socket</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)ICrypoLoader.h">
       <Filter>Crypto</Filter>
     </ClInclude>
@@ -296,7 +286,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Clipboard.h">
       <Filter>Capturing</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)ScreenImageDriver.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Socket.h">
+      <Filter>Network\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)LogWindow.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)SliderInput.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\wwwroot\index.html">
@@ -304,6 +302,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts" />
+    <CustomBuild Include="$(MSBuildThisFileDirectory)..\wwwroot\Core.ts">
+      <Filter>wwwroot</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

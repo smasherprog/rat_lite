@@ -72,10 +72,7 @@ namespace SL {
 				return os;
 			}
 
-			struct OutgoingPacket {
-				std::shared_ptr<Network::Packet> Pack;
-				unsigned int UncompressedLength;
-			};
+
 			struct PacketHeader {
 				unsigned int Packet_Type;
 				unsigned int Payload_Length;

@@ -1,5 +1,5 @@
 #pragma once
-#include <ostream>
+
 #include <algorithm>
 #include <math.h>
 
@@ -66,16 +66,8 @@ namespace SL {
 			inline auto Distance(const Point& p1, const Point& p2) { return sqrt(SquaredDistance(p1, p2)); }
 
 			inline auto Distance(const Point& p, const Rect& r) { return Distance(p, r.Center()); }
-			inline std::ostream& operator<<(std::ostream& os, const Point& p)
-			{
-				os << "X=" << p.X << ", Y=" << p.Y;
-				return os;
-			}
-			inline std::ostream& operator<<(std::ostream& os, const Rect& r)
-			{
-				os << r.Origin << " Height=" << r.Height << ", Width=" << r.Width;
-				return os;
-			}
+			std::ostream& operator<<(std::ostream& os, const Point& p);
+			std::ostream& operator<<(std::ostream& os, const Rect& r);
 		}
 	}
 }

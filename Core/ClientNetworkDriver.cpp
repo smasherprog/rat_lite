@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ClientNetworkDriver.h"
-#include "WebSocket.h"
+#include "Socket.h"
 #include "Shapes.h"
 #include "IClientDriver.h"
 #include "Image.h"
@@ -88,14 +88,16 @@ namespace SL {
 				
 				void Start() {
 					Stop();
-					WebSocket::Connect(_Config.get(), this, _dst_host.c_str());
-					_ConectedToSelf = (std::string("127.0.0.1") == _dst_host) || (std::string("localhost") == _dst_host) || (std::string("::1") == _dst_host);
+					Connect(_Config.get(), this, _dst_host.c_str());
+				
 
 				}
 				
 				void Stop() {
-					if (_Socket) _Socket->close("Stopping Listener");
-					_Socket.reset();//decrement count
+					if (_Socket) {
+						_Socket->close("Stopping Listener");
+						_Socket.reset();//decrement count
+					}
 				}
 				virtual ~ClientNetworkDriverImpl() {
 					Stop();

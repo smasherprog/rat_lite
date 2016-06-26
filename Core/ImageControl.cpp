@@ -80,9 +80,13 @@ namespace SL {
 					}
 				}
 				void Draw(int x, int y) {
-					std::lock_guard<std::mutex> lock(_ImageLock);
-					fl_draw_image((uchar*)_ScaledImage->data(), x, y, _ScaledImage->Width(), _ScaledImage->Height(), 4);
-					_MouseImage->draw(_MousePos.X, _MousePos.Y);
+					if (_ScaledImage) {
+						std::lock_guard<std::mutex> lock(_ImageLock);
+						if (_ScaledImage) {
+							fl_draw_image((uchar*)_ScaledImage->data(), x, y, _ScaledImage->Width(), _ScaledImage->Height(), 4);
+							_MouseImage->draw(_MousePos.X, _MousePos.Y);
+						}
+					}
 				}
 				void set_ImageDifference(Utilities::Point& pos, const std::shared_ptr<Utilities::Image>& img) {
 
@@ -177,14 +181,14 @@ namespace SL {
 				ScreenImageInfo _ScreenImageInfo;
 				bool _DNDIncoming = false;
 
-				ImageControlImpl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) : 
+				ImageControlImpl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) :
 					Fl_Box(X, Y, W, H, title),
 					_ScreenImageDriver(std::forward<ScreenImageInfo>(info)),
-					_ScreenImageInfo(info){
-					
+					_ScreenImageInfo(info) {
+
 				}
 				virtual ~ImageControlImpl() {
-					
+
 				}
 				virtual void draw() override {
 					int height(0), width(0);
@@ -204,7 +208,7 @@ namespace SL {
 				int pastedstuff() {
 					auto t = std::string(Fl::event_text(), Fl::event_length());
 					auto splits = split(t, '\n');
-					for(auto& s: splits) {
+					for (auto& s : splits) {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "split " << s);
 					}
 					return 1;
@@ -214,7 +218,7 @@ namespace SL {
 						x = static_cast<int>(static_cast<float>(x) / _ScreenImageDriver.get_ScaleFactor());
 						y = static_cast<int>(static_cast<float>(y) / _ScreenImageDriver.get_ScaleFactor());
 					}
-					_ScreenImageInfo.OnMouse(e, button, press,x, y);
+					_ScreenImageInfo.OnMouse(e, button, press, x, y);
 				}
 				virtual int handle(int e) override {
 
@@ -275,7 +279,7 @@ SL::Remote_Access_Library::UI::ImageControl::~ImageControl() {
 
 void SL::Remote_Access_Library::UI::ImageControl::OnResize(int W, int H, int SS)
 {
-	_ImageControlImpl->OnResize(W,H, SS);
+	_ImageControlImpl->OnResize(W, H, SS);
 }
 
 bool SL::Remote_Access_Library::UI::ImageControl::is_ImageScaled() const

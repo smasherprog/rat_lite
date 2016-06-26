@@ -5,8 +5,7 @@
 #include "Packet.h"
 #include "IServerDriver.h"
 #include "Server_Config.h"
-#include "WebSocket.h"
-#include "HttpsSocket.h"
+#include "Socket.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Keyboard.h"
@@ -22,7 +21,7 @@ namespace SL {
 
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
 
-				std::shared_ptr<WebSocket::Listener> _Listener;
+				std::shared_ptr<Listener> _Listener;
 
 				IServerDriver* _IServerDriver;
 
@@ -164,7 +163,7 @@ namespace SL {
 				void Start() {
 					Stop();
 					if (_Config->WebSocketTLSLPort > 0) {
-						_Listener = std::make_unique<WebSocket::Listener>(this, _Config);
+						_Listener = std::make_unique<Listener>(this, _Config, ListenerTypes::WEBSOCKET);
 					}
 
 				}
@@ -177,7 +176,7 @@ namespace SL {
 					}
 					std::for_each(begin(copyclients), end(copyclients), [](const std::shared_ptr<ISocket>& o) { o->close("ShuttingDown"); });
 					copyclients.clear();
-					_Listener.reset();
+					if(_Listener) _Listener.reset();
 
 				}
 				void ExtractImageRect(Utilities::Rect r, const Utilities::Image & img, std::vector<char>& outbuffer) {

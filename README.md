@@ -26,7 +26,7 @@ Latest standards: c++ 14
 <h3>How to get started:</h3>
 <ul>
 <li>
-<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Visual-Studio-Development">Visual Studio</a>
+<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Windows-Development">Windows</a>
 </li>
 <li><a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Android-Development">Android</a> </li>
 <li>

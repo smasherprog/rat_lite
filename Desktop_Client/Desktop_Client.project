@@ -138,7 +138,7 @@
       </Completion>
     </Configuration>
     <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config âcxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config Ã¢ÂÂcxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="/usr/local/opt/openssl/include"/>
         <IncludePath Value="/usr/local/opt/boost/include"/>
         <IncludePath Value="/usr/local/opt/fltk/include"/>
@@ -228,4 +228,8 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Linux_Debug"/>
+  <Dependencies Name="Linux_Release"/>
+  <Dependencies Name="Mac_Debug"/>
+  <Dependencies Name="Mac_Release"/>
 </CodeLite_Project>

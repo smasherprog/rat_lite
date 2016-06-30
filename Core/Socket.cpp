@@ -269,7 +269,7 @@ namespace SL {
 						if (!ec) {
 							auto beforesize = read_buffer->size();
 							std::istream stream(read_buffer.get());
-							self->_Header = std::move(Parse("1.0", stream));
+							self->_Header = Parse("1.0", stream);
 
 							const auto it = self->_Header.find(HTTP_CONTENTLENGTH);
 							self->_ReadPayload_Length = 0;
@@ -301,7 +301,7 @@ namespace SL {
 					{
 						if (!ec && !self->closed()) {
 							assert(len == self->_ReadPayload_Length);
-							auto pac(std::make_shared<Packet>(std::move(self->GetNextReadPacket())));
+							auto pac(std::make_shared<Packet>(self->GetNextReadPacket()));
 							self->_IBaseNetworkDriver->OnReceive(self, pac);
 							self->readheader();
 						}
@@ -456,7 +456,7 @@ namespace SL {
 				virtual void send(Packet& pack) override {
 					auto self(shared_from_this());
 					auto beforesize = pack.Payload_Length;
-					auto compack(std::make_shared<Packet>(std::move(compress(pack))));
+					auto compack(std::make_shared<Packet>(compress(pack)));
 					_socket.get_io_service().post([self, compack, beforesize]()
 					{
 
@@ -525,7 +525,7 @@ namespace SL {
 							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Read Handshake bytes " << bytes_transferred);
 
 							std::istream stream(read_buffer.get());
-							self->_Header = std::move(Parse("1.1", stream));
+							self->_Header =Parse("1.1", stream);
 
 							if (self->_Header.count(HTTP_SECWEBSOCKETKEY) == 0) return self->close("handshake async_read_until Sec-WebSocket-Key not present");//close socket and get out malformed
 							auto write_buffer(std::make_shared<boost::asio::streambuf>());
@@ -590,7 +590,7 @@ namespace SL {
 									writeexpire_from_now(self, 0);//make sure to reset the write timmer
 									SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Read Handshake bytes " << bytes_transferred);
 									std::istream stream(read_buffer.get());
-									self->_Header = std::move(Parse("1.1", stream));
+									self->_Header = Parse("1.1", stream);
 									if (Crypto::Base64::decode(self->_Header[HTTP_SECWEBSOCKETACCEPT]) == accept_sha1) {
 										self->_IBaseNetworkDriver->OnConnect(self);
 										self->readheader();
@@ -711,7 +711,7 @@ namespace SL {
 
 								packet.Packet_Type = self->_ReadPacketHeader.Packet_Type;
 								packet.Payload_Length = self->_ReadPacketHeader.Payload_Length;
-								auto spac(std::make_shared<Packet>(std::move(self->decompress(packet))));
+								auto spac(std::make_shared<Packet>(self->decompress(packet)));
 
 								self->_IBaseNetworkDriver->OnReceive(self, spac);
 								self->readheader();

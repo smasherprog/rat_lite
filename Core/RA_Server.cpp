@@ -147,20 +147,20 @@ namespace SL {
 							//check mouse img first
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
 								OnMouseImg(mouseimg.get());
-								mouseimg = std::move(Input::get_MouseImage());
+								mouseimg = Input::get_MouseImage();
 								mouseimgtimer = curtime;
 							}
 							//check mouse pos next
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
 								OnMousePos(mousepos.get());
-								mousepos = std::move(Input::get_MousePosition());
+								mousepos = Input::get_MousePosition();
 								mouseimgtimer = curtime;
 							}
 
 							//check screen next
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config->ScreenImageCaptureRate && is_ready(screenimg)) {
 								OnScreen(screenimg.get());
-								screenimg = std::move(Capturing::get_ScreenImage());
+								screenimg = Capturing::get_ScreenImage();
 								screenimgtimer = curtime;
 							}
 						//}

@@ -32,6 +32,9 @@ Latest standards: c++ 14
 <li>
 <a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Ubuntu-Development">Ubuntu</a>
 </li>
+<li>
+<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Mac-Development">Mac</a>
+</li>
 </ul>
 </p>
 <p>The library is not yet stable and in development . . . </p>

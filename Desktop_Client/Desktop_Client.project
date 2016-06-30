@@ -57,13 +57,10 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Linux_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config âcxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
-        <IncludePath Value="/usr/local/include"/>
-      </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config Ã¢ÂÂldflags) lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
-        <LibraryPath Value="/usr/local/lib"/>
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
+      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem -lboost_system -lboost_thread $(shell fltk-config --ldflags) -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
+        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Debug"/>
+        <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
@@ -104,8 +101,8 @@
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
       <Linker Options="-Wl, -Bstatic -lCore -Wl, -Bdynamic $(shell fltk-config --ldflags) -lboost_filesystem -lboost_system -lboost_thread -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
+        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Release"/>
+        <LibraryPath Value="$(WorkspacePath)/Core/Release"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

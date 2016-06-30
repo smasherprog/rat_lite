@@ -4,7 +4,7 @@
   <Project Name="Core" Path="Core/Core.project" Active="No"/>
   <Project Name="Desktop_Client" Path="Desktop_Client/Desktop_Client.project"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Mac_Debug" Selected="yes">
+    <WorkspaceConfiguration Name="Mac_Debug" Selected="no">
       <Environment/>
       <Project Name="Desktop_Client" ConfigName="Mac_Debug"/>
       <Project Name="Core" ConfigName="Mac_Debug"/>
@@ -14,7 +14,7 @@
       <Project Name="Desktop_Client" ConfigName="Mac_Release"/>
       <Project Name="Core" ConfigName="Mac_Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Linux_Debug" Selected="no">
+    <WorkspaceConfiguration Name="Linux_Debug" Selected="yes">
       <Environment/>
       <Project Name="Desktop_Client" ConfigName="Linux_Debug"/>
       <Project Name="Core" ConfigName="Linux_Debug"/>

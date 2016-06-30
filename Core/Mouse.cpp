@@ -4,6 +4,10 @@
 #include <assert.h>
 #include "Logging.h"
 
+#if __APPLE__
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 namespace SL
 {
 	namespace Remote_Access_Library
@@ -147,7 +151,18 @@ namespace SL
 #error "Unknown Apple platform"
 #endif
 
-#error Applie specific implementation of CaptureMouse has not been written yet. You can help out by writing it!
+            std::shared_ptr<Utilities::Image> CaptureMouseImage()
+			{
+				return Utilities::Image::CreateImage(0, 0);
+			}
+           
+            Utilities::Point GetCursorPos()
+			{
+                auto ev = CGEventCreate(NULL);
+                auto loc = CGEventGetLocation(ev);
+                CFRelease(ev);
+                return Utilities::Point(loc.x, loc.y);
+            }
 #elif __ANDROID__
 
 			std::shared_ptr<Utilities::Image> CaptureMouseImage()
@@ -218,7 +233,7 @@ std::future<SL::Remote_Access_Library::Utilities::Point> SL::Remote_Access_Libra
 {
 	return std::async(std::launch::async, [] {return Capturing::GetCursorPos(); });
 }
-
+   
 void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEvent & m)
 {
 
@@ -260,11 +275,12 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 	SendInput(1, &input, sizeof(input));
 	if (m.PressData == Input::Mouse::Press::DBLCLICK) SendInput(1, &input, sizeof(input));
 #elif __APPLE__
+
 	CGPoint new_pos;
 	CGEventErr err;
 	new_pos.x = m.Pos.X;
 	new_pos.y = m.Pos.Y;
-	!CGWarpMouseCursorPosition(new_pos);
+	CGWarpMouseCursorPosition(new_pos);
 #elif __ANDROID__
 
 #elif __linux__

@@ -4,17 +4,25 @@
   <Project Name="Core" Path="Core/Core.project" Active="No"/>
   <Project Name="Desktop_Client" Path="Desktop_Client/Desktop_Client.project"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Mac_Debug" Selected="yes">
       <Environment/>
-      <Project Name="Client" ConfigName="Debug"/>
-      <Project Name="Core" ConfigName="Debug"/>
-      <Project Name="Desktop_Client" ConfigName="Debug"/>
+      <Project Name="Desktop_Client" ConfigName="Mac_Debug"/>
+      <Project Name="Core" ConfigName="Mac_Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Mac_Release" Selected="no">
       <Environment/>
-      <Project Name="Client" ConfigName="Release"/>
-      <Project Name="Core" ConfigName="Release"/>
-      <Project Name="Desktop_Client" ConfigName="Release"/>
+      <Project Name="Desktop_Client" ConfigName="Mac_Release"/>
+      <Project Name="Core" ConfigName="Mac_Release"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Linux_Debug" Selected="no">
+      <Environment/>
+      <Project Name="Desktop_Client" ConfigName="Linux_Debug"/>
+      <Project Name="Core" ConfigName="Linux_Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Linux_Release" Selected="no">
+      <Environment/>
+      <Project Name="Desktop_Client" ConfigName="Linux_Release"/>
+      <Project Name="Core" ConfigName="Linux_Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

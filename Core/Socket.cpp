@@ -237,13 +237,13 @@ namespace SL {
 				{
 					return _socket.lowest_layer().remote_endpoint().port();
 				}
-				virtual bool is_v4() const {
+				virtual bool is_v4() const override{
 					return _socket.lowest_layer().remote_endpoint().address().is_v4();
 				}
-				virtual bool is_v6() const {
+				virtual bool is_v6() const override{
 					return _socket.lowest_layer().remote_endpoint().address().is_v6();
 				}
-				virtual bool is_loopback() const {
+				virtual bool is_loopback() const override{
 					return _socket.lowest_layer().remote_endpoint().address().is_loopback();
 				}
 
@@ -497,13 +497,13 @@ namespace SL {
 				{
 					return _socket.lowest_layer().remote_endpoint().port();
 				}
-				virtual bool is_v4() const {
+				virtual bool is_v4() const override{
 					return _socket.lowest_layer().remote_endpoint().address().is_v4();
 				}
-				virtual bool is_v6() const {
+				virtual bool is_v6() const override{
 					return _socket.lowest_layer().remote_endpoint().address().is_v6();
 				}
-				virtual bool is_loopback() const {
+				virtual bool is_loopback() const override{
 					return _socket.lowest_layer().remote_endpoint().address().is_loopback();
 				}
 

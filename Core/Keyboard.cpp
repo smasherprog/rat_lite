@@ -229,7 +229,12 @@ unsigned int Map_ToPlatformKey(unsigned int key) {
 
 
 #elif __APPLE__
-
+unsigned int Map_ToPlatformKey(unsigned int key) {
+	switch (key) {
+        	default:
+		return 0;
+    }
+}
 #elif __ANDROID__
 
 

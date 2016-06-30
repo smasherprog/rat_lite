@@ -93,16 +93,16 @@ namespace SL {
 
 						return true;
 					}
-					virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) {
+					virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
 						std::ostringstream os;
 						os << "User Connected! Ip: " << socket->get_address() << " port: " << socket->get_port();
 						_LogWindow->AddMessage(os.str());
 					}
-					virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& pack) {
+					virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& pack) override{
 						UNUSED(socket);
 						UNUSED(pack);
 					}
-					virtual void OnClose(const Network::ISocket* socket) {
+					virtual void OnClose(const Network::ISocket* socket)override {
 						std::ostringstream os;
 						os << "User Disconnected! Ip: " << socket->get_address() << " port: " << socket->get_port();
 						_LogWindow->AddMessage(os.str());

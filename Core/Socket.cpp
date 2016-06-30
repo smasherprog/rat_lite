@@ -869,16 +869,15 @@ void SL::Remote_Access_Library::Network::Connect(Client_Config* config, IBaseNet
 
 	auto sock = std::make_shared<WSSocketImpl>(driver, io_runner->io_service, sslcontext);
 
-
-	host = host != nullptr ? host : "";
+	std::string _host = host != nullptr ? host : "";
 	auto port = std::to_string(config->WebSocketTLSLPort);
-	assert(sock->_Host.size() > 2);
-	assert(sock->_Port.size() > 0);
+	assert(_host.size() > 2);
+	assert(port.size() > 0);
 	sock->_Server = false;
 
 	boost::asio::ip::tcp::resolver resolver(io_runner->io_service);
 
-	boost::asio::ip::tcp::resolver::query query(host, port);
+	boost::asio::ip::tcp::resolver::query query(_host, port);
 	boost::system::error_code ercode;
 	auto endpoint = resolver.resolve(query, ercode);
 	if (ercode) {

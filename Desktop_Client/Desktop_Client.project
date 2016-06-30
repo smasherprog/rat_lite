@@ -57,10 +57,10 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Linux_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config âcxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="/usr/local/include"/>
       </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config Ã¢ÂÂldflags) lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
+      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config --ldflags) lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
         <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
         <LibraryPath Value="/usr/local/lib"/>
@@ -141,13 +141,13 @@
       </Completion>
     </Configuration>
     <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config âcxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="/usr/local/opt/openssl/include"/>
         <IncludePath Value="/usr/local/opt/boost/include"/>
         <IncludePath Value="/usr/local/opt/fltk/include"/>
         <IncludePath Value="/usr/local/opt/jpeg-turbo/include"/>
       </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config Ââldflags) -lturbojpeg  -lssl -lcrypto" Required="yes">
+      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config --ldflags) -lturbojpeg  -lssl -lcrypto" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
         <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
         <LibraryPath Value="/usr/local/opt/openssl/lib"/>

@@ -2,7 +2,7 @@
 <CodeLite_Project Name="Desktop_Client" InternalType="Console">
   <Plugins>
     <Plugin Name="qmake">
-      <![CDATA[00020001N0005Debug0000000000000001N0009Mac_Debug000000000000]]>
+      <![CDATA[00030001N0005Debug0000000000000001N0009Mac_Debug0000000000000001N0011Mac_Release000000000000]]>
     </Plugin>
     <Plugin Name="CMakePlugin">
       <![CDATA[[{
@@ -16,6 +16,15 @@
   "parentProject": ""
  }, {
   "name": "Mac_Debug",
+  "enabled": false,
+  "buildDirectory": "build",
+  "sourceDirectory": "$(ProjectPath)",
+  "generator": "",
+  "buildType": "",
+  "arguments": [],
+  "parentProject": ""
+ }, {
+  "name": "Mac_Release",
   "enabled": false,
   "buildDirectory": "build",
   "sourceDirectory": "$(ProjectPath)",
@@ -39,6 +48,7 @@
   <Dependencies/>
   <VirtualDirectory Name="src">
     <File Name="Viewer.cpp"/>
+    <File Name="Desktop_Client.project"/>
   </VirtualDirectory>
   <Dependencies Name="Release">
     <Project Name="Core"/>
@@ -46,6 +56,10 @@
   <Dependencies Name="Debug">
     <Project Name="Core"/>
   </Dependencies>
+  <Dependencies Name="Linux_Debug"/>
+  <Dependencies Name="Linux_Release"/>
+  <Dependencies Name="Mac_Debug"/>
+  <Dependencies Name="Mac_Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -57,13 +71,10 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Linux_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
-        <IncludePath Value="/usr/local/include"/>
-      </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config --ldflags) lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
-        <LibraryPath Value="/usr/local/lib"/>
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
+      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem -lboost_system -lboost_thread $(shell fltk-config --ldflags) -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
+        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Debug"/>
+        <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
@@ -104,8 +115,8 @@
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
       <Linker Options="-Wl, -Bstatic -lCore -Wl, -Bdynamic $(shell fltk-config --ldflags) -lboost_filesystem -lboost_system -lboost_thread -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
+        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Release"/>
+        <LibraryPath Value="$(WorkspacePath)/Core/Release"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
@@ -140,16 +151,15 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+    <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="LLDB Debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell /usr/local/opt/fltk/bin/fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="/usr/local/opt/openssl/include"/>
         <IncludePath Value="/usr/local/opt/boost/include"/>
         <IncludePath Value="/usr/local/opt/fltk/include"/>
         <IncludePath Value="/usr/local/opt/jpeg-turbo/include"/>
       </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -Wl, -Bdynamic $(shell fltk-config --ldflags) -lturbojpeg  -lssl -lcrypto" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
+      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt $(shell /usr/local/opt/fltk/bin/fltk-config --ldflags) -lturbojpeg  -lssl -lcrypto" Required="yes">
+        <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
         <LibraryPath Value="/usr/local/opt/openssl/lib"/>
         <LibraryPath Value="/usr/local/opt/boost/lib"/>
         <LibraryPath Value="/usr/local/opt/fltk/lib"/>
@@ -189,13 +199,20 @@
       </Completion>
     </Configuration>
     <Configuration Name="Mac_Release" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O3;-std=c++14;-Wall;$(shell fltk-config --cxxflags)" C_Options="-O3;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
-        <IncludePath Value="."/>
+      <Compiler Options="-O3;-std=c++14;$(shell /usr/local/opt/fltk/bin/fltk-config --cxxflags)" C_Options="-O3;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="/usr/local/opt/openssl/include"/>
+        <IncludePath Value="/usr/local/opt/boost/include"/>
+        <IncludePath Value="/usr/local/opt/fltk/include"/>
+        <IncludePath Value="/usr/local/opt/jpeg-turbo/include"/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore -Wl, -Bdynamic $(shell fltk-config --ldflags) -lboost_filesystem -lboost_system -lboost_thread -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/$(ConfigurationName)"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/$(ConfigurationName)"/>
+      <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt $(shell /usr/local/opt/fltk/bin/fltk-config --ldflags) -lturbojpeg  -lssl -lcrypto" Required="yes">
+        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Release"/>
+        <LibraryPath Value="$(WorkspacePath)/Core/Release"/>
+        <LibraryPath Value="/usr/local/opt/openssl/lib"/>
+        <LibraryPath Value="/usr/local/opt/boost/lib"/>
+        <LibraryPath Value="/usr/local/opt/fltk/lib"/>
+        <LibraryPath Value="/usr/local/opt/jpeg-turbo/lib"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

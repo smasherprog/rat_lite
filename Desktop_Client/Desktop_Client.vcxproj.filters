@@ -7,9 +7,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ClCompile Include="Viewer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Viewer.cpp" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

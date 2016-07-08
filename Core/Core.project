@@ -64,28 +64,29 @@
     <File Name="Compression/bitstream.h"/>
     <File Name="Compression/divsufsort.c"/>
     <File Name="Compression/divsufsort.h"/>
+    <File Name="Compression/entropy_common.c"/>
     <File Name="Compression/error_private.h"/>
     <File Name="Compression/error_public.h"/>
-    <File Name="Compression/fse.c"/>
     <File Name="Compression/fse.h"/>
-    <File Name="Compression/fse_static.h"/>
-    <File Name="Compression/huff0.c"/>
-    <File Name="Compression/huff0.h"/>
-    <File Name="Compression/huff0_static.h"/>
+    <File Name="Compression/fse_compress.c"/>
+    <File Name="Compression/fse_decompress.c"/>
+    <File Name="Compression/huf.h"/>
+    <File Name="Compression/huf_compress.c"/>
+    <File Name="Compression/huf_decompress.c"/>
     <File Name="Compression/mem.h"/>
-    <File Name="Compression/zbuff.c"/>
+    <File Name="Compression/xxhash.c"/>
+    <File Name="Compression/xxhash.h"/>
     <File Name="Compression/zbuff.h"/>
-    <File Name="Compression/zbuff_static.h"/>
+    <File Name="Compression/zbuff_compress.c"/>
+    <File Name="Compression/zbuff_decompress.c"/>
     <File Name="Compression/zdict.c"/>
     <File Name="Compression/zdict.h"/>
-    <File Name="Compression/zdict_static.h"/>
     <File Name="Compression/zstd.h"/>
+    <File Name="Compression/zstd_common.c"/>
     <File Name="Compression/zstd_compress.c"/>
     <File Name="Compression/zstd_decompress.c"/>
     <File Name="Compression/zstd_internal.h"/>
-    <File Name="Compression/zstdjsgen.bat"/>
     <File Name="Compression/zstd_opt.h"/>
-    <File Name="Compression/zstd_static.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="Network">
     <File Name="Packet.h"/>
@@ -174,7 +175,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Linux_Debug" CompilerType="GCC" DebuggerType="" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-W;-std=c++14;-fPIC" C_Options="-g;-W;-fPIC" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
+      <Compiler Options="-g;-W;-std=c++14;-Wall;-fPIC" C_Options="-g;-W;-fPIC" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/lib$(ProjectName).so" IntermediateDirectory="./Debug" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

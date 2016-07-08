@@ -190,7 +190,7 @@
       </Debugger>
       <PreBuild/>
       <PostBuild>
-        <Command Enabled="yes">cp -R -f ../wwwroot/ $(OutDir)</Command>
+        <Command Enabled="yes">cp -R -f ../wwwroot $(OutDir)</Command>
         <Command Enabled="yes">cp -f Desktop_Server.desktop $(OutDir)</Command>
         <Command Enabled="yes">cp -f Desktop_Server.ico $(OutDir)</Command>
       </PostBuild>
@@ -239,7 +239,7 @@
       </Debugger>
       <PreBuild/>
       <PostBuild>
-        <Command Enabled="yes">cp ../wwwroot/ $(OutDir) -r -f</Command>
+        <Command Enabled="yes">cp ../wwwroot $(OutDir) -r -f</Command>
         <Command Enabled="yes">cp Desktop_Server.desktop $(OutDir) -f</Command>
         <Command Enabled="yes">cp Desktop_Server.ico $(OutDir) -f</Command>
       </PostBuild>

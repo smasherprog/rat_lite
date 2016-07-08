@@ -277,7 +277,6 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 #elif __APPLE__
 
 	CGPoint new_pos;
-	CGEventErr err;
 	new_pos.x = m.Pos.X;
 	new_pos.y = m.Pos.Y;
 	CGWarpMouseCursorPosition(new_pos);

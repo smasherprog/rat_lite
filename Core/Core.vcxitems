@@ -18,27 +18,19 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ApplicationDirectory.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Clipboard.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\divsufsort.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huff0.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zdict.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_compress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_decompress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\divsufsort.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\entropy_common.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse_compress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse_decompress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huf_compress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huf_decompress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\xxhash.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff_compress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff_decompress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zdict.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_common.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_compress.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_decompress.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp" />
@@ -74,18 +66,14 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_public.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse_static.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huff0.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huff0_static.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huf.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\mem.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\xxhash.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zbuff.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zbuff_static.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zdict.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zdict_static.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_internal.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_opt.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_static.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h" />

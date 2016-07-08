@@ -9,17 +9,17 @@
       <Project Name="Desktop_Client" ConfigName="Mac_Debug"/>
       <Project Name="Core" ConfigName="Mac_Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Mac_Release" Selected="no">
+    <WorkspaceConfiguration Name="Mac_Release" Selected="yes">
       <Environment/>
       <Project Name="Desktop_Client" ConfigName="Mac_Release"/>
       <Project Name="Core" ConfigName="Mac_Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Linux_Debug" Selected="no">
+    <WorkspaceConfiguration Name="Linux_Debug" Selected="yes">
       <Environment/>
       <Project Name="Desktop_Client" ConfigName="Linux_Debug"/>
       <Project Name="Core" ConfigName="Linux_Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Linux_Release" Selected="no">
+    <WorkspaceConfiguration Name="Linux_Release" Selected="yes">
       <Environment/>
       <Project Name="Desktop_Client" ConfigName="Linux_Release"/>
       <Project Name="Core" ConfigName="Linux_Release"/>

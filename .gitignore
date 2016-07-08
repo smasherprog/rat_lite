@@ -24,6 +24,7 @@ bld/
 [Jj]ni[Ll]ibs/
 .vs/
 .codelite/
+.build-debug/
 *.tlog
 # Roslyn cache directories
 *.ide/

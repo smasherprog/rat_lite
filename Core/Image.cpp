@@ -201,7 +201,7 @@ void Get_Range(Image_Range& prev_range, std::vector<int>& grid, unsigned int gri
 std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Library::Utilities::Image::GetDifs(const Image & oldimg, const Image & newimg)
 {
 
-	auto start = std::chrono::steady_clock::now();
+	//auto start = std::chrono::steady_clock::now();
 
 
 	std::vector<SL::Remote_Access_Library::Utilities::Rect> rects;
@@ -233,7 +233,7 @@ std::vector<SL::Remote_Access_Library::Utilities::Rect> SL::Remote_Access_Librar
 		}
 	}
 
-	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+	//auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 	//SL_RAT_LOG(Logging_Levels::INFO_log_level, "It took " << elapsed.count() << " milliseconds to compare run GetDifs ");
 
 	if (rects.size() <= 2) {

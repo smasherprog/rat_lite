@@ -24,8 +24,8 @@ bld/
 [Jj]ni[Ll]ibs/
 .vs/
 .codelite/
+.build-*/
 *.tlog
-.vs/
 # Roslyn cache directories
 *.ide/
 
@@ -69,6 +69,8 @@ dlldata.c
 *.pidb
 *.svclog
 *.scc
+*.mk
+*.txt
 
 # Chutzpah Test files
 _Chutzpah*

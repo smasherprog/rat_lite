@@ -29,7 +29,7 @@ std::string executable_path_fallback(const char *argv0)
 	return p.make_preferred().string();
 }
 
-#if (_WIN32) // {
+#if (_WIN32)
 
 #  include <Windows.h>
 
@@ -70,7 +70,7 @@ std::string executable_path(const char *argv0)
 #   error "Unknown Apple platform"
 #endif
 
-#elif (__linux__) // } {
+#elif (__linux__) 
 
 #  include <unistd.h>
 
@@ -90,13 +90,13 @@ std::string executable_path(const char *argv0)
 	return p.make_preferred().string();
 }
 
-#else // } {
+#else 
 
 std::string executable_path(const char *argv0)
 {
 	return executable_path_fallback(argv0);
 }
 
-#endif // }
+#endif
 
 #endif

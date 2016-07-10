@@ -23,6 +23,7 @@ namespace SL {
 				static std::shared_ptr<Image> Resize(const std::shared_ptr<Image>& inimg, float scale, Image_Resamples resample = Image_Resamples::NEAREST_NEIGHBOR);
 				static std::shared_ptr<Image> Resize(const std::shared_ptr<Image>& inimg, int height, int width, Image_Resamples resample = Image_Resamples::NEAREST_NEIGHBOR);
 				static std::vector<Rect> GetDifs(const Image& oldimg, const Image& newimg);
+		
 				static void Copy(Image& src, Rect src_rect, Image & dst, Rect dst_rect);
 
 				Image(Image_Impl&);
@@ -39,8 +40,6 @@ namespace SL {
 				unsigned int Width() const { return _Width; }
 
 			};
-			//this object is used for shared_ptr alias constuctor
-
 		}
 	}
 }

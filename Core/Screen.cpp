@@ -73,7 +73,26 @@ namespace SL {
 #   error "Unknown Apple platform"
 #endif
 
-#error Applie specific implementation of CaptureDesktopImage has not been written yet. You can help out by writing it!
+
+        #include <ApplicationServices/ApplicationServices.h>
+
+    	std::shared_ptr<Utilities::Image> CaptureDesktopImage()
+		{
+            auto image_ref = CGDisplayCreateImage(CGMainDisplayID());    
+            auto provider = CGImageGetDataProvider(image_ref);
+            auto dataref = CGDataProviderCopyData(provider);
+            size_t w, h;
+            w = CGImageGetWidth(image_ref);
+            h = CGImageGetHeight(image_ref);
+            size_t bpp = CGImageGetBitsPerPixel(image_ref) / 8;
+            
+            auto img = Utilities::Image::CreateImage(h, w, (const char*)(CFDataGetBytePtr(dataref)),  bpp);
+
+            CFRelease(dataref);
+            CGImageRelease(image_ref);
+            return img;
+        }
+    
 #elif __ANDROID__
 		std::shared_ptr<Utilities::Image> CaptureDesktopImage()
 		{

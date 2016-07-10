@@ -107,6 +107,7 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -117,6 +118,8 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
@@ -127,6 +130,7 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -137,6 +141,7 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -147,6 +152,7 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
@@ -157,6 +163,7 @@
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -175,12 +182,9 @@
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
-      <Outputs>
-      </Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
+      <Command>call xcopy "$(SolutionDir)wwwroot" "$(OutDir)wwwroot\" /E /H /K /y</Command>
+      <Outputs>tester.fs</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>
@@ -204,12 +208,9 @@
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
-      <Outputs>
-      </Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
+      <Command>call xcopy "$(SolutionDir)wwwroot" "$(OutDir)wwwroot\" /E /H /K /y</Command>
+      <Outputs>tester.fs</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>
@@ -233,12 +234,9 @@
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
-      <Outputs>
-      </Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
+      <Command>call xcopy "$(SolutionDir)wwwroot" "$(OutDir)wwwroot\" /E /H /K /y</Command>
+      <Outputs>tester.fs</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>
@@ -266,12 +264,9 @@
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
-      <Outputs>
-      </Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
+      <Command>call xcopy "$(SolutionDir)wwwroot" "$(OutDir)wwwroot\" /E /H /K /y</Command>
+      <Outputs>tester.fs</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>
@@ -290,6 +285,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <AdditionalOptions>/Qvec-report:2 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -299,12 +295,9 @@
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
-      <Outputs>
-      </Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
+      <Command>call xcopy "$(SolutionDir)wwwroot" "$(OutDir)wwwroot\" /E /H /K /y</Command>
+      <Outputs>tester.fs</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>
@@ -332,12 +325,9 @@
       <AdditionalDependencies>winmm.lib;rpcrt4.lib;wininet.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
-      <Outputs>
-      </Outputs>
-      <TreatOutputAsContent>
-      </TreatOutputAsContent>
+      <Command>call xcopy "$(SolutionDir)wwwroot" "$(OutDir)wwwroot\" /E /H /K /y</Command>
+      <Outputs>tester.fs</Outputs>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>
@@ -361,30 +351,30 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\boost.1.60.0.0\build\native\boost.targets" Condition="Exists('..\packages\boost.1.60.0.0\build\native\boost.targets')" />
-    <Import Project="..\packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets" Condition="Exists('..\packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets')" />
-    <Import Project="..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets" Condition="Exists('..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets')" />
-    <Import Project="..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets" Condition="Exists('..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets')" />
-    <Import Project="..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets" Condition="Exists('..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets')" />
-    <Import Project="..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets" Condition="Exists('..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets')" />
-    <Import Project="..\packages\open_ssl_windows.1.0.2.10\build\native\open_ssl_windows.targets" Condition="Exists('..\packages\open_ssl_windows.1.0.2.10\build\native\open_ssl_windows.targets')" />
-    <Import Project="..\packages\open_ssl.1.0.2.08\build\native\open_ssl.targets" Condition="Exists('..\packages\open_ssl.1.0.2.08\build\native\open_ssl.targets')" />
-    <Import Project="..\packages\Libjpeg-Turbo.1.5.00\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\packages\Libjpeg-Turbo.1.5.00\build\native\Libjpeg-Turbo.targets')" />
-    <Import Project="..\packages\fltk.1.3.3.31\build\native\fltk.targets" Condition="Exists('..\packages\fltk.1.3.3.31\build\native\fltk.targets')" />
+    <Import Project="..\packages\boost.1.61.0.0\build\native\boost.targets" Condition="Exists('..\packages\boost.1.61.0.0\build\native\boost.targets')" />
+    <Import Project="..\packages\boost_date_time-vc140.1.61.0.0\build\native\boost_date_time-vc140.targets" Condition="Exists('..\packages\boost_date_time-vc140.1.61.0.0\build\native\boost_date_time-vc140.targets')" />
+    <Import Project="..\packages\boost_filesystem-vc140.1.61.0.0\build\native\boost_filesystem-vc140.targets" Condition="Exists('..\packages\boost_filesystem-vc140.1.61.0.0\build\native\boost_filesystem-vc140.targets')" />
+    <Import Project="..\packages\boost_regex-vc140.1.61.0.0\build\native\boost_regex-vc140.targets" Condition="Exists('..\packages\boost_regex-vc140.1.61.0.0\build\native\boost_regex-vc140.targets')" />
+    <Import Project="..\packages\boost_system-vc140.1.61.0.0\build\native\boost_system-vc140.targets" Condition="Exists('..\packages\boost_system-vc140.1.61.0.0\build\native\boost_system-vc140.targets')" />
+    <Import Project="..\packages\Libjpeg-Turbo.1.5.01\build\native\Libjpeg-Turbo.targets" Condition="Exists('..\packages\Libjpeg-Turbo.1.5.01\build\native\Libjpeg-Turbo.targets')" />
+    <Import Project="..\packages\fltk.1.3.3.33\build\native\fltk.targets" Condition="Exists('..\packages\fltk.1.3.3.33\build\native\fltk.targets')" />
+    <Import Project="..\packages\open_ssl_android.1.0.2.13\build\native\open_ssl_android.targets" Condition="Exists('..\packages\open_ssl_android.1.0.2.13\build\native\open_ssl_android.targets')" />
+    <Import Project="..\packages\open_ssl_windows.1.0.2.11\build\native\open_ssl_windows.targets" Condition="Exists('..\packages\open_ssl_windows.1.0.2.11\build\native\open_ssl_windows.targets')" />
+    <Import Project="..\packages\open_ssl.1.0.2.09\build\native\open_ssl.targets" Condition="Exists('..\packages\open_ssl.1.0.2.09\build\native\open_ssl.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\boost.1.60.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.60.0.0\build\native\boost.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets'))" />
-    <Error Condition="!Exists('..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl_android.1.0.2.12\build\native\open_ssl_android.targets'))" />
-    <Error Condition="!Exists('..\packages\open_ssl_windows.1.0.2.10\build\native\open_ssl_windows.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl_windows.1.0.2.10\build\native\open_ssl_windows.targets'))" />
-    <Error Condition="!Exists('..\packages\open_ssl.1.0.2.08\build\native\open_ssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl.1.0.2.08\build\native\open_ssl.targets'))" />
-    <Error Condition="!Exists('..\packages\Libjpeg-Turbo.1.5.00\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Libjpeg-Turbo.1.5.00\build\native\Libjpeg-Turbo.targets'))" />
-    <Error Condition="!Exists('..\packages\fltk.1.3.3.31\build\native\fltk.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fltk.1.3.3.31\build\native\fltk.targets'))" />
+    <Error Condition="!Exists('..\packages\boost.1.61.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.61.0.0\build\native\boost.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_date_time-vc140.1.61.0.0\build\native\boost_date_time-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_date_time-vc140.1.61.0.0\build\native\boost_date_time-vc140.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_filesystem-vc140.1.61.0.0\build\native\boost_filesystem-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_filesystem-vc140.1.61.0.0\build\native\boost_filesystem-vc140.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_regex-vc140.1.61.0.0\build\native\boost_regex-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_regex-vc140.1.61.0.0\build\native\boost_regex-vc140.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_system-vc140.1.61.0.0\build\native\boost_system-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_system-vc140.1.61.0.0\build\native\boost_system-vc140.targets'))" />
+    <Error Condition="!Exists('..\packages\Libjpeg-Turbo.1.5.01\build\native\Libjpeg-Turbo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Libjpeg-Turbo.1.5.01\build\native\Libjpeg-Turbo.targets'))" />
+    <Error Condition="!Exists('..\packages\fltk.1.3.3.33\build\native\fltk.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fltk.1.3.3.33\build\native\fltk.targets'))" />
+    <Error Condition="!Exists('..\packages\open_ssl_android.1.0.2.13\build\native\open_ssl_android.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl_android.1.0.2.13\build\native\open_ssl_android.targets'))" />
+    <Error Condition="!Exists('..\packages\open_ssl_windows.1.0.2.11\build\native\open_ssl_windows.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl_windows.1.0.2.11\build\native\open_ssl_windows.targets'))" />
+    <Error Condition="!Exists('..\packages\open_ssl.1.0.2.09\build\native\open_ssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\open_ssl.1.0.2.09\build\native\open_ssl.targets'))" />
   </Target>
 </Project>

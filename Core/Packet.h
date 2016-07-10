@@ -17,6 +17,7 @@ namespace SL {
 				MOUSEIMAGE,
 				KEYEVENT,
 				MOUSEEVENT,
+				CLIPBOARDTEXTEVENT,
 				//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
 				LAST_PACKET_TYPE
 			};
@@ -71,10 +72,7 @@ namespace SL {
 				return os;
 			}
 
-			struct OutgoingPacket {
-				std::shared_ptr<Network::Packet> Pack;
-				unsigned int UncompressedLength;
-			};
+
 			struct PacketHeader {
 				unsigned int Packet_Type;
 				unsigned int Payload_Length;

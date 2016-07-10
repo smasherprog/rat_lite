@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ClientNetworkDriver.h"
-#include "WebSocket.h"
+#include "Socket.h"
 #include "Shapes.h"
 #include "IClientDriver.h"
 #include "Image.h"
@@ -9,8 +9,8 @@
 #include "Mouse.h"
 #include "Logging.h"
 #include "Keyboard.h"
-#include "ISocket.h"
 #include "Client_Config.h"
+#include "ISocket.h"
 
 #include <assert.h>
 
@@ -24,21 +24,19 @@ namespace SL {
                 std::shared_ptr<Network::Client_Config> _Config;
 				std::shared_ptr<Network::ISocket> _Socket;
                 std::string _dst_host;
-				
-                bool _ConectedToSelf;
-				
-                
-				void MouseImage(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				Utilities::Point _LastMousePosition;
+     
+				void MouseImage(std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
-					_IClientDriver->OnReceive_MouseImage(socket, img);
+					_IClientDriver->OnReceive_MouseImage(img);
 				}
 
-				void MousePos(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void MousePos(std::shared_ptr<Packet>& p) {
 					assert(p->Payload_Length == sizeof(Utilities::Point));
-					_IClientDriver->OnReceive_MousePos(socket, (Utilities::Point*)p->Payload);
+					_IClientDriver->OnReceive_MousePos((Utilities::Point*)p->Payload);
 				}
-				void ImageDif(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void ScreenImageDif(std::shared_ptr<Packet>& p) {
 					auto imgrect = (Utilities::Rect*)p->Payload;
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
@@ -54,10 +52,10 @@ namespace SL {
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
-					_IClientDriver->OnReceive_ImageDif(socket, imgrect->Origin, img);
+					_IClientDriver->OnReceive_ImageDif(imgrect->Origin, img);
 
 				}
-				void Image(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+				void ScreenImage(std::shared_ptr<Packet>& p) {
 
 					auto compfree = [](void* handle) {tjDestroy(handle); };
 					auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
@@ -72,26 +70,32 @@ namespace SL {
 					if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Utilities::Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 						SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, tjGetErrorStr());
 					}
-					_IClientDriver->OnReceive_Image(socket, img);
+					_IClientDriver->OnReceive_Image(img);
 
 				}
-			
+				void ClipboardTextEvent(std::shared_ptr<Packet>& p) {
+				
+					_IClientDriver->OnReceive_ClipboardText(p->Payload, p->Payload_Length);
+				}
+
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : 
-                _IClientDriver(r), _Config(config), _dst_host(dst_host), _ConectedToSelf(false){
-
+                _IClientDriver(r), _Config(config), _dst_host(dst_host){
+					memset(&_LastMousePosition, 0, sizeof(_LastMousePosition));
 				}
 				
 				void Start() {
 					Stop();
-					WebSocket::Connect(_Config.get(), this, _dst_host.c_str());
-					_ConectedToSelf = (std::string("127.0.0.1") == _dst_host) || (std::string("localhost") == _dst_host) || (std::string("::1") == _dst_host);
+					Connect(_Config.get(), this, _dst_host.c_str());
+				
 
 				}
 				
 				void Stop() {
-					if (_Socket) _Socket->close("Stopping Listener");
-					_Socket.reset();//decrement count
+					if (_Socket) {
+						_Socket->close("Stopping Listener");
+						_Socket.reset();//decrement count
+					}
 				}
 				virtual ~ClientNetworkDriverImpl() {
 					Stop();
@@ -112,16 +116,19 @@ namespace SL {
 
 					switch (p->Packet_Type) {
 					case static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGE) :
-						Image(socket, p);
+						ScreenImage(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGEDIF) :
-						ImageDif(socket, p);
+						ScreenImageDif(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE) :
-						MouseImage(socket, p);
+						MouseImage(p);
 						break;
 					case static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS) :
-						MousePos(socket, p);
+						MousePos(p);
+						break;
+					case static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT) :
+						ClipboardTextEvent(p);
 						break;
 					default:
 						_IClientDriver->OnReceive(socket, p);//pass up the chain
@@ -134,6 +141,12 @@ namespace SL {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendMouse called on a socket that is not open yet");
 						return;
 					}
+					if (_Socket->is_loopback()) return;//dont send mouse info to ourselfs as this will cause a loop
+					//do checks to prevent sending redundant mouse information about its position
+					if (m.EventData == Input::Mouse::NO_EVENTDATA && _LastMousePosition == m.Pos && m.PressData == Input::Mouse::NO_PRESS_DATA && m.ScrollDelta == 0) {
+						return;//already did this event
+					}
+					_LastMousePosition = m.Pos;
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(m));
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
@@ -147,9 +160,18 @@ namespace SL {
 					memcpy(p.Payload, &m, sizeof(m));
 					_Socket->send(p);
 				}
-				bool ConnectedToSelf() const {
-					return _ConectedToSelf;	
+				void SendClipboardText(const char* data, unsigned int len) {
+					if (!_Socket) {
+						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
+						return;
+					}
+					if (_Socket->is_loopback()) return;//dont send clipboard info to ourselfs as it will cause a loop
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT), len, (char*)data, false);
+					_Socket->send(p);
 				}
+                std::shared_ptr<ISocket> get_Socket()const{
+                    return _Socket;
+                }
 			};
 		}
 	}
@@ -187,6 +209,10 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const In
 	_ClientNetworkDriverImpl->SendMouse(m);
 }
 
-bool SL::Remote_Access_Library::Network::ClientNetworkDriver::ConnectedToSelf() const {
-	return _ClientNetworkDriverImpl->ConnectedToSelf();
+std::shared_ptr<SL::Remote_Access_Library::Network::ISocket> SL::Remote_Access_Library::Network::ClientNetworkDriver::get_Socket()const{
+    return _ClientNetworkDriverImpl->get_Socket();
+}
+
+void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
+	return _ClientNetworkDriverImpl->SendClipboardText(data, len);
 }

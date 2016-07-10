@@ -31,6 +31,7 @@ namespace SL {
 				void SendScreenFull(ISocket * socket, const Utilities::Image & img);
 				void SendMouse(ISocket * socket, const Utilities::Image & img);
 				void SendMouse(ISocket * socket, const Utilities::Point& pos);
+				void SendClipboardText(ISocket * socket, const char* data, unsigned int len);
 
 				std::vector<std::shared_ptr<Network::ISocket>> GetClients();
 				size_t ClientCount() const;

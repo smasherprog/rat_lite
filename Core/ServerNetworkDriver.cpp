@@ -5,8 +5,7 @@
 #include "Packet.h"
 #include "IServerDriver.h"
 #include "Server_Config.h"
-#include "WebSocket.h"
-#include "HttpsSocket.h"
+#include "Socket.h"
 #include "turbojpeg.h"
 #include "Mouse.h"
 #include "Keyboard.h"
@@ -22,7 +21,7 @@ namespace SL {
 
 			class ServerNetworkDriverImpl : public IBaseNetworkDriver {
 
-				std::shared_ptr<WebSocket::Listener> _Listener;
+				std::shared_ptr<Listener> _Listener;
 
 				IServerDriver* _IServerDriver;
 
@@ -31,21 +30,30 @@ namespace SL {
 				std::mutex _ClientsLock;
 				std::shared_ptr<Network::Server_Config> _Config;
 				std::vector<char> _CompressBuffer;
-
+                Utilities::Point _LastMousePos;
+                
 				void KeyboardEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::KeyEvent));
-					_IServerDriver->OnKey((Input::KeyEvent*) p->Payload);
+					_IServerDriver->OnReceive_Key((Input::KeyEvent*) p->Payload);
 
 				}
 
 				void MouseEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
 					UNUSED(socket);
 					assert(p->Payload_Length == sizeof(Input::MouseEvent));
-					_IServerDriver->OnMouse((Input::MouseEvent*) p->Payload);
+					_IServerDriver->OnReceive_Mouse((Input::MouseEvent*) p->Payload);
 				}
+				void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, std::shared_ptr<Packet>& p) {
+					UNUSED(socket);
+
+					_IServerDriver->OnReceive_ClipboardText(p->Payload, p->Payload_Length);
+				}
+
+
 			public:
-				ServerNetworkDriverImpl(std::shared_ptr<Network::Server_Config> config, IServerDriver* svrd) : _IServerDriver(svrd), _Config(config) {
+				ServerNetworkDriverImpl(std::shared_ptr<Network::Server_Config> config, IServerDriver* svrd) : 
+                _IServerDriver(svrd), _Config(config), _LastMousePos(0, 0) {
 
 				}
 				virtual ~ServerNetworkDriverImpl() {
@@ -57,7 +65,7 @@ namespace SL {
 				}
 
 				virtual void OnConnect(const std::shared_ptr<ISocket>& socket) override {
-					if (_Clients.size() > static_cast<size_t>(_Config->MaxNumConnections) ){
+					if (_Clients.size() > static_cast<size_t>(_Config->MaxNumConnections)) {
 						socket->close("CLosing due to max number of connections!");
 						return;
 					}
@@ -66,6 +74,7 @@ namespace SL {
 					_Clients.push_back(socket);
 				}
 				virtual void OnClose(const ISocket* socket)override {
+                    
 					_IServerDriver->OnClose(socket);
 
 					std::lock_guard<std::mutex> lock(_ClientsLock);
@@ -83,7 +92,10 @@ namespace SL {
 					case static_cast<unsigned int>(PACKET_TYPES::KEYEVENT) :
 						KeyboardEvent(socket, p);
 						break;
-
+					case static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT) :
+						ClipboardTextEvent(socket, p);
+						break;
+				
 					default:
 						_IServerDriver->OnReceive(socket, p);//pass up the chain
 						break;
@@ -112,6 +124,7 @@ namespace SL {
 					else socket->send(p);
 				}
 				void SendMouse(ISocket * socket, const Utilities::Image & img) {
+
 					Utilities::Point r(Utilities::Point(img.Width(), img.Height()));
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE), static_cast<unsigned int>(sizeof(r) + img.size()));
 					memcpy(p.Payload, &r, sizeof(r));
@@ -121,14 +134,20 @@ namespace SL {
 				}
 				void SendMouse(ISocket * socket, const Utilities::Point& pos)
 				{
+                    if(_LastMousePos == pos) return;//no need to send the same information
+                    else _LastMousePos = pos;//copy the last mouse pos
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS), sizeof(pos));
-					p.Packet_Type = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
 					memcpy(p.Payload, &pos, sizeof(pos));
 					if (socket == nullptr) SendToAll(p);
 					else socket->send(p);
 				}
 
+				void SendClipboardText(ISocket * socket, const char* data, unsigned int len) {
+					Packet p(static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT), len, (char*)data, false);
+					if (socket == nullptr) SendToAll(p);
+					else socket->send(p);
 
+				}
 
 				void SendToAll(Packet& packet) {
 					for (auto& c : GetClients()) {
@@ -146,7 +165,7 @@ namespace SL {
 				void Start() {
 					Stop();
 					if (_Config->WebSocketTLSLPort > 0) {
-						_Listener = std::make_unique<WebSocket::Listener>(this, _Config);
+						_Listener = std::make_unique<Listener>(this, _Config, ListenerTypes::WEBSOCKET);
 					}
 
 				}
@@ -159,7 +178,7 @@ namespace SL {
 					}
 					std::for_each(begin(copyclients), end(copyclients), [](const std::shared_ptr<ISocket>& o) { o->close("ShuttingDown"); });
 					copyclients.clear();
-					_Listener.reset();
+					if(_Listener) _Listener.reset();
 
 				}
 				void ExtractImageRect(Utilities::Rect r, const Utilities::Image & img, std::vector<char>& outbuffer) {
@@ -249,6 +268,10 @@ void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendMouse(ISocket 
 	_ServerNetworkDriverImpl->SendMouse(socket, pos);
 }
 
+void SL::Remote_Access_Library::Network::ServerNetworkDriver::SendClipboardText(ISocket * socket, const char* data, unsigned int len) {
+	SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnSend_ClipboardText " << len);
+	_ServerNetworkDriverImpl->SendClipboardText(socket, data, len);
+}
 
 std::vector<std::shared_ptr<SL::Remote_Access_Library::Network::ISocket>> SL::Remote_Access_Library::Network::ServerNetworkDriver::GetClients()
 {

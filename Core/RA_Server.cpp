@@ -12,6 +12,7 @@
 #include "Keyboard.h"
 #include "IBaseNetworkDriver.h"
 #include "crypto.h"
+#include "Clipboard.h"
 
 #include <thread>
 #include <mutex>
@@ -21,6 +22,7 @@
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Server {
+
 			class ServerImpl : public Network::IServerDriver {
 			public:
 				std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
@@ -30,6 +32,7 @@ namespace SL {
 				Network::ServerNetworkDriver _ServerNetworkDriver;
 				Network::HttpsServerNetworkDriver _HttpsServerNetworkDriver;
 				Network::IBaseNetworkDriver* _IUserNetworkDriver;
+				std::unique_ptr<Capturing::Clipboard> _Clipboard;
 
 				bool _Keepgoing = true;
 				std::mutex _NewClientLock;
@@ -40,12 +43,15 @@ namespace SL {
 				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
 					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
 				{
+					
 				}
 
 				virtual ~ServerImpl() {
+					_Clipboard.reset();//make sure to prevent race conditions
 					_Status = Server_Status::SERVER_STOPPED;
 					_Keepgoing = false;
 				}
+
 				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override {
 					UNUSED(socket);
 					return true;
@@ -67,8 +73,37 @@ namespace SL {
 					else SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive Unknown Packet " << packet->Packet_Type);
 				}
 
-				void OnScreen(std::shared_ptr<Utilities::Image> img)
-				{
+				virtual void OnReceive_ClipboardText(const char* data, unsigned int len) override {
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
+                    _Clipboard->copy_to_clipboard(data, static_cast<int>(len));
+				}
+
+
+				virtual void OnReceive_Mouse(Input::MouseEvent* m) override {
+					if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
+				}
+				virtual void OnReceive_Key(Input::KeyEvent* m)override {
+					if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
+				}
+
+
+				void OnMousePos(Utilities::Point p) {
+					_ServerNetworkDriver.SendMouse(nullptr, p);
+				}
+				void OnMouseImg(std::shared_ptr<Utilities::Image> img) {
+					if (!LastMouse) {
+						_ServerNetworkDriver.SendMouse(nullptr, *img);
+					}
+					else {
+                        if(LastMouse->size() != img->size()) {
+                            _ServerNetworkDriver.SendMouse(nullptr, *img);
+                        } else if (memcmp(img->data(), LastMouse->data(), LastMouse->size()) != 0) {
+							_ServerNetworkDriver.SendMouse(nullptr, *img);
+						}
+					}
+					LastMouse = img;
+				}
+				void OnScreen(std::shared_ptr<Utilities::Image> img) {
 					if (!_NewClients.empty()) {
 						//make sure to send the full screens to any new connects
 						std::lock_guard<std::mutex> lock(_NewClientLock);
@@ -87,35 +122,12 @@ namespace SL {
 					LastScreen = img;//swap
 				}
 
-
-				void OnMouseImg(std::shared_ptr<Utilities::Image> img)
-				{
-					if (!LastMouse) {
-						_ServerNetworkDriver.SendMouse(nullptr, *img);
-					}
-					else {
-						if (memcmp(img->data(), LastMouse->data(), std::min(LastMouse->size(), img->size())) != 0) {
-							_ServerNetworkDriver.SendMouse(nullptr, *img);
-						}
-					}
-					LastMouse = img;
-				}
-				void OnMousePos(Utilities::Point p) {
-					_ServerNetworkDriver.SendMouse(nullptr, p);
-				}
-
-
-				virtual void OnMouse(Input::MouseEvent* m) override {
-					if (!_Config->IgnoreIncomingMouseEvents) Input::SimulateMouseEvent(*m);
-				}
-				virtual void OnKey(Input::KeyEvent* m)override {
-					if (!_Config->IgnoreIncomingKeyboardEvents) Input::SimulateKeyboardEvent(*m);
-				}
-
 				int Run() {
 					_Status = Server_Status::SERVER_RUNNING;
 					_ServerNetworkDriver.Start();
 					_HttpsServerNetworkDriver.Start();
+					_Clipboard = std::make_unique<Capturing::Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
+
 #if !__ANDROID__
 					auto mouseimg(Input::get_MouseImage());
 					auto mousepos(Input::get_MousePosition());
@@ -124,6 +136,7 @@ namespace SL {
 
 					auto screenimg(Capturing::get_ScreenImage());
 					auto screenimgtimer = std::chrono::steady_clock::now();
+				
 #endif
 
 
@@ -134,20 +147,20 @@ namespace SL {
 							//check mouse img first
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
 								OnMouseImg(mouseimg.get());
-								mouseimg = std::move(Input::get_MouseImage());
+								mouseimg = Input::get_MouseImage();
 								mouseimgtimer = curtime;
 							}
 							//check mouse pos next
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
 								OnMousePos(mousepos.get());
-								mousepos = std::move(Input::get_MousePosition());
-								mouseimgtimer = curtime;
+								mousepos = Input::get_MousePosition();
+								mousepostimer = curtime;
 							}
 
 							//check screen next
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config->ScreenImageCaptureRate && is_ready(screenimg)) {
 								OnScreen(screenimg.get());
-								screenimg = std::move(Capturing::get_ScreenImage());
+								screenimg = Capturing::get_ScreenImage();
 								screenimgtimer = curtime;
 							}
 						}
@@ -204,7 +217,7 @@ SL::Remote_Access_Library::Server_Status SL::Remote_Access_Library::Server::RA_S
 std::string SL::Remote_Access_Library::Server::RA_Server::Validate_Settings(std::shared_ptr<Network::Server_Config> config)
 {
 	std::string ret;
-	assert(config.get()!=nullptr);
+	assert(config.get() != nullptr);
 	ret += Crypto::ValidateCertificate(config->Public_Certficate.get());
 	ret += Crypto::ValidatePrivateKey(config->Private_Key.get(), config->PasswordToPrivateKey);
 	if (!SL::Directory_Exists(config->WWWRoot)) ret += "You must supply a valid folder for wwwroot!\n";

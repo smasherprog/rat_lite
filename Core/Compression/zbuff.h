@@ -28,8 +28,8 @@
     You can contact the author at :
     - zstd homepage : http://www.zstd.net/
 */
-#ifndef ZSTD_BUFFERED_H
-#define ZSTD_BUFFERED_H
+#ifndef ZSTD_BUFFERED_H_23987
+#define ZSTD_BUFFERED_H_23987
 
 #if defined (__cplusplus)
 extern "C" {
@@ -38,16 +38,14 @@ extern "C" {
 /* *************************************
 *  Dependencies
 ***************************************/
-#include <stddef.h>   /* size_t */
+#include <stddef.h>      /* size_t */
 
 
 /* ***************************************************************
 *  Compiler specifics
 *****************************************************************/
-/*!
-*  ZSTD_DLL_EXPORT :
-*  Enable exporting of functions when building a Windows DLL
-*/
+/* ZSTD_DLL_EXPORT :
+*  Enable exporting of functions when building a Windows DLL */
 #if defined(_WIN32) && defined(ZSTD_DLL_EXPORT) && (ZSTD_DLL_EXPORT==1)
 #  define ZSTDLIB_API __declspec(dllexport)
 #else
@@ -103,8 +101,8 @@ ZSTDLIB_API size_t ZBUFF_compressEnd(ZBUFF_CCtx* cctx, void* dst, size_t* dstCap
 *  @return : nb of bytes still present into internal buffer (0 if it's empty)
 *            or an error code, which can be tested using ZBUFF_isError().
 *
-*  Hint : recommended buffer sizes (not compulsory) : ZBUFF_recommendedCInSize / ZBUFF_recommendedCOutSize
-*  input : ZBUFF_recommendedCInSize==128 KB block size is the internal unit, it improves latency to use this value (skipped buffering).
+*  Hint : _recommended buffer_ sizes (not compulsory) : ZBUFF_recommendedCInSize() / ZBUFF_recommendedCOutSize()
+*  input : ZBUFF_recommendedCInSize==128 KB block size is the internal unit, use this value to reduce intermediate stages (better latency)
 *  output : ZBUFF_recommendedCOutSize==ZSTD_compressBound(128 KB) + 3 + 3 : ensures it's always possible to write/flush/end a full block. Skip some buffering.
 *  By using both, it ensures that input will be entirely consumed, and output will always contain the result, reducing intermediate buffering.
 * **************************************************/
@@ -153,15 +151,47 @@ ZSTDLIB_API unsigned ZBUFF_isError(size_t errorCode);
 ZSTDLIB_API const char* ZBUFF_getErrorName(size_t errorCode);
 
 /** Functions below provide recommended buffer sizes for Compression or Decompression operations.
-*   These sizes are just hints, and tend to offer better latency */
+*   These sizes are just hints, they tend to offer better latency */
 ZSTDLIB_API size_t ZBUFF_recommendedCInSize(void);
 ZSTDLIB_API size_t ZBUFF_recommendedCOutSize(void);
 ZSTDLIB_API size_t ZBUFF_recommendedDInSize(void);
 ZSTDLIB_API size_t ZBUFF_recommendedDOutSize(void);
 
 
+#ifdef ZBUFF_STATIC_LINKING_ONLY
+
+/* ====================================================================================
+ * The definitions in this section are considered experimental.
+ * They should never be used in association with a dynamic library, as they may change in the future.
+ * They are provided for advanced usages.
+ * Use them only in association with static linking.
+ * ==================================================================================== */
+
+/*--- Dependency ---*/
+#define ZSTD_STATIC_LINKING_ONLY   /* ZSTD_parameters */
+#include "zstd.h"
+
+
+/*--- External memory ---*/
+/*! ZBUFF_createCCtx_advanced() :
+ *  Create a ZBUFF compression context using external alloc and free functions */
+ZSTDLIB_API ZBUFF_CCtx* ZBUFF_createCCtx_advanced(ZSTD_customMem customMem);
+
+/*! ZBUFF_createDCtx_advanced() :
+ *  Create a ZBUFF decompression context using external alloc and free functions */
+ZSTDLIB_API ZBUFF_DCtx* ZBUFF_createDCtx_advanced(ZSTD_customMem customMem);
+
+
+/*--- Advanced Streaming function ---*/
+ZSTDLIB_API size_t ZBUFF_compressInit_advanced(ZBUFF_CCtx* zbc,
+                                               const void* dict, size_t dictSize,
+                                               ZSTD_parameters params, U64 pledgedSrcSize);
+
+#endif /* ZBUFF_STATIC_LINKING_ONLY */
+
+
 #if defined (__cplusplus)
 }
 #endif
 
-#endif  /* ZSTD_BUFFERED_H */
+#endif  /* ZSTD_BUFFERED_H_23987 */

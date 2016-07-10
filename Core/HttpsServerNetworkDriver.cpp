@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "HttpsServerNetworkDriver.h"
 #include "IHttpsDriver.h"
-#include "HttpsSocket.h"
+#include "ISocket.h"
+#include "Socket.h"
 #include "HttpHeader.h"
 #include "Server_Config.h"
 #include "Logging.h"
@@ -23,7 +24,7 @@ namespace SL {
 			class HttpsServerNetworkDriverImpl : public IHttpsDriver {
 			public:
 
-				std::shared_ptr<HttpsListener> _Listener;
+				std::shared_ptr<Listener> _Listener;
 
 				IHttpsDriver* _IHttpsDriver;
 				std::shared_ptr<Network::Server_Config> _config;
@@ -153,7 +154,7 @@ namespace SL {
 				void Start() {
 					if (_config->HttpTLSPort > 0) {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Starting TLS http socket Listening on port " << _config->HttpTLSPort);
-						_Listener = std::make_shared<HttpsListener>(this, _config);
+						_Listener = std::make_shared<Listener>(this, _config, ListenerTypes::HTTPS);
 					}
 				}
 				void Stop() {

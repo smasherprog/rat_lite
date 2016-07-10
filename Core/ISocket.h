@@ -26,11 +26,16 @@ namespace SL {
 				//s in in seconds
 				virtual void set_WriteTimeout(int s) = 0;
 
-				virtual std::string get_ipv4_address() const = 0;
+				virtual std::string get_address() const = 0;
 				virtual unsigned short get_port() const = 0;
 
+				virtual bool is_v4() const = 0;
+				virtual bool is_v6() const = 0;
+				//is the this connection to ourselfs? i.e. 127.0.0.1 or ::1, etc
+				virtual bool is_loopback() const = 0;
 			};
 
 		}
 	}
 }
+

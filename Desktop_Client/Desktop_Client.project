@@ -70,8 +70,8 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Linux_Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell $(HOME)/.linuxbrew/bin/fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
-      <Linker Options="-Wl,  -Bstatic -lCore -lboost_filesystem -lboost_system -lboost_thread $(shell $(HOME)/.linuxbrew/bin/fltk-config --ldflags) -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
+      <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0"/>
+      <Linker Options="-Wl,  -Bstatic -lCore -lboost_filesystem -lboost_system -lboost_thread $(shell fltk-config --ldflags) -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Debug"/>
         <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
       </Linker>
@@ -105,14 +105,14 @@
         <ClangCmpFlagsC/>
         <ClangCmpFlags/>
         <ClangPP/>
-        <SearchPaths>$(HOME)/.linuxbrew/include</SearchPaths>
+        <SearchPaths/>
       </Completion>
     </Configuration>
     <Configuration Name="Linux_Release" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O3;-std=c++14;-Wall;$(shell $(HOME)/.linuxbrew/bin/fltk-config --cxxflags)" C_Options="-O3;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-O3;-std=c++14;-Wall;$(shell fltk-config --cxxflags)" C_Options="-O3;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
-      <Linker Options="-Wl,  -Bstatic -lCore -lboost_filesystem -lboost_system -lboost_thread $(shell $(HOME)/.linuxbrew/bin/fltk-config --ldflags) -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
+      <Linker Options="-Wl,  -Bstatic -lCore -lboost_filesystem -lboost_system -lboost_thread $(shell fltk-config --ldflags) -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Release"/>
         <LibraryPath Value="$(WorkspacePath)/Core/Release"/>
       </Linker>

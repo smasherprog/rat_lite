@@ -33,12 +33,51 @@ namespace SL {
 			};
 
 
+				template<class T>std::string get_address(T& _socket)
+				{
+                    boost::system::error_code ec;
+					auto rt(_socket.lowest_layer().remote_endpoint(ec));
+                    if(!ec) return rt.address().to_string();
+                    else return "";
+				}
+				template<class T> unsigned short get_port(T& _socket)
+				{
+                    boost::system::error_code ec;
+					auto rt(_socket.lowest_layer().remote_endpoint(ec));
+                    if(!ec) return rt.port();
+                    else return -1;
+				}
+				template<class T> bool is_v4(T& _socket)
+                {
+                    boost::system::error_code ec;
+					auto rt(_socket.lowest_layer().remote_endpoint(ec));
+                    if(!ec) return rt.address().is_v4();
+                    else return true;
+				}
+				template<class T> bool is_v6(T& _socket)
+                {
+                    boost::system::error_code ec;
+					auto rt(_socket.lowest_layer().remote_endpoint(ec));
+                    if(!ec) return rt.address().is_v6();
+                    else return true;
+				}
+				template<class T> bool is_loopback(T& _socket)
+                {
+                    boost::system::error_code ec;
+					auto rt(_socket.lowest_layer().remote_endpoint(ec));
+                    if(!ec) return rt.address().is_loopback();
+                    else return true;
+				}
+                
 			template<class T> void readexpire_from_now(T& self, int seconds)
 			{
-				if (seconds <= 0) self->_read_deadline.expires_at(boost::posix_time::pos_infin);
-				else  self->_read_deadline.expires_from_now(boost::posix_time::seconds(seconds));
-
-				if (seconds >= 0) {
+                boost::system::error_code ec;
+				if (seconds <= 0) self->_read_deadline.expires_at(boost::posix_time::pos_infin, ec);
+				else  self->_read_deadline.expires_from_now(boost::posix_time::seconds(seconds), ec);
+                if (ec) {
+                    SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+                }
+				else if (seconds >= 0) {
 					self->_read_deadline.async_wait([self, seconds](const boost::system::error_code& ec) {
 						if (ec != boost::asio::error::operation_aborted) {
 							self->close("read timer expired. Time waited: ");
@@ -48,9 +87,12 @@ namespace SL {
 			}
 			template<class T> void writeexpire_from_now(T& self, int seconds)
 			{
-				if (seconds <= 0) self->_write_deadline.expires_at(boost::posix_time::pos_infin);
-				else self->_write_deadline.expires_from_now(boost::posix_time::seconds(seconds));
-				if (seconds >= 0) {
+                boost::system::error_code ec;
+				if (seconds <= 0) self->_write_deadline.expires_at(boost::posix_time::pos_infin, ec);
+				else self->_write_deadline.expires_from_now(boost::posix_time::seconds(seconds), ec);
+                if (ec) {
+                    SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+                } else if (seconds >= 0) {
 					self->_write_deadline.async_wait([self, seconds](const boost::system::error_code& ec) {
 						if (ec != boost::asio::error::operation_aborted) {
 							//close("write timer expired. Time waited: " + std::to_string(seconds));
@@ -59,18 +101,25 @@ namespace SL {
 					});
 				}
 			}
+            
 			template<class T> void closeme(T* self, std::string reason) {
+               
 				if (self->closed()) return;
 				SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: " << reason);
 				self->_Closed = true;
 				self->CancelTimers();
+              
 				self->_IBaseNetworkDriver->OnClose(self);
-				boost::system::error_code ec;
-				self->_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-				self->_socket.lowest_layer().close();
-				if (ec) {
-					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
-				}
+                boost::system::error_code ec;
+                self->_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+                  
+                if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+                ec.clear();
+                self->_socket.lowest_layer().close(ec);
+                   
+                if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message()); 
+              
+				SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Socket Closed");
 			}
 
 			template<class T> void writebody(T& self)
@@ -119,6 +168,7 @@ namespace SL {
 					Stop();
 				}
 				void Stop() {
+            
 					io_service.stop();
 					while (!io_service.stopped()) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -231,25 +281,23 @@ namespace SL {
 
 				virtual std::string get_address() const override
 				{
-					return _socket.lowest_layer().remote_endpoint().address().to_string();
+                    return Network::get_address(_socket);
 				}
 				virtual unsigned short get_port() const override
 				{
-					return _socket.lowest_layer().remote_endpoint().port();
+                    return Network::get_port(_socket);
 				}
-				virtual bool is_v4() const override{
-					return _socket.lowest_layer().remote_endpoint().address().is_v4();
+				virtual bool is_v4() const override
+                {
+                    return Network::is_v4(_socket);
 				}
-				virtual bool is_v6() const override{
-					return _socket.lowest_layer().remote_endpoint().address().is_v6();
+				virtual bool is_v6() const override
+                {
+                   return Network::is_v6(_socket);
 				}
 				virtual bool is_loopback() const override{
-					return _socket.lowest_layer().remote_endpoint().address().is_loopback();
+                   return Network::is_loopback(_socket);
 				}
-
-
-
-
 				virtual void close(std::string reason) override
 				{
 					closeme(this, reason);
@@ -488,25 +536,25 @@ namespace SL {
 					_writetimeout = s;
 
 				}
-
-				virtual std::string get_address() const override
+              virtual std::string get_address() const override
 				{
-					return _socket.lowest_layer().remote_endpoint().address().to_string();
+                    return Network::get_address(_socket);
 				}
 				virtual unsigned short get_port() const override
 				{
-					return _socket.lowest_layer().remote_endpoint().port();
+                    return Network::get_port(_socket);
 				}
-				virtual bool is_v4() const override{
-					return _socket.lowest_layer().remote_endpoint().address().is_v4();
+				virtual bool is_v4() const override
+                {
+                    return Network::is_v4(_socket);
 				}
-				virtual bool is_v6() const override{
-					return _socket.lowest_layer().remote_endpoint().address().is_v6();
+				virtual bool is_v6() const override
+                {
+                   return Network::is_v6(_socket);
 				}
 				virtual bool is_loopback() const override{
-					return _socket.lowest_layer().remote_endpoint().address().is_loopback();
+                   return Network::is_loopback(_socket);
 				}
-
 				void start() {
 					if (_Server) receivehandshake();
 					else sendHandshake();
@@ -734,7 +782,7 @@ namespace SL {
 							assert(byteswritten == sizeof(self->_WritePacketHeader));
 							writebody(self);
 						}
-						else self->close(std::string("writeheader async_write ") + ec.message());
+						else self->close(std::string("writePacketheader async_write ") + ec.message());
 					});
 
 				}

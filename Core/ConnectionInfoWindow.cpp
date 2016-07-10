@@ -7,7 +7,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Tooltip.H>
-#include <Fl/Fl_Check_Button.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/x.H>               // needed for fl_display
 #include <FL/Fl_Secret_Input.H>
 #undef CREATE

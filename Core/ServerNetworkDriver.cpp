@@ -74,6 +74,7 @@ namespace SL {
 					_Clients.push_back(socket);
 				}
 				virtual void OnClose(const ISocket* socket)override {
+                    
 					_IServerDriver->OnClose(socket);
 
 					std::lock_guard<std::mutex> lock(_ClientsLock);

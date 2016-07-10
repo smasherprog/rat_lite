@@ -3,7 +3,7 @@
   <Project Name="Desktop_Client" Path="Desktop_Client/Desktop_Client.project" Active="Yes"/>
   <Project Name="Core" Path="Core/Core.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Mac_Debug" Selected="no">
+    <WorkspaceConfiguration Name="Mac_Debug" Selected="yes">
       <Environment/>
       <Project Name="Desktop_Client" ConfigName="Mac_Debug"/>
       <Project Name="Core" ConfigName="Mac_Debug"/>

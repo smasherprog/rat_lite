@@ -15,6 +15,15 @@
   "arguments": [],
   "parentProject": ""
  }, {
+  "name": "Linux_Debug",
+  "enabled": false,
+  "buildDirectory": "build",
+  "sourceDirectory": "$(ProjectPath)",
+  "generator": "",
+  "buildType": "",
+  "arguments": [],
+  "parentProject": ""
+ }, {
   "name": "Mac_Debug",
   "enabled": false,
   "buildDirectory": "build",
@@ -149,7 +158,7 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="LLDB Debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g;-O0;-pedantic;-W;-std=c++14;$(shell /usr/local/opt/fltk/bin/fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="/usr/local/opt/openssl/include"/>
         <IncludePath Value="/usr/local/opt/boost/include"/>
@@ -205,8 +214,7 @@
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
       <Linker Options="-Wl, -Bstatic -lCore -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt $(shell /usr/local/opt/fltk/bin/fltk-config --ldflags) -lturbojpeg  -lssl -lcrypto" Required="yes">
-        <LibraryPath Value="$(WorkspacePath)/Desktop_UI/Release"/>
-        <LibraryPath Value="$(WorkspacePath)/Core/Release"/>
+        <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
         <LibraryPath Value="/usr/local/opt/openssl/lib"/>
         <LibraryPath Value="/usr/local/opt/boost/lib"/>
         <LibraryPath Value="/usr/local/opt/fltk/lib"/>

@@ -168,8 +168,10 @@
     </Configuration>
     <Configuration Name="Mac_Debug" CompilerType="GCC" DebuggerType="LLDB Debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-Wmain;-g;-O0;-W;-std=c++14;$(shell /usr/local/opt/fltk/bin/fltk-config --cxxflags)" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
-        <IncludePath Value="/usr/local/opt/fltk/include"/>
         <IncludePath Value="/usr/local/opt/openssl/include"/>
+        <IncludePath Value="/usr/local/opt/boost/include"/>
+        <IncludePath Value="/usr/local/opt/fltk/include"/>
+        <IncludePath Value="/usr/local/opt/jpeg-turbo/include"/>
       </Compiler>
       <Linker Options="-Wl, -Bstatic -lCore $(shell /usr/local/opt/fltk/bin/fltk-config --ldflags) -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lpthread -lturbojpeg  -lssl -lcrypto" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
@@ -216,11 +218,14 @@
       </Completion>
     </Configuration>
     <Configuration Name="Mac_Release" CompilerType="GCC" DebuggerType="LLDB Debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O3;-std=c++14;-Wall" C_Options="-O3;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-O3;-std=c++14;$(shell /usr/local/opt/fltk/bin/fltk-config --cxxflags)" C_Options="-O3;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="/usr/local/opt/openssl/include"/>
+        <IncludePath Value="/usr/local/opt/boost/include"/>
         <IncludePath Value="/usr/local/opt/fltk/include"/>
+        <IncludePath Value="/usr/local/opt/jpeg-turbo/include"/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
-      <Linker Options="-Wl, -Bstatic -lCore $(shell fltk-config --ldflags) -lboost_filesystem -lboost_system -lboost_thread -lpthread -lturbojpeg  -lssl -lcrypto -ldl -lX11 -lXext -lXfixes -lXtst" Required="yes">
+      <Linker Options="-Wl, -Bstatic -lCore $(shell /usr/local/opt/fltk/bin/fltk-config --ldflags) -lboost_filesystem-mt -lboost_system-mt -lboost_thread-mt -lpthread -lturbojpeg  -lssl -lcrypto" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/Core/Debug"/>
         <LibraryPath Value="/usr/local/opt/openssl/lib"/>
         <LibraryPath Value="/usr/local/opt/boost/lib"/>
@@ -239,9 +244,9 @@
       </Debugger>
       <PreBuild/>
       <PostBuild>
-        <Command Enabled="yes">cp ../wwwroot $(OutDir) -r -f</Command>
-        <Command Enabled="yes">cp Desktop_Server.desktop $(OutDir) -f</Command>
-        <Command Enabled="yes">cp Desktop_Server.ico $(OutDir) -f</Command>
+        <Command Enabled="yes">cp -R -f ../wwwroot $(OutDir)</Command>
+        <Command Enabled="yes">cp -f Desktop_Server.desktop $(OutDir)</Command>
+        <Command Enabled="yes">cp -f Desktop_Server.ico $(OutDir)</Command>
       </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>

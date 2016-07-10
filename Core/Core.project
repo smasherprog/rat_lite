@@ -2,11 +2,20 @@
 <CodeLite_Project Name="Core" InternalType="Library">
   <Plugins>
     <Plugin Name="qmake">
-      <![CDATA[00030001N0005Debug0000000000000001N0009Mac_Debug0000000000000001N0007Release000000000000]]>
+      <![CDATA[00040001N0005Debug0000000000000001N0009Mac_Debug0000000000000001N0011Mac_Release0000000000000001N0007Release000000000000]]>
     </Plugin>
     <Plugin Name="CMakePlugin">
       <![CDATA[[{
   "name": "Debug",
+  "enabled": false,
+  "buildDirectory": "build",
+  "sourceDirectory": "$(ProjectPath)",
+  "generator": "",
+  "buildType": "",
+  "arguments": [],
+  "parentProject": ""
+ }, {
+  "name": "Linux_Debug",
   "enabled": false,
   "buildDirectory": "build",
   "sourceDirectory": "$(ProjectPath)",
@@ -285,7 +294,10 @@
     </Configuration>
     <Configuration Name="Mac_Release" CompilerType="GCC" DebuggerType="" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-O3;-W;-std=c++14;-Wall;-fPIC" C_Options="-W;-fPIC;" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
-        <IncludePath Value="/usr/local/include/"/>
+        <IncludePath Value="/usr/local/opt/openssl/include"/>
+        <IncludePath Value="/usr/local/opt/boost/include"/>
+        <IncludePath Value="/usr/local/opt/fltk/include"/>
+        <IncludePath Value="/usr/local/opt/jpeg-turbo/include"/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>

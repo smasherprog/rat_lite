@@ -25,9 +25,7 @@ namespace SL {
 				std::shared_ptr<Network::ISocket> _Socket;
                 std::string _dst_host;
 				Utilities::Point _LastMousePosition;
-                bool _ConectedToSelf;
-				
-                
+     
 				void MouseImage(std::shared_ptr<Packet>& p) {
 					auto imgsize = (Utilities::Point*)p->Payload;
 					auto img(Utilities::Image::CreateImage(imgsize->Y, imgsize->X, p->Payload + sizeof(Utilities::Rect), 4));
@@ -82,7 +80,7 @@ namespace SL {
 
 			public:
 				ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Network::Client_Config> config, const char * dst_host) : 
-                _IClientDriver(r), _Config(config), _dst_host(dst_host), _ConectedToSelf(false){
+                _IClientDriver(r), _Config(config), _dst_host(dst_host){
 					memset(&_LastMousePosition, 0, sizeof(_LastMousePosition));
 				}
 				
@@ -143,6 +141,7 @@ namespace SL {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendMouse called on a socket that is not open yet");
 						return;
 					}
+					if (_Socket->is_loopback()) return;//dont send mouse info to ourselfs as this will cause a loop
 					//do checks to prevent sending redundant mouse information about its position
 					if (m.EventData == Input::Mouse::NO_EVENTDATA && _LastMousePosition == m.Pos && m.PressData == Input::Mouse::NO_PRESS_DATA && m.ScrollDelta == 0) {
 						return;//already did this event
@@ -166,11 +165,9 @@ namespace SL {
 						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
 						return;
 					}
+					if (_Socket->is_loopback()) return;//dont send clipboard info to ourselfs as it will cause a loop
 					Packet p(static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT), len, (char*)data, false);
 					_Socket->send(p);
-				}
-				bool ConnectedToSelf() const {
-					return _ConectedToSelf;	
 				}
                 std::shared_ptr<ISocket> get_Socket()const{
                     return _Socket;
@@ -212,9 +209,6 @@ void SL::Remote_Access_Library::Network::ClientNetworkDriver::SendMouse(const In
 	_ClientNetworkDriverImpl->SendMouse(m);
 }
 
-bool SL::Remote_Access_Library::Network::ClientNetworkDriver::ConnectedToSelf() const {
-	return _ClientNetworkDriverImpl->ConnectedToSelf();
-}
 std::shared_ptr<SL::Remote_Access_Library::Network::ISocket> SL::Remote_Access_Library::Network::ClientNetworkDriver::get_Socket()const{
     return _ClientNetworkDriverImpl->get_Socket();
 }

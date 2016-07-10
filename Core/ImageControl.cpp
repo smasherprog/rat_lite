@@ -84,7 +84,7 @@ namespace SL {
 						std::lock_guard<std::mutex> lock(_ImageLock);
 						if (_ScaledImage) {
 							fl_draw_image((uchar*)_ScaledImage->data(), x, y, _ScaledImage->Width(), _ScaledImage->Height(), 4);
-							_MouseImage->draw(_MousePos.X, _MousePos.Y);
+							if(_MouseImage) _MouseImage->draw(_MousePos.X, _MousePos.Y);
 						}
 					}
 				}

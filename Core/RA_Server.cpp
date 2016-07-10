@@ -143,7 +143,7 @@ namespace SL {
 					while (_Keepgoing) {
 #if !__ANDROID__
 						auto curtime = std::chrono::steady_clock::now();
-						//if (_ServerNetworkDriver.ClientCount() > 0) {
+						if (_ServerNetworkDriver.ClientCount() > 0) {
 							//check mouse img first
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
 								OnMouseImg(mouseimg.get());
@@ -154,7 +154,7 @@ namespace SL {
 							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
 								OnMousePos(mousepos.get());
 								mousepos = Input::get_MousePosition();
-								mouseimgtimer = curtime;
+								mousepostimer = curtime;
 							}
 
 							//check screen next
@@ -163,7 +163,7 @@ namespace SL {
 								screenimg = Capturing::get_ScreenImage();
 								screenimgtimer = curtime;
 							}
-						//}
+						}
 #endif
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					}

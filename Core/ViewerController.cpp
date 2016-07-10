@@ -131,9 +131,7 @@ namespace SL {
 						};
 					}
 					ev.PressData = press;
-					if (!_ClientNetworkDriver.ConnectedToSelf()) {
-						_ClientNetworkDriver.SendMouse(ev);//sending input to yourself will lead to an infinite loop...
-					}
+					_ClientNetworkDriver.SendMouse(ev);
 				}
 				void Close() {
 					if (!_BeingClosed) {

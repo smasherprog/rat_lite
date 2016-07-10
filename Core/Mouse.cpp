@@ -27,7 +27,7 @@ namespace SL
 				auto capturedc = RAIIHDC(CreateCompatibleDC(desktopdc.get()));
 				auto capturebmp = RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), 32, 32)); // 32 x 32 is the biggest allowed for windows...
 				if (!desktopdc || !capturedc || !capturebmp) {
-					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Couldnt get Init DC!");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "Couldnt get Init DC! LastError:" << GetLastError());
 					return Utilities::Image::CreateImage(0, 0);
 				}
 					
@@ -37,20 +37,20 @@ namespace SL
 				CURSORINFO cursorInfo;
 				cursorInfo.cbSize = sizeof(cursorInfo);
 				if (GetCursorInfo(&cursorInfo) == FALSE) {
-					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE LastError:" << GetLastError());
 					return Utilities::Image::CreateImage(0, 0);
 				}
 				ICONINFOEXA ii = { 0 };
 				ii.cbSize = sizeof(ii);
 				if (GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
 					//this tends to fail on hyper-v enviornments generating alot of noise. so lower its level to Info..
-					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE");
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE LastError:" << GetLastError());
 					return Utilities::Image::CreateImage(0, 0);
 				}
 				auto colorbmp = RAIIHBITMAP(ii.hbmColor); // make sure this is cleaned up properly
 				auto maskbmp = RAIIHBITMAP(ii.hbmMask); // make sure this is cleaned up properly
 				if (DrawIcon(capturedc.get(), 0, 0, cursorInfo.hCursor) == FALSE) {
-					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "DrawIcon == FALSE");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "DrawIcon == FALSE LastError:" << GetLastError());
 					return Utilities::Image::CreateImage(0, 0);
 				}
 				BITMAP bm;
@@ -119,20 +119,22 @@ namespace SL
 				CURSORINFO cursorInfo;
 				cursorInfo.cbSize = sizeof(cursorInfo);
 				if(GetCursorInfo(&cursorInfo) == FALSE) {
-					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE");
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, "GetCursorInfo == FALSE LastError:"<< GetLastError());
 					return pos;
 				}
 
-				ICONINFOEXA ii = { 0 };
+				ICONINFOEX ii = { 0 };
 				ii.cbSize = sizeof(ii);
-				if(GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
-					//this tends to fail on hyper-v enviornments generating alot of noise. so lower its level to Info..
-					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE");
-					return pos;
-				}
+				auto res = GetIconInfoEx(cursorInfo.hCursor, &ii);
 				auto colorbmp = RAIIHBITMAP(ii.hbmColor); // make sure this is cleaned up properly
 				auto maskbmp = RAIIHBITMAP(ii.hbmMask); // make sure this is cleaned up properly
-
+				auto lasterror = GetLastError();
+				if(res == FALSE) {
+					if (lasterror == ERROR_INVALID_CURSOR_HANDLE) return pos;// this happens sometimes... Its not an error, and can create some noise
+					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "GetIconInfoEx == FALSE LastError:" << lasterror);
+					return pos;
+				}
+			
 				pos.X = cursorInfo.ptScreenPos.x - ii.xHotspot;
 				pos.Y = cursorInfo.ptScreenPos.y - ii.yHotspot;
 
@@ -224,9 +226,7 @@ namespace SL
 
 std::future<std::shared_ptr<SL::Remote_Access_Library::Utilities::Image>> SL::Remote_Access_Library::Input::get_MouseImage()
 {
-	return std::async(std::launch::async, [] {
-		return Capturing::CaptureMouseImage();
-	});
+	return std::async(std::launch::async, [] {return Capturing::CaptureMouseImage();});
 }
 
 std::future<SL::Remote_Access_Library::Utilities::Point> SL::Remote_Access_Library::Input::get_MousePosition()

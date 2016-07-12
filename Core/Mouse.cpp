@@ -279,7 +279,57 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
 	CGPoint new_pos;
 	new_pos.x = m.Pos.X;
 	new_pos.y = m.Pos.Y;
-	CGWarpMouseCursorPosition(new_pos);
+	
+    std::vector<CGEventRef> evnts;
+    switch (m.EventData) {
+	case Input::Mouse::Events::LEFT:
+		if (m.PressData == Input::Mouse::Press::UP) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp, new_pos, kCGMouseButtonLeft));
+		else if (m.PressData == Input::Mouse::Press::DOWN) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown, new_pos, kCGMouseButtonLeft));
+		else {//double click
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown, new_pos, kCGMouseButtonLeft));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp, new_pos, kCGMouseButtonLeft));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown, new_pos, kCGMouseButtonLeft));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp, new_pos, kCGMouseButtonLeft));
+        }
+		break;
+	case Input::Mouse::Events::MIDDLE:
+		if (m.PressData == Input::Mouse::Press::UP) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseUp, new_pos, kCGMouseButtonCenter));
+		else if (m.PressData == Input::Mouse::Press::DOWN) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseDown, new_pos, kCGMouseButtonCenter));
+		else {//double click
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseDown, new_pos, kCGMouseButtonCenter));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseUp, new_pos, kCGMouseButtonCenter));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseDown, new_pos, kCGMouseButtonCenter));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseUp, new_pos, kCGMouseButtonCenter));
+        }
+		break;
+	case Input::Mouse::Events::RIGHT:
+		if (m.PressData == Input::Mouse::Press::UP) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp, new_pos, kCGMouseButtonRight));
+		else if (m.PressData == Input::Mouse::Press::DOWN) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, new_pos, kCGMouseButtonRight));
+		else {//double click
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, new_pos, kCGMouseButtonRight));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp, new_pos, kCGMouseButtonRight));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, new_pos, kCGMouseButtonRight));
+            evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp, new_pos, kCGMouseButtonRight));
+        }
+		break;
+	case Input::Mouse::Events::SCROLL:
+        if(m.ScrollDelta <0){
+            
+        } else if(m.ScrollDelta>0) {
+            
+        }
+        
+		break;
+	default:
+		CGWarpMouseCursorPosition(new_pos);
+	}
+    for(auto& a: evnts){
+        CGEventPost(kCGHIDEventTap, a);
+        CFRelease(a);
+    }
+    
+    
+    
 #elif __ANDROID__
 
 #elif __linux__

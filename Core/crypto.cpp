@@ -202,6 +202,7 @@ std::string SL::Remote_Access_Library::Crypto::ValidateCertificate(ICrypoLoader*
 	std::string ret;
 	auto mem = BIO_new(BIO_s_mem());
 	BIO_puts(mem, b);
+  
 	auto cert = PEM_read_bio_X509(mem, NULL, NULL, NULL);
 	if(cert ==NULL)  ret+= std::string("Loaded the Certifiate, but could not read the certificate information. It might be invalid!");
 	if (mem) BIO_free(mem);

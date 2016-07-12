@@ -33,50 +33,50 @@ namespace SL {
 			};
 
 
-				template<class T>std::string get_address(T& _socket)
-				{
-                    boost::system::error_code ec;
-					auto rt(_socket.lowest_layer().remote_endpoint(ec));
-                    if(!ec) return rt.address().to_string();
-                    else return "";
-				}
-				template<class T> unsigned short get_port(T& _socket)
-				{
-                    boost::system::error_code ec;
-					auto rt(_socket.lowest_layer().remote_endpoint(ec));
-                    if(!ec) return rt.port();
-                    else return -1;
-				}
-				template<class T> bool is_v4(T& _socket)
-                {
-                    boost::system::error_code ec;
-					auto rt(_socket.lowest_layer().remote_endpoint(ec));
-                    if(!ec) return rt.address().is_v4();
-                    else return true;
-				}
-				template<class T> bool is_v6(T& _socket)
-                {
-                    boost::system::error_code ec;
-					auto rt(_socket.lowest_layer().remote_endpoint(ec));
-                    if(!ec) return rt.address().is_v6();
-                    else return true;
-				}
-				template<class T> bool is_loopback(T& _socket)
-                {
-                    boost::system::error_code ec;
-					auto rt(_socket.lowest_layer().remote_endpoint(ec));
-                    if(!ec) return rt.address().is_loopback();
-                    else return true;
-				}
-                
+			template<class T>std::string get_address(T& _socket)
+			{
+				boost::system::error_code ec;
+				auto rt(_socket.lowest_layer().remote_endpoint(ec));
+				if (!ec) return rt.address().to_string();
+				else return "";
+			}
+			template<class T> unsigned short get_port(T& _socket)
+			{
+				boost::system::error_code ec;
+				auto rt(_socket.lowest_layer().remote_endpoint(ec));
+				if (!ec) return rt.port();
+				else return -1;
+			}
+			template<class T> bool is_v4(T& _socket)
+			{
+				boost::system::error_code ec;
+				auto rt(_socket.lowest_layer().remote_endpoint(ec));
+				if (!ec) return rt.address().is_v4();
+				else return true;
+			}
+			template<class T> bool is_v6(T& _socket)
+			{
+				boost::system::error_code ec;
+				auto rt(_socket.lowest_layer().remote_endpoint(ec));
+				if (!ec) return rt.address().is_v6();
+				else return true;
+			}
+			template<class T> bool is_loopback(T& _socket)
+			{
+				boost::system::error_code ec;
+				auto rt(_socket.lowest_layer().remote_endpoint(ec));
+				if (!ec) return rt.address().is_loopback();
+				else return true;
+			}
+
 			template<class T> void readexpire_from_now(T& self, int seconds)
 			{
-                boost::system::error_code ec;
+				boost::system::error_code ec;
 				if (seconds <= 0) self->_read_deadline.expires_at(boost::posix_time::pos_infin, ec);
 				else  self->_read_deadline.expires_from_now(boost::posix_time::seconds(seconds), ec);
-                if (ec) {
-                    SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
-                }
+				if (ec) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+				}
 				else if (seconds >= 0) {
 					self->_read_deadline.async_wait([self, seconds](const boost::system::error_code& ec) {
 						if (ec != boost::asio::error::operation_aborted) {
@@ -87,12 +87,13 @@ namespace SL {
 			}
 			template<class T> void writeexpire_from_now(T& self, int seconds)
 			{
-                boost::system::error_code ec;
+				boost::system::error_code ec;
 				if (seconds <= 0) self->_write_deadline.expires_at(boost::posix_time::pos_infin, ec);
 				else self->_write_deadline.expires_from_now(boost::posix_time::seconds(seconds), ec);
-                if (ec) {
-                    SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
-                } else if (seconds >= 0) {
+				if (ec) {
+					SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+				}
+				else if (seconds >= 0) {
 					self->_write_deadline.async_wait([self, seconds](const boost::system::error_code& ec) {
 						if (ec != boost::asio::error::operation_aborted) {
 							//close("write timer expired. Time waited: " + std::to_string(seconds));
@@ -101,24 +102,24 @@ namespace SL {
 					});
 				}
 			}
-            
+
 			template<class T> void closeme(T* self, std::string reason) {
-               
+
 				if (self->closed()) return;
 				SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Closing socket: " << reason);
 				self->_Closed = true;
 				self->CancelTimers();
-              
+
 				self->_IBaseNetworkDriver->OnClose(self);
-                boost::system::error_code ec;
-                self->_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-                  
-                if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
-                ec.clear();
-                self->_socket.lowest_layer().close(ec);
-                   
-                if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message()); 
-              
+				boost::system::error_code ec;
+				self->_socket.lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+
+				if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+				ec.clear();
+				self->_socket.lowest_layer().close(ec);
+
+				if (ec) SL_RAT_LOG(Utilities::Logging_Levels::ERROR_log_level, ec.message());
+
 				SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Socket Closed");
 			}
 
@@ -144,7 +145,7 @@ namespace SL {
 					else self->close(std::string("writebody async_write ") + ec.message());
 				});
 			}
-		
+
 			const std::string ws_magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 			class Asio_Context {
 
@@ -168,7 +169,7 @@ namespace SL {
 					Stop();
 				}
 				void Stop() {
-            
+
 					io_service.stop();
 					while (!io_service.stopped()) {
 						std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -221,7 +222,7 @@ namespace SL {
 				std::vector<char> _IncomingBuffer;
 				std::unordered_map<std::string, std::string> _Header;
 				bool _Server = false;
-			
+
 				bool _Closed = true;
 				bool _Writing = false;
 
@@ -281,22 +282,22 @@ namespace SL {
 
 				virtual std::string get_address() const override
 				{
-                    return Network::get_address(_socket);
+					return Network::get_address(_socket);
 				}
 				virtual unsigned short get_port() const override
 				{
-                    return Network::get_port(_socket);
+					return Network::get_port(_socket);
 				}
 				virtual bool is_v4() const override
-                {
-                    return Network::is_v4(_socket);
+				{
+					return Network::is_v4(_socket);
 				}
 				virtual bool is_v6() const override
-                {
-                   return Network::is_v6(_socket);
+				{
+					return Network::is_v6(_socket);
 				}
-				virtual bool is_loopback() const override{
-                   return Network::is_loopback(_socket);
+				virtual bool is_loopback() const override {
+					return Network::is_loopback(_socket);
 				}
 				virtual void close(std::string reason) override
 				{
@@ -395,7 +396,7 @@ namespace SL {
 					});
 				}
 
-	
+
 			};
 
 
@@ -439,7 +440,7 @@ namespace SL {
 				PacketHeader _ReadPacketHeader;
 				std::unordered_map<std::string, std::string> _Header;
 				bool _Server = false;
-			
+
 
 				bool _Closed = true;
 				bool _Writing = false;
@@ -536,24 +537,24 @@ namespace SL {
 					_writetimeout = s;
 
 				}
-              virtual std::string get_address() const override
+				virtual std::string get_address() const override
 				{
-                    return Network::get_address(_socket);
+					return Network::get_address(_socket);
 				}
 				virtual unsigned short get_port() const override
 				{
-                    return Network::get_port(_socket);
+					return Network::get_port(_socket);
 				}
 				virtual bool is_v4() const override
-                {
-                    return Network::is_v4(_socket);
+				{
+					return Network::is_v4(_socket);
 				}
 				virtual bool is_v6() const override
-                {
-                   return Network::is_v6(_socket);
+				{
+					return Network::is_v6(_socket);
 				}
-				virtual bool is_loopback() const override{
-                   return Network::is_loopback(_socket);
+				virtual bool is_loopback() const override {
+					return Network::is_loopback(_socket);
 				}
 				void start() {
 					if (_Server) receivehandshake();
@@ -573,7 +574,7 @@ namespace SL {
 							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Read Handshake bytes " << bytes_transferred);
 
 							std::istream stream(read_buffer.get());
-							self->_Header =Parse("1.1", stream);
+							self->_Header = Parse("1.1", stream);
 
 							if (self->_Header.count(HTTP_SECWEBSOCKETKEY) == 0) return self->close("handshake async_read_until Sec-WebSocket-Key not present");//close socket and get out malformed
 							auto write_buffer(std::make_shared<boost::asio::streambuf>());
@@ -853,7 +854,7 @@ namespace SL {
 					});
 
 				}
-	
+
 				void send_close(int status_code, std::string reason)
 				{
 					auto writeheader(std::make_shared<std::vector<unsigned char>>());
@@ -1054,7 +1055,7 @@ namespace SL {
 
 SL::Remote_Access_Library::Network::Listener::Listener(IBaseNetworkDriver* netevent, std::shared_ptr<Network::Server_Config> config, ListenerTypes type)
 {
-	
+
 	if (type == ListenerTypes::HTTPS) {
 		_ListinerImpl = std::make_shared<ListinerImpl>(netevent, std::make_shared<Asio_Context>(), config->HttpTLSPort, config);
 		_ListinerImpl->Start<HttpsSocketImpl>();
@@ -1063,7 +1064,7 @@ SL::Remote_Access_Library::Network::Listener::Listener(IBaseNetworkDriver* netev
 		_ListinerImpl = std::make_shared<ListinerImpl>(netevent, std::make_shared<Asio_Context>(), config->WebSocketTLSLPort, config);
 		_ListinerImpl->Start<WSSocketImpl>();
 	}
-	
+
 }
 
 SL::Remote_Access_Library::Network::Listener::~Listener()

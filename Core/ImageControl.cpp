@@ -49,12 +49,12 @@ namespace SL {
 
 				float _ScaleFactor;
 				ScreenImageInfo _ScreenImageInfo;
-
+			
 				Utilities::Point _MousePos;
 				std::shared_ptr<Utilities::Image> _MouseImageData;
 				std::unique_ptr<Fl_RGB_Image> _MouseImage;
 
-				ScreenImageImpl(ScreenImageInfo&& info) : _ScaleFactor(1.0f), _ScreenImageInfo(info) {}
+				ScreenImageImpl(ScreenImageInfo&& info) : _ScaleFactor(1.0f), _ScreenImageInfo(info){}
 
 				bool is_ImageScaled() const {
 					return !(_ScaleFactor >= .999f && _ScaleFactor <= 1.001f);
@@ -65,6 +65,7 @@ namespace SL {
 				}
 				void set_ScaleFactor(float factor) {
 					_ScaleFactor = factor;
+				
 				}
 				float get_ScaleFactor() const {
 					return _ScaleFactor;
@@ -140,6 +141,7 @@ namespace SL {
 				}
 				bool Update(int& width, int& height) {
 					if (!_ScaledImage) return false;
+			
 					//make sure the image is scaled properly
 					if (is_ImageScaled()) {
 						auto psize = _ScreenImageInfo.get_Height();
@@ -204,6 +206,7 @@ namespace SL {
 						auto dims = _ScreenImageDriver.get_UnscaledImageSize();
 						_ScreenImageDriver.set_ScaleFactor(static_cast<float>(pheight) / static_cast<float>(dims.Y));
 					}
+					
 				}
 				int pastedstuff() {
 					auto t = std::string(Fl::event_text(), Fl::event_length());
@@ -289,6 +292,7 @@ bool SL::Remote_Access_Library::UI::ImageControl::is_ImageScaled() const
 
 void SL::Remote_Access_Library::UI::ImageControl::set_ScreenImage(std::shared_ptr<Utilities::Image>& img)
 {
+	_ImageControlImpl->size(img->Width(), img->Height());
 	return _ImageControlImpl->_ScreenImageDriver.set_ScreenImage(img);
 }
 

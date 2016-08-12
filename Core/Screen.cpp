@@ -89,6 +89,7 @@ namespace SL {
             auto img = Utilities::Image::CreateImage(h, w, (const char*)(CFDataGetBytePtr(dataref)),  bpp);
 
             CFRelease(dataref);
+            CFRelease(provider);
             CGImageRelease(image_ref);
             return img;
         }

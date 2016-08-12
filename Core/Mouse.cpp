@@ -313,7 +313,7 @@ void SL::Remote_Access_Library::Input::SimulateMouseEvent(const Input::MouseEven
         }
 		break;
 	case Input::Mouse::Events::SCROLL:
-        evnts.push_back(CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine, 1, m.ScrollDelta));
+        evnts.push_back(CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine, 1, -m.ScrollDelta));
 		break;
 	default:
 		CGWarpMouseCursorPosition(new_pos);

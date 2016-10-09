@@ -88,6 +88,7 @@ namespace SL {
 				}
 				virtual void resize(int X, int Y, int W, int H) override {
 					Fl_Double_Window::resize(X, Y, W, H);
+					
 					_ImageControl->OnResize(W, H, _Fl_Scroll->scrollbar_size());
 				}
 				void handle_key(int e, Input::Keyboard::Press press) {

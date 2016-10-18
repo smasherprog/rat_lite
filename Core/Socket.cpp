@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Socket.h"
 #include "Packet.h"
-#include "Compression/zstd.h"
+#include "zstd.h"
 #include "Logging.h"
 #include "HttpHeader.h"
 #include "crypto.h"

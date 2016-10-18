@@ -18,45 +18,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ApplicationDirectory.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Clipboard.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\divsufsort.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\entropy_common.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse_compress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse_decompress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huf_compress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huf_decompress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\xxhash.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff_compress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff_decompress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zdict.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_common.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_compress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_decompress.c">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ConnectWindow.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)crypto.cpp" />
@@ -87,19 +48,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ClientNetworkDriver.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Client_Config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Clipboard.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\bitstream.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\divsufsort.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_private.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_public.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huf.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\mem.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\xxhash.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zbuff.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zdict.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_internal.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_opt.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectionInfoWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ConnectWindow.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto.h" />

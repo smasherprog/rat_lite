@@ -5,7 +5,7 @@
 #include "IClientDriver.h"
 #include "Image.h"
 #include "Packet.h"
-#include "turbojpeg.h"
+#include "libjpeg-turbo/turbojpeg.h"
 #include "Mouse.h"
 #include "Logging.h"
 #include "Keyboard.h"

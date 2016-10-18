@@ -4,9 +4,6 @@
     <Filter Include="Capturing">
       <UniqueIdentifier>{c797f52d-9f5f-4678-bd9c-060ce3b39857}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Compression">
-      <UniqueIdentifier>{97c74e65-cd2b-45f5-bad6-068b0ee61663}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Network">
       <UniqueIdentifier>{d9ef1a3f-ea65-49ec-b024-2a93ab7f0422}</UniqueIdentifier>
     </Filter>
@@ -115,45 +112,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)LogWindow.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\divsufsort.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\entropy_common.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse_compress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\fse_decompress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huf_compress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\huf_decompress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\xxhash.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff_compress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zbuff_decompress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zdict.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_common.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_compress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Compression\zstd_decompress.c">
-      <Filter>Compression</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Mouse.h">
@@ -261,45 +219,6 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)SliderInput.h">
       <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\bitstream.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\divsufsort.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_private.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\error_public.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\fse.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\huf.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\mem.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\xxhash.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zbuff.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zdict.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_internal.h">
-      <Filter>Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Compression\zstd_opt.h">
-      <Filter>Compression</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

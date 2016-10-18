@@ -3,7 +3,7 @@
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
-    <SharedGUID>bdde746d-dba3-4e1b-ade4-eb2cb5d3b377</SharedGUID>
+    <SharedGUID>e7f721f2-6deb-4bfc-b129-3b5f84e27928</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <Import_RootNamespace>Mobile_Server</Import_RootNamespace>

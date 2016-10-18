@@ -1,9 +1,6 @@
 [submodule "zstd"]
 	path = zstd
 	url = https://github.com/facebook/zstd
-[submodule "libjpeg-turbo"]
-	path = libjpeg-turbo
-	url = https://github.com/libjpeg-turbo/libjpeg-turbo
 [submodule "fltk"]
 	path = test-only
 	url = https://github.com/fltk/test-only

@@ -1,0 +1,1 @@
+emcc -O3 -s TOTAL_MEMORY=50331648 -s EXPORTED_FUNCTIONS="['_ZSTD_decompress', '_ZSTD_compress', '_ZSTD_compressBound', '_ZSTD_isError', '_ZSTD_getErrorName']" divsufsort.c entropy_common.c fse_compress.c fse_decompress.c huf_compress.c huf_decompress.c xxhash.c zbuff_compress.c zbuff_decompress.c zdict.c zstd_common.c zstd_compress.c zstd_decompress.c -o zstd.js

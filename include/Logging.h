@@ -17,7 +17,7 @@ namespace SL {
 		}
 	}
 }
-
+#define UNUSED(x) (void)(x)
 #define S(x) #x
 #define S_(x) S(x)
 //Usage  SL_RAT_LOG(SL::Remote_Access_Library::Utilities::Logging_Levels::Debug_log_level, "Message goes here "<< 56 <<" Any Valid cout stuff works");

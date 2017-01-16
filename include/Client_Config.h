@@ -20,7 +20,7 @@ namespace SL {
 
 				std::string Password;//this is the password to connect to the endpoint or that the server requrires before allowing the connection 
 
-				std::shared_ptr<Crypto::ICrypoLoader> Public_Certficate;
+				std::string Certficate_Public_FilePath;
 			};
 		}
 	}

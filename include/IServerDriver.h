@@ -1,5 +1,5 @@
 #pragma once
-#include "IBaseNetworkDriver.h"
+#include "INetworkHandlers.h"
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -10,7 +10,7 @@ namespace SL {
 		namespace Network {
 			class ISocket;
 			class Packet;
-			class IServerDriver : public IBaseNetworkDriver{
+			class IServerDriver : public INetworkHandlers<uWS::CLIENT> {
 			public:
 				virtual ~IServerDriver() {}
 

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Clipboard.h"
 #include "Logging.h"
 

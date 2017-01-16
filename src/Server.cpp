@@ -1,8 +1,7 @@
-#include "stdafx.h"
-#include "RA_Server.h"
-#include "Screen.h"
+#include "Server.h"
+
+#include "ScreenCapture.h"
 #include "Mouse.h"
-#include "Image.h"
 #include "ServerNetworkDriver.h"
 #include "HttpsServerNetworkDriver.h"
 #include "IServerDriver.h"
@@ -19,53 +18,49 @@
 #include <string.h>
 #include <assert.h>
 
+
 namespace SL {
 	namespace Remote_Access_Library {
 		namespace Server {
 
 			class ServerImpl : public Network::IServerDriver {
 			public:
-				std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastScreen;
-				std::shared_ptr<SL::Remote_Access_Library::Utilities::Image> LastMouse;
 
-				Utilities::Point LastMousePos = Utilities::Point(0xffffffff, 0xffffffff);
+				SL::Screen_Capture::ScreenCaptureManager _ScreenCaptureManager;
+
 				Network::ServerNetworkDriver _ServerNetworkDriver;
-				Network::HttpsServerNetworkDriver _HttpsServerNetworkDriver;
-				Network::IBaseNetworkDriver* _IUserNetworkDriver;
 				std::unique_ptr<Capturing::Clipboard> _Clipboard;
 
 				bool _Keepgoing = true;
-				std::mutex _NewClientLock;
-				std::vector<std::shared_ptr<Network::ISocket>> _NewClients;
+
+				std::vector<uWS::WebSocket<uWS::CLIENT>> _Clients;
+				std::mutex _ClientsLock;
+
 				Server_Status _Status = Server_Status::SERVER_STOPPED;
 				std::shared_ptr<Network::Server_Config> _Config;
 
 				ServerImpl(std::shared_ptr<Network::Server_Config> config, Network::IBaseNetworkDriver* parent) :
-					_ServerNetworkDriver(this, config), _HttpsServerNetworkDriver(nullptr, config), _IUserNetworkDriver(parent), _Config(config)
+					_ServerNetworkDriver(this, config), _Config(config)
 				{
-					
+
 				}
 
 				virtual ~ServerImpl() {
+					_ScreenCaptureManager.StopCapturing();
 					_Clipboard.reset();//make sure to prevent race conditions
 					_Status = Server_Status::SERVER_STOPPED;
 					_Keepgoing = false;
 				}
-
-				virtual bool ValidateUntrustedCert(const std::shared_ptr<Network::ISocket>& socket) override {
-					UNUSED(socket);
-					return true;
-				}
-				virtual void OnConnect(const std::shared_ptr<Network::ISocket>& socket) override {
-					{
-						std::lock_guard<std::mutex> lock(_NewClientLock);
-						_NewClients.push_back(socket);
-					}
-					if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
+				virtual void onConnection(uWS::WebSocket<uWS::CLIENT> ws, uWS::UpgradeInfo ui) override {
+					std::lock_guard<std::mutex> lock(_ClientsLock);
+					_Clients.push_back(ws);
+					//if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 				}
 
-				virtual void OnClose(const Network::ISocket* socket)override {
-					if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
+				virtual void onDisconnection(uWS::WebSocket<uWS::CLIENT> ws, int code, char *message, size_t length) override {
+					std::lock_guard<std::mutex> lock(_ClientsLock);
+					_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&ws](const uWS::WebSocket<uWS::CLIENT>& p) { return p == ws; }), _Clients.end());
+					//if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 				}
 
 				virtual void OnReceive(const std::shared_ptr<Network::ISocket>& socket, std::shared_ptr<Network::Packet>& packet)override {
@@ -75,7 +70,7 @@ namespace SL {
 
 				virtual void OnReceive_ClipboardText(const char* data, unsigned int len) override {
 					SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
-                    _Clipboard->copy_to_clipboard(data, static_cast<int>(len));
+					_Clipboard->copy_to_clipboard(data, static_cast<int>(len));
 				}
 
 
@@ -95,9 +90,10 @@ namespace SL {
 						_ServerNetworkDriver.SendMouse(nullptr, *img);
 					}
 					else {
-                        if(LastMouse->size() != img->size()) {
-                            _ServerNetworkDriver.SendMouse(nullptr, *img);
-                        } else if (memcmp(img->data(), LastMouse->data(), LastMouse->size()) != 0) {
+						if (LastMouse->size() != img->size()) {
+							_ServerNetworkDriver.SendMouse(nullptr, *img);
+						}
+						else if (memcmp(img->data(), LastMouse->data(), LastMouse->size()) != 0) {
 							_ServerNetworkDriver.SendMouse(nullptr, *img);
 						}
 					}
@@ -128,45 +124,10 @@ namespace SL {
 					_HttpsServerNetworkDriver.Start();
 					_Clipboard = std::make_unique<Capturing::Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
 
-#if !__ANDROID__
-					auto mouseimg(Input::get_MouseImage());
-					auto mousepos(Input::get_MousePosition());
-					auto mouseimgtimer = std::chrono::steady_clock::now();
-					auto mousepostimer = std::chrono::steady_clock::now();
-
-					auto screenimg(Capturing::get_ScreenImage());
-					auto screenimgtimer = std::chrono::steady_clock::now();
-				
-#endif
 
 
-					while (_Keepgoing) {
-#if !__ANDROID__
-						auto curtime = std::chrono::steady_clock::now();
-						if (_ServerNetworkDriver.ClientCount() > 0) {
-							//check mouse img first
-							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mouseimgtimer).count() > _Config->MouseImageCaptureRate && is_ready(mouseimg)) {
-								OnMouseImg(mouseimg.get());
-								mouseimg = Input::get_MouseImage();
-								mouseimgtimer = curtime;
-							}
-							//check mouse pos next
-							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - mousepostimer).count() > _Config->MousePositionCaptureRate && is_ready(mousepos)) {
-								OnMousePos(mousepos.get());
-								mousepos = Input::get_MousePosition();
-								mousepostimer = curtime;
-							}
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-							//check screen next
-							if (std::chrono::duration_cast<std::chrono::milliseconds>(curtime - screenimgtimer).count() > _Config->ScreenImageCaptureRate && is_ready(screenimg)) {
-								OnScreen(screenimg.get());
-								screenimg = Capturing::get_ScreenImage();
-								screenimgtimer = curtime;
-							}
-						}
-#endif
-						std::this_thread::sleep_for(std::chrono::milliseconds(50));
-					}
 					_HttpsServerNetworkDriver.Stop();
 					_ServerNetworkDriver.Stop();
 

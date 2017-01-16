@@ -24,7 +24,7 @@ namespace SL {
 				unsigned int MaxNumConnections = 10;//
 
 				//CRYPTO SETTINGS
-				std::shared_ptr<Crypto::ICrypoLoader> Private_Key;
+				std::string Certficate_Private_FilePath;
 				std::string PasswordToPrivateKey;
 			};
 		}

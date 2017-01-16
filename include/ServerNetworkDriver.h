@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <uWS/uWS.h>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -21,7 +22,7 @@ namespace SL {
 				~ServerNetworkDriver();
 
 				void SendScreen(uWS::WebSocket<uWS::CLIENT>* socket, const Screen_Capture::Image & img);
-				void SendMouse(uWS::WebSocket<uWS::CLIENT>* socket, const Screen_Capture::Image & img, const Utilities::Point& pos);
+				void SendMouse(uWS::WebSocket<uWS::CLIENT>* socket, const Screen_Capture::Image & img);
 				void SendMouse(uWS::WebSocket<uWS::CLIENT>* socket, const Utilities::Point& pos);
 				void SendClipboardText(uWS::WebSocket<uWS::CLIENT>* socket, const char* data, unsigned int len);
 			

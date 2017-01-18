@@ -9,9 +9,11 @@ namespace SL {
 			HDCWrapper MonitorDC;
 			HDCWrapper CaptureDC;
 			std::shared_ptr<Mouse_Thread_Data> Data;
-			std::unique_ptr<char[]> NewImageBuffer;
+			std::unique_ptr<char[]> NewImageBuffer, LastImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
+			int Last_x, Last_y;
+
 		};
 
 
@@ -20,6 +22,7 @@ namespace SL {
 			_GDIMouseProcessorImpl = std::make_unique<GDIMouseProcessorImpl>();
 			_GDIMouseProcessorImpl->ImageBufferSize = 0;
 			_GDIMouseProcessorImpl->FirstRun = true;
+			_GDIMouseProcessorImpl->Last_x = _GDIMouseProcessorImpl->Last_y = 0;
 		}
 
 		GDIMouseProcessor::~GDIMouseProcessor()
@@ -37,7 +40,7 @@ namespace SL {
 			_GDIMouseProcessorImpl->Data = data;
 			_GDIMouseProcessorImpl->ImageBufferSize = _GDIMouseProcessorImpl->MaxCursurorSize* _GDIMouseProcessorImpl->MaxCursurorSize* PixelStride;
 			_GDIMouseProcessorImpl->NewImageBuffer = std::make_unique<char[]>(_GDIMouseProcessorImpl->ImageBufferSize);
-
+			_GDIMouseProcessorImpl->LastImageBuffer = std::make_unique<char[]>(_GDIMouseProcessorImpl->ImageBufferSize);
 			return Ret;
 		}
 		//
@@ -95,12 +98,12 @@ namespace SL {
 
 			SelectObject(_GDIMouseProcessorImpl->CaptureDC.DC, originalBmp);
 
-			auto wholeimg = CreateImage(ret, PixelStride, 0, _GDIMouseProcessorImpl->NewImageBuffer.get());
+			auto wholeimg = Create(ret, PixelStride, 0, _GDIMouseProcessorImpl->NewImageBuffer.get());
 
 			//need to make sure the alpha channel is correct
 			if (ii.wResID == 32513) { // when its just the i beam
 				auto ptr = (unsigned int*)_GDIMouseProcessorImpl->NewImageBuffer.get();
-				for (auto i = 0; i < RowStride(*wholeimg) *Height(*wholeimg) / 4; i++) {
+				for (auto i = 0; i < RowStride(wholeimg) *Height(wholeimg) / 4; i++) {
 					if (ptr[i] != 0) {
 						ptr[i] = 0xff000000;
 					}
@@ -116,7 +119,18 @@ namespace SL {
 			//}
 
 			if (_GDIMouseProcessorImpl->Data->CaptureCallback) {
-				_GDIMouseProcessorImpl->Data->CaptureCallback(*wholeimg, cursorInfo.ptScreenPos.x - ii.xHotspot, cursorInfo.ptScreenPos.y - ii.yHotspot);
+				int lastx = static_cast<int>(cursorInfo.ptScreenPos.x - ii.xHotspot);
+				int lasty = static_cast<int>(cursorInfo.ptScreenPos.y - ii.yHotspot);
+				//if the mouse image is different, send the new image and swap the data 
+				if (memcmp(_GDIMouseProcessorImpl->NewImageBuffer.get(), _GDIMouseProcessorImpl->LastImageBuffer.get(), bi.biSizeImage) != 0) {
+					_GDIMouseProcessorImpl->Data->CaptureCallback(&wholeimg, lastx, lasty);
+					std::swap(_GDIMouseProcessorImpl->NewImageBuffer, _GDIMouseProcessorImpl->LastImageBuffer);
+				}
+				else if(_GDIMouseProcessorImpl->Last_x != lastx || _GDIMouseProcessorImpl->Last_y != lasty){
+					_GDIMouseProcessorImpl->Data->CaptureCallback(nullptr, lastx, lasty);
+				}
+				_GDIMouseProcessorImpl->Last_x = lastx;
+				_GDIMouseProcessorImpl->Last_y = lasty;
 			}
 			return Ret;
 		}

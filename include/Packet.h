@@ -2,7 +2,6 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Network {
 
 			enum class PACKET_TYPES : unsigned int {
 				INVALID,
@@ -18,6 +17,6 @@ namespace SL {
 				LAST_PACKET_TYPE
 			};
 	
-		}
+		
 	}
 }

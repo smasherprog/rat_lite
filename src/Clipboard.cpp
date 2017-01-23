@@ -9,7 +9,7 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Capturing {
+	
 			class ClipboardImpl : public Fl_Widget {
 			public:
 				const bool* Is_ClipboardShared;
@@ -53,9 +53,9 @@ namespace SL {
 					auto p = (ClipboardImpl*)data;
 
 					if (source == 1 && *(p->Is_ClipboardShared)) {
-						SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Clipboard Changed!");
+						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Clipboard Changed!");
 						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
-							SL_RAT_LOG(Utilities::Logging_Levels::INFO_log_level, "Contains plain text");
+							SL_RAT_LOG(Logging_Levels::INFO_log_level, "Contains plain text");
 							Fl::paste(*p, 1, Fl::clipboard_plain_text);
 						}
 					}
@@ -83,18 +83,18 @@ namespace SL {
 					if (updateclipboard)  Fl::copy(data, static_cast<int>(len), 1);
 				}
 			};
-		}
+		
 	}
 }
-SL::Remote_Access_Library::Capturing::Clipboard::Clipboard(const bool* is_clipshared, std::function<void(const char*, int)>&& onchange)
+SL::Remote_Access_Library::Clipboard::Clipboard(const bool* is_clipshared, std::function<void(const char*, int)>&& onchange)
 {
 	_ClipboardImpl = new ClipboardImpl(is_clipshared, std::forward<std::function<void(const char*, int)>>(onchange));
 }
 
-SL::Remote_Access_Library::Capturing::Clipboard::~Clipboard()
+SL::Remote_Access_Library::Clipboard::~Clipboard()
 {
 	delete _ClipboardImpl;
 }
-void SL::Remote_Access_Library::Capturing::Clipboard::copy_to_clipboard(const char* data, int len) {
+void SL::Remote_Access_Library::Clipboard::copy_to_clipboard(const char* data, int len) {
 	_ClipboardImpl->copy_to_clipboard(data, len);
 }

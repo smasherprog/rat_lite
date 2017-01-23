@@ -4,29 +4,29 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-		namespace Network {
-			struct Server_Config: Client_Config {
 
-				//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
-				std::string WWWRoot;
-				
-				unsigned int MouseImageCaptureRate = 1000;// measured in ms
-				unsigned int MousePositionCaptureRate = 50;// measured in ms
-				unsigned int ScreenImageCaptureRate = 100;// measured in ms
+		struct Server_Config : Client_Config {
 
-				//Image Settings
-				bool SendGrayScaleImages = false;//this will improve bandwith usage
-				int ImageCompressionSetting = 70;// this is [0, 100]    = [WORST, BEST]
+			//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
+			std::string WWWRoot;
 
-				bool IgnoreIncomingMouseEvents = false;
-				bool IgnoreIncomingKeyboardEvents = false;
+			unsigned int MouseImageCaptureRate = 1000;// measured in ms
+			unsigned int MousePositionCaptureRate = 50;// measured in ms
+			unsigned int ScreenImageCaptureRate = 100;// measured in ms
 
-				unsigned int MaxNumConnections = 10;//
+			//Image Settings
+			bool SendGrayScaleImages = false;//this will improve bandwith usage
+			int ImageCompressionSetting = 70;// this is [0, 100]    = [WORST, BEST]
 
-				//CRYPTO SETTINGS
-				std::string Certficate_Private_FilePath;
-				std::string PasswordToPrivateKey;
-			};
-		}
+			bool IgnoreIncomingMouseEvents = false;
+			bool IgnoreIncomingKeyboardEvents = false;
+
+			unsigned int MaxNumConnections = 10;//
+
+			//CRYPTO SETTINGS
+			std::string Certficate_Private_FilePath;
+			std::string PasswordToPrivateKey;
+		};
+
 	}
 }

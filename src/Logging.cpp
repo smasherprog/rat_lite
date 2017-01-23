@@ -8,7 +8,7 @@
 
 #endif
 
-void SL::Remote_Access_Library::Utilities::Log(Logging_Levels level, const char* file, int line, const char* func, std::ostringstream& data)
+void SL::Remote_Access_Library::Log(Logging_Levels level, const char* file, int line, const char* func, std::ostringstream& data)
 {
 
 #if __ANDROID__

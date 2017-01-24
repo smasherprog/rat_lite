@@ -6,10 +6,7 @@ namespace SL {
 
 		struct MouseEvent;
 		struct KeyEvent;
-
-		class ISocket;
-		class Packet;
-		class IServerDriver : public INetworkHandlers<uWS::CLIENT> {
+		class IServerDriver : public INetworkHandlers{
 		public:
 			virtual ~IServerDriver() {}
 

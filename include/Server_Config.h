@@ -4,7 +4,7 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-
+		class ICrypoLoader;
 		struct Server_Config : Client_Config {
 
 			//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
@@ -24,7 +24,7 @@ namespace SL {
 			unsigned int MaxNumConnections = 10;//
 
 			//CRYPTO SETTINGS
-			std::string Certficate_Private_FilePath;
+			std::shared_ptr<ICrypoLoader> Private_Key;
 			std::string PasswordToPrivateKey;
 		};
 

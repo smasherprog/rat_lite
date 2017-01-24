@@ -3,6 +3,7 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
+		class ICrypoLoader;
 		struct Client_Config {
 
 			//both the viewer and web client communicate over web sockets.
@@ -15,7 +16,7 @@ namespace SL {
 
 			std::string Password;//this is the password to connect to the endpoint or that the server requrires before allowing the connection 
 
-			std::string Certficate_Public_FilePath;
+			std::shared_ptr<ICrypoLoader> Public_Certficate;
 		};
 
 	}

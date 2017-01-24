@@ -24,7 +24,7 @@ namespace SL {
 			void Start(std::shared_ptr<Server_Config> config);
 			void Stop();
 		
-			Server_Status get_Status()const;
+			Server_Status get_Status() const;
 			static std::string Validate_Settings(std::shared_ptr<Server_Config> config);
 
 #if __ANDROID__

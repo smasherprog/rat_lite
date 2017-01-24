@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include <uWS/uWS.h>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -13,7 +12,7 @@ namespace SL {
 		class ServerNetworkDriverImpl;
 		struct Server_Config;
 		class IServerDriver;
-
+		class ISocket;
 		class ServerNetworkDriver {
 			std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
 		public:
@@ -22,10 +21,10 @@ namespace SL {
 
 			void Start();
 			void Stop();
-			void SendScreen(uWS::WebSocket<uWS::CLIENT>* socket, const Screen_Capture::Image & img);
-			void SendMouse(uWS::WebSocket<uWS::CLIENT>* socket, const Screen_Capture::Image & img);
-			void SendMouse(uWS::WebSocket<uWS::CLIENT>* socket, const Point& pos);
-			void SendClipboardText(uWS::WebSocket<uWS::CLIENT>* socket, const char* data, unsigned int len);
+			void SendScreen(ISocket* socket, const Screen_Capture::Image & img);
+			void SendMouse(ISocket* socket, const Screen_Capture::Image & img);
+			void SendMouse(ISocket* socket, const Point& pos);
+			void SendClipboardText(ISocket* socket, const char* data, unsigned int len);
 
 		};
 

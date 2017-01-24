@@ -1,8 +1,4 @@
 #include "Server.h"
-#include <beast/websocket.hpp>
-#include <beast/websocket/ssl.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 
 #include <thread>
 #include <mutex>
@@ -15,7 +11,6 @@
 
 #include "IServerDriver.h"
 #include "Logging.h"
-#include "Packet.h"
 #include "Server_Config.h"
 
 
@@ -42,8 +37,8 @@ namespace SL {
 
 			Server_Status _Status = Server_Status::SERVER_STOPPED;
 			std::shared_ptr<Server_Config> _Config;
-			//io_service ioservice;
-
+	
+	
 			ServerImpl(std::shared_ptr<Server_Config> config) :
 				_ServerNetworkDriver(this, config), _Config(config)
 			{

@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 namespace SL {
@@ -24,7 +24,7 @@ namespace SL {
 
 			virtual ~ISocket() {}
 			//adds the data to the internal queue, does not block and returns immediately. Library takes a COPY of the packet
-			//virtual void send(Packet& pack) = 0;
+			virtual void send(std::shared_ptr<char> data, size_t len) = 0;
 			//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
 			virtual void close(std::string reason) = 0;
 			virtual bool closed() = 0;

@@ -4,7 +4,7 @@
 
 namespace SL {
 	namespace Remote_Access_Library {
-		class ICrypoLoader;
+		class ICryptoLoader;
 		struct Server_Config : Client_Config {
 
 			//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
@@ -21,10 +21,11 @@ namespace SL {
 			bool IgnoreIncomingMouseEvents = false;
 			bool IgnoreIncomingKeyboardEvents = false;
 
+			unsigned int MaxWebSocketThreads = 2;//
 			unsigned int MaxNumConnections = 10;//
 
 			//CRYPTO SETTINGS
-			std::shared_ptr<ICrypoLoader> Private_Key;
+			std::shared_ptr<ICryptoLoader> Private_Key;
 			std::string PasswordToPrivateKey;
 		};
 

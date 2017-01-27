@@ -15,13 +15,17 @@ namespace SL {
 		class ISocket;
 		class ServerNetworkDriver {
 			std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
+
 		public:
-			ServerNetworkDriver(IServerDriver * r, std::shared_ptr<Server_Config> config);
+			ServerNetworkDriver();
 			~ServerNetworkDriver();
 
-			void Start();
+			void Start(IServerDriver * r, std::shared_ptr<Server_Config> config);
 			void Stop();
-			void SendScreen(ISocket* socket, const Screen_Capture::Image & img);
+			//frames are images
+			void SendFrameChange(ISocket* socket, const Screen_Capture::Image & img);
+			void SendFrame(ISocket* socket, const Screen_Capture::Image & img);
+
 			void SendMouse(ISocket* socket, const Screen_Capture::Image & img);
 			void SendMouse(ISocket* socket, const Point& pos);
 			void SendClipboardText(ISocket* socket, const char* data, unsigned int len);

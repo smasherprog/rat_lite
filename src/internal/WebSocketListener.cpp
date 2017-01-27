@@ -8,13 +8,14 @@
 #include <assert.h>
 #include <beast/websocket.hpp>
 #include <beast/websocket/ssl.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
 #include <beast/core/placeholders.hpp>
 #include <beast/core/streambuf.hpp>
+
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -24,12 +25,10 @@ namespace SL {
 
 		public:
 
-			WSSocketImpl(INetworkHandlers* netdriver, boost::asio::ssl::context& context, boost::asio::io_service& io_service) :
-				_sslstream(io_service, context),
-				_INetworkHandlers(netdriver),
+			WSSocketImpl(boost::asio::ssl::context& context, boost::asio::io_service& io_service) :
+				_socket(io_service, context),
 				_read_deadline(io_service),
-				_write_deadline(io_service),
-				_socket(_sslstream)
+				_write_deadline(io_service)
 			{
 				_read_deadline.expires_at(boost::posix_time::pos_infin);
 				_write_deadline.expires_at(boost::posix_time::pos_infin);
@@ -43,14 +42,15 @@ namespace SL {
 				CancelTimers();
 				close("~WSSocketImpl");
 			}
-			boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _sslstream;
-			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>&> _socket;
+			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> _socket;
 
-			INetworkHandlers* _INetworkHandlers;
+			std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)> onMessage;
+			std::function<void(const ISocket* socket)> onDisconnection;
 
 			boost::asio::deadline_timer _read_deadline;
 			boost::asio::deadline_timer _write_deadline;
-			beast::streambuf db;
+			boost::asio::streambuf db;
+			beast::websocket::frame_info frame_;
 
 			bool _Closed = true;
 			bool _Writing = false;
@@ -67,7 +67,8 @@ namespace SL {
 
 			virtual void send(std::shared_ptr<char> data, size_t len) override {
 				auto self(shared_from_this());
-				boost::asio::async_write(_socket, boost::asio::buffer(data.get(), len), [data, self](const boost::system::error_code& ec, std::size_t byteswritten) {
+
+				_socket.async_write(boost::asio::buffer(data.get(), len), [data, self](const boost::system::error_code& ec) {
 					if (ec)
 					{
 						self->close(std::string("readheader async_read ") + ec.message());
@@ -75,13 +76,13 @@ namespace SL {
 				});
 
 			}
-			virtual void close(std::string reason) override {
+			virtual void close(const std::string& reason) override {
 				if (closed()) return;
 				SL_RAT_LOG(Logging_Levels::INFO_log_level, "Closing socket: " << reason);
 				_Closed = true;
 				CancelTimers();
 
-				_INetworkHandlers->onDisconnection(this);
+				onDisconnection(this);
 				boost::system::error_code ec;
 				_socket.close(beast::websocket::close_code::normal, ec);
 
@@ -118,7 +119,7 @@ namespace SL {
 				boost::system::error_code ec;
 				auto rt(_socket.lowest_layer().remote_endpoint(ec));
 				if (!ec) return rt.port();
-				else return -1;
+				else return 0;
 			}
 			virtual bool is_v4() const override
 			{
@@ -141,7 +142,6 @@ namespace SL {
 				else return true;
 			}
 			void read() {
-				beast::websocket::opcode op;
 				auto self(shared_from_this());
 
 				boost::system::error_code ec;
@@ -158,46 +158,21 @@ namespace SL {
 					});
 				}
 
-				_socket.async_read(op, db, [self](const boost::system::error_code& ec, std::size_t len) {
+				_socket.async_read_frame(frame_, db, [self](const boost::system::error_code& ec) {
 					if (ec) {
 						SL_RAT_LOG(Logging_Levels::ERROR_log_level, ec.message());
 						self->close("async_read error");
 					}
 					else {
-						self->_INetworkHandlers->onMessage(self, nullptr, len);
+						self->onMessage(self, boost::asio::buffer_cast<const char*>(self->db.data()), self->db.size());
+						self->db.consume(self->db.size());
 						self->read();
 					}
 				});
 			}
-			void operator()(boost::system::error_code ec, std::size_t)
-			{
-				(*this)(ec);
-			}
-			template<class DynamicBuffer, std::size_t N>
-			static
-				bool
-				match(DynamicBuffer& db, char const(&s)[N])
-			{
-				using boost::asio::buffer;
-				using boost::asio::buffer_copy;
-				if (db.size() < N - 1)
-					return false;
-				static_string<N - 1> t;
-				t.resize(N - 1);
-				buffer_copy(buffer(t.data(), t.size()),
-					db.data());
-				if (t != s)
-					return false;
-				db.consume(N - 1);
-				return true;
-			}
-			void operator()(boost::system::error_code ec)
-			{
 
-			}
 
 		};
-
 
 
 		//This can be used in production, the dh params do not need to be kept secret. Below is a 3072 bit dhparams
@@ -299,11 +274,13 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 			boost::optional<boost::asio::io_service::work> work_;
 			boost::asio::ssl::context context_;
 			std::shared_ptr<Server_Config> Server_Config_;
-			INetworkHandlers* handlers;
 
 		public:
+			std::function<void(const std::shared_ptr<ISocket>&)> onConnection;
+			std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)> onMessage;
+			std::function<void(const ISocket* socket)> onDisconnection;
 
-			WebSocketListenerImpl(INetworkHandlers* netevent, std::shared_ptr<Server_Config> config) : handlers(netevent), context_(boost::asio::ssl::context::tlsv11), acceptor_(ios_), work_(ios_), Server_Config_(config)
+			WebSocketListenerImpl(std::shared_ptr<Server_Config> config) :context_(boost::asio::ssl::context::tlsv11), acceptor_(ios_), work_(ios_), Server_Config_(config)
 			{
 				thread_.reserve(config->MaxWebSocketThreads);
 				for (std::size_t i = 0; i < config->MaxWebSocketThreads; ++i)
@@ -361,7 +338,9 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 			}
 			void run() {
 				auto self(shared_from_this());
-				auto sock = std::make_shared<WSSocketImpl>(handlers, ios_, context_);
+				auto sock = std::make_shared<WSSocketImpl>(context_, ios_);
+				sock->onDisconnection = onDisconnection;
+				sock->onMessage = onMessage;
 				acceptor_.async_accept(sock->_socket.lowest_layer(), [self, sock](boost::system::error_code ec) {
 					if (!self->acceptor_.is_open())
 						return;
@@ -373,7 +352,7 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 						return;
 					}
 
-					sock->_sslstream.async_handshake(boost::asio::ssl::stream_base::server, [self, sock](boost::system::error_code ec) {
+					sock->_socket.next_layer().async_handshake(boost::asio::ssl::stream_base::server, [self, sock](boost::system::error_code ec) {
 						if (!self->acceptor_.is_open())
 							return;
 						if (ec == boost::asio::error::operation_aborted)
@@ -383,6 +362,7 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 							SL_RAT_LOG(Logging_Levels::ERROR_log_level, "on_accept: " << ec.message());
 							return;
 						}
+						self->onConnection(std::dynamic_pointer_cast<ISocket>(sock));
 						sock->read();
 						self->run();
 
@@ -411,12 +391,24 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 
 		};
 
-		WebSocketListener::WebSocketListener(INetworkHandlers* netevent, std::shared_ptr<Server_Config> config) {
-			_WebSocketListenerImpl = std::make_unique<WebSocketListenerImpl>(netevent, config);
+		WebSocketListener::WebSocketListener(std::shared_ptr<Server_Config> config) {
+			_WebSocketListenerImpl = std::make_unique<WebSocketListenerImpl>(config);
 		}
 		WebSocketListener::~WebSocketListener() {
 
 		}
+
+		void WebSocketListener::onConnection(const std::function<void(const std::shared_ptr<ISocket>&)>& func) {
+			_WebSocketListenerImpl->onConnection = func;
+		}
+		void WebSocketListener::onMessage(const std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)>& func) {
+			_WebSocketListenerImpl->onMessage = func;
+		}
+		void WebSocketListener::onDisconnection(const std::function<void(const ISocket* socket)>& func) {
+			_WebSocketListenerImpl->onDisconnection = func;
+		}
+
+
 
 	}
 }

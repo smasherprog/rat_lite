@@ -2,6 +2,15 @@
 #include <memory>
 #include <string>
 
+#if defined(_WIN32)
+#if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
+//windows xp
+#define _WIN32_WINNT 0x0501
+#else
+#define _WIN32_WINNT 0x0601
+#endif
+#endif
+
 namespace SL {
 	namespace Remote_Access_Library {
 
@@ -26,7 +35,7 @@ namespace SL {
 			//adds the data to the internal queue, does not block and returns immediately. Library takes a COPY of the packet
 			virtual void send(std::shared_ptr<char> data, size_t len) = 0;
 			//sends a request that the socket be closed. NetworkEvents::OnClose will be called when the call is successful
-			virtual void close(std::string reason) = 0;
+			virtual void close(const std::string& reason) = 0;
 			virtual bool closed() = 0;
 
 			//s in in seconds

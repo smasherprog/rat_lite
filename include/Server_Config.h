@@ -10,9 +10,8 @@ namespace SL {
 			//this is where files are issued out for the webserver. If no path is specified, wwwroot in applications directory is chosen as a default
 			std::string WWWRoot;
 
-			unsigned int MouseImageCaptureRate = 1000;// measured in ms
-			unsigned int MousePositionCaptureRate = 50;// measured in ms
-			unsigned int ScreenImageCaptureRate = 100;// measured in ms
+			int MousePositionCaptureRate = 50;// measured in ms
+			int ScreenImageCaptureRate = 100;// measured in ms
 
 			//Image Settings
 			bool SendGrayScaleImages = false;//this will improve bandwith usage
@@ -21,8 +20,8 @@ namespace SL {
 			bool IgnoreIncomingMouseEvents = false;
 			bool IgnoreIncomingKeyboardEvents = false;
 
-			unsigned int MaxWebSocketThreads = 2;//
-			unsigned int MaxNumConnections = 10;//
+			size_t MaxWebSocketThreads = 2;//
+			size_t MaxNumConnections = 10;//
 
 			//CRYPTO SETTINGS
 			std::shared_ptr<ICryptoLoader> Private_Key;

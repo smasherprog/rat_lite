@@ -4,23 +4,16 @@
 #include "Server_Config.h"
 #include "turbojpeg.h"
 #include "Input.h"
-#include "ICryptoLoader.h"
 #include "Logging.h"
 #include "ScreenCapture.h"
+#include "WebSocketListener.h"
+#include "ISocket.h"
 
 #include <atomic>
 #include <mutex>
 #include <vector>
 #include <assert.h>
-#include <beast/websocket.hpp>
-#include <beast/websocket/ssl.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
-#include <beast/core/placeholders.hpp>
-#include <beast/core/streambuf.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
+#include <array>
 
 namespace SL {
 	namespace Remote_Access_Library {
@@ -30,76 +23,81 @@ namespace SL {
 			IServerDriver* _IServerDriver;
 
 			std::shared_ptr<Server_Config> _Config;
-			std::atomic_int ClientCount;
-
+			std::vector<std::shared_ptr<ISocket>> Clients;
+			std::mutex ClientLock;
+			WebSocketListener _WebSocketListener;
 
 		public:
-			ServerNetworkDriverImpl(std::shared_ptr<Server_Config> config, IServerDriver* svrd) :
-				_IServerDriver(svrd), _Config(config) {
-
-				_Listener.onConnection([&](uWS::WebSocket<uWS::CLIENT> ws, uWS::UpgradeInfo ui) {
-					if (ClientCount >= static_cast<size_t>(_Config->MaxNumConnections)) {
-						char *closeMessage = "Closing due to max number of connections!";
-						size_t closeMessageLength = strlen(closeMessage);
-						ws.close(1000, closeMessage, closeMessageLength);
+			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
+				_IServerDriver(r), _Config(config), _WebSocketListener(config) {
+				_WebSocketListener.onConnection([&](const std::shared_ptr<ISocket>& sock) {
+					if (Clients.size() >= _Config->MaxNumConnections) {
+						sock->close(std::string("Closing due to max number of connections!"));
 					}
 					else {
-						ClientCount += 1;
-						_IServerDriver->onConnection(ws, ui);
+						{
+							std::lock_guard<std::mutex> lock(ClientLock);
+							Clients.push_back(sock);
+						}
+						_IServerDriver->onConnection(sock);
 					}
 				});
-				_Listener.onDisconnection([&](uWS::WebSocket<uWS::CLIENT> ws, int code, char *message, size_t length) {
-					ClientCount -= 1;
-					_IServerDriver->onDisconnection(ws, code, message, length);
+				_WebSocketListener.onDisconnection([&](const ISocket* ws) {
+					{
+						std::lock_guard<std::mutex> lock(ClientLock);
+						Clients.erase(std::remove_if(begin(Clients), end(Clients), [ws](const std::shared_ptr<ISocket>& p) { return p.get() == ws; }), Clients.end());
+					}
+					_IServerDriver->onDisconnection(ws);
 
 				});
-				_Listener.onMessage([&](uWS::WebSocket<uWS::CLIENT> ws, char *message, size_t length, uWS::OpCode opCode) {
+				_WebSocketListener.onMessage([&](const std::shared_ptr<ISocket>& sock, const char *message, size_t length) {
 					auto pactype = PACKET_TYPES::INVALID;
 					assert(length >= sizeof(pactype));
-					pactype = *reinterpret_cast<PACKET_TYPES*>(message);
+
+					pactype = *reinterpret_cast<const PACKET_TYPES*>(message);
 					length -= sizeof(pactype);
 					message += sizeof(pactype);
 
 					switch (pactype) {
 					case PACKET_TYPES::MOUSEEVENT:
 						assert(length == sizeof(MouseEvent));
-						_IServerDriver->OnReceive_Mouse(reinterpret_cast<MouseEvent*>(message));
+						_IServerDriver->OnReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
 						break;
 					case PACKET_TYPES::KEYEVENT:
 						assert(length == sizeof(KeyEvent));
-						_IServerDriver->OnReceive_Key(reinterpret_cast<KeyEvent*>(message));
+						_IServerDriver->OnReceive_Key(reinterpret_cast<const KeyEvent*>(message));
 						break;
 					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
 						_IServerDriver->OnReceive_ClipboardText(message, length);
 						break;
 					default:
-						_IServerDriver->onMessage(ws, message - sizeof(pactype), length + sizeof(pactype), opCode);
+						_IServerDriver->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));
 						break;
 					}
-
-					_IServerDriver->onMessage(ws, message, length, opCode);
 				});
 
-				//auto c = uS::TLS::createContext(_Config->Certficate_Public_FilePath, _Config->Certficate_Private_FilePath, _Config->PasswordToPrivateKey);
 
-				_Listener.listen(_Config->WebSocketTLSLPort);
-				_Listener.run();
-				int k = 0;
 			}
 			virtual ~ServerNetworkDriverImpl() {
 
 			}
-			void Start() {
-			
-			}
-			void Stop() {
-				_Listener.getDefaultGroup<uWS::SERVER>().close();
-			}
-			
+			void Send(ISocket* socket, std::shared_ptr<char> data, size_t len) {
+				if (socket) {
+					socket->send(data, len);
+				}
+				else {
 
-			void SendScreen(ISocket* socket, const Screen_Capture::Image & img) {
+					std::lock_guard<std::mutex> lock(ClientLock);
+					for (auto& c : Clients) {
+						c->send(data, len);
+					}
+				}
+
+			}
+
+			void SendScreen(ISocket* socket, const Screen_Capture::Image & img, PACKET_TYPES p) {
 				Rect r(Point(0, 0), Height(img), Width(img));
-				auto p = static_cast<unsigned int>(PACKET_TYPES::SCREENIMAGE);
+				
 
 				auto compfree = [](void* handle) {tjDestroy(handle); };
 				auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
@@ -108,9 +106,9 @@ namespace SL {
 
 				auto maxsize = std::max(tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set), static_cast<unsigned long>((Screen_Capture::RowStride(img) + Screen_Capture::RowPadding(img)) * Screen_Capture::Height(img))) + sizeof(r) + sizeof(p);
 				auto _jpegSize = maxsize;
-				auto buffer1 = std::make_unique<char[]>(maxsize);
+				auto buffer = std::shared_ptr<char>(new char[maxsize], [](char* ptr) { delete[] ptr; });
 
-				auto dst = (unsigned char*)buffer1.get();
+				auto dst = (unsigned char*)buffer.get();
 				memcpy(dst, &p, sizeof(p));
 				dst += sizeof(p);
 				memcpy(dst, &r, sizeof(r));
@@ -131,16 +129,14 @@ namespace SL {
 				}
 				//	std::cout << "Sending " << r << std::endl;
 				auto finalsize = sizeof(p) + sizeof(r) + _jpegSize;//adjust the correct size
-
-				if (socket == nullptr)	_Listener.getDefaultGroup<uWS::SERVER>().broadcast(buffer1.get(), finalsize, uWS::OpCode::BINARY);
-				else socket->send(buffer1.get(), finalsize, uWS::OpCode::BINARY);
+				Send(socket, buffer, finalsize);
 			}
 			void SendMouse(ISocket* socket, const Screen_Capture::Image & img) {
 
 				Point r(Width(img), Height(img));
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE);
 				auto finalsize = (Screen_Capture::RowStride(img) * Screen_Capture::Height(img)) + sizeof(p) + sizeof(r);
-				auto buffer = std::make_unique<char[]>(finalsize);
+				auto buffer = std::shared_ptr<char>(new char[finalsize], [](char* ptr) { delete[] ptr; });
 
 				auto dst = buffer.get();
 				memcpy(dst, &p, sizeof(p));
@@ -149,50 +145,54 @@ namespace SL {
 				dst += sizeof(r);
 				Screen_Capture::Extract(img, dst, Screen_Capture::RowStride(img) * Screen_Capture::Height(img));
 
-				if (socket == nullptr)	_Listener.getDefaultGroup<uWS::SERVER>().broadcast(buffer.get(), finalsize, uWS::OpCode::BINARY);
-				else socket->send(buffer.get(), finalsize, uWS::OpCode::BINARY);
+				Send(socket, buffer, finalsize);
 
 			}
 			void SendMouse(ISocket* socket, const Point& pos)
 			{
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
 				const auto size = sizeof(pos) + sizeof(p);
+				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });
+			
+				memcpy(buffer.get(), &p, sizeof(p));
+				memcpy(buffer.get()+ sizeof(p), &pos, sizeof(pos));
 
-				char buffer[size];
-				memcpy(buffer, &p, sizeof(p));
-				memcpy(buffer + sizeof(p), &pos, sizeof(pos));
-
-				if (socket == nullptr)	_Listener.getDefaultGroup<uWS::SERVER>().broadcast(buffer, size, uWS::OpCode::BINARY);
-				else socket->send(buffer, size, uWS::OpCode::BINARY);
+				Send(socket, buffer, size);
 			}
 
 			void SendClipboardText(ISocket* socket, const char* data, unsigned int len) {
 				auto p = static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT);
 				auto size = len + sizeof(p);
-				auto buffer = std::make_unique<char[]>(size);
+				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });
+				memcpy(buffer.get(), &p, sizeof(p));
+				memcpy(buffer.get() + sizeof(p), data, len);
 
-				if (socket == nullptr)	_Listener.getDefaultGroup<uWS::SERVER>().broadcast(buffer.get(), size, uWS::OpCode::BINARY);
-				else socket->send(buffer.get(), size, uWS::OpCode::BINARY);
+				Send(socket, buffer, size);
 
 			}
 		};
-		ServerNetworkDriver::ServerNetworkDriver(IServerDriver * r, std::shared_ptr<Server_Config> config) :_ServerNetworkDriverImpl(std::make_unique<ServerNetworkDriverImpl>(config, r))
+		ServerNetworkDriver::ServerNetworkDriver()
 		{
+
 		}
 		ServerNetworkDriver::~ServerNetworkDriver()
 		{
 
 		}
-		void ServerNetworkDriver::Start() {
-			_ServerNetworkDriverImpl->Start();
+		void ServerNetworkDriver::Start(IServerDriver * r, std::shared_ptr<Server_Config> config) {
+			_ServerNetworkDriverImpl = std::make_unique<ServerNetworkDriverImpl>(r, config);
 		}
 		void ServerNetworkDriver::Stop() {
-			_ServerNetworkDriverImpl->Stop();
+			_ServerNetworkDriverImpl.reset();
 		}
 
-		void ServerNetworkDriver::SendScreen(ISocket* socket, const Screen_Capture::Image & img)
+		void ServerNetworkDriver::SendFrameChange(ISocket* socket, const Screen_Capture::Image & img)
 		{
-			_ServerNetworkDriverImpl->SendScreen(socket, img);
+			_ServerNetworkDriverImpl->SendScreen(socket, img, PACKET_TYPES::SCREENIMAGEDIF);
+		}
+		void ServerNetworkDriver::SendFrame(ISocket* socket, const Screen_Capture::Image & img)
+		{
+			_ServerNetworkDriverImpl->SendScreen(socket, img, PACKET_TYPES::SCREENIMAGE);
 		}
 		void ServerNetworkDriver::SendMouse(ISocket* socket, const Screen_Capture::Image & img)
 		{

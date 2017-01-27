@@ -1,7 +1,6 @@
 #include "Server.h"
 
 #include <thread>
-#include <mutex>
 #include <string.h>
 
 #include <assert.h>
@@ -30,61 +29,68 @@ namespace SL {
 			ServerNetworkDriver _ServerNetworkDriver;
 			std::unique_ptr<Clipboard> _Clipboard;
 
-			bool _Keepgoing = true;
-
-			std::vector<uWS::WebSocket<uWS::CLIENT>> _Clients;
-			std::mutex _ClientsLock;
-
 			Server_Status _Status = Server_Status::SERVER_STOPPED;
 			std::shared_ptr<Server_Config> _Config;
-	
-	
+
 			ServerImpl(std::shared_ptr<Server_Config> config) :
-				_ServerNetworkDriver(this, config), _Config(config)
+				_ServerNetworkDriver(), _Config(config)
 			{
 				_Status = Server_Status::SERVER_RUNNING;
-				_ServerNetworkDriver.Start();
+				_ServerNetworkDriver.Start(this, config);
 				_Clipboard = std::make_unique<Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
-		
-
-
+				_ScreenCaptureManager.setMouseChangeInterval(_Config->MousePositionCaptureRate);
+				_ScreenCaptureManager.setFrameChangeInterval(_Config->ScreenImageCaptureRate);
+				_ScreenCaptureManager.setMonitorsToCapture([]() {
+					return Screen_Capture::GetMonitors();
+				});
+				_ScreenCaptureManager.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
+					if (img) {
+						_ServerNetworkDriver.SendMouse(nullptr, *img);
+					}
+					_ServerNetworkDriver.SendMouse(nullptr, Point(x, y));
+				});
+				_ScreenCaptureManager.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+					_ServerNetworkDriver.SendFrameChange(nullptr, img);
+				});
+				_ScreenCaptureManager.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+					_ServerNetworkDriver.SendFrame(nullptr, img);
+				});
+				_ScreenCaptureManager.Start();
 			}
 
 			virtual ~ServerImpl() {
-				_Keepgoing = false;
 				_ScreenCaptureManager.Stop();
 				_Clipboard.reset();//make sure to prevent race conditions
 				_Status = Server_Status::SERVER_STOPPED;
 				_ServerNetworkDriver.Stop();
 
 			}
-			virtual void onConnection(uWS::WebSocket<uWS::CLIENT> ws, uWS::UpgradeInfo ui) override {
-				UNUSED(ui);
-				std::lock_guard<std::mutex> lock(_ClientsLock);
-				_Clients.push_back(ws);
+			virtual void onConnection(const std::shared_ptr<ISocket>& socket) override {
+				UNUSED(socket);
 				//if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
 
-			virtual void onDisconnection(uWS::WebSocket<uWS::CLIENT> ws, int code, char *message, size_t length) override {
-				std::lock_guard<std::mutex> lock(_ClientsLock);
-				_Clients.erase(std::remove_if(begin(_Clients), end(_Clients), [&ws](const uWS::WebSocket<uWS::CLIENT>& p) { return p == ws; }), _Clients.end());
+			virtual void onDisconnection(const ISocket* socket) override {
+				UNUSED(socket);
 				//if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
 			}
 
-			virtual void onMessage(uWS::WebSocket<uWS::CLIENT> ws, char *message, size_t length, uWS::OpCode opCode)  override {
-
+			virtual void onMessage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len)  override {
+				UNUSED(socket);
+				UNUSED(data);
+				UNUSED(len);
 			}
 
-			virtual void OnReceive_ClipboardText(const char* data, unsigned int len) override {
+			virtual void OnReceive_ClipboardText(const char* data, size_t len) override {
 				SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
 				_Clipboard->copy_to_clipboard(data, static_cast<int>(len));
 			}
 
 
-			virtual void OnReceive_Mouse(MouseEvent* m) override {
+			virtual void OnReceive_Mouse(const MouseEvent* m) override {
 				if (!_Config->IgnoreIncomingMouseEvents) SimulateMouseEvent(*m);
 			}
-			virtual void OnReceive_Key(KeyEvent* m)override {
+			virtual void OnReceive_Key(const KeyEvent* m)override {
 				if (!_Config->IgnoreIncomingKeyboardEvents) SimulateKeyboardEvent(*m);
 			}
 
@@ -92,40 +98,7 @@ namespace SL {
 			void OnMousePos(Point p) {
 				_ServerNetworkDriver.SendMouse(nullptr, p);
 			}
-			//void OnMouseImg(std::shared_ptr<Utilities::Image> img) {
-			//	if (!LastMouse) {
-			//		_ServerNetworkDriver.SendMouse(nullptr, *img);
-			//	}
-			//	else {
-			//		if (LastMouse->size() != img->size()) {
-			//			_ServerNetworkDriver.SendMouse(nullptr, *img);
-			//		}
-			//		else if (memcmp(img->data(), LastMouse->data(), LastMouse->size()) != 0) {
-			//			_ServerNetworkDriver.SendMouse(nullptr, *img);
-			//		}
-			//	}
-			//	LastMouse = img;
-			//}
-			//void OnScreen(std::shared_ptr<Utilities::Image> img) {
-			//	if (!_NewClients.empty()) {
-			//		//make sure to send the full screens to any new connects
-			//		std::lock_guard<std::mutex> lock(_NewClientLock);
-			//		for (auto& a : _NewClients) {
-			//			_ServerNetworkDriver.SendScreenFull(a.get(), *img);
-			//		}
-			//		_NewClients.clear();
-			//	}
-			//	if (LastScreen) {
-			//		if (img->data() != LastScreen->data()) {
-			//			for (auto r : SL::Remote_Access_Library::Utilities::Image::GetDifs(*LastScreen, *img)) {
-			//				_ServerNetworkDriver.SendScreenDif(nullptr, r, *img);
-			//			}
-			//		}
-			//	}
-			//	LastScreen = img;//swap
-			//}
 
-	
 			Server_Status get_Status() const {
 				return _Status;
 			}
@@ -164,7 +137,7 @@ namespace SL {
 			//if (!SL::Directory_Exists(config->WWWRoot)) ret += "You must supply a valid folder for wwwroot!\n";
 
 			return ret;
-	}
+		}
 #if __ANDROID__
 		void Server::Server::OnImage(char* buf, int width, int height)
 		{
@@ -172,5 +145,5 @@ namespace SL {
 		}
 #endif
 
-}
+	}
 }

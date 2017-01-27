@@ -63,8 +63,8 @@ namespace SL {
 //Usage  SL_RAT_LOG(SL::Remote_Access_Library::Logging_Levels::Debug_log_level, "Message goes here "<< 56 <<" Any Valid cout stuff works");
 
 #define SL_RAT_LOG(level, msg) {\
-std::ostringstream buffer; \
-buffer << msg; \
-SL::Remote_Access_Library::Log(level, __FILE__, __LINE__, __func__, buffer);\
+std::ostringstream buffersl134nonesd; \
+buffersl134nonesd << msg; \
+SL::Remote_Access_Library::Log(level, __FILE__, __LINE__, __func__, buffersl134nonesd);\
 }
 

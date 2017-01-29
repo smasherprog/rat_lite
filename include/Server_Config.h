@@ -21,7 +21,7 @@ namespace SL {
 			bool IgnoreIncomingKeyboardEvents = false;
 
 			size_t MaxWebSocketThreads = 2;//
-			size_t MaxNumConnections = 10;//
+			int MaxNumConnections = 10;//
 
 			//CRYPTO SETTINGS
 			std::shared_ptr<ICryptoLoader> Private_Key;

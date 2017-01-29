@@ -31,16 +31,17 @@ namespace SL {
 			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
 				_IServerDriver(r), _Config(config), _WebSocketListener(config) {
 				_WebSocketListener.onConnection([&](const std::shared_ptr<ISocket>& sock) {
-					if (Clients.size() >= _Config->MaxNumConnections) {
+
+					if (_Config->MaxNumConnections == -1 || static_cast<int>(Clients.size()) < _Config->MaxNumConnections) {
+						std::lock_guard<std::mutex> lock(ClientLock);
+						Clients.push_back(sock);
+					}
+					else
+					{
 						sock->close(std::string("Closing due to max number of connections!"));
 					}
-					else {
-						{
-							std::lock_guard<std::mutex> lock(ClientLock);
-							Clients.push_back(sock);
-						}
-						_IServerDriver->onConnection(sock);
-					}
+					_IServerDriver->onConnection(sock);
+
 				});
 				_WebSocketListener.onDisconnection([&](const ISocket* ws) {
 					{
@@ -97,7 +98,7 @@ namespace SL {
 
 			void SendScreen(ISocket* socket, const Screen_Capture::Image & img, PACKET_TYPES p) {
 				Rect r(Point(0, 0), Height(img), Width(img));
-				
+
 
 				auto compfree = [](void* handle) {tjDestroy(handle); };
 				auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
@@ -153,9 +154,9 @@ namespace SL {
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
 				const auto size = sizeof(pos) + sizeof(p);
 				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });
-			
+
 				memcpy(buffer.get(), &p, sizeof(p));
-				memcpy(buffer.get()+ sizeof(p), &pos, sizeof(pos));
+				memcpy(buffer.get() + sizeof(p), &pos, sizeof(pos));
 
 				Send(socket, buffer, size);
 			}

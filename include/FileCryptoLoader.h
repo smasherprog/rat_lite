@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "ICryptoLoader.h"
 
 namespace SL {
@@ -8,7 +9,7 @@ namespace SL {
 			FileCryptoLoaderImpl* _FileCryptoLoaderImpl;
 		public:
 
-			FileCryptoLoader(const char* filepath);
+			FileCryptoLoader(const std::string& filepath);
 			virtual ~FileCryptoLoader();
 
 			virtual const char* get_buffer();

@@ -8,12 +8,12 @@ namespace SL {
 		class ISocket;
 		class WebSocketListenerImpl;
 		class WebSocketListener {
-			std::unique_ptr<WebSocketListenerImpl> _WebSocketListenerImpl;
+			std::shared_ptr<WebSocketListenerImpl> _WebSocketListenerImpl;
 		public:
 
 			WebSocketListener(std::shared_ptr<Server_Config> config);
 			~WebSocketListener();
-
+		
 			void onConnection(const std::function<void(const std::shared_ptr<ISocket>&)>& func);
 			void onMessage(const std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)>& func);
 			void onDisconnection(const std::function<void(const ISocket* socket)>& func);

@@ -1,7 +1,7 @@
 #include "ServerNetworkDriver.h"
 #include "Shapes.h"
 #include "IServerDriver.h"
-#include "Server_Config.h"
+#include "Configs.h"
 #include "turbojpeg.h"
 #include "Input.h"
 #include "Logging.h"

@@ -9,7 +9,7 @@ namespace SL {
 	namespace Remote_Access_Library {
 		class FileCryptoLoaderImpl {
 		public:
-			FileCryptoLoaderImpl(const char* filepath) :FilePath(filepath) {}
+			FileCryptoLoaderImpl(const std::string& filepath) :FilePath(filepath) {}
 			~FileCryptoLoaderImpl() {
 				memset(Data.data(), 0, Data.size());
 			}
@@ -44,7 +44,7 @@ namespace SL {
 
 		};
 
-		FileCryptoLoader::FileCryptoLoader(const char* filepath)
+		FileCryptoLoader::FileCryptoLoader(const std::string& filepath)
 		{
 			_FileCryptoLoaderImpl = new FileCryptoLoaderImpl(filepath);
 		}

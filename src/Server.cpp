@@ -10,7 +10,7 @@
 
 #include "IServerDriver.h"
 #include "Logging.h"
-#include "Server_Config.h"
+#include "Configs.h"
 
 
 #include "Clipboard.h"

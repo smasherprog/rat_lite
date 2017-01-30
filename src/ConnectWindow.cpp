@@ -1,10 +1,10 @@
 #include "ConnectWindow.h"
-
 #include "Configs.h"
 #include "ICryptoLoader.h"
 #include "FileCryptoLoader.h"
 #include "InMemoryCryptoLoader.h"
 #include "Logging.h"
+#include "ViewerController.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -28,15 +28,14 @@ namespace SL {
 
 			Fl_Input* bInput = nullptr;
 			Fl_Button* connectbtn = nullptr;
-			Fl_Check_Button* checkbx = nullptr;
+			//Fl_Check_Button* checkbx = nullptr;
 			Fl_Menu_Bar *_MenuBar = nullptr;
 	
 			std::string Host;
-			//std::unique_ptr<ViewerController> _MainWindow;
+			std::unique_ptr<ViewerController> _MainWindow;
 			std::shared_ptr<Client_Config> _Config;
-			ConnectWindowImpl() :Fl_Window(400, 420, 350, 110, "Connect to Host") {
-				_Config = std::make_shared<Client_Config>();
-				_Config->Share_Clipboard = true;
+			ConnectWindowImpl(std::shared_ptr<Client_Config> c) :Fl_Window(400, 420, 350, 110, "Connect to Host"), _Config(c){
+			
 			}
 			virtual ~ConnectWindowImpl() {
 
@@ -51,11 +50,10 @@ namespace SL {
 			static void DoConnect(void* userdata) {
 				auto ptr = ((ConnectWindowImpl*)userdata);
 				ptr->ActivateWidgets();
-				//ptr->_MainWindow = std::make_unique<ViewerController>(ptr->_Config, ptr->Host.c_str());
+				ptr->_MainWindow = std::make_unique<ViewerController>(ptr->_Config, ptr->Host.c_str());
 			}
 			static void try_connect(std::string host, ConnectWindowImpl* ptr) {
 				auto portspecified = host.find_last_of(':');
-				ptr->_Config->WebSocketTLSLPort = 6001;
 				if (portspecified != host.npos) {
 					auto port = host.substr(portspecified + 1, host.size() - (portspecified - 1));
 					if (!port.empty()) {
@@ -64,13 +62,6 @@ namespace SL {
 					ptr->Host = host.substr(0, portspecified);
 				}
 				else ptr->Host = host;
-#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG)
-
-				if (!ptr->_Config->Public_Certficate) {
-					ptr->_Config->Public_Certficate = std::static_pointer_cast<ICryptoLoader>(std::make_shared<InMemoryCryptoLoader>(public_cert, sizeof(public_cert)));
-				}
-
-#endif
 
 				Fl::awake(DoConnect, ptr);//make sure to switch to the GUI thread
 			}
@@ -98,11 +89,11 @@ namespace SL {
 				std::thread th([host, ptr]() { try_connect(host, ptr); });
 				th.detach();
 			}
-			static void setscale(Fl_Widget* o, void* userdata) {
+			/*static void setscale(Fl_Widget* o, void* userdata) {
 				UNUSED(o);
 				auto ptr = ((ConnectWindowImpl*)userdata);
 				if (ptr->checkbx) ptr->_Config->Scale_Image = ptr->checkbx->value() == 1;
-			}
+			}*/
 			static void _FullPathToCertifiateCB(Fl_Widget*w, void*data) {
 				UNUSED(w);
 				auto p = (ConnectWindowImpl*)data;
@@ -123,7 +114,7 @@ namespace SL {
 			}
 
 
-			void Init() {
+			void Init(const std::string& host) {
 				auto workingy = 0;
 				auto startleft = 80;
 
@@ -134,18 +125,22 @@ namespace SL {
 				workingy += 30;
 
 				bInput = new Fl_Input(startleft, workingy, w() - startleft, 30, "Host: ");
+				bInput->value(host.c_str());
 				workingy += 24;
 
-				checkbx = new Fl_Check_Button(startleft, workingy, w() - startleft, 30, " Scaling");
-				checkbx->align(FL_ALIGN_LEFT);
-				checkbx->callback(setscale, this);
-				workingy += 24;
+				//checkbx = new Fl_Check_Button(startleft, workingy, w() - startleft, 30, " Scaling");
+				//checkbx->align(FL_ALIGN_LEFT);
+				//checkbx->callback(setscale, this);
+			//	workingy += 24;
 
 
 				connectbtn = new Fl_Button(0, h() - 30, w(), 30, "Connect");
 				connectbtn->callback(try_connect_frm, this);
 				end();
 				show();
+				if (!host.empty()) {
+					connectbtn->activate();
+				}
 			}
 		};
 
@@ -153,10 +148,10 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::ConnectWindow::ConnectWindow()
+SL::Remote_Access_Library::ConnectWindow::ConnectWindow(const std::shared_ptr<Client_Config> config, const std::string& host)
 {
-	_ConnectWindowImpl = new ConnectWindowImpl();
-	_ConnectWindowImpl->Init();
+	_ConnectWindowImpl = new ConnectWindowImpl(config);
+	_ConnectWindowImpl->Init(host);
 
 }
 SL::Remote_Access_Library::ConnectWindow::~ConnectWindow()

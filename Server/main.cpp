@@ -103,6 +103,7 @@ int main(int argc, char* argv[]) {
 
 	SL::Remote_Access_Library::Server serv;
 	serv.Start(config);
+
 	while (serv.get_Status() != SL::Remote_Access_Library::Server_Status::SERVER_STOPPED) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}

@@ -99,8 +99,6 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 			bool Share_Clipboard = true;//share your clipboard?
 			bool Scale_Image = false;
 
-			std::string Password;//this is the password to connect to the endpoint or that the server requrires before allowing the connection 
-
 			std::shared_ptr<ICryptoLoader> Public_Certficate;
 		};
 

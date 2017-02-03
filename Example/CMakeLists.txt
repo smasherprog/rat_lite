@@ -18,10 +18,8 @@ set(Screen_Capture_EXAMPLE_SRC
 	Screen_Capture_Example.cpp
 )
 
-include_directories(${Screen_Capture_SOURCE_DIR}/include)
-
+include_directories(${SCREEN_CAPTURE_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${Screen_Capture_EXAMPLE_SRC})
-target_link_libraries(${PROJECT_NAME} Screen_Capturelib)
+target_link_libraries(${PROJECT_NAME} ${SCREEN_CAPTURE_LIB})
 target_link_libraries(${PROJECT_NAME} ${SYSTEM_LIBS})
 
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

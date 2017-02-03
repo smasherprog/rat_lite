@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 	Fl::get_system_colors();
 	Fl::visual(FL_RGB);
 
-	auto config = std::make_shared<SL::Remote_Access_Library::Client_Config>();
+	auto config = std::make_shared<SL::RAT::Client_Config>();
 
 	std::string public_cert_path, host;
 
@@ -58,10 +58,10 @@ int main(int argc, char* argv[]) {
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
 	//in debug mode allow usage of pre-made certs. DO NOT USE IN PRODUCTION!!!
 	if (public_cert_path.empty()) {
-		config->Public_Certficate = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::InMemoryCryptoLoader(SL::Remote_Access_Library::public_cert, sizeof(SL::Remote_Access_Library::public_cert)));
+		config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::InMemoryCryptoLoader(SL::RAT::public_cert, sizeof(SL::RAT::public_cert)));
 	}
 	else if (!public_cert_path.empty()) {
-			config->Public_Certficate = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::FileCryptoLoader(public_cert_path));
+			config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
 	}
 	else {
 		std::cout << desc << "\n";
@@ -69,12 +69,12 @@ int main(int argc, char* argv[]) {
 	}
 
 #else 
-	config->Public_Certficate = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::FileCryptoLoader(public_cert_path));
+	config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
 #endif
 
 
 
-	SL::Remote_Access_Library::ConnectWindow c(config, host);
+	SL::RAT::ConnectWindow c(config, host);
 	Fl::lock();
 	while (Fl::wait() > 0) {
 		if (Fl::thread_message()) {

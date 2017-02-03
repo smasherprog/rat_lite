@@ -5,14 +5,14 @@
 
 #if __ANDROID__
 
-#define APPNAME "Remote_Access_Library"
+#define APPNAME "RAT"
 #include <android/log.h>
 
 #endif
 
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		enum Logging_Levels {
 			Debug_log_level,
@@ -60,11 +60,11 @@ namespace SL {
 #define UNUSED(x) (void)(x)
 #define S(x) #x
 #define S_(x) S(x)
-//Usage  SL_RAT_LOG(SL::Remote_Access_Library::Logging_Levels::Debug_log_level, "Message goes here "<< 56 <<" Any Valid cout stuff works");
+//Usage  SL_RAT_LOG(SL::RAT::Logging_Levels::Debug_log_level, "Message goes here "<< 56 <<" Any Valid cout stuff works");
 
 #define SL_RAT_LOG(level, msg) {\
 std::ostringstream buffersl134nonesd; \
 buffersl134nonesd << msg; \
-SL::Remote_Access_Library::Log(level, __FILE__, __LINE__, __func__, buffersl134nonesd);\
+SL::RAT::Log(level, __FILE__, __LINE__, __func__, buffersl134nonesd);\
 }
 

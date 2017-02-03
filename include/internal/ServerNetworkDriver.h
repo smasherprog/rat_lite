@@ -6,7 +6,7 @@ namespace SL {
 	namespace Screen_Capture {
 		struct Image;
 	};
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class Point;
 
 		class ServerNetworkDriverImpl;

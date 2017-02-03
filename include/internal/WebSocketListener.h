@@ -3,7 +3,7 @@
 #include <functional>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		struct Server_Config;
 		class ISocket;
 		class WebSocketListenerImpl;

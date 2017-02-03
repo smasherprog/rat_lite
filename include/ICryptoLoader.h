@@ -1,6 +1,6 @@
 #pragma once
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class ICryptoLoader {
 		public:
 			virtual ~ICryptoLoader() {}

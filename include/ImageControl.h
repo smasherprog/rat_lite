@@ -7,10 +7,8 @@
 #include <memory>
 
 namespace SL {
-	namespace Screen_Capture {
-		struct Image;
-	}
-	namespace Remote_Access_Library {
+
+	namespace RAT {
 
 		struct ScreenImageInfo {
 
@@ -32,10 +30,10 @@ namespace SL {
 
 			void OnResize(int W, int H, int SS);
 			bool is_ImageScaled() const;
-			void set_ScreenImage(std::shared_ptr<Screen_Capture::Image>& img);
-			void set_ImageDifference(Point& pos, const std::shared_ptr<Screen_Capture::Image>& img);
-			void set_MouseImage(std::shared_ptr<Screen_Capture::Image>& img);
-			void set_MousePosition(Point* pos);
+			void set_ScreenImage(const Rect* rect, std::shared_ptr<char>& data);
+			void set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data);
+			void set_MouseImage(const Size* size, const char* data);
+			void set_MousePosition(const Point* pos);
 
 		};
 

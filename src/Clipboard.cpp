@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 	
 			class ClipboardImpl : public Fl_Widget {
 			public:
@@ -86,15 +86,15 @@ namespace SL {
 		
 	}
 }
-SL::Remote_Access_Library::Clipboard::Clipboard(const bool* is_clipshared, std::function<void(const char*, int)>&& onchange)
+SL::RAT::Clipboard::Clipboard(const bool* is_clipshared, std::function<void(const char*, int)>&& onchange)
 {
 	_ClipboardImpl = new ClipboardImpl(is_clipshared, std::forward<std::function<void(const char*, int)>>(onchange));
 }
 
-SL::Remote_Access_Library::Clipboard::~Clipboard()
+SL::RAT::Clipboard::~Clipboard()
 {
 	delete _ClipboardImpl;
 }
-void SL::Remote_Access_Library::Clipboard::copy_to_clipboard(const char* data, int len) {
+void SL::RAT::Clipboard::copy_to_clipboard(const char* data, int len) {
 	_ClipboardImpl->copy_to_clipboard(data, len);
 }

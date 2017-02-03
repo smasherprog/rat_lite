@@ -3,7 +3,7 @@
 #include <string>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		struct Server_Config;
 		enum Server_Status {

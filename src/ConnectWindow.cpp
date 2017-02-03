@@ -1,9 +1,7 @@
 #include "ConnectWindow.h"
 #include "Configs.h"
-#include "ICryptoLoader.h"
 #include "FileCryptoLoader.h"
 #include "InMemoryCryptoLoader.h"
-#include "Logging.h"
 #include "ViewerController.h"
 
 #include <FL/Fl.H>
@@ -21,7 +19,7 @@
 #include <thread>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class ConnectWindowImpl : Fl_Window {
 		public:
@@ -148,13 +146,13 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::ConnectWindow::ConnectWindow(const std::shared_ptr<Client_Config> config, const std::string& host)
+SL::RAT::ConnectWindow::ConnectWindow(const std::shared_ptr<Client_Config> config, const std::string& host)
 {
 	_ConnectWindowImpl = new ConnectWindowImpl(config);
 	_ConnectWindowImpl->Init(host);
 
 }
-SL::Remote_Access_Library::ConnectWindow::~ConnectWindow()
+SL::RAT::ConnectWindow::~ConnectWindow()
 {
 	//DELETE IS NOT NEEDED HERE AS it is handled by the fltk library
 	//delete _ConnectWindowImpl;

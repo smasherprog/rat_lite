@@ -13,7 +13,7 @@
 #include <windows.h>
 #endif
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		void SimulateMouseEvent(const MouseEvent & m)
 		{

@@ -1,18 +1,12 @@
 #include "ClientNetworkDriver.h"
-#include "Shapes.h"
+#include "Configs.h"
+#include "Image.h"
 #include "IClientDriver.h"
 #include "turbojpeg.h"
-#include "Input.h"
-#include "Logging.h"
-#include "Configs.h"
-#include "ISocket.h"
-#include "INetworkHandlers.h"
-#include "ScreenCapture.h"
-#include "Internal\SCCommon.h"
 #include <assert.h>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 	
 		class ClientNetworkDriverImpl : public INetworkHandlers {
 
@@ -20,24 +14,20 @@ namespace SL {
 			std::shared_ptr<Client_Config> _Config;
 			std::shared_ptr<ISocket> _Socket;
 			std::string _dst_host;
-		
+			Point _LastMousePosition;
 
 			void MouseImage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
-				auto imgsize = *(Point*)data;
-				Screen_Capture::ImageRect imgrect;
-				imgrect.left = imgrect.top = 0;
-				imgrect.bottom = imgsize.Y;
-				imgrect.right = imgsize.X;
-				auto img = Screen_Capture::Create(imgrect, Screen_Capture::PixelStride, 0, const_cast<char*>(data+ sizeof(imgsize)));
-				_IClientDriver->OnReceive_MouseImage(img);
+				auto imgrect = reinterpret_cast<const Size*>(data);
+				assert(len == sizeof(Size) + (imgrect->X * imgrect->Y*PixelStride));
+				_IClientDriver->OnReceive_MouseImage(imgrect, data + sizeof(Size));
 			}
 
 			void MousePos(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
 				assert(len == sizeof(Point));
 				_IClientDriver->OnReceive_MousePos((Point*)data);
 			}
-			void ScreenImageDif(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
-				auto imgrect = *(Rect*)data;
+			void ScreenImage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len, bool dif) {
+				auto imgrect = reinterpret_cast<const Rect*>(data);
 				auto compfree = [](void* handle) {tjDestroy(handle); };
 				auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
 
@@ -47,41 +37,18 @@ namespace SL {
 				if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(len - sizeof(Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
-				auto imgbacking = std::make_unique<char[]>(outwidth* outheight * Screen_Capture::PixelStride);
-				Screen_Capture::ImageRect imgr;
-				imgr.left = imgrect.left();
-				imgr.top = imgrect.top();
-				imgr.bottom = imgrect.bottom();
-				imgr.right = imgrect.right();
-
-				auto img = Screen_Capture::Create(imgr, Screen_Capture::PixelStride, 0, const_cast<char*>(data + sizeof(imgrect)));
-				
+				assert(outwidth == imgrect->Width && outheight == imgrect->Height);
+				auto imgbacking = std::shared_ptr<char>(new char[outwidth* outheight * PixelStride], [](char* ptr) {delete[] ptr; });
 
 				if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(len - sizeof(Rect)), (unsigned char*)imgbacking.get(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
-				_IClientDriver->OnReceive_ImageDif(imgrect.Origin, img);
-
-			}
-			void ScreenImage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
-
-		/*		auto compfree = [](void* handle) {tjDestroy(handle); };
-				auto _jpegDecompressor(std::unique_ptr<void, decltype(compfree)>(tjInitDecompress(), compfree));
-				int jpegSubsamp(0), outwidth(0), outheight(0);
-				auto src = (unsigned char*)(p->Payload + sizeof(Rect));
-
-				if (tjDecompressHeader2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
-					SL_RAT_LOG(Logging_Levels::ERROR_log_level, "tjDecompressHeader2 " << tjGetErrorStr());
+				if (dif) {
+					_IClientDriver->OnReceive_ImageDif(imgrect, imgbacking);
 				}
-				auto img = Image::CreateImage(outheight, outwidth);
-
-				if (tjDecompress2(_jpegDecompressor.get(), src, static_cast<unsigned long>(p->Payload_Length - sizeof(Rect)), (unsigned char*)img->data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
+				else {
+					_IClientDriver->OnReceive_Image(imgrect, imgbacking);
 				}
-				_IClientDriver->OnReceive_Image(img);
-*/
-
-
 			}
 			void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
 
@@ -124,10 +91,10 @@ namespace SL {
 				auto p = *reinterpret_cast<const PACKET_TYPES*>(data);
 				switch (p) {
 				case PACKET_TYPES::SCREENIMAGE :
-					ScreenImage(socket, data + sizeof(p), len-sizeof(p));
+					ScreenImage(socket, data + sizeof(p), len-sizeof(p), false);
 					break;
 				case PACKET_TYPES::SCREENIMAGEDIF:
-					ScreenImageDif(socket, data + sizeof(p), len - sizeof(p));
+					ScreenImage(socket, data + sizeof(p), len - sizeof(p), true);
 					break;
 				case PACKET_TYPES::MOUSEIMAGE :
 					MouseImage(socket, data + sizeof(p), len - sizeof(p));
@@ -153,22 +120,29 @@ namespace SL {
 				}
 				if (_Socket->is_loopback()) return;//dont send mouse info to ourselfs as this will cause a loop
 				//do checks to prevent sending redundant mouse information about its position
-				if (m.EventData == NO_EVENTDATA && _LastMousePosition == m.Pos && m.PressData == Input::Mouse::NO_PRESS_DATA && m.ScrollDelta == 0) {
+				if (m.EventData == NO_EVENTDATA && _LastMousePosition == m.Pos && m.PressData == NO_PRESS_DATA && m.ScrollDelta == 0) {
 					return;//already did this event
 				}
 				_LastMousePosition = m.Pos;
-				Packet p(static_cast<unsigned int>(PACKET_TYPES::MOUSEEVENT), sizeof(m));
-				memcpy(p.Payload, &m, sizeof(m));
-				_Socket->send(p);
+				auto ptype = PACKET_TYPES::MOUSEEVENT;
+				auto size = sizeof(ptype) + sizeof(m);
+				auto ptr(std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; }));
+				*reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
+				memcpy(ptr.get() + sizeof(ptype), &m, sizeof(m));
+				_Socket->send(ptr, size);
 			}
 			void SendKey(const KeyEvent & m) {
 				if (!_Socket) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
 					return;
 				}
-				Packet p(static_cast<unsigned int>(PACKET_TYPES::KEYEVENT), sizeof(m));
-				memcpy(p.Payload, &m, sizeof(m));
-				_Socket->send(p);
+				auto ptype = PACKET_TYPES::KEYEVENT;
+				auto size = sizeof(ptype) + sizeof(m);
+				auto ptr(std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; }));
+				*reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
+				memcpy(ptr.get() + sizeof(ptype), &m, sizeof(m));
+				_Socket->send(ptr, size);
+
 			}
 			void SendClipboardText(const char* data, unsigned int len) {
 				if (!_Socket) {
@@ -176,8 +150,14 @@ namespace SL {
 					return;
 				}
 				if (_Socket->is_loopback()) return;//dont send clipboard info to ourselfs as it will cause a loop
-				Packet p(static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT), len, (char*)data, false);
-				_Socket->send(p);
+			
+				auto ptype = PACKET_TYPES::CLIPBOARDTEXTEVENT;
+				auto size = sizeof(ptype) + len;
+				auto ptr(std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; }));
+				*reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
+				memcpy(ptr.get() + sizeof(ptype), data, len);
+				_Socket->send(ptr, size);
+
 			}
 			std::shared_ptr<ISocket> get_Socket()const {
 				return _Socket;
@@ -188,39 +168,39 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, std::shared_ptr<Client_Config> config, const char * dst_host) 
+SL::RAT::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, std::shared_ptr<Client_Config> config, const char * dst_host) 
 	: _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r, config, dst_host))
 {
 
 }
 
-SL::Remote_Access_Library::ClientNetworkDriver::~ClientNetworkDriver()
+SL::RAT::ClientNetworkDriver::~ClientNetworkDriver()
 {
 	Stop();
 	delete _ClientNetworkDriverImpl;
 }
 
-void SL::Remote_Access_Library::ClientNetworkDriver::Start()
+void SL::RAT::ClientNetworkDriver::Start()
 {
 	_ClientNetworkDriverImpl->Start();
 }
 
-void SL::Remote_Access_Library::ClientNetworkDriver::Stop()
+void SL::RAT::ClientNetworkDriver::Stop()
 {
 	_ClientNetworkDriverImpl->Stop();
 }
 
-void SL::Remote_Access_Library::ClientNetworkDriver::SendKey(const KeyEvent & m)
+void SL::RAT::ClientNetworkDriver::SendKey(const KeyEvent & m)
 {
 	_ClientNetworkDriverImpl->SendKey(m);
 }
 
-void SL::Remote_Access_Library::ClientNetworkDriver::SendMouse(const MouseEvent& m)
+void SL::RAT::ClientNetworkDriver::SendMouse(const MouseEvent& m)
 {
 	_ClientNetworkDriverImpl->SendMouse(m);
 }
 
 
-void SL::Remote_Access_Library::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
+void SL::RAT::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
 	return _ClientNetworkDriverImpl->SendClipboardText(data, len);
 }

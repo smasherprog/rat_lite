@@ -4,7 +4,7 @@
 #include "Logging.h"
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class InMemoryCryptoLoaderImpl {
 		public:
 			InMemoryCryptoLoaderImpl(const char* data, size_t size) {

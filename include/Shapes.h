@@ -5,7 +5,7 @@
 #include <iostream>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class Point {
 		public:
@@ -14,6 +14,7 @@ namespace SL {
 			Point(int x, int y) :X(x), Y(y) {}
 			int X, Y;
 		};
+		typedef Point Size;
 		class Rect {
 
 		public:

@@ -29,7 +29,7 @@ void check_range(const std::string& name, T& value, const T& min, const T& max)
 
 int main(int argc, char* argv[]) {
 
-	auto config = std::make_shared<SL::Remote_Access_Library::Server_Config>();
+	auto config = std::make_shared<SL::RAT::Server_Config>();
 
 	config->WebSocketTLSLPort = 6001;// listen for websockets
 	config->HttpTLSPort = 8080;
@@ -82,13 +82,13 @@ int main(int argc, char* argv[]) {
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
 	//in debug mode allow usage of pre-made certs. DO NOT USE IN PRODUCTION!!!
 	if (private_key_path.empty() || config->PasswordToPrivateKey.empty() || public_cert_path.empty()) {
-		config->Private_Key = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::InMemoryCryptoLoader(SL::Remote_Access_Library::private_key, sizeof(SL::Remote_Access_Library::private_key)));
-		config->PasswordToPrivateKey = SL::Remote_Access_Library::private_key_password;
-		config->Public_Certficate = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::InMemoryCryptoLoader(SL::Remote_Access_Library::public_cert, sizeof(SL::Remote_Access_Library::public_cert)));
+		config->Private_Key = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::InMemoryCryptoLoader(SL::RAT::private_key, sizeof(SL::RAT::private_key)));
+		config->PasswordToPrivateKey = SL::RAT::private_key_password;
+		config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::InMemoryCryptoLoader(SL::RAT::public_cert, sizeof(SL::RAT::public_cert)));
 	}
 	else if (!private_key_path.empty() && !config->PasswordToPrivateKey.empty() && !public_cert_path.empty()) {
-		config->Private_Key = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::FileCryptoLoader(private_key_path));
-		config->Public_Certficate = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::FileCryptoLoader(public_cert_path));
+		config->Private_Key = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(private_key_path));
+		config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
 	}
 	else {
 		std::cout << desc << "\n";
@@ -96,15 +96,15 @@ int main(int argc, char* argv[]) {
 	}
 
 #else 
-	config->Private_Key = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::FileCryptoLoader(private_key_path));
-	config->Public_Certficate = std::shared_ptr<SL::Remote_Access_Library::ICryptoLoader>(new SL::Remote_Access_Library::FileCryptoLoader(public_cert_path));
+	config->Private_Key = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(private_key_path));
+	config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
 #endif
 
 
-	SL::Remote_Access_Library::Server serv;
+	SL::RAT::Server serv;
 	serv.Start(config);
 
-	while (serv.get_Status() != SL::Remote_Access_Library::Server_Status::SERVER_STOPPED) {
+	while (serv.get_Status() != SL::RAT::Server_Status::SERVER_STOPPED) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
 	return 0;

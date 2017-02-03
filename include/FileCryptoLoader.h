@@ -3,7 +3,7 @@
 #include "ICryptoLoader.h"
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class FileCryptoLoaderImpl;
 		class FileCryptoLoader : public ICryptoLoader {
 			FileCryptoLoaderImpl* _FileCryptoLoaderImpl;

@@ -2,14 +2,10 @@
 
 #include <thread>
 #include <string.h>
-
 #include <assert.h>
 #include "ScreenCapture.h"
-#include "Input.h"
 #include "ServerNetworkDriver.h"
-
 #include "IServerDriver.h"
-#include "Logging.h"
 #include "Configs.h"
 
 
@@ -19,7 +15,7 @@
 
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class ServerImpl : public IServerDriver {
 		public:

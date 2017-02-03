@@ -27,7 +27,7 @@
 
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class ViewerControllerImpl : public Fl_Double_Window, IClientDriver {
 		public:
@@ -174,14 +174,14 @@ namespace SL {
 			}
 
 
-			virtual void OnReceive_Image(std::shared_ptr<Screen_Capture::Image>& img) override
+			virtual void OnReceive_Image(const Rect* rect, std::shared_ptr<char>& data) override
 			{
-				_ImageControl->set_ScreenImage(img);
+				_ImageControl->set_ScreenImage(rect, data);
 				Fl::awake(awakenredraw, this);
 			}
 
-			virtual void OnReceive_ImageDif(Point pos, std::shared_ptr<Screen_Capture::Image>& img) override {
-				_ImageControl->set_ImageDifference(pos, img);
+			virtual void OnReceive_ImageDif(const Rect* rect, std::shared_ptr<char>& data) override {
+				_ImageControl->set_ImageDifference(rect, data);
 				Fl::awake(awakenredraw, this);
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 					_NetworkStatsTimer = std::chrono::steady_clock::now();
@@ -199,11 +199,11 @@ namespace SL {
 				}
 
 			}
-			virtual void OnReceive_MouseImage(Screen_Capture::Image& img)override {
-				_ImageControl->set_MouseImage(img);
+			virtual void OnReceive_MouseImage(const Size* rect, const char* data)override {
+				_ImageControl->set_MouseImage(rect, data);
 			}
 
-			virtual void OnReceive_MousePos(Point* pos)override {
+			virtual void OnReceive_MousePos(const Point* pos)override {
 				_ImageControl->set_MousePosition(pos);
 			}
 			virtual void  OnReceive_ClipboardText(const char* data, unsigned int len) override {
@@ -216,12 +216,12 @@ namespace SL {
 }
 
 
-SL::Remote_Access_Library::ViewerController::ViewerController(std::shared_ptr<Client_Config> config, const char * dst_host) {
+SL::RAT::ViewerController::ViewerController(std::shared_ptr<Client_Config> config, const char * dst_host) {
 
 	_ViewerControllerImpl = new ViewerControllerImpl(config, dst_host);
 	_ViewerControllerImpl->_ClientNetworkDriver.Start();
 }
 
-SL::Remote_Access_Library::ViewerController::~ViewerController() {
+SL::RAT::ViewerController::~ViewerController() {
 
 }

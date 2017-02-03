@@ -2,7 +2,7 @@
 #include <memory>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class ISocket;
 		class INetworkHandlers {
 		public:

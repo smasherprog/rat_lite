@@ -6,7 +6,7 @@
 #include "Logging.h"
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class FileCryptoLoaderImpl {
 		public:
 			FileCryptoLoaderImpl(const std::string& filepath) :FilePath(filepath) {}

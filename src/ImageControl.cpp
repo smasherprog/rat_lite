@@ -1,8 +1,8 @@
 #include "ImageControl.h"
-#include "ScreenCapture.h"
 #include "Logging.h"
 #include "Shapes.h"
 #include "Input.h"
+#include "Image.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
@@ -17,7 +17,7 @@
 #include <memory>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
 			std::stringstream ss(s);
@@ -34,13 +34,31 @@ namespace SL {
 			return elems;
 		}
 
+		std::shared_ptr<char> Resize(const std::shared_ptr<char>& inimg, int inheight, int inwidth, int dstheight, int dstwidth)
+		{//linear scaling
+			auto m_width = dstwidth;
+			auto m_height = dstheight;
+			auto outimg = std::shared_ptr<char>(new char[m_width*m_height*PixelStride], [](char* ptr) {delete[] ptr; });
+			auto temp = (int*)outimg.get();
+			auto pixels = (int*)inimg.get();
+			double x_ratio = inwidth / (double)m_width;
+			double y_ratio = inheight / (double)m_height;
+			double px, py;
+			for (int i = 0; i < m_height; i++) {
+				for (int j = 0; j < m_width; j++) {
+					px = floor(j*x_ratio);
+					py = floor(i*y_ratio);
+					temp[(i*m_width) + j] = pixels[(int)((py*inwidth) + px)];
+				}
+			}
+			return outimg;
+		}
+
+
 		class ScreenImageImpl {
 		public:
-			std::shared_ptr<Screen_Capture::Image> _OriginalImage;//this is the original image, kept to resize the scaled if needed
-			Point _OriginalImageSize;//helper to avoid locking where its not needed
-
-			std::shared_ptr<Screen_Capture::Image> _ScaledImage;
-			Point _ScaledImageSize;//helper to avoid locking where its not needed
+			Image _OriginalImage;//this is the original image, kept to resize the scaled if needed
+			Image _ScaledImage;
 
 			std::mutex _ImageLock;
 
@@ -48,7 +66,7 @@ namespace SL {
 			ScreenImageInfo _ScreenImageInfo;
 
 			Point _MousePos;
-			std::shared_ptr<Screen_Capture::Image> _MouseImageData;
+			std::shared_ptr<Image> _MouseImageData;
 			std::unique_ptr<Fl_RGB_Image> _MouseImage;
 
 			ScreenImageImpl(ScreenImageInfo&& info) : _ScaleFactor(1.0f), _ScreenImageInfo(info) {}
@@ -57,8 +75,7 @@ namespace SL {
 				return !(_ScaleFactor >= .999f && _ScaleFactor <= 1.001f);
 			}
 			Point get_UnscaledImageSize() const {
-				if (_OriginalImage) return _OriginalImageSize;
-				return Point(0, 0);
+				return Point(_OriginalImage.Rect.Width, _OriginalImage.Rect.Height);
 			}
 			void set_ScaleFactor(float factor) {
 				_ScaleFactor = factor;
@@ -67,26 +84,32 @@ namespace SL {
 			float get_ScaleFactor() const {
 				return _ScaleFactor;
 			}
-			void set_ScreenImage(std::shared_ptr<Screen_Capture::Image>& img) {
-				/*auto tmp = Image::CreateImage(img->Height(), img->Width(), img->data(), 4);
+			void set_ScreenImage(const Rect* rect, std::shared_ptr<char>& data) {
+				auto size = rect->Width*rect->Height*PixelStride;
+				Image original;
+				original.Rect = *rect;
+				original.Data = std::shared_ptr<char>(new char[size], [](char* ptr) {delete[] ptr; });
+				memcpy(original.Data.get(), data.get(), size);
+
+				Image scaled;
+				scaled.Rect = *rect;
+				scaled.Data = data;
 				{
 					std::lock_guard<std::mutex> lock(_ImageLock);
-					_OriginalImageSize = Point(img->Width(), img->Height());
-					_OriginalImage = img;
-					_ScaledImageSize = Point(img->Width(), img->Height());
-					_ScaledImage = tmp;
-				}*/
+					_OriginalImage = original;
+					_ScaledImage = scaled;
+				}
 			}
 			void Draw(int x, int y) {
-				/*		if (_ScaledImage) {
-							std::lock_guard<std::mutex> lock(_ImageLock);
-							if (_ScaledImage) {
-								fl_draw_image((uchar*)_ScaledImage->data(), x, y, _ScaledImage->Width(), _ScaledImage->Height(), 4);
-								if (_MouseImage) _MouseImage->draw(_MousePos.X, _MousePos.Y);
-							}
-						}*/
+				if (_ScaledImage.Data) {
+					std::lock_guard<std::mutex> lock(_ImageLock);
+					if (_ScaledImage.Data) {
+						fl_draw_image((uchar*)_ScaledImage.Data.get(), x, y, _ScaledImage.Rect.Width, _ScaledImage.Rect.Height, 4);
+						if (_MouseImage) _MouseImage->draw(_MousePos.X, _MousePos.Y);
+					}
+				}
 			}
-			void set_ImageDifference(Point& pos, const std::shared_ptr<Screen_Capture::Image>& img) {
+			void set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data) {
 
 				//if (_OriginalImage) {
 
@@ -124,11 +147,11 @@ namespace SL {
 				//	}
 				//}
 			}
-			void set_MouseImage(std::shared_ptr<Screen_Capture::Image>& img) {
-				_MouseImageData = img;
-				//				_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
+			void set_MouseImage(const Size* size, const char* data) {
+				//_MouseImageData = img;
+			//	_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
 			}
-			void set_MousePosition(Point* pos) {
+			void set_MousePosition(const Point* pos) {
 				_MousePos = *pos;
 				if (is_ImageScaled()) {//need to scale the mouse pos as well
 
@@ -137,37 +160,32 @@ namespace SL {
 				}
 			}
 			bool Update(int& width, int& height) {
-				//if (!_ScaledImage) return false;
-
-				////make sure the image is scaled properly
-				//if (is_ImageScaled()) {
-				//	auto psize = _ScreenImageInfo.get_Height();
-				//	if (psize != _ScaledImageSize.Y) {//rescale the image
-				//		{
-				//			std::lock_guard<std::mutex> lock(_ImageLock);
-				//			_ScaledImage = Image::Resize(_OriginalImage, psize, static_cast<int>(_ScaleFactor*_OriginalImage->Width()));
-				//			_ScaledImageSize = Point(_ScaledImage->Width(), _ScaledImage->Height());
-				//		}
-				//		width = _ScaledImage->Width();
-				//		height = _ScaledImage->Height();
-				//		return true;
-				//	}
-				//}
-				//else {//NO SCALING!!
-				//	if (_ScaledImageSize.X != _OriginalImageSize.X || _ScaledImageSize.Y != _OriginalImageSize.Y) {
-				//		{
-				//			std::lock_guard<std::mutex> lock(_ImageLock);
-				//			_ScaledImage = Image::CreateImage(_OriginalImage->Height(), _OriginalImage->Width(), _OriginalImage->data(), 4);
-				//			_ScaledImageSize = Point(_ScaledImage->Width(), _ScaledImage->Height());
-				//		}
-				//		width = _ScaledImage->Width();
-				//		height = _ScaledImage->Height();
-				//		return true;
-				//	}
-				//}
-				//width = _ScaledImage->Width();
-				//height = _ScaledImage->Height();
-				return false;//no changes
+				if (!_ScaledImage.Data) return false;
+				auto ret = false;
+				//make sure the image is scaled properly
+				if (is_ImageScaled()) {
+					auto psize = _ScreenImageInfo.get_Height();
+					if (psize != _ScaledImage.Rect.Height) {//rescale the image
+						std::lock_guard<std::mutex> lock(_ImageLock);
+						_ScaledImage.Rect = Rect(Point(0, 0), psize, static_cast<int>(_ScaleFactor* _OriginalImage.Rect.Height));
+						_ScaledImage.Data = Resize(_OriginalImage.Data, _OriginalImage.Rect.Height, _OriginalImage.Rect.Width, _ScaledImage.Rect.Height, _ScaledImage.Rect.Width);
+						ret = true;
+					}
+				}
+				else {//NO SCALING!!
+					if (_ScaledImage.Rect.Width != _OriginalImage.Rect.Width || _ScaledImage.Rect.Height != _OriginalImage.Rect.Width) {
+						std::lock_guard<std::mutex> lock(_ImageLock);
+						auto size = _OriginalImage.Rect.Height*_OriginalImage.Rect.Width*PixelStride;
+					
+						_ScaledImage.Rect = _OriginalImage.Rect;
+						_ScaledImage.Data = std::shared_ptr<char>(new char[size], [](char* ptr) {delete[] ptr; });
+						memcpy(_ScaledImage.Data.get(), _OriginalImage.Data.get(), size);
+						ret = true;
+					}
+				}
+				width = _ScaledImage.Rect.Width;
+				height = _ScaledImage.Rect.Height;
+				return ret;//no changes
 			}
 		};
 
@@ -267,43 +285,41 @@ namespace SL {
 
 	}
 }
-
-
-SL::Remote_Access_Library::ImageControl::ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) {
+SL::RAT::ImageControl::ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) {
 	_ImageControlImpl = new ImageControlImpl(X, Y, W, H, title, std::forward<ScreenImageInfo>(info));
 }
 
-SL::Remote_Access_Library::ImageControl::~ImageControl() {
+SL::RAT::ImageControl::~ImageControl() {
 	delete _ImageControlImpl;
 }
 
-void SL::Remote_Access_Library::ImageControl::OnResize(int W, int H, int SS)
+void SL::RAT::ImageControl::OnResize(int W, int H, int SS)
 {
 	_ImageControlImpl->OnResize(W, H, SS);
 }
 
-bool SL::Remote_Access_Library::ImageControl::is_ImageScaled() const
+bool SL::RAT::ImageControl::is_ImageScaled() const
 {
 	return _ImageControlImpl->_ScreenImageDriver.is_ImageScaled();
 }
 
-void SL::Remote_Access_Library::ImageControl::set_ScreenImage(std::shared_ptr<Screen_Capture::Image>& img)
+void SL::RAT::ImageControl::set_ScreenImage(const Rect* rect, std::shared_ptr<char>& data)
 {
-	_ImageControlImpl->size(Width(*img), Height(*img));
-	_ImageControlImpl->_ScreenImageDriver.set_ScreenImage(img);
+	_ImageControlImpl->size(rect->Width, rect->Height);
+	_ImageControlImpl->_ScreenImageDriver.set_ScreenImage(rect, data);
 }
 
-void SL::Remote_Access_Library::ImageControl::set_ImageDifference(Point & pos, const std::shared_ptr<Screen_Capture::Image>& img)
+void SL::RAT::ImageControl::set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data)
 {
-	_ImageControlImpl->_ScreenImageDriver.set_ImageDifference(pos, img);
+	_ImageControlImpl->_ScreenImageDriver.set_ImageDifference(rect, data);
 }
 
-void SL::Remote_Access_Library::ImageControl::set_MouseImage(std::shared_ptr<Screen_Capture::Image>& img)
+void SL::RAT::ImageControl::set_MouseImage(const Size* size, const char* data)
 {
-	_ImageControlImpl->_ScreenImageDriver.set_MouseImage(img);
+	_ImageControlImpl->_ScreenImageDriver.set_MouseImage(size, data);
 }
 
-void SL::Remote_Access_Library::ImageControl::set_MousePosition(Point * pos)
+void SL::RAT::ImageControl::set_MousePosition(const Point* pos)
 {
 	_ImageControlImpl->_ScreenImageDriver.set_MousePosition(pos);
 }

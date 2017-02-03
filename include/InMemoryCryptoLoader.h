@@ -2,7 +2,7 @@
 #include "ICryptoLoader.h"
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class InMemoryCryptoLoaderImpl;
 		class InMemoryCryptoLoader : public ICryptoLoader {
 			InMemoryCryptoLoaderImpl* _InMemoryCryptoLoaderImpl;

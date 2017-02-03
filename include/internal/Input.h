@@ -2,7 +2,7 @@
 #include "Shapes.h"
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		enum Specials : unsigned int {
 			NO_SPECIAL_DATA,

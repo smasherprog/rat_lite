@@ -3,7 +3,7 @@
 
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 		class ClipboardImpl;
 		class Clipboard {
 			ClipboardImpl* _ClipboardImpl = nullptr;

@@ -2,7 +2,7 @@
 #include "INetworkHandlers.h"
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		struct MouseEvent;
 		struct KeyEvent;

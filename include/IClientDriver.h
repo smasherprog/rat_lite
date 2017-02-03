@@ -2,10 +2,7 @@
 #include "INetworkHandlers.h"
 
 namespace SL {
-	namespace Screen_Capture{
-		struct Image;
-	}
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class Point;
 		class ISocket;
@@ -13,10 +10,10 @@ namespace SL {
 		public:
 
 			virtual ~IClientDriver() {}
-			virtual void OnReceive_ImageDif(Point pos, Screen_Capture::Image& img) = 0;
-			virtual void OnReceive_Image(Screen_Capture::Image& img) = 0;
-			virtual void OnReceive_MouseImage(Screen_Capture::Image& img) = 0;
-			virtual void OnReceive_MousePos(Point* pos) = 0;
+			virtual void OnReceive_ImageDif(const Rect* rect, std::shared_ptr<char>& data) = 0;
+			virtual void OnReceive_Image(const Rect* rect, std::shared_ptr<char>& data) = 0;
+			virtual void OnReceive_MouseImage(const Size* rect, const char* data) = 0;
+			virtual void OnReceive_MousePos(const Point* pos) = 0;
 			virtual void OnReceive_ClipboardText(const char* data, unsigned int len) = 0;
 
 		};

@@ -16,7 +16,7 @@
 #include <array>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class ServerNetworkDriverImpl {
 

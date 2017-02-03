@@ -18,7 +18,7 @@
 
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		class WSSocketImpl : public ISocket, public std::enable_shared_from_this<WSSocketImpl> {
 		private:

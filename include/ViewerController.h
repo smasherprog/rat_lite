@@ -2,7 +2,7 @@
 #include <memory>
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		struct Client_Config;
 		class ViewerControllerImpl;

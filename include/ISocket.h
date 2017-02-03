@@ -12,7 +12,7 @@
 #endif
 
 namespace SL {
-	namespace Remote_Access_Library {
+	namespace RAT {
 
 		enum class PACKET_TYPES : unsigned int {
 			INVALID,

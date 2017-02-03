@@ -199,7 +199,7 @@ namespace SL {
 				}
 
 			}
-			virtual void OnReceive_MouseImage(std::shared_ptr<Screen_Capture::Image>& img)override {
+			virtual void OnReceive_MouseImage(Screen_Capture::Image& img)override {
 				_ImageControl->set_MouseImage(img);
 			}
 

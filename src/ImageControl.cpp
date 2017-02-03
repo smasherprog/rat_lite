@@ -78,13 +78,13 @@ namespace SL {
 				}*/
 			}
 			void Draw(int x, int y) {
-		/*		if (_ScaledImage) {
-					std::lock_guard<std::mutex> lock(_ImageLock);
-					if (_ScaledImage) {
-						fl_draw_image((uchar*)_ScaledImage->data(), x, y, _ScaledImage->Width(), _ScaledImage->Height(), 4);
-						if (_MouseImage) _MouseImage->draw(_MousePos.X, _MousePos.Y);
-					}
-				}*/
+				/*		if (_ScaledImage) {
+							std::lock_guard<std::mutex> lock(_ImageLock);
+							if (_ScaledImage) {
+								fl_draw_image((uchar*)_ScaledImage->data(), x, y, _ScaledImage->Width(), _ScaledImage->Height(), 4);
+								if (_MouseImage) _MouseImage->draw(_MousePos.X, _MousePos.Y);
+							}
+						}*/
 			}
 			void set_ImageDifference(Point& pos, const std::shared_ptr<Screen_Capture::Image>& img) {
 
@@ -126,7 +126,7 @@ namespace SL {
 			}
 			void set_MouseImage(std::shared_ptr<Screen_Capture::Image>& img) {
 				_MouseImageData = img;
-//				_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
+				//				_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
 			}
 			void set_MousePosition(Point* pos) {
 				_MousePos = *pos;
@@ -279,32 +279,31 @@ SL::Remote_Access_Library::ImageControl::~ImageControl() {
 
 void SL::Remote_Access_Library::ImageControl::OnResize(int W, int H, int SS)
 {
-	//_ImageControlImpl->OnResize(W, H, SS);
+	_ImageControlImpl->OnResize(W, H, SS);
 }
 
 bool SL::Remote_Access_Library::ImageControl::is_ImageScaled() const
 {
-	//return _ImageControlImpl->_ScreenImageDriver.is_ImageScaled();
-	return true;
+	return _ImageControlImpl->_ScreenImageDriver.is_ImageScaled();
 }
 
 void SL::Remote_Access_Library::ImageControl::set_ScreenImage(std::shared_ptr<Screen_Capture::Image>& img)
 {
-	//_ImageControlImpl->size(Width(*img), Height(*img));
-	//return _ImageControlImpl->_ScreenImageDriver.set_ScreenImage(img);
+	_ImageControlImpl->size(Width(*img), Height(*img));
+	_ImageControlImpl->_ScreenImageDriver.set_ScreenImage(img);
 }
 
 void SL::Remote_Access_Library::ImageControl::set_ImageDifference(Point & pos, const std::shared_ptr<Screen_Capture::Image>& img)
 {
-	//return _ImageControlImpl->_ScreenImageDriver.set_ImageDifference(pos, img);
+	_ImageControlImpl->_ScreenImageDriver.set_ImageDifference(pos, img);
 }
 
 void SL::Remote_Access_Library::ImageControl::set_MouseImage(std::shared_ptr<Screen_Capture::Image>& img)
 {
-	//return _ImageControlImpl->_ScreenImageDriver.set_MouseImage(img);
+	_ImageControlImpl->_ScreenImageDriver.set_MouseImage(img);
 }
 
 void SL::Remote_Access_Library::ImageControl::set_MousePosition(Point * pos)
 {
-	//return _ImageControlImpl->_ScreenImageDriver.set_MousePosition(pos);
+	_ImageControlImpl->_ScreenImageDriver.set_MousePosition(pos);
 }

@@ -94,5 +94,9 @@ dHEcfRl35ANQC0j95KsdzTw/Cg==
 		const std::string private_key_password = "Test pass";
 
 #endif
+
+		std::shared_ptr<ICryptoLoader> LoadFromFile(const std::string& file);
+		std::shared_ptr<ICryptoLoader> LoadFromMemory(const char* data, size_t size);
+		void Connect(Client_Config* config, INetworkHandlers* driver, const char* host);
 	}
 }

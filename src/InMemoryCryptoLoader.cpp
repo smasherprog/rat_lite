@@ -1,4 +1,4 @@
-#include "InMemoryCryptoLoader.h"
+#include "RAT.h"
 #include <vector>
 #include <assert.h>
 #include "Logging.h"
@@ -27,25 +27,8 @@ namespace SL {
 			std::vector<char> Data;
 
 		};
-		InMemoryCryptoLoader::InMemoryCryptoLoader(const char* data, size_t size)
-		{
-			_InMemoryCryptoLoaderImpl = new InMemoryCryptoLoaderImpl(data, size);
-		}
-
-		InMemoryCryptoLoader::~InMemoryCryptoLoader()
-		{
-
-			delete _InMemoryCryptoLoaderImpl;
-		}
-
-		const char* InMemoryCryptoLoader::get_buffer()
-		{
-			return _InMemoryCryptoLoaderImpl->get_buffer();
-		}
-
-		size_t InMemoryCryptoLoader::get_size()
-		{
-			return _InMemoryCryptoLoaderImpl->get_size();
+		std::shared_ptr<ICryptoLoader> LoadFromMemory(const char* data, size_t size) {
+			return std::shared_ptr<ICryptoLoader>(new InMemoryCryptoLoaderImpl(data, size));
 		}
 	}
 }

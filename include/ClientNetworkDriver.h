@@ -6,11 +6,9 @@ namespace SL {
 
 		struct MouseEvent;
 		struct KeyEvent;
-
 		class IClientDriver;
 		class ClientNetworkDriverImpl;
 		struct Client_Config;
-		class ISocket;
 		class ClientNetworkDriver {
 			ClientNetworkDriverImpl* _ClientNetworkDriverImpl;
 

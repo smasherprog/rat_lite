@@ -1,4 +1,4 @@
-#include "FileCryptoLoader.h"
+#include "RAT.h"
 #include <string>
 #include <vector>
 #include <fstream>
@@ -43,26 +43,8 @@ namespace SL {
 			std::string FilePath;
 
 		};
-
-		FileCryptoLoader::FileCryptoLoader(const std::string& filepath)
-		{
-			_FileCryptoLoaderImpl = new FileCryptoLoaderImpl(filepath);
-		}
-
-		FileCryptoLoader::~FileCryptoLoader()
-		{
-
-			delete _FileCryptoLoaderImpl;
-		}
-
-		const char* FileCryptoLoader::get_buffer()
-		{
-			return _FileCryptoLoaderImpl->get_buffer();
-		}
-
-		size_t FileCryptoLoader::get_size()
-		{
-			return _FileCryptoLoaderImpl->get_size();
+		std::shared_ptr<ICryptoLoader> LoadFromFile(const std::string& file) {
+			return std::shared_ptr<ICryptoLoader>(new FileCryptoLoaderImpl(file));
 		}
 	}
 }

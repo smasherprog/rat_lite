@@ -62,14 +62,14 @@ namespace SL {
 					switch (pactype) {
 					case PACKET_TYPES::MOUSEEVENT:
 						assert(length == sizeof(MouseEvent));
-						_IServerDriver->OnReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
+						_IServerDriver->onReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
 						break;
 					case PACKET_TYPES::KEYEVENT:
 						assert(length == sizeof(KeyEvent));
-						_IServerDriver->OnReceive_Key(reinterpret_cast<const KeyEvent*>(message));
+						_IServerDriver->onReceive_Key(reinterpret_cast<const KeyEvent*>(message));
 						break;
 					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-						_IServerDriver->OnReceive_ClipboardText(message, length);
+						_IServerDriver->onReceive_ClipboardText(message, length);
 						break;
 					default:
 						_IServerDriver->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));

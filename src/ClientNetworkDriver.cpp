@@ -3,6 +3,7 @@
 #include "Image.h"
 #include "IClientDriver.h"
 #include "turbojpeg.h"
+#include "Input.h"
 #include <assert.h>
 
 namespace SL {
@@ -19,12 +20,12 @@ namespace SL {
 			void MouseImage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
 				auto imgrect = reinterpret_cast<const Size*>(data);
 				assert(len == sizeof(Size) + (imgrect->X * imgrect->Y*PixelStride));
-				_IClientDriver->OnReceive_MouseImage(imgrect, data + sizeof(Size));
+				_IClientDriver->onReceive_MouseImage(imgrect, data + sizeof(Size));
 			}
 
 			void MousePos(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
 				assert(len == sizeof(Point));
-				_IClientDriver->OnReceive_MousePos((Point*)data);
+				_IClientDriver->onReceive_MousePos((Point*)data);
 			}
 			void ScreenImage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len, bool dif) {
 				auto imgrect = reinterpret_cast<const Rect*>(data);
@@ -44,15 +45,15 @@ namespace SL {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
 				if (dif) {
-					_IClientDriver->OnReceive_ImageDif(imgrect, imgbacking);
+					_IClientDriver->onReceive_ImageDif(imgrect, imgbacking);
 				}
 				else {
-					_IClientDriver->OnReceive_Image(imgrect, imgbacking);
+					_IClientDriver->onReceive_Image(imgrect, imgbacking);
 				}
 			}
 			void ClipboardTextEvent(const std::shared_ptr<ISocket>& socket, const char* data, size_t len) {
 
-				_IClientDriver->OnReceive_ClipboardText(data, len);
+				_IClientDriver->onReceive_ClipboardText(data, len);
 			}
 
 		public:

@@ -1,100 +1,75 @@
 #include "Clipboard.h"
 #include "Logging.h"
 
-#include <FL/Fl.H>
-#include <FL/Fl_Widget.H>
-
-#include <mutex>
-#include <vector>
-
 namespace SL {
 	namespace RAT {
-	
-			class ClipboardImpl : public Fl_Widget {
-			public:
-				const bool* Is_ClipboardShared;
-				std::function<void(const char*, int)> OnChange;
-				//contention on this mutex is low.. no need to try an optimize 
-				std::mutex LastClipDataLock;
-				std::vector<char> LastClipData;
-				ClipboardImpl(const bool* is_clipshared, std::function<void(const char*, int)>&& onchange) : Fl_Widget(0, 0, 0, 0), Is_ClipboardShared(is_clipshared), OnChange(std::move(onchange)) {
-					Fl::add_clipboard_notify(clip_callback, this);
-				}
-				virtual ~ClipboardImpl() {
-					Fl::remove_clipboard_notify(clip_callback);
-				}
-				virtual void draw() override {}//do nothing
-				virtual int handle(int event) override {
-					if (event == FL_PASTE) {
 
-						if (strcmp(Fl::event_clipboard_type(), Fl::clipboard_image) == 0) { // an image is being pasted
-							//To Be implemeneted...... Probably not though because images can be large and seems like its an edge case any way
-						}
-						else {//text is being pasted
-							bool emitclipevent = false;
-							auto data = Fl::event_text();
-							auto len = Fl::event_length();
-							{
-								std::lock_guard<std::mutex> lock(LastClipDataLock);
-								emitclipevent = !is_datasame(data, len);
-								if (emitclipevent) UpdateBuffer(data, len);
-							}
-							if (emitclipevent) {
-								OnChange(data, len);
-							}
-							
-						}
+		void clip_callback(int source, void *data) {
+			auto p = (Clipboard*)data;
 
-					}
-					return 1;
+			if (source == 1 && p->is_ClipboardShared()) {
+				SL_RAT_LOG(Logging_Levels::INFO_log_level, "Clipboard Changed!");
+				if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "Contains plain text");
+					Fl::paste(*p, 1, Fl::clipboard_plain_text);
 				}
+			}
+		}
+		//caller should lock the mutex to prevent races
+		bool is_datasame(const char* data, int len, std::vector<char>& lastclipdata) {
+			auto size = static_cast<size_t>(len);
+			if (size != lastclipdata.size()) return false;
+			if (memcmp(lastclipdata.data(), data, size) == 0) return true;
+			return false;
+		}
 
-				static void clip_callback(int source, void *data) {
-					auto p = (ClipboardImpl*)data;
+		Clipboard::Clipboard() : Fl_Widget(0, 0, 0, 0) {
+			sharedClipboard = false;
+			Fl::add_clipboard_notify(clip_callback, this);
+		}
+		Clipboard::~Clipboard() {
+			Fl::remove_clipboard_notify(clip_callback);
+		}
 
-					if (source == 1 && *(p->Is_ClipboardShared)) {
-						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Clipboard Changed!");
-						if (Fl::clipboard_contains(Fl::clipboard_plain_text)) {
-							SL_RAT_LOG(Logging_Levels::INFO_log_level, "Contains plain text");
-							Fl::paste(*p, 1, Fl::clipboard_plain_text);
-						}
-					}
+		int Clipboard::handle(int event) {
+			if (event == FL_PASTE) {
+
+				if (strcmp(Fl::event_clipboard_type(), Fl::clipboard_image) == 0) { // an image is being pasted
+					//To Be implemeneted...... Probably not though because images can be large and seems like its an edge case any way
 				}
-				//caller should lock the mutex to prevent races
-				bool is_datasame(const char* data, int len) {
-					auto size = static_cast<size_t>(len);
-					if (size != LastClipData.size()) return false;
-					if (memcmp(LastClipData.data(), data, size) == 0) return true;
-					return false;
-				}
-				//caller should lock the mutex to prevent races
-				void UpdateBuffer(const char* data, int len) {
-					auto size = static_cast<size_t>(len);
-					LastClipData.resize(size);
-					memcpy(LastClipData.data(), data, size);
-				}
-				void copy_to_clipboard(const char* data, int len) {
-					bool updateclipboard = false;
+				else {//text is being pasted
+					bool emitclipevent = false;
+					auto data = Fl::event_text();
+					auto len = Fl::event_length();
 					{
 						std::lock_guard<std::mutex> lock(LastClipDataLock);
-						updateclipboard = !is_datasame(data, len);
-						if (updateclipboard) UpdateBuffer(data, len);
+						emitclipevent = !is_datasame(data, len, LastClipData);
+						if (emitclipevent) {
+							LastClipData.resize(len);
+							memcpy(LastClipData.data(), data, len);
+						}
 					}
-					if (updateclipboard)  Fl::copy(data, static_cast<int>(len), 1);
-				}
-			};
-		
-	}
-}
-SL::RAT::Clipboard::Clipboard(const bool* is_clipshared, std::function<void(const char*, int)>&& onchange)
-{
-	_ClipboardImpl = new ClipboardImpl(is_clipshared, std::forward<std::function<void(const char*, int)>>(onchange));
-}
+					if (emitclipevent && ChangeCallback) {
+						ChangeCallback(data, len);
+					}
 
-SL::RAT::Clipboard::~Clipboard()
-{
-	delete _ClipboardImpl;
-}
-void SL::RAT::Clipboard::copy_to_clipboard(const char* data, int len) {
-	_ClipboardImpl->copy_to_clipboard(data, len);
+				}
+
+			}
+			return 1;
+		}
+	
+		void Clipboard::updateClipbard(const char* data, int len) {
+			bool updateclipboard = false;
+			{
+				std::lock_guard<std::mutex> lock(LastClipDataLock);
+				updateclipboard = !is_datasame(data, len, LastClipData);
+				if (updateclipboard) {
+					LastClipData.resize(len);
+					memcpy(LastClipData.data(), data, len);
+				}
+			}
+			if (updateclipboard)  Fl::copy(data, static_cast<int>(len), 1);
+		}
+	}
 }

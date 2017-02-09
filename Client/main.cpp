@@ -2,9 +2,7 @@
 #include <memory>
 #include <iostream>
 #include "ConnectWindow.h"
-#include "Configs.h"
-#include "InMemoryCryptoLoader.h"
-#include "FileCryptoLoader.h"
+#include "RAT.h"
 
 #if _WIN32
 //work around for now for boost on windows
@@ -58,10 +56,10 @@ int main(int argc, char* argv[]) {
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
 	//in debug mode allow usage of pre-made certs. DO NOT USE IN PRODUCTION!!!
 	if (public_cert_path.empty()) {
-		config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::InMemoryCryptoLoader(SL::RAT::public_cert, sizeof(SL::RAT::public_cert)));
+		config->Public_Certficate = SL::RAT::LoadFromMemory(SL::RAT::public_cert, sizeof(SL::RAT::public_cert));
 	}
 	else if (!public_cert_path.empty()) {
-			config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
+			config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
 	}
 	else {
 		std::cout << desc << "\n";

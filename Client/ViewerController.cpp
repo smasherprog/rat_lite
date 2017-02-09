@@ -1,17 +1,11 @@
 
 #include "ViewerController.h"
 #include "ImageControl.h"
-#include "Input.h"
-#include "Logging.h"
-#include "ImageControl.h"
-#include "Configs.h"
-#include "ISocket.h"
+#include "RAT.h"
 
-#include "IClientDriver.h"
 #include "ClientNetworkDriver.h"
 #include "Clipboard.h"
-#include "Shapes.h"
-#include "ScreenCapture.h"
+#include "IClientDriver.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -77,7 +71,9 @@ namespace SL {
 				resizable(this);
 				show();
 
-				_Clipboard = std::make_unique<Clipboard>(&config->Share_Clipboard, [&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
+				_Clipboard = std::make_unique<Clipboard>();
+				_Clipboard->shareClipboard(config->Share_Clipboard);
+				_Clipboard->onChange([&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
 
 			}
 			virtual ~ViewerControllerImpl() {
@@ -174,13 +170,13 @@ namespace SL {
 			}
 
 
-			virtual void OnReceive_Image(const Rect* rect, std::shared_ptr<char>& data) override
+			virtual void onReceive_Image(const Rect* rect, std::shared_ptr<char>& data) override
 			{
 				_ImageControl->set_ScreenImage(rect, data);
 				Fl::awake(awakenredraw, this);
 			}
 
-			virtual void OnReceive_ImageDif(const Rect* rect, std::shared_ptr<char>& data) override {
+			virtual void onReceive_ImageDif(const Rect* rect, std::shared_ptr<char>& data) override {
 				_ImageControl->set_ImageDifference(rect, data);
 				Fl::awake(awakenredraw, this);
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
@@ -199,15 +195,15 @@ namespace SL {
 				}
 
 			}
-			virtual void OnReceive_MouseImage(const Size* rect, const char* data)override {
+			virtual void onReceive_MouseImage(const Size* rect, const char* data)override {
 				_ImageControl->set_MouseImage(rect, data);
 			}
 
-			virtual void OnReceive_MousePos(const Point* pos)override {
+			virtual void onReceive_MousePos(const Point* pos)override {
 				_ImageControl->set_MousePosition(pos);
 			}
-			virtual void  OnReceive_ClipboardText(const char* data, unsigned int len) override {
-				_Clipboard->copy_to_clipboard(data, len);
+			virtual void  onReceive_ClipboardText(const char* data, unsigned int len) override {
+				_Clipboard->updateClipbard(data, len);
 			}
 
 

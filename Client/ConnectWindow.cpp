@@ -1,8 +1,6 @@
 #include "ConnectWindow.h"
-#include "Configs.h"
-#include "FileCryptoLoader.h"
-#include "InMemoryCryptoLoader.h"
 #include "ViewerController.h"
+#include "RAT.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -103,7 +101,7 @@ namespace SL {
 				auto action = chooser.show();
 				if (action == -1 || action == 1) return;//cancel was hit
 
-				p->_Config->Public_Certficate = std::static_pointer_cast<ICryptoLoader>(std::make_shared<FileCryptoLoader>(chooser.filename()));
+				p->_Config->Public_Certficate = SL::RAT::LoadFromFile(chooser.filename());
 			}
 			static void Menu_CB(Fl_Widget*w, void*data) {
 				UNUSED(w);

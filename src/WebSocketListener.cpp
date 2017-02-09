@@ -1,5 +1,5 @@
-#include "WebSocketListener.h"
-#include "WebSocket.h"
+#include "internal/WebSocketListener.h"
+#include "internal/WebSocket.h"
 #include "Configs.h"
 #include "Logging.h"
 #include "ICryptoLoader.h"
@@ -21,6 +21,10 @@ KGdva8BKIaE9fq2q0OaZpBWE7KtVdraF5+CnvEj4AJqxGgZ/OtP+Y3UPTIcjoIve
 f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 -----END DH PARAMETERS-----)";
 
+		std::string get_password(std::shared_ptr<Server_Config>& c)
+		{
+			return c->PasswordToPrivateKey;
+		}
 
 		WebSocketListener::WebSocketListener(std::shared_ptr<Server_Config>& c) :context_(boost::asio::ssl::context::tlsv11), acceptor_(ios_), work_(ios_), Server_Config_(c)
 		{
@@ -35,7 +39,7 @@ f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 				| boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3
 				| boost::asio::ssl::context::single_dh_use);
 			boost::system::error_code ec;
-			context_.set_password_callback([=]() { return Server_Config_->PasswordToPrivateKey;  }, ec);
+			context_.set_password_callback(bind(&get_password, c), ec);
 			if (ec) SL_RAT_LOG(Logging_Levels::ERROR_log_level, "set_password_callback error " << ec.message());
 			ec.clear();
 			boost::asio::const_buffer dhp(dhparams, sizeof(dhparams));
@@ -79,6 +83,7 @@ f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 			}
 
 		}
+	
 		void WebSocketListener::run() {
 			auto self(shared_from_this());
 			auto sock = std::make_shared<WebSocket>(context_, ios_);
@@ -106,7 +111,7 @@ f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 						SL_RAT_LOG(Logging_Levels::ERROR_log_level, "on_accept: " << ec.message());
 						return;
 					}
-					self->onConnection_(std::dynamic_pointer_cast<ISocket>(sock));
+					self->onConnection_(std::static_pointer_cast<ISocket>(sock));
 					sock->read();
 					self->run();
 

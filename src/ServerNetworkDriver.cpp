@@ -6,7 +6,7 @@
 #include "Input.h"
 #include "Logging.h"
 #include "ScreenCapture.h"
-#include "WebSocketListener.h"
+#include "internal/WebSocketListener.h"
 #include "ISocket.h"
 
 #include <atomic>

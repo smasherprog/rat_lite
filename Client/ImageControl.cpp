@@ -33,10 +33,7 @@ namespace SL {
 			split(s, delim, elems);
 			return elems;
 		}
-		std::shared_ptr<char> Resize(const std::shared_ptr<char>& inimg, int inheight, int inwidth, float scale)
-		{
-			return Resize(inimg, inheight, inwidth, static_cast<int>(ceil(static_cast<float>(inheight) * scale)), static_cast<int>(ceil(static_cast<float>(inwidth) * scale)));
-		}
+
 		std::shared_ptr<char> Resize(const std::shared_ptr<char>& inimg, int inheight, int inwidth, int dstheight, int dstwidth)
 		{//linear scaling
 			auto m_width = dstwidth;
@@ -56,6 +53,23 @@ namespace SL {
 			}
 			return outimg;
 		}
+		std::shared_ptr<char> Resize(const std::shared_ptr<char>& inimg, int* inheight, int* inwidth, float scale)
+		{
+			auto height = *inheight;
+			auto width = *inwidth;
+			*inheight = static_cast<int>(ceil(static_cast<float>(*inheight) * scale));
+			*inwidth = static_cast<int>(ceil(static_cast<float>(*inwidth) * scale));
+			return Resize(inimg, height, width, *inheight, *inwidth);
+		}
+		void Copy(Image& src, Rect src_rect, Image & dst, Rect dst_rect)
+		{
+			auto dst_start = (int*)dst.Data.get();
+			auto src_start = (int*)src.Data.get();
+			for (auto row = dst_rect.top(), src_row = 0; row < dst_rect.bottom(); row++, src_row++) {
+				memcpy(dst_start + (dst.Rect.Width * row) + dst_rect.left(), src_start + (src.Rect.Width*src_row) + src_rect.left(), src_rect.Width*PixelStride);
+			}
+		}
+
 
 
 		class ScreenImageImpl {
@@ -69,7 +83,7 @@ namespace SL {
 			ScreenImageInfo _ScreenImageInfo;
 
 			Point _MousePos;
-			std::shared_ptr<Image> _MouseImageData;
+			Image _MouseImageData;
 			std::unique_ptr<Fl_RGB_Image> _MouseImage;
 
 			ScreenImageImpl(ScreenImageInfo&& info) : _ScaleFactor(1.0f), _ScreenImageInfo(info) {}
@@ -113,46 +127,45 @@ namespace SL {
 				}
 			}
 			void set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data) {
+				if (!(_OriginalImage.Data && _ScaledImage.Data)) return;// both images should exist, if not then get out!
 
-				if (_OriginalImage.Data) {
+				Image nonscaled;
+				nonscaled.Rect = *rect;
+				nonscaled.Data = data;
 
-					auto difdst_rect = *rect;
-					auto difsrc_rect = Rect(Point(0, 0), rect->Height, rect->Width);
+				if (is_ImageScaled()) {//rescale the incoming image image
 
-					if (_ScaledImage.Data) {
-						if (is_ImageScaled() && _OriginalImage.Rect.Height != _ScaledImage.Rect.Height) {//rescale the incoming image image
+					Image scaledimg;
+					scaledimg.Rect = *rect;
+					scaledimg.Rect.Origin = Point();
+					scaledimg.Data = Resize(data, &scaledimg.Rect.Height, &scaledimg.Rect.Width, _ScaleFactor);
 
-							auto resampledimg = Resize(data, _ScaleFactor);
-							pos.X = static_cast<int>(floor(static_cast<float>(pos.X)*_ScaleFactor));
-							pos.Y = static_cast<int>(floor(static_cast<float>(pos.Y)*_ScaleFactor));
-							auto dst_rect = Rect(pos, (int)resampledimg->Height(), (int)resampledimg->Width());
-							auto src_rect = Rect(Point(0, 0), (int)resampledimg->Height(), (int)resampledimg->Width());
+					auto x = static_cast<int>(floor(static_cast<float>(rect->left())*_ScaleFactor));
+					auto y = static_cast<int>(floor(static_cast<float>(rect->top())*_ScaleFactor));
 
-							{
-								std::lock_guard<std::mutex> lock(_ImageLock);
-								Image::Copy(*img, difsrc_rect, *_OriginalImage, difdst_rect);//keep original in sync
-								Image::Copy(*resampledimg, src_rect, *_ScaledImage, dst_rect);//copy scaled down 
-							}
-						}
-						else {
-							auto dst_rect = Rect(pos, (int)img->Height(), (int)img->Width());
-							auto src_rect = Rect(Point(0, 0), (int)img->Height(), (int)img->Width());
-							{
-								std::lock_guard<std::mutex> lock(_ImageLock);
-								Image::Copy(*img, difsrc_rect, *_OriginalImage, difdst_rect);//keep original in sync
-								Image::Copy(*img, src_rect, *_ScaledImage, dst_rect);//no sling going on here 
-							}
-						}
-					}
-					else {
-						std::lock_guard<std::mutex> lock(_ImageLock);
-						Image::Copy(*img, difsrc_rect, *_OriginalImage, difdst_rect);//keep original in sync
-					}
+					auto dst_rect = Rect(Point(x, y), scaledimg.Rect.Height, scaledimg.Rect.Width);
+
+					std::lock_guard<std::mutex> lock(_ImageLock);
+					Copy(nonscaled, nonscaled.Rect, _OriginalImage, *rect);//keep original in sync
+					Copy(scaledimg, scaledimg.Rect, _ScaledImage, dst_rect);//copy scaled down 
+
+				}
+				else {
+
+					std::lock_guard<std::mutex> lock(_ImageLock);
+					Copy(nonscaled, nonscaled.Rect, _OriginalImage, *rect);//keep original in sync
+					Copy(nonscaled, nonscaled.Rect, _ScaledImage, *rect);//copy scaled down 
+
+
 				}
 			}
 			void set_MouseImage(const Size* size, const char* data) {
-				//_MouseImageData = img;
-			//	_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData->data(), _MouseImageData->Width(), _MouseImageData->Height(), 4);
+				auto s = size->X*size->Y*PixelStride;
+				_MouseImageData.Data = std::shared_ptr<char>(new char[s], [](char* p) {delete[] p; });
+				_MouseImageData.Rect.Width = size->X;
+				_MouseImageData.Rect.Height = size->Y;
+				memcpy(_MouseImageData.Data.get(), data, s);
+				_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData.Data.get(), size->X, size->Y, PixelStride);
 			}
 			void set_MousePosition(const Point* pos) {
 				_MousePos = *pos;
@@ -179,7 +192,7 @@ namespace SL {
 					if (_ScaledImage.Rect.Width != _OriginalImage.Rect.Width || _ScaledImage.Rect.Height != _OriginalImage.Rect.Width) {
 						std::lock_guard<std::mutex> lock(_ImageLock);
 						auto size = _OriginalImage.Rect.Height*_OriginalImage.Rect.Width*PixelStride;
-					
+
 						_ScaledImage.Rect = _OriginalImage.Rect;
 						_ScaledImage.Data = std::shared_ptr<char>(new char[size], [](char* ptr) {delete[] ptr; });
 						memcpy(_ScaledImage.Data.get(), _OriginalImage.Data.get(), size);

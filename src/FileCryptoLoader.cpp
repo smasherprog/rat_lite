@@ -7,10 +7,10 @@
 
 namespace SL {
 	namespace RAT {
-		class FileCryptoLoaderImpl {
+		class FileCryptoLoader: public ICryptoLoader {
 		public:
-			FileCryptoLoaderImpl(const std::string& filepath) :FilePath(filepath) {}
-			~FileCryptoLoaderImpl() {
+			FileCryptoLoader(const std::string& filepath) :FilePath(filepath) {}
+			~FileCryptoLoader() {
 				memset(Data.data(), 0, Data.size());
 			}
 			const char* get_buffer() {
@@ -44,7 +44,7 @@ namespace SL {
 
 		};
 		std::shared_ptr<ICryptoLoader> LoadFromFile(const std::string& file) {
-			return std::shared_ptr<ICryptoLoader>(new FileCryptoLoaderImpl(file));
+			return std::static_pointer_cast<ICryptoLoader>(std::make_shared<FileCryptoLoader>(file));
 		}
 	}
 }

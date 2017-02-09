@@ -33,7 +33,6 @@ namespace SL {
 			Specials SpecialKey;
 		};
 
-
 		void SimulateKeyboardEvent(KeyEvent ev);
 
 

@@ -1,17 +1,15 @@
 #include "Server.h"
-
 #include <thread>
 #include <string.h>
 #include <assert.h>
+
 #include "ScreenCapture.h"
 #include "ServerNetworkDriver.h"
 #include "IServerDriver.h"
-#include "Configs.h"
-
-
 #include "Clipboard.h"
-
-
+#include "Configs.h"
+#include "Shapes.h"
+#include "Input.h"
 
 
 namespace SL {
@@ -33,7 +31,10 @@ namespace SL {
 			{
 				_Status = Server_Status::SERVER_RUNNING;
 				_ServerNetworkDriver.Start(this, config);
-				_Clipboard = std::make_unique<Clipboard>(&_Config->Share_Clipboard, [&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
+				_Clipboard = std::make_unique<Clipboard>();
+				_Clipboard->shareClipboard(_Config->Share_Clipboard);
+				_Clipboard->onChange([&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
+
 				_ScreenCaptureManager.setMouseChangeInterval(_Config->MousePositionCaptureRate);
 				_ScreenCaptureManager.setFrameChangeInterval(_Config->ScreenImageCaptureRate);
 				_ScreenCaptureManager.setMonitorsToCapture([]() {
@@ -77,16 +78,16 @@ namespace SL {
 				UNUSED(len);
 			}
 
-			virtual void OnReceive_ClipboardText(const char* data, size_t len) override {
+			virtual void onReceive_ClipboardText(const char* data, size_t len) override {
 				SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
-				_Clipboard->copy_to_clipboard(data, static_cast<int>(len));
+				_Clipboard->updateClipbard(data, static_cast<int>(len));
 			}
 
 
-			virtual void OnReceive_Mouse(const MouseEvent* m) override {
+			virtual void onReceive_Mouse(const MouseEvent* m) override {
 				if (!_Config->IgnoreIncomingMouseEvents) SimulateMouseEvent(*m);
 			}
-			virtual void OnReceive_Key(const KeyEvent* m)override {
+			virtual void onReceive_Key(const KeyEvent* m)override {
 				if (!_Config->IgnoreIncomingKeyboardEvents) SimulateKeyboardEvent(*m);
 			}
 

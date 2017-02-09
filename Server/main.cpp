@@ -3,10 +3,8 @@
 #include <string>
 #include <iostream>
 
-#include "Configs.h"
+#include "RAT.h"
 #include "Server.h"
-#include "InMemoryCryptoLoader.h"
-#include "FileCryptoLoader.h"
 
 #if _WIN32
 //work around for now for boost on windows
@@ -82,13 +80,14 @@ int main(int argc, char* argv[]) {
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
 	//in debug mode allow usage of pre-made certs. DO NOT USE IN PRODUCTION!!!
 	if (private_key_path.empty() || config->PasswordToPrivateKey.empty() || public_cert_path.empty()) {
-		config->Private_Key = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::InMemoryCryptoLoader(SL::RAT::private_key, sizeof(SL::RAT::private_key)));
+		
+		config->Private_Key = SL::RAT::LoadFromMemory(SL::RAT::private_key, sizeof(SL::RAT::private_key));
 		config->PasswordToPrivateKey = SL::RAT::private_key_password;
-		config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::InMemoryCryptoLoader(SL::RAT::public_cert, sizeof(SL::RAT::public_cert)));
+		config->Public_Certficate = SL::RAT::LoadFromMemory(SL::RAT::public_cert, sizeof(SL::RAT::public_cert));
 	}
 	else if (!private_key_path.empty() && !config->PasswordToPrivateKey.empty() && !public_cert_path.empty()) {
-		config->Private_Key = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(private_key_path));
-		config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
+		config->Private_Key = SL::RAT::LoadFromFile(private_key_path);
+		config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
 	}
 	else {
 		std::cout << desc << "\n";
@@ -96,8 +95,8 @@ int main(int argc, char* argv[]) {
 	}
 
 #else 
-	config->Private_Key = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(private_key_path));
-	config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
+	config->Private_Key = SL::RAT::LoadFromFile(private_key_path);
+	config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
 #endif
 
 

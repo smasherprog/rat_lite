@@ -5,13 +5,13 @@
 
 namespace SL {
 	namespace RAT {
-		class InMemoryCryptoLoaderImpl {
+		class InMemoryCryptoLoader:public ICryptoLoader {
 		public:
-			InMemoryCryptoLoaderImpl(const char* data, size_t size) {
+			InMemoryCryptoLoader(const char* data, size_t size) {
 				Data.resize(size);
 				memcpy(Data.data(), data, size);
 			}
-			~InMemoryCryptoLoaderImpl() {
+			~InMemoryCryptoLoader() {
 				memset(Data.data(), 0, Data.size());
 			}
 			const char* get_buffer() {
@@ -28,7 +28,7 @@ namespace SL {
 
 		};
 		std::shared_ptr<ICryptoLoader> LoadFromMemory(const char* data, size_t size) {
-			return std::shared_ptr<ICryptoLoader>(new InMemoryCryptoLoaderImpl(data, size));
+			return std::static_pointer_cast<ICryptoLoader>(std::make_shared<InMemoryCryptoLoader>(data, size));
 		}
 	}
 }

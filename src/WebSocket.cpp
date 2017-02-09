@@ -1,4 +1,4 @@
-#include "WebSocket.h"
+#include "internal/WebSocket.h"
 #include "Logging.h"
 #include "ISocket.h"
 
@@ -41,7 +41,7 @@ namespace SL {
 			_read_deadline.cancel();
 			_write_deadline.cancel();
 
-			onDisconnection(this);
+			onDisconnection_(this);
 			boost::system::error_code ec;
 			_socket.close(beast::websocket::close_code::normal, ec);
 
@@ -72,7 +72,7 @@ namespace SL {
 					self->close("async_read error");
 				}
 				else {
-					self->onMessage(self, boost::asio::buffer_cast<const char*>(self->db.data()), self->db.size());
+					self->onMessage_(self, boost::asio::buffer_cast<const char*>(self->db.data()), self->db.size());
 					self->db.consume(self->db.size());
 					self->read();
 				}

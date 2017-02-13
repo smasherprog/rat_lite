@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -112,7 +112,7 @@ protected:
 
     // Number of literal bytes 0..255
     static std::uint16_t constexpr literals = 256;
-    
+
     // Number of Literal or Length codes, including the END_BLOCK code
     static std::uint16_t constexpr lCodes = literals + 1 + lengthCodes;
 
@@ -184,7 +184,7 @@ protected:
     // Describes a single value and its code string.
     struct ct_data
     {
-        std::uint16_t fc; // frequency count or bit string    
+        std::uint16_t fc; // frequency count or bit string
         std::uint16_t dl; // parent node in tree or length of bit string
 
         bool
@@ -648,7 +648,7 @@ protected:
     static
     unsigned
     bi_reverse(unsigned code, int len);
-    
+
     template<class = void>
     static
     void
@@ -807,7 +807,7 @@ deflate_stream::get_lut() ->
             //std::uint16_t bl_count[maxBits+1];
 
             // Initialize the mapping length (0..255) -> length code (0..28)
-            std::uint8_t length = 0;
+            int length = 0;
             for(std::uint8_t code = 0; code < lengthCodes-1; ++code)
             {
                 tables.base_length[code] = length;
@@ -815,11 +815,11 @@ deflate_stream::get_lut() ->
                 for(unsigned n = 0; n < run; ++n)
                     tables.length_code[length++] = code;
             }
-            BOOST_ASSERT(length == 0);
+            BOOST_ASSERT(length == 256);
             // Note that the length 255 (match length 258) can be represented
             // in two different ways: code 284 + 5 bits or code 285, so we
             // overwrite length_code[255] to use the best encoding:
-            tables.length_code[length-1] = lengthCodes-1;
+            tables.length_code[255] = lengthCodes-1;
 
             // Initialize the mapping dist (0..32K) -> dist code (0..29)
             {

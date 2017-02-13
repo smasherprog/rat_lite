@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -105,15 +105,7 @@ struct auto_fragment
 #if GENERATING_DOCS
 using decorate = implementation_defined;
 #else
-template<class Decorator>
-inline
-detail::decorator_type
-decorate(Decorator&& d)
-{
-    return detail::decorator_type{new
-        detail::decorator<typename std::decay<Decorator>::type>{
-            std::forward<Decorator>(d)}};
-}
+using decorate = detail::decorator_type;
 #endif
 
 /** Keep-alive option.
@@ -196,52 +188,100 @@ struct message_type
 
 namespace detail {
 
-using pong_cb = std::function<void(ping_data const&)>;
+using ping_cb = std::function<void(bool, ping_data const&)>;
 
 } // detail
 
-/** Pong callback option.
+/** permessage-deflate extension options.
 
-    Sets the callback to be invoked whenever a pong is received
-    during a call to @ref beast::websocket::stream::read,
-    @ref beast::websocket::stream::read_frame,
-    @ref beast::websocket::stream::async_read, or
-    @ref beast::websocket::stream::async_read_frame.
+    These settings control the permessage-deflate extension,
+    which allows messages to be compressed.
 
-    Unlike completion handlers, the callback will be invoked for
-    each received pong during a call to any synchronous or
-    asynchronous read function. The operation is passive, with
-    no associated error code, and triggered by reads.
+    @note Objects of this type are used with
+          @ref beast::websocket::stream::set_option.
+*/
+struct permessage_deflate
+{
+    /// `true` to offer the extension in the server role
+    bool server_enable = false;
+
+    /// `true` to offer the extension in the client role
+    bool client_enable = false;
+
+    /** Maximum server window bits to offer
+
+        @note Due to a bug in ZLib, this value must be greater than 8.
+    */
+    int server_max_window_bits = 15;
+
+    /** Maximum client window bits to offer
+
+        @note Due to a bug in ZLib, this value must be greater than 8.
+    */
+    int client_max_window_bits = 15;
+
+    /// `true` if server_no_context_takeover desired
+    bool server_no_context_takeover = false;
+
+    /// `true` if client_no_context_takeover desired
+    bool client_no_context_takeover = false;
+
+    /// Deflate compression level 0..9
+    int compLevel = 8;
+
+    /// Deflate memory level, 1..9
+    int memLevel = 4;
+};
+
+/** Ping callback option.
+
+    Sets the callback to be invoked whenever a ping or pong is
+    received during a call to one of the following functions:
+
+    @li @ref beast::websocket::stream::read
+    @li @ref beast::websocket::stream::read_frame
+    @li @ref beast::websocket::stream::async_read
+    @li @ref beast::websocket::stream::async_read_frame
+
+    Unlike completion handlers, the callback will be invoked
+    for each received ping and pong during a call to any
+    synchronous or asynchronous read function. The operation is
+    passive, with no associated error code, and triggered by reads.
 
     The signature of the callback must be:
     @code
-    void callback(
+    void
+    callback(
+        bool is_pong,               // `true` if this is a pong
         ping_data const& payload    // Payload of the pong frame
     );
     @endcode
 
-    If the read operation receiving a pong frame is an asynchronous
-    operation, the callback will be invoked using the same method as
-    that used to invoke the final handler.
+    The value of `is_pong` will be `true` if a pong control frame
+    is received, and `false` if a ping control frame is received.
+
+    If the read operation receiving a ping or pong frame is an
+    asynchronous operation, the callback will be invoked using
+    the same method as that used to invoke the final handler.
 
     @note Objects of this type are used with
           @ref beast::websocket::stream::set_option.
-          To remove the pong callback, construct the option with
-          no parameters: `set_option(pong_callback{})`
+          To remove the ping callback, construct the option with
+          no parameters: `set_option(ping_callback{})`
 */
 #if GENERATING_DOCS
-using pong_callback = implementation_defined;
+using ping_callback = implementation_defined;
 #else
-struct pong_callback
+struct ping_callback
 {
-    detail::pong_cb value;
+    detail::ping_cb value;
 
-    pong_callback() = default;
-    pong_callback(pong_callback&&) = default;
-    pong_callback(pong_callback const&) = default;
+    ping_callback() = default;
+    ping_callback(ping_callback&&) = default;
+    ping_callback(ping_callback const&) = default;
 
     explicit
-    pong_callback(detail::pong_cb f)
+    ping_callback(detail::ping_cb f)
         : value(std::move(f))
     {
     }
@@ -250,12 +290,15 @@ struct pong_callback
 
 /** Read buffer size option.
 
-    Sets the number of bytes allocated to the socket's read buffer.
-    If this is zero, then reads are not buffered. Setting this
-    higher can improve performance when expecting to receive
-    many small frames.
+    Sets the size of the read buffer used by the implementation to
+    receive frames. The read buffer is needed when permessage-deflate
+    is used.
 
-    The default is no buffering.
+    Lowering the size of the buffer can decrease the memory requirements
+    for each connection, while increasing the size of the buffer can reduce
+    the number of calls made to the next layer to read data.
+
+    The default setting is 4096. The minimum value is 8.
 
     @note Objects of this type are used with
           @ref beast::websocket::stream::set_option.

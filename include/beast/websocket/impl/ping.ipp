@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -55,9 +55,8 @@ public:
     template<class DeducedHandler, class... Args>
     ping_op(DeducedHandler&& h,
             stream<NextLayer>& ws, Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h), ws,
-                std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            ws, std::forward<Args>(args)...)
     {
         (*this)(error_code{}, false);
     }
@@ -104,7 +103,7 @@ public:
 
 template<class NextLayer>
 template<class Handler>
-void 
+void
 stream<NextLayer>::ping_op<Handler>::
 operator()(error_code ec, std::size_t)
 {
@@ -196,7 +195,7 @@ async_ping(ping_data const& payload, WriteHandler&& handler)
         "AsyncStream requirements requirements not met");
     beast::async_completion<
         WriteHandler, void(error_code)
-            > completion(handler);
+            > completion{handler};
     ping_op<decltype(completion.handler)>{
         completion.handler, *this,
             opcode::ping, payload};
@@ -214,7 +213,7 @@ async_pong(ping_data const& payload, WriteHandler&& handler)
         "AsyncStream requirements requirements not met");
     beast::async_completion<
         WriteHandler, void(error_code)
-            > completion(handler);
+            > completion{handler};
     ping_op<decltype(completion.handler)>{
         completion.handler, *this,
             opcode::pong, payload};

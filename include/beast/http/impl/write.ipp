@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -126,9 +126,8 @@ public:
     template<class DeducedHandler, class... Args>
     write_streambuf_op(DeducedHandler&& h, Stream& s,
             Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h),
-                s, std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            s, std::forward<Args>(args)...)
     {
         (*this)(error_code{}, 0, false);
     }
@@ -235,7 +234,7 @@ async_write(AsyncWriteStream& stream,
     static_assert(is_AsyncWriteStream<AsyncWriteStream>::value,
         "AsyncWriteStream requirements not met");
     beast::async_completion<WriteHandler,
-        void(error_code)> completion(handler);
+        void(error_code)> completion{handler};
     streambuf sb;
     detail::write_start_line(sb, msg);
     detail::write_fields(sb, msg.fields);
@@ -279,7 +278,7 @@ struct write_preparation
         w.init(ec);
         if(ec)
             return;
-  
+
         write_start_line(sb, msg);
         write_fields(sb, msg.fields);
         beast::write(sb, "\r\n");
@@ -373,9 +372,8 @@ public:
 
     template<class DeducedHandler, class... Args>
     write_op(DeducedHandler&& h, Stream& s, Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h), s,
-                std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            s, std::forward<Args>(args)...)
     {
         auto& d = *d_;
         auto sp = d_;
@@ -730,7 +728,7 @@ async_write(AsyncWriteStream& stream,
         message<isRequest, Body, Fields>>::value,
             "Writer requirements not met");
     beast::async_completion<WriteHandler,
-        void(error_code)> completion(handler);
+        void(error_code)> completion{handler};
     detail::write_op<AsyncWriteStream, decltype(completion.handler),
         isRequest, Body, Fields>{completion.handler, stream, msg};
     return completion.result.get();

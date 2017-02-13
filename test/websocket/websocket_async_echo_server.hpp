@@ -1,49 +1,157 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BEAST_WEBSOCKET_ASYNC_ECHO_PEER_H_INCLUDED
-#define BEAST_WEBSOCKET_ASYNC_ECHO_PEER_H_INCLUDED
+#ifndef BEAST_WEBSOCKET_ASYNC_ECHO_SERVER_HPP
+#define BEAST_WEBSOCKET_ASYNC_ECHO_SERVER_HPP
 
 #include <beast/core/placeholders.hpp>
 #include <beast/core/streambuf.hpp>
-#include <beast/websocket.hpp>
+#include <beast/websocket/stream.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <atomic>
 #include <functional>
-#include <iostream>
 #include <memory>
-#include <thread>
-
+#include <mutex>
 #include <ostream>
+#include <string>
+#include <thread>
+#include <type_traits>
+#include <typeindex>
+#include <unordered_map>
+#include <utility>
 
-namespace beast {
 namespace websocket {
 
-// Asynchronous WebSocket echo client/server
-//
+/** Asynchronous WebSocket echo client/server
+*/
 class async_echo_server
 {
 public:
-    using endpoint_type = boost::asio::ip::tcp::endpoint;
+    using error_code = beast::error_code;
     using address_type = boost::asio::ip::address;
     using socket_type = boost::asio::ip::tcp::socket;
+    using endpoint_type = boost::asio::ip::tcp::endpoint;
 
 private:
+    struct identity
+    {
+        template<class Body, class Fields>
+        void
+        operator()(beast::http::message<
+            true, Body, Fields>& req) const
+        {
+            req.fields.replace("User-Agent", "async_echo_client");
+        }
+
+        template<class Body, class Fields>
+        void
+        operator()(beast::http::message<
+            false, Body, Fields>& resp) const
+        {
+            resp.fields.replace("Server", "async_echo_server");
+        }
+    };
+
+    /** A container of type-erased option setters.
+    */
+    template<class NextLayer>
+    class options_set
+    {
+        // workaround for std::function bug in msvc
+        struct callable
+        {
+            virtual ~callable() = default;
+            virtual void operator()(
+                beast::websocket::stream<NextLayer>&) = 0;
+        };
+
+        template<class T>
+        class callable_impl : public callable
+        {
+            T t_;
+
+        public:
+            template<class U>
+            callable_impl(U&& u)
+                : t_(std::forward<U>(u))
+            {
+            }
+
+            void
+            operator()(beast::websocket::stream<NextLayer>& ws)
+            {
+                t_(ws);
+            }
+        };
+
+        template<class Opt>
+        class lambda
+        {
+            Opt opt_;
+
+        public:
+            lambda(lambda&&) = default;
+            lambda(lambda const&) = default;
+
+            lambda(Opt const& opt)
+                : opt_(opt)
+            {
+            }
+
+            void
+            operator()(beast::websocket::stream<NextLayer>& ws) const
+            {
+                ws.set_option(opt_);
+            }
+        };
+
+        std::unordered_map<std::type_index,
+            std::unique_ptr<callable>> list_;
+
+    public:
+        template<class Opt>
+        void
+        set_option(Opt const& opt)
+        {
+            std::unique_ptr<callable> p;
+            p.reset(new callable_impl<lambda<Opt>>{opt});
+            list_[std::type_index{
+                typeid(Opt)}] = std::move(p);
+        }
+
+        void
+        set_options(beast::websocket::stream<NextLayer>& ws)
+        {
+            for(auto const& op : list_)
+                (*op.second)(ws);
+        }
+    };
+
     std::ostream* log_;
     boost::asio::io_service ios_;
     socket_type sock_;
+    endpoint_type ep_;
     boost::asio::ip::tcp::acceptor acceptor_;
     std::vector<std::thread> thread_;
     boost::optional<boost::asio::io_service::work> work_;
+    options_set<socket_type> opts_;
 
 public:
     async_echo_server(async_echo_server const&) = delete;
     async_echo_server& operator=(async_echo_server const&) = delete;
 
+    /** Constructor.
+
+        @param log A pointer to a stream to log to, or `nullptr`
+        to disable logging.
+
+        @param threads The number of threads in the io_service.
+    */
     async_echo_server(std::ostream* log,
             std::size_t threads)
         : log_(log)
@@ -51,12 +159,16 @@ public:
         , acceptor_(ios_)
         , work_(ios_)
     {
+        opts_.set_option(
+            beast::websocket::decorate(identity{}));
         thread_.reserve(threads);
         for(std::size_t i = 0; i < threads; ++i)
             thread_.emplace_back(
                 [&]{ ios_.run(); });
     }
 
+    /** Destructor.
+    */
     ~async_echo_server()
     {
         work_ = boost::none;
@@ -67,148 +179,110 @@ public:
             t.join();
     }
 
-    void
-    open(bool server,
-        endpoint_type const& ep, error_code& ec)
-    {
-        if(server)
-        {
-            acceptor_.open(ep.protocol(), ec);
-            if(ec)
-            {
-                if(log_)
-                    (*log_) << "open: " << ec.message() << std::endl;
-                return;
-            }
-            acceptor_.set_option(
-                boost::asio::socket_base::reuse_address{true});
-            acceptor_.bind(ep, ec);
-            if(ec)
-            {
-                if(log_)
-                    (*log_) << "bind: " << ec.message() << std::endl;
-                return;
-            }
-            acceptor_.listen(
-                boost::asio::socket_base::max_connections, ec);
-            if(ec)
-            {
-                if(log_)
-                    (*log_) << "listen: " << ec.message() << std::endl;
-                return;
-            }
-            acceptor_.async_accept(sock_,
-                std::bind(&async_echo_server::on_accept, this,
-                    beast::asio::placeholders::error));
-        }
-        else
-        {
-            Peer{*this, std::move(sock_), ep};
-        }
-    }
-
+    /** Return the listening endpoint.
+    */
     endpoint_type
     local_endpoint() const
     {
         return acceptor_.local_endpoint();
     }
 
+    /** Set a websocket option.
+
+        The option will be applied to all new connections.
+
+        @param opt The option to apply.
+    */
+    template<class Opt>
+    void
+    set_option(Opt const& opt)
+    {
+        opts_.set_option(opt);
+    }
+
+    /** Open a listening port.
+
+        @param ep The address and port to bind to.
+
+        @param ec Set to the error, if any occurred.
+    */
+    void
+    open(endpoint_type const& ep, error_code& ec)
+    {
+        acceptor_.open(ep.protocol(), ec);
+        if(ec)
+            return fail("open", ec);
+        acceptor_.set_option(
+            boost::asio::socket_base::reuse_address{true});
+        acceptor_.bind(ep, ec);
+        if(ec)
+            return fail("bind", ec);
+        acceptor_.listen(
+            boost::asio::socket_base::max_connections, ec);
+        if(ec)
+            return fail("listen", ec);
+        acceptor_.async_accept(sock_, ep_,
+            std::bind(&async_echo_server::on_accept, this,
+                beast::asio::placeholders::error));
+    }
+
 private:
-    class Peer
+    class peer
     {
         struct data
         {
             async_echo_server& server;
+            endpoint_type ep;
             int state = 0;
-            boost::optional<endpoint_type> ep;
-            stream<socket_type> ws;
+            beast::websocket::stream<socket_type> ws;
             boost::asio::io_service::strand strand;
-            opcode op;
+            beast::websocket::opcode op;
             beast::streambuf db;
-            int id;
+            std::size_t id;
 
             data(async_echo_server& server_,
+                endpoint_type const& ep_,
                     socket_type&& sock_)
-                : server(server_)
-                , ws(std::move(sock_))
-                , strand(ws.get_io_service())
-                , id([]
-                    {
-                        static int n = 0;
-                        return ++n;
-                    }())
-            {
-            }
-
-            data(async_echo_server& server_,
-                    socket_type&& sock_, endpoint_type const& ep_)
                 : server(server_)
                 , ep(ep_)
                 , ws(std::move(sock_))
                 , strand(ws.get_io_service())
                 , id([]
                     {
-                        static int n = 0;
+                        static std::atomic<std::size_t> n{0};
                         return ++n;
                     }())
             {
             }
         };
 
+        // VFALCO This could be unique_ptr in [Net.TS]
         std::shared_ptr<data> d_;
 
     public:
-        Peer(Peer&&) = default;
-        Peer(Peer const&) = default;
-        Peer& operator=(Peer&&) = delete;
-        Peer& operator=(Peer const&) = delete;
-
-        struct identity
-        {
-            template<class Body, class Fields>
-            void
-            operator()(http::message<true, Body, Fields>& req)
-            {
-                req.fields.replace("User-Agent", "async_echo_client");
-            }
-
-            template<class Body, class Fields>
-            void
-            operator()(http::message<false, Body, Fields>& resp)
-            {
-                resp.fields.replace("Server", "async_echo_server");
-            }
-        };
+        peer(peer&&) = default;
+        peer(peer const&) = default;
+        peer& operator=(peer&&) = delete;
+        peer& operator=(peer const&) = delete;
 
         template<class... Args>
         explicit
-        Peer(async_echo_server& server,
-                socket_type&& sock, Args&&... args)
-            : d_(std::make_shared<data>(server,
+        peer(async_echo_server& server,
+            endpoint_type const& ep, socket_type&& sock,
+                Args&&... args)
+            : d_(std::make_shared<data>(server, ep,
                 std::forward<socket_type>(sock),
                     std::forward<Args>(args)...))
         {
             auto& d = *d_;
-            d.ws.set_option(decorate(identity{}));
-            d.ws.set_option(read_message_max(64 * 1024 * 1024));
-            d.ws.set_option(auto_fragment{false});
-            //d.ws.set_option(write_buffer_size{64 * 1024});
+            d.server.opts_.set_options(d.ws);
             run();
         }
 
         void run()
         {
             auto& d = *d_;
-            if(! d.ep)
-            {
-                d.ws.async_accept(std::move(*this));
-            }
-            else
-            {
-                d.state = 4;
-                d.ws.next_layer().async_connect(
-                    *d.ep, std::move(*this));
-            }
+            d.ws.async_accept(std::move(*this));
         }
 
         template<class DynamicBuffer, std::size_t N>
@@ -220,7 +294,7 @@ private:
             using boost::asio::buffer_copy;
             if(db.size() < N-1)
                 return false;
-            static_string<N-1> t;
+            beast::static_string<N-1> t;
             t.resize(N-1);
             buffer_copy(buffer(t.data(), t.size()),
                 db.data());
@@ -245,12 +319,12 @@ private:
             // did accept
             case 0:
                 if(ec)
-                    return fail(ec, "async_accept");
+                    return fail("async_accept", ec);
 
             // start
             case 1:
                 if(ec)
-                    return fail(ec, "async_handshake");
+                    return fail("async_handshake", ec);
                 d.db.consume(d.db.size());
                 // read message
                 d.state = 2;
@@ -260,10 +334,10 @@ private:
 
             // got message
             case 2:
-                if(ec == error::closed)
+                if(ec == beast::websocket::error::closed)
                     return;
                 if(ec)
-                    return fail(ec, "async_read");
+                    return fail("async_read", ec);
                 if(match(d.db, "RAW"))
                 {
                     d.state = 1;
@@ -274,14 +348,16 @@ private:
                 else if(match(d.db, "TEXT"))
                 {
                     d.state = 1;
-                    d.ws.set_option(message_type{opcode::text});
+                    d.ws.set_option(
+                        beast::websocket::message_type{
+                            beast::websocket::opcode::text});
                     d.ws.async_write(
                         d.db.data(), d.strand.wrap(std::move(*this)));
                     return;
                 }
                 else if(match(d.db, "PING"))
                 {
-                    ping_data payload;
+                    beast::websocket::ping_data payload;
                     d.db.consume(buffer_copy(
                         buffer(payload.data(), payload.size()),
                             d.db.data()));
@@ -299,53 +375,36 @@ private:
                 }
                 // write message
                 d.state = 1;
-                d.ws.set_option(message_type(d.op));
+                d.ws.set_option(
+                    beast::websocket::message_type(d.op));
                 d.ws.async_write(d.db.data(),
                     d.strand.wrap(std::move(*this)));
-                return;
-
-            // connected
-            case 4:
-                if(ec)
-                    return fail(ec, "async_connect");
-                d.state = 1;
-                d.ws.async_handshake(
-                    d.ep->address().to_string() + ":" +
-                        boost::lexical_cast<std::string>(d.ep->port()),
-                            "/", d.strand.wrap(std::move(*this)));
                 return;
             }
         }
 
     private:
         void
-        fail(error_code ec, std::string what)
+        fail(std::string what, error_code ec)
         {
             auto& d = *d_;
             if(d.server.log_)
-            {
-                if(ec != error::closed)
-                    (*d.server.log_) << "#" << d.id << " " <<
-                        what << ": " << ec.message() << std::endl;
-            }
+                if(ec != beast::websocket::error::closed)
+                    d.server.fail("[#" + std::to_string(d.id) +
+                        " " + boost::lexical_cast<std::string>(d.ep) +
+                            "] " + what, ec);
         }
     };
 
     void
-    fail(error_code ec, std::string what)
+    fail(std::string what, error_code ec)
     {
         if(log_)
+        {
+            static std::mutex m;
+            std::lock_guard<std::mutex> lock{m};
             (*log_) << what << ": " <<
                 ec.message() << std::endl;
-    }
-
-    void
-    maybe_throw(error_code ec, std::string what)
-    {
-        if(ec)
-        {
-            fail(ec, what);
-            throw ec;
         }
     }
 
@@ -356,16 +415,15 @@ private:
             return;
         if(ec == boost::asio::error::operation_aborted)
             return;
-        maybe_throw(ec, "accept");
-        socket_type sock(std::move(sock_));
-        acceptor_.async_accept(sock_,
+        if(ec)
+            fail("accept", ec);
+        peer{*this, ep_, std::move(sock_)};
+        acceptor_.async_accept(sock_, ep_,
             std::bind(&async_echo_server::on_accept, this,
                 beast::asio::placeholders::error));
-        Peer{*this, std::move(sock)};
     }
 };
 
 } // websocket
-} // beast
 
 #endif

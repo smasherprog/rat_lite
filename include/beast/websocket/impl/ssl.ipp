@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -59,9 +59,7 @@ public:
     explicit
     teardown_ssl_op(
             DeducedHandler&& h, stream_type& stream)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(
-                h), stream))
+        : d_(std::forward<DeducedHandler>(h), stream)
     {
         (*this)(error_code{}, false);
     }

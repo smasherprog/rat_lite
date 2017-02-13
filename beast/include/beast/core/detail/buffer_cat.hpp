@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -83,7 +83,8 @@ class buffer_cat_helper<Bn...>::const_iterator
     iter()
     {
         return *reinterpret_cast<
-            iter_t<I>*>(buf_.data());
+            iter_t<I>*>(static_cast<void*>(
+                buf_.data()));
     }
 
     template<std::size_t I>
@@ -91,7 +92,8 @@ class buffer_cat_helper<Bn...>::const_iterator
     iter() const
     {
         return *reinterpret_cast<
-            iter_t<I> const*>(buf_.data());
+            iter_t<I> const*>(static_cast<
+                void const*>(buf_.data()));
     }
 
 public:

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -45,9 +45,8 @@ public:
     template<class DeducedHandler, class... Args>
     read_some_op(DeducedHandler&& h,
             dynabuf_readstream& srs, Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h), srs,
-                std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            srs, std::forward<Args>(args)...)
     {
         (*this)(error_code{}, 0);
     }
@@ -243,7 +242,7 @@ async_read_some(
             "MutableBufferSequence requirements not met");
     beast::async_completion<
         ReadHandler, void(error_code, std::size_t)
-            > completion(handler);
+            > completion{handler};
     read_some_op<MutableBufferSequence,
         decltype(completion.handler)>{
             completion.handler, *this, buffers};

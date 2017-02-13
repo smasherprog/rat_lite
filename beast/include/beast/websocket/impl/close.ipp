@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -56,9 +56,8 @@ public:
     template<class DeducedHandler, class... Args>
     close_op(DeducedHandler&& h,
             stream<NextLayer>& ws, Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h), ws,
-                std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            ws, std::forward<Args>(args)...)
     {
         (*this)(error_code{}, false);
     }
@@ -107,7 +106,7 @@ public:
 
 template<class NextLayer>
 template<class Handler>
-void 
+void
 stream<NextLayer>::close_op<Handler>::
 operator()(error_code ec, std::size_t)
 {
@@ -119,7 +118,7 @@ operator()(error_code ec, std::size_t)
 
 template<class NextLayer>
 template<class Handler>
-void 
+void
 stream<NextLayer>::close_op<Handler>::
 operator()(error_code ec, bool again)
 {
@@ -198,7 +197,7 @@ async_close(close_reason const& cr, CloseHandler&& handler)
         "AsyncStream requirements not met");
     beast::async_completion<
         CloseHandler, void(error_code)
-            > completion(handler);
+            > completion{handler};
     close_op<decltype(completion.handler)>{
         completion.handler, *this, cr};
     return completion.result.get();

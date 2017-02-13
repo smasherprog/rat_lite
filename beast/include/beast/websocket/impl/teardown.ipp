@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -47,9 +47,7 @@ public:
     teardown_tcp_op(
         DeducedHandler&& h,
             socket_type& socket)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(
-                h), socket))
+        : d_(std::forward<DeducedHandler>(h), socket)
     {
         (*this)(error_code{}, 0, false);
     }

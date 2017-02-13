@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -125,7 +125,7 @@ public:
     void
     emplace(F&& f);
 
-    void
+    bool
     maybe_invoke()
     {
         if(base_)
@@ -133,7 +133,9 @@ public:
             auto const basep = base_;
             base_ = nullptr;
             (*basep)();
+            return true;
         }
+        return false;
     }
 };
 

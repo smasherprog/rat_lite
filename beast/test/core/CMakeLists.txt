@@ -7,11 +7,9 @@ GroupSources(test/core "/")
 add_executable (core-tests
     ${BEAST_INCLUDES}
     ${EXTRAS_INCLUDES}
-    ${ZLIB_SOURCES}
     ../../extras/beast/unit_test/main.cpp
     buffer_test.hpp
     async_completion.cpp
-    basic_streambuf.cpp
     bind_handler.cpp
     buffer_cat.cpp
     buffer_concepts.cpp
@@ -24,6 +22,7 @@ add_executable (core-tests
     handler_concepts.cpp
     handler_ptr.cpp
     placeholders.cpp
+    prepare_buffer.cpp
     prepare_buffers.cpp
     static_streambuf.cpp
     static_string.cpp
@@ -34,6 +33,7 @@ add_executable (core-tests
     base64.cpp
     empty_base_optimization.cpp
     get_lowest_layer.cpp
+    is_call_possible.cpp
     sha1.cpp
 )
 

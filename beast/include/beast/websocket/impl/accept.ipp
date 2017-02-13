@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2016 Vinnie Falco (vinnie dot falco at gmail dot com)
+// Copyright (c) 2013-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -35,7 +35,7 @@ class stream<NextLayer>::response_op
     {
         bool cont;
         stream<NextLayer>& ws;
-        http::response<http::string_body> resp;
+        http::response<http::string_body> res;
         error_code final_ec;
         int state = 0;
 
@@ -45,12 +45,12 @@ class stream<NextLayer>::response_op
                 bool cont_)
             : cont(cont_)
             , ws(ws_)
-            , resp(ws_.build_response(req))
+            , res(ws_.build_response(req))
         {
             // can't call stream::reset() here
             // otherwise accept_op will malfunction
             //
-            if(resp.status != 101)
+            if(res.status != 101)
                 final_ec = error::handshake_failed;
         }
     };
@@ -64,9 +64,8 @@ public:
     template<class DeducedHandler, class... Args>
     response_op(DeducedHandler&& h,
             stream<NextLayer>& ws, Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h), ws,
-                std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            ws, std::forward<Args>(args)...)
     {
         (*this)(error_code{}, false);
     }
@@ -107,7 +106,7 @@ public:
 
 template<class NextLayer>
 template<class Handler>
-void 
+void
 stream<NextLayer>::response_op<Handler>::
 operator()(error_code ec, bool again)
 {
@@ -121,7 +120,7 @@ operator()(error_code ec, bool again)
             // send response
             d.state = 1;
             http::async_write(d.ws.next_layer(),
-                d.resp, std::move(*this));
+                d.res, std::move(*this));
             return;
 
         // sent response
@@ -129,7 +128,11 @@ operator()(error_code ec, bool again)
             d.state = 99;
             ec = d.final_ec;
             if(! ec)
+            {
+                pmd_read(
+                    d.ws.pmd_config_, d.res.fields);
                 d.ws.open(detail::role_type::server);
+            }
             break;
         }
     }
@@ -176,9 +179,8 @@ public:
     template<class DeducedHandler, class... Args>
     accept_op(DeducedHandler&& h,
             stream<NextLayer>& ws, Args&&... args)
-        : d_(make_handler_ptr<data, Handler>(
-            std::forward<DeducedHandler>(h), ws,
-                std::forward<Args>(args)...))
+        : d_(std::forward<DeducedHandler>(h),
+            ws, std::forward<Args>(args)...)
     {
         (*this)(error_code{}, 0, false);
     }
@@ -286,7 +288,7 @@ async_accept(ConstBufferSequence const& bs, AcceptHandler&& handler)
             "ConstBufferSequence requirements not met");
     beast::async_completion<
         AcceptHandler, void(error_code)
-            > completion(handler);
+            > completion{handler};
     accept_op<decltype(completion.handler)>{
         completion.handler, *this, bs};
     return completion.result.get();
@@ -304,7 +306,7 @@ async_accept(http::request<Body, Fields> const& req,
         "AsyncStream requirements requirements not met");
     beast::async_completion<
         AcceptHandler, void(error_code)
-            > completion(handler);
+            > completion{handler};
     reset();
     response_op<decltype(completion.handler)>{
         completion.handler, *this, req,
@@ -412,6 +414,7 @@ accept(http::request<Body, Fields> const& req,
         //             teardown if Connection: close.
         return;
     }
+    pmd_read(pmd_config_, req.fields);
     open(detail::role_type::server);
 }
 

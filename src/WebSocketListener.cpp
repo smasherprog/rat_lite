@@ -91,9 +91,7 @@ f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 			sock->onDisconnection(onDisconnection_);
 			sock->onMessage(onMessage_);
 			acceptor_.async_accept(sock->get_Socket().lowest_layer(), [self, sock](boost::system::error_code ec) {
-				if (!self->acceptor_.is_open())
-					return;
-				if (ec == boost::asio::error::operation_aborted)
+				if (!self->acceptor_.is_open() || ec == boost::asio::error::operation_aborted)
 					return;
 				if (ec)
 				{
@@ -102,18 +100,28 @@ f4pf5b+c+w+99vHpUlkbIzV0tI5vGZo1uwIBAg==
 				}
 
 				sock->get_Socket().next_layer().async_handshake(boost::asio::ssl::stream_base::server, [self, sock](boost::system::error_code ec) {
-					if (!self->acceptor_.is_open())
-						return;
-					if (ec == boost::asio::error::operation_aborted)
+					if (!self->acceptor_.is_open() || ec == boost::asio::error::operation_aborted)
 						return;
 					if (ec)
 					{
 						SL_RAT_LOG(Logging_Levels::ERROR_log_level, "on_accept: " << ec.message());
 						return;
 					}
-					self->onConnection_(std::static_pointer_cast<ISocket>(sock));
-					sock->read();
-					self->run();
+					sock->get_Socket().async_accept([self, sock](boost::system::error_code ec) {
+						if (!self->acceptor_.is_open() || ec == boost::asio::error::operation_aborted)
+							return;
+						if (ec)
+						{
+							SL_RAT_LOG(Logging_Levels::ERROR_log_level, "on_accept: " << ec.message());
+							return;
+						}
+
+						self->onConnection_(std::static_pointer_cast<ISocket>(sock));
+						sock->read();
+						self->run();
+
+					});
+					
 
 				});
 			});

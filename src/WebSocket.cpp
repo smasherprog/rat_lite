@@ -27,13 +27,31 @@ namespace SL {
 		void WebSocket::send(std::shared_ptr<char> data, size_t len) {
 			auto self(shared_from_this());
 
-			_socket.async_write(boost::asio::buffer(data.get(), len), [data, self](const boost::system::error_code& ec) {
-				if (ec)
-				{
-					self->close(std::string("readheader async_read ") + ec.message());
-				}
+			_socket.get_io_service().post([self, data, len]() {
+				self->Outgoing.push_back({ data, len });
+				self->write();
 			});
 
+
+
+		}
+		void WebSocket::write() {
+			if (Writing || Outgoing.empty()) return;
+			auto data = Outgoing.front();
+			Outgoing.pop_front();
+			auto self(shared_from_this());
+			auto bg = boost::asio::buffer(data.Data.get(), data.len);
+			_socket.set_option(beast::websocket::message_type{ beast::websocket::opcode::binary });
+
+			_socket.async_write(bg, [data, self](const boost::system::error_code& ec) {
+				if (ec)
+				{
+					self->close(std::string("async_write ") + ec.message());
+				}
+				else {
+					self->write();
+				}
+			});
 		}
 		void WebSocket::close(const std::string& reason) {
 			if (closed()) return;
@@ -43,12 +61,7 @@ namespace SL {
 			_write_deadline.cancel();
 
 			onDisconnection_(this);
-			boost::system::error_code ec;
-			_socket.close(beast::websocket::close_code::normal, ec);
 
-			if (ec) SL_RAT_LOG(Logging_Levels::ERROR_log_level, ec.message());
-			ec.clear();
-			SL_RAT_LOG(Logging_Levels::INFO_log_level, "Socket Closed");
 		}
 		void WebSocket::read() {
 			auto self(shared_from_this());
@@ -62,12 +75,15 @@ namespace SL {
 			else if (_readtimeout >= 0) {
 				_read_deadline.async_wait([self](const boost::system::error_code& ec) {
 					if (ec != boost::asio::error::operation_aborted) {
-						self->close("read timer expired. Time waited: ");
+						self->get_Socket().async_close(beast::websocket::close_code::normal, [self](const boost::system::error_code& e) {
+							self->close("read timer expired. Time waited: ");
+						});
 					}
 				});
 			}
 
-			_socket.async_read_frame(frame_, db, [self](const boost::system::error_code& ec) {
+			beast::websocket::opcode op;
+			_socket.async_read(op, db, [op, self](const boost::system::error_code& ec) {
 				if (ec) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, ec.message());
 					self->close("async_read error");
@@ -150,12 +166,21 @@ namespace SL {
 					sock->get_Socket().next_layer().set_verify_mode(boost::asio::ssl::verify_none);
 					sock->get_Socket().next_layer().handshake(boost::asio::ssl::stream_base::client, ercode);
 					if (ercode) {
-						sock->close(std::string("handshake ") + ercode.message());
+						sock->close(std::string("tls handshake ") + ercode.message());
 						driver->onDisconnection(sock.get());
 					}
 					else {
-						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Connected to "<<host<<" Starting Read");
-						sock->read();
+						sock->get_Socket().handshake(_host, "/", ercode);
+
+						if (ercode) {
+							sock->close(std::string("websocket handshake ") + ercode.message());
+							driver->onDisconnection(sock.get());
+						}
+						else {
+							SL_RAT_LOG(Logging_Levels::INFO_log_level, "Connected to " << host << " Starting Read");
+							sock->read();
+						}
+
 					}
 				}
 			}

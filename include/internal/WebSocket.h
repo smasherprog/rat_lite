@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <deque>
 #include <functional>
 #if defined(_WIN32)
 #if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
@@ -30,15 +31,20 @@ namespace SL {
 			boost::asio::deadline_timer _read_deadline;
 			boost::asio::deadline_timer _write_deadline;
 			boost::asio::streambuf db;
-			beast::websocket::frame_info frame_;
 
 			bool _Closed = true;
 			bool _Writing = false;
 
 			int _readtimeout = 5;
 			int _writetimeout = 5;
+			struct OutgoingPayloads {
+				std::shared_ptr<char> Data;
+				size_t len;
+			};
 
 		public:
+			std::deque<OutgoingPayloads> Outgoing;
+			bool Writing;
 
 			WebSocket(boost::asio::ssl::context& context, boost::asio::io_service& io_service);
 			virtual ~WebSocket();
@@ -48,6 +54,7 @@ namespace SL {
 			virtual void send(std::shared_ptr<char> data, size_t len) override;
 			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>& get_Socket() { return _socket; }
 			virtual void close(const std::string& reason) override;
+
 			virtual bool closed() override {
 				return _Closed || !_socket.lowest_layer().is_open();
 			}
@@ -99,6 +106,7 @@ namespace SL {
 				else return true;
 			}
 			void read();
+			void write();
 		};
 	}
 }

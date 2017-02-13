@@ -142,7 +142,7 @@ namespace SL {
 			}
 			void SendClipboardText(const char* data, unsigned int len) {
 				if (!_Socket) {
-					SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendClipboardText called on a socket that is not open yet");
 					return;
 				}
 				if (_Socket->is_loopback()) return;//dont send clipboard info to ourselfs as it will cause a loop

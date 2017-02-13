@@ -206,7 +206,6 @@ namespace SL {
 		}
 
 		void ServerNetworkDriver::SendClipboardText(ISocket* socket, const char* data, unsigned int len) {
-			SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnSend_ClipboardText " << len);
 			_ServerNetworkDriverImpl->SendClipboardText(socket, data, len);
 		}
 

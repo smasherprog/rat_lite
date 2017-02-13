@@ -1,9 +1,7 @@
 #include "ClientNetworkDriver.h"
-#include "Configs.h"
-#include "Image.h"
-#include "IClientDriver.h"
+#include "RAT.h"
 #include "turbojpeg.h"
-#include "Input.h"
+#include "IClientDriver.h"
 #include <assert.h>
 
 namespace SL {
@@ -57,26 +55,23 @@ namespace SL {
 			}
 
 		public:
-			ClientNetworkDriverImpl(IClientDriver* r, std::shared_ptr<Client_Config> config, const char * dst_host) :
-				_IClientDriver(r), _Config(config), _dst_host(dst_host) {
+			ClientNetworkDriverImpl(IClientDriver* r) :
+				_IClientDriver(r) {
 		
 			}
 
-			void Start() {
-				Stop();
-				//Connect(_Config.get(), this, _dst_host.c_str());
-
-
+			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host) {
+				_Config = config;
+				_dst_host = dst_host;
+				SL::RAT::Connect(_Config.get(), this, dst_host);
 			}
 
-			void Stop() {
+			virtual ~ClientNetworkDriverImpl() {
 				if (_Socket) {
 					_Socket->close("Stopping Listener");
 					_Socket.reset();//decrement count
 				}
-			}
-			virtual ~ClientNetworkDriverImpl() {
-				Stop();
+
 			}
 
 			virtual void onConnection(const std::shared_ptr<ISocket>& socket) override {
@@ -168,28 +163,22 @@ namespace SL {
 	}
 }
 
-
-SL::RAT::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r, std::shared_ptr<Client_Config> config, const char * dst_host) 
-	: _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r, config, dst_host))
+SL::RAT::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r) 
+	: _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r))
 {
 
 }
 
 SL::RAT::ClientNetworkDriver::~ClientNetworkDriver()
 {
-	Stop();
 	delete _ClientNetworkDriverImpl;
 }
 
-void SL::RAT::ClientNetworkDriver::Start()
+void SL::RAT::ClientNetworkDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
 {
-	_ClientNetworkDriverImpl->Start();
+	_ClientNetworkDriverImpl->Connect(config, dst_host);
 }
 
-void SL::RAT::ClientNetworkDriver::Stop()
-{
-	_ClientNetworkDriverImpl->Stop();
-}
 
 void SL::RAT::ClientNetworkDriver::SendKey(const KeyEvent & m)
 {

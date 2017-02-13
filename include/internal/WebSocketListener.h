@@ -33,6 +33,7 @@ namespace SL {
 			std::vector<std::thread> thread_;
 			boost::optional<boost::asio::io_service::work> work_;
 			boost::asio::ssl::context context_;
+
 			std::shared_ptr<Server_Config> Server_Config_;
 
 			std::function<void(const std::shared_ptr<ISocket>&)> onConnection_;

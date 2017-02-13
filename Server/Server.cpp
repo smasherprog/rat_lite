@@ -20,20 +20,20 @@ namespace SL {
 
 			SL::Screen_Capture::ScreenCaptureManager _ScreenCaptureManager;
 
-			ServerNetworkDriver _ServerNetworkDriver;
-			std::unique_ptr<Clipboard> _Clipboard;
+			ServerNetworkDriver ServerNetworkDriver_;
+			std::unique_ptr<Clipboard> Clipboard_;
 
 			Server_Status _Status = Server_Status::SERVER_STOPPED;
 			std::shared_ptr<Server_Config> _Config;
 
 			ServerImpl(std::shared_ptr<Server_Config> config) :
-				_ServerNetworkDriver(), _Config(config)
+				ServerNetworkDriver_(), _Config(config)
 			{
 				_Status = Server_Status::SERVER_RUNNING;
-				_ServerNetworkDriver.Start(this, config);
-				_Clipboard = std::make_unique<Clipboard>();
-				_Clipboard->shareClipboard(_Config->Share_Clipboard);
-				_Clipboard->onChange([&](const char* c, int len) { _ServerNetworkDriver.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
+		
+				Clipboard_ = std::make_unique<Clipboard>();
+				Clipboard_->shareClipboard(_Config->Share_Clipboard);
+				Clipboard_->onChange([&](const char* c, int len) { ServerNetworkDriver_.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
 
 				_ScreenCaptureManager.setMouseChangeInterval(_Config->MousePositionCaptureRate);
 				_ScreenCaptureManager.setFrameChangeInterval(_Config->ScreenImageCaptureRate);
@@ -42,24 +42,26 @@ namespace SL {
 				});
 				_ScreenCaptureManager.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 					if (img) {
-						_ServerNetworkDriver.SendMouse(nullptr, *img);
+						ServerNetworkDriver_.SendMouse(nullptr, *img);
 					}
-					_ServerNetworkDriver.SendMouse(nullptr, Point(x, y));
+					ServerNetworkDriver_.SendMouse(nullptr, Point(x, y));
 				});
 				_ScreenCaptureManager.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-					_ServerNetworkDriver.SendFrameChange(nullptr, img);
+					ServerNetworkDriver_.SendFrameChange(nullptr, img);
 				});
 				_ScreenCaptureManager.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-					_ServerNetworkDriver.SendFrame(nullptr, img);
-				});
+					ServerNetworkDriver_.SendFrame(nullptr, img);
+				});		
+				ServerNetworkDriver_.Start(this, config);
 				_ScreenCaptureManager.Start();
+
 			}
 
 			virtual ~ServerImpl() {
 				_ScreenCaptureManager.Stop();
-				_Clipboard.reset();//make sure to prevent race conditions
+				Clipboard_.reset();//make sure to prevent race conditions
 				_Status = Server_Status::SERVER_STOPPED;
-				_ServerNetworkDriver.Stop();
+				ServerNetworkDriver_.Stop();
 
 			}
 			virtual void onConnection(const std::shared_ptr<ISocket>& socket) override {
@@ -79,8 +81,8 @@ namespace SL {
 			}
 
 			virtual void onReceive_ClipboardText(const char* data, size_t len) override {
-				SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceive_ClipboardText " << len);
-				_Clipboard->updateClipbard(data, static_cast<int>(len));
+				SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceiveClipboard_Text " << len);
+				Clipboard_->updateClipbard(data, static_cast<int>(len));
 			}
 
 
@@ -93,7 +95,7 @@ namespace SL {
 
 
 			void OnMousePos(Point p) {
-				_ServerNetworkDriver.SendMouse(nullptr, p);
+				ServerNetworkDriver_.SendMouse(nullptr, p);
 			}
 
 			Server_Status get_Status() const {
@@ -113,6 +115,7 @@ namespace SL {
 		void Server::Server::Start(std::shared_ptr<Server_Config> config)
 		{
 			_ServerImpl = std::make_shared<ServerImpl>(config);
+			
 		}
 
 		void Server::Server::Stop()

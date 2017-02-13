@@ -13,13 +13,10 @@ namespace SL {
 			ClientNetworkDriverImpl* _ClientNetworkDriverImpl;
 
 		public:
-			ClientNetworkDriver(IClientDriver* r, std::shared_ptr<Client_Config> config, const char* dst_host);
+			ClientNetworkDriver(IClientDriver* r );
 			virtual ~ClientNetworkDriver();
 
-			//after creating ServerNetworkDriver, Start() must be called to start the network processessing
-			void Start();
-			//Before calling Stop, you must ensure that any external references to shared_ptr<ISocket> have been released
-			void Stop();
+			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host);
 
 			void SendKey(const KeyEvent& m);
 			void SendMouse(const MouseEvent& m);

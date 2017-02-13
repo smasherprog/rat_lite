@@ -20,17 +20,17 @@ namespace SL {
 
 		class ServerNetworkDriverImpl {
 
+		public:	
 			IServerDriver* _IServerDriver;
 
 			std::shared_ptr<Server_Config> _Config;
 			std::vector<std::shared_ptr<ISocket>> Clients;
 			std::mutex ClientLock;
-			WebSocketListener _WebSocketListener;
+			std::shared_ptr<WebSocketListener> WebSocketListener_;
 
-		public:
 			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
-				_IServerDriver(r), _Config(config), _WebSocketListener(config) {
-				_WebSocketListener.onConnection([&](const std::shared_ptr<ISocket>& sock) {
+				_IServerDriver(r), _Config(config), WebSocketListener_(std::make_shared<WebSocketListener>(config)) {
+				WebSocketListener_->onConnection([&](const std::shared_ptr<ISocket>& sock) {
 
 					if (_Config->MaxNumConnections == -1 || static_cast<int>(Clients.size()) < _Config->MaxNumConnections) {
 						std::lock_guard<std::mutex> lock(ClientLock);
@@ -43,7 +43,7 @@ namespace SL {
 					_IServerDriver->onConnection(sock);
 
 				});
-				_WebSocketListener.onDisconnection([&](const ISocket* ws) {
+				WebSocketListener_->onDisconnection([&](const ISocket* ws) {
 					{
 						std::lock_guard<std::mutex> lock(ClientLock);
 						Clients.erase(std::remove_if(begin(Clients), end(Clients), [ws](const std::shared_ptr<ISocket>& p) { return p.get() == ws; }), Clients.end());
@@ -51,7 +51,7 @@ namespace SL {
 					_IServerDriver->onDisconnection(ws);
 
 				});
-				_WebSocketListener.onMessage([&](const std::shared_ptr<ISocket>& sock, const char *message, size_t length) {
+				WebSocketListener_->onMessage([&](const std::shared_ptr<ISocket>& sock, const char *message, size_t length) {
 					auto pactype = PACKET_TYPES::INVALID;
 					assert(length >= sizeof(pactype));
 
@@ -182,6 +182,7 @@ namespace SL {
 		}
 		void ServerNetworkDriver::Start(IServerDriver * r, std::shared_ptr<Server_Config> config) {
 			_ServerNetworkDriverImpl = std::make_unique<ServerNetworkDriverImpl>(r, config);
+			_ServerNetworkDriverImpl->WebSocketListener_->run();
 		}
 		void ServerNetworkDriver::Stop() {
 			_ServerNetworkDriverImpl.reset();

@@ -49,10 +49,10 @@ namespace SL {
 				auto wnd = (ViewerControllerImpl*)widget;
 				wnd->Close();
 			}
-			ViewerControllerImpl(std::shared_ptr<Client_Config> config, const char* dst_host) :
+			ViewerControllerImpl(std::shared_ptr<Client_Config> config) :
 				Fl_Double_Window(900, 700, "Remote Host"),
 				_Config(config),
-				_ClientNetworkDriver(this, config, dst_host)
+				_ClientNetworkDriver(this)
 			{
 				_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
 				callback(window_cb);
@@ -78,7 +78,6 @@ namespace SL {
 			}
 			virtual ~ViewerControllerImpl() {
 				_Clipboard.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
-				_ClientNetworkDriver.Stop();
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
 				Fl_Double_Window::resize(X, Y, W, H);
@@ -214,8 +213,8 @@ namespace SL {
 
 SL::RAT::ViewerController::ViewerController(std::shared_ptr<Client_Config> config, const char * dst_host) {
 
-	_ViewerControllerImpl = new ViewerControllerImpl(config, dst_host);
-	_ViewerControllerImpl->_ClientNetworkDriver.Start();
+	_ViewerControllerImpl = new ViewerControllerImpl(config);
+	_ViewerControllerImpl->_ClientNetworkDriver.Connect(config, dst_host);
 }
 
 SL::RAT::ViewerController::~ViewerController() {

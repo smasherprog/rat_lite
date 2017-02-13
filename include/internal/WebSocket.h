@@ -43,8 +43,8 @@ namespace SL {
 			WebSocket(boost::asio::ssl::context& context, boost::asio::io_service& io_service);
 			virtual ~WebSocket();
 
-			void onMessage(std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)>& cb) { onMessage_ = cb; }
-			void onDisconnection(std::function<void(const ISocket* socket)>& cb) { onDisconnection_ = cb; }
+			void onMessage(const std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)>& cb) { onMessage_ = cb; }
+			void onDisconnection(const std::function<void(const ISocket* socket)>& cb) { onDisconnection_ = cb; }
 			virtual void send(std::shared_ptr<char> data, size_t len) override;
 			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>& get_Socket() { return _socket; }
 			virtual void close(const std::string& reason) override;

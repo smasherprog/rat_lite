@@ -62,10 +62,13 @@
 # include <sys/filio.h>
 # include <sys/wait.h>
 # define UV__O_CLOEXEC O_CLOEXEC
-# if defined(__FreeBSD__)
+# if defined(__FreeBSD__) && __FreeBSD__ >= 10
 #  define uv__accept4 accept4
 #  define UV__SOCK_NONBLOCK SOCK_NONBLOCK
 #  define UV__SOCK_CLOEXEC  SOCK_CLOEXEC
+# endif
+# if !defined(F_DUP2FD_CLOEXEC) && defined(_F_DUP2FD_CLOEXEC)
+#  define F_DUP2FD_CLOEXEC  _F_DUP2FD_CLOEXEC
 # endif
 #endif
 
@@ -95,7 +98,7 @@ uint64_t uv_hrtime(void) {
 
 
 void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
-  assert(!(handle->flags & (UV_CLOSING | UV_CLOSED)));
+  assert(!uv__is_closing(handle));
 
   handle->flags |= UV_CLOSING;
   handle->close_cb = close_cb;
@@ -289,7 +292,7 @@ int uv_is_closing(const uv_handle_t* handle) {
 }
 
 
-uv_os_fd_t uv_backend_fd(const uv_loop_t* loop) {
+int uv_backend_fd(const uv_loop_t* loop) {
   return loop->backend_fd;
 }
 
@@ -449,7 +452,7 @@ int uv__accept(int sockfd) {
   assert(sockfd >= 0);
 
   while (1) {
-#if defined(__linux__) || defined(__FreeBSD__)
+#if defined(__linux__) || (defined(__FreeBSD__) && __FreeBSD__ >= 10)
     static int no_accept4;
 
     if (no_accept4)
@@ -514,6 +517,9 @@ int uv__close_nocheckstdio(int fd) {
 
 int uv__close(int fd) {
   assert(fd > STDERR_FILENO);  /* Catch stdio close bugs. */
+#if defined(__MVS__)
+  epoll_file_close(fd);
+#endif
   return uv__close_nocheckstdio(fd);
 }
 
@@ -975,11 +981,18 @@ int uv__open_cloexec(const char* path, int flags) {
 
 int uv__dup2_cloexec(int oldfd, int newfd) {
   int r;
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && __FreeBSD__ >= 10
   r = dup3(oldfd, newfd, O_CLOEXEC);
   if (r == -1)
     return -errno;
   return r;
+#elif defined(__FreeBSD__) && defined(F_DUP2FD_CLOEXEC)
+  r = fcntl(oldfd, F_DUP2FD_CLOEXEC, newfd);
+  if (r != -1)
+    return r;
+  if (errno != EINVAL)
+    return -errno;
+  /* Fall through. */
 #elif defined(__linux__)
   static int no_dup3;
   if (!no_dup3) {
@@ -1225,4 +1238,10 @@ void uv_os_free_passwd(uv_passwd_t* pwd) {
 
 int uv_os_get_passwd(uv_passwd_t* pwd) {
   return uv__getpwuid_r(pwd);
+}
+
+
+int uv_translate_sys_error(int sys_errno) {
+  /* If < 0 then it's already a libuv error. */
+  return sys_errno <= 0 ? sys_errno : -sys_errno;
 }

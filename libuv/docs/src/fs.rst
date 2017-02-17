@@ -223,7 +223,7 @@ API
 .. c:function:: int uv_fs_fstat(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb)
 .. c:function:: int uv_fs_lstat(uv_loop_t* loop, uv_fs_t* req, const char* path, uv_fs_cb cb)
 
-    Equivalent to :man:`stat(2)`, :man:`fstat(2)` and :man:`fstat(2)` respectively.
+    Equivalent to :man:`stat(2)`, :man:`fstat(2)` and :man:`lstat(2)` respectively.
 
 .. c:function:: int uv_fs_rename(uv_loop_t* loop, uv_fs_t* req, const char* path, const char* new_path, uv_fs_cb cb)
 
@@ -308,6 +308,10 @@ API
 
         The background story and some more details on these issues can be checked
         `here <https://github.com/nodejs/node/issues/7726>`_.
+
+    .. note::
+      This function is not implemented on Windows XP and Windows Server 2003.
+      On these systems, UV_ENOSYS is returned.
 
     .. versionadded:: 1.8.0
 

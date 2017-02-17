@@ -10,13 +10,14 @@
           ['OS=="solaris"', {
             'cflags': [ '-pthreads' ],
           }],
-          ['OS not in "solaris android zos"', {
+          ['OS not in "solaris android os390"', {
             'cflags': [ '-pthread' ],
           }],
-          ['OS in "zos"', {
+          ['OS in "os390"', {
             'defines': [
               '_UNIX03_THREADS',
               '_UNIX03_SOURCE',
+              '_UNIX03_WITHDRAWN',
               '_OPEN_SYS_IF_EXT',
               '_OPEN_SYS_SOCK_IPV6',
               '_OPEN_MSGQ_EXT',
@@ -28,6 +29,7 @@
               'PATH_MAX=255'
             ],
             'cflags': [ '-qxplink' ],
+            'ldflags': [ '-qxplink' ],
           }]
         ],
       }],
@@ -35,7 +37,7 @@
     'xcode_settings': {
       'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',  # -fvisibility=hidden
       'WARNING_CFLAGS': [ '-Wall', '-Wextra', '-Wno-unused-parameter' ],
-      'OTHER_CFLAGS': [ '-g', '--std=gnu99', '-pedantic' ],
+      'OTHER_CFLAGS': [ '-g', '--std=gnu89', '-pedantic' ],
     }
   },
 
@@ -74,10 +76,8 @@
         'src/fs-poll.c',
         'src/heap-inl.h',
         'src/inet.c',
-        'src/loop-watcher.c',
         'src/queue.h',
         'src/threadpool.c',
-        'src/timer.c',
         'src/uv-common.c',
         'src/uv-common.h',
         'src/version.c'
@@ -91,6 +91,7 @@
           'sources': [
             'include/uv-win.h',
             'src/win/async.c',
+            'src/win/atomicops-inl.h',
             'src/win/core.c',
             'src/win/detect-wakeup.c',
             'src/win/dl.c',
@@ -102,6 +103,7 @@
             'src/win/handle.c',
             'src/win/handle-inl.h',
             'src/win/internal.h',
+            'src/win/loop-watcher.c',
             'src/win/pipe.c',
             'src/win/thread.c',
             'src/win/poll.c',
@@ -110,10 +112,12 @@
             'src/win/req.c',
             'src/win/req-inl.h',
             'src/win/signal.c',
+            'src/win/snprintf.c',
             'src/win/stream.c',
             'src/win/stream-inl.h',
             'src/win/tcp.c',
             'src/win/tty.c',
+            'src/win/timer.c',
             'src/win/udp.c',
             'src/win/util.c',
             'src/win/winapi.c',
@@ -149,6 +153,7 @@
             'src/unix/getnameinfo.c',
             'src/unix/internal.h',
             'src/unix/loop.c',
+            'src/unix/loop-watcher.c',
             'src/unix/pipe.c',
             'src/unix/poll.c',
             'src/unix/process.c',
@@ -157,6 +162,7 @@
             'src/unix/stream.c',
             'src/unix/tcp.c',
             'src/unix/thread.c',
+            'src/unix/timer.c',
             'src/unix/tty.c',
             'src/unix/udp.c',
           ],
@@ -166,10 +172,10 @@
               ['OS=="solaris"', {
                 'ldflags': [ '-pthreads' ],
               }],
-              [ 'OS=="zos" and uv_library=="shared_library"', {
+              [ 'OS=="os390" and uv_library=="shared_library"', {
                 'ldflags': [ '-Wl,DLL' ],
               }],
-              ['OS != "solaris" and OS != "android" and OS != "zos"', {
+              ['OS != "solaris" and OS != "android" and OS != "os390"', {
                 'ldflags': [ '-pthread' ],
               }],
             ],
@@ -177,14 +183,14 @@
           'conditions': [
             ['uv_library=="shared_library"', {
               'conditions': [
-                ['OS=="zos"', {
+                ['OS=="os390"', {
                   'cflags': [ '-qexportall' ],
                 }, {
                   'cflags': [ '-fPIC' ],
                 }],
               ],
             }],
-            ['uv_library=="shared_library" and OS!="mac" and OS!="zos"', {
+            ['uv_library=="shared_library" and OS!="mac" and OS!="os390"', {
               # This will cause gyp to set soname
               # Must correspond with UV_VERSION_MAJOR
               # in include/uv-version.h
@@ -192,14 +198,14 @@
             }],
           ],
         }],
-        [ 'OS in "linux mac ios android"', {
+        [ 'OS in "linux mac ios android os390"', {
           'sources': [ 'src/unix/proctitle.c' ],
         }],
-        [ 'OS != "zos"', {
+        [ 'OS != "os390"', {
           'cflags': [
             '-fvisibility=hidden',
             '-g',
-            '--std=gnu99',
+            '--std=gnu89',
             '-pedantic',
             '-Wall',
             '-Wextra',
@@ -218,7 +224,7 @@
             '_DARWIN_UNLIMITED_SELECT=1',
           ]
         }],
-        [ 'OS!="mac" and OS!="zos"', {
+        [ 'OS!="mac" and OS!="os390"', {
           # Enable on all platforms except OS X. The antique gcc/clang that
           # ships with Xcode emits waaaay too many false positives.
           'cflags': [ '-Wstrict-aliasing' ],
@@ -253,7 +259,7 @@
           'sources': [ 'src/unix/sunos.c' ],
           'defines': [
             '__EXTENSIONS__',
-            '_XOPEN_SOURCE=600',
+            '_XOPEN_SOURCE=500',
           ],
           'link_settings': {
             'libraries': [
@@ -271,6 +277,7 @@
             '_XOPEN_SOURCE=500',
             '_LINUX_SOURCE_COMPAT',
             '_THREAD_SAFE',
+            'HAVE_SYS_AHAFS_EVPRODS_H',
           ],
           'link_settings': {
             'libraries': [
@@ -298,11 +305,12 @@
         ['uv_library=="shared_library"', {
           'defines': [ 'BUILDING_UV_SHARED=1' ]
         }],
-        ['OS=="zos"', {
+        ['OS=="os390"', {
           'sources': [
             'src/unix/pthread-fixes.c',
-            'src/unix/pthread-barrier.c'
-            'src/unix/os390.c'
+            'src/unix/pthread-barrier.c',
+            'src/unix/os390.c',
+            'src/unix/os390-syscalls.c'
           ]
         }],
       ]
@@ -454,9 +462,7 @@
           'sources': [
             'test/runner-win.c',
             'test/runner-win.h',
-          ],
-          'defines': [
-            '_WIN32_WINNT=0x0600',
+            'src/win/snprintf.c',
           ],
           'libraries': [ '-lws2_32' ]
         }, { # POSIX
@@ -465,7 +471,7 @@
             'test/runner-unix.h',
           ],
           'conditions': [
-            [ 'OS != "zos"', {
+            [ 'OS != "os390"', {
               'defines': [ '_GNU_SOURCE' ],
               'cflags': [ '-Wno-long-long' ],
               'xcode_settings': {
@@ -494,7 +500,7 @@
         ['uv_library=="shared_library"', {
           'defines': [ 'USING_UV_SHARED=1' ],
           'conditions': [
-            [ 'OS == "zos"', {
+            [ 'OS == "os390"', {
               'cflags': [ '-Wc,DLL' ],
             }],
           ],
@@ -542,6 +548,7 @@
           'sources': [
             'test/runner-win.c',
             'test/runner-win.h',
+            'src/win/snprintf.c',
           ],
           'libraries': [ '-lws2_32' ]
         }, { # POSIX
@@ -554,7 +561,7 @@
         ['uv_library=="shared_library"', {
           'defines': [ 'USING_UV_SHARED=1' ],
           'conditions': [
-            [ 'OS == "zos"', {
+            [ 'OS == "os390"', {
               'cflags': [ '-Wc,DLL' ],
             }],
           ],

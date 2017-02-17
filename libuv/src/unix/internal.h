@@ -30,9 +30,17 @@
 #include <fcntl.h>  /* O_CLOEXEC, may be */
 #include <stdio.h>
 
+#if defined(__STRICT_ANSI__)
+# define inline __inline
+#endif
+
 #if defined(__linux__)
 # include "linux-syscalls.h"
 #endif /* __linux__ */
+
+#if defined(__MVS__)
+# include "os390-syscalls.h"
+#endif /* __MVS__ */
 
 #if defined(__sun)
 # include <sys/port.h>
@@ -48,7 +56,7 @@
 #endif /* _AIX */
 
 #if defined(__APPLE__) && !TARGET_OS_IPHONE
-# include <CoreServices/CoreServices.h>
+# include <AvailabilityMacros.h>
 #endif
 
 #if defined(__ANDROID__)
@@ -216,6 +224,10 @@ int uv__tcp_keepalive(int fd, int on, unsigned int delay);
 /* pipe */
 int uv_pipe_listen(uv_pipe_t* handle, int backlog, uv_connection_cb cb);
 
+/* timer */
+void uv__run_timers(uv_loop_t* loop);
+int uv__next_timeout(const uv_loop_t* loop);
+
 /* signal */
 void uv__signal_close(uv_signal_t* handle);
 void uv__signal_global_once_init(void);
@@ -230,12 +242,16 @@ void uv__platform_invalidate_fd(uv_loop_t* loop, int fd);
 
 /* various */
 void uv__async_close(uv_async_t* handle);
+void uv__check_close(uv_check_t* handle);
 void uv__fs_event_close(uv_fs_event_t* handle);
+void uv__idle_close(uv_idle_t* handle);
 void uv__pipe_close(uv_pipe_t* handle);
 void uv__poll_close(uv_poll_t* handle);
+void uv__prepare_close(uv_prepare_t* handle);
 void uv__process_close(uv_process_t* handle);
 void uv__stream_close(uv_stream_t* handle);
 void uv__tcp_close(uv_tcp_t* handle);
+void uv__timer_close(uv_timer_t* handle);
 void uv__udp_close(uv_udp_t* handle);
 void uv__udp_finish_close(uv_udp_t* handle);
 uv_handle_type uv__handle_type(int fd);
@@ -264,6 +280,24 @@ int uv__make_pipe(int fds[2], int flags);
 int uv__fsevents_init(uv_fs_event_t* handle);
 int uv__fsevents_close(uv_fs_event_t* handle);
 void uv__fsevents_loop_delete(uv_loop_t* loop);
+
+/* OSX < 10.7 has no file events, polyfill them */
+#ifndef MAC_OS_X_VERSION_10_7
+
+static const int kFSEventStreamCreateFlagFileEvents = 0x00000010;
+static const int kFSEventStreamEventFlagItemCreated = 0x00000100;
+static const int kFSEventStreamEventFlagItemRemoved = 0x00000200;
+static const int kFSEventStreamEventFlagItemInodeMetaMod = 0x00000400;
+static const int kFSEventStreamEventFlagItemRenamed = 0x00000800;
+static const int kFSEventStreamEventFlagItemModified = 0x00001000;
+static const int kFSEventStreamEventFlagItemFinderInfoMod = 0x00002000;
+static const int kFSEventStreamEventFlagItemChangeOwner = 0x00004000;
+static const int kFSEventStreamEventFlagItemXattrMod = 0x00008000;
+static const int kFSEventStreamEventFlagItemIsFile = 0x00010000;
+static const int kFSEventStreamEventFlagItemIsDir = 0x00020000;
+static const int kFSEventStreamEventFlagItemIsSymlink = 0x00040000;
+
+#endif /* __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070 */
 
 #endif /* defined(__APPLE__) */
 

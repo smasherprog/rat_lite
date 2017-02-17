@@ -45,6 +45,30 @@ int uv__getaddrinfo_translate_error(int sys_err) {
 }
 
 
+/*
+ * MinGW is missing this
+ */
+#if !defined(_MSC_VER) && !defined(__MINGW64_VERSION_MAJOR)
+  typedef struct addrinfoW {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    WCHAR* ai_canonname;
+    struct sockaddr* ai_addr;
+    struct addrinfoW* ai_next;
+  } ADDRINFOW, *PADDRINFOW;
+
+  DECLSPEC_IMPORT int WSAAPI GetAddrInfoW(const WCHAR* node,
+                                          const WCHAR* service,
+                                          const ADDRINFOW* hints,
+                                          PADDRINFOW* result);
+
+  DECLSPEC_IMPORT void WSAAPI FreeAddrInfoW(PADDRINFOW pAddrInfo);
+#endif
+
+
 /* adjust size value to be multiple of 4. Use to keep pointer aligned */
 /* Do we need different versions of this for different architectures? */
 #define ALIGNED_SIZE(X)     ((((X) + 3) >> 2) << 2)
@@ -238,8 +262,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   int err;
 
   if (req == NULL || (node == NULL && service == NULL)) {
-    err = WSAEINVAL;
-    goto error;
+    return UV_EINVAL;
   }
 
   uv_req_init(loop, (uv_req_t*)req);

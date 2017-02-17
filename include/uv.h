@@ -49,7 +49,12 @@ extern "C" {
 #include "uv-version.h"
 #include <stddef.h>
 #include <stdio.h>
-#include <stdint.h>
+
+#if defined(_MSC_VER) && _MSC_VER < 1600
+# include "stdint-msvc2008.h"
+#else
+# include <stdint.h>
+#endif
 
 #if defined(_WIN32)
 # include "uv-win.h"
@@ -280,7 +285,7 @@ UV_EXTERN int uv_has_ref(const uv_handle_t*);
 UV_EXTERN void uv_update_time(uv_loop_t*);
 UV_EXTERN uint64_t uv_now(const uv_loop_t*);
 
-UV_EXTERN uv_os_fd_t uv_backend_fd(const uv_loop_t*);
+UV_EXTERN int uv_backend_fd(const uv_loop_t*);
 UV_EXTERN int uv_backend_timeout(const uv_loop_t*);
 
 typedef void (*uv_alloc_cb)(uv_handle_t* handle,
@@ -357,6 +362,8 @@ typedef enum {
   UV_JOIN_GROUP
 } uv_membership;
 
+
+UV_EXTERN int uv_translate_sys_error(int sys_errno);
 
 UV_EXTERN const char* uv_strerror(int err);
 UV_EXTERN const char* uv_err_name(int err);
@@ -1460,7 +1467,6 @@ struct uv_loop_s {
   void* active_reqs[2];
   /* Internal flag to signal loop stop. */
   unsigned int stop_flag;
-  void* reserved[4];
   UV_LOOP_PRIVATE_FIELDS
 };
 

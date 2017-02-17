@@ -36,6 +36,17 @@ sNtQuerySystemInformation pNtQuerySystemInformation;
 
 
 /* Kernel32 function pointers */
+sGetQueuedCompletionStatusEx pGetQueuedCompletionStatusEx;
+sSetFileCompletionNotificationModes pSetFileCompletionNotificationModes;
+sCreateSymbolicLinkW pCreateSymbolicLinkW;
+sCancelIoEx pCancelIoEx;
+sInitializeConditionVariable pInitializeConditionVariable;
+sSleepConditionVariableCS pSleepConditionVariableCS;
+sSleepConditionVariableSRW pSleepConditionVariableSRW;
+sWakeAllConditionVariable pWakeAllConditionVariable;
+sWakeConditionVariable pWakeConditionVariable;
+sCancelSynchronousIo pCancelSynchronousIo;
+sGetFinalPathNameByHandleW pGetFinalPathNameByHandleW;
 
 
 /* Powrprof.dll function pointer */
@@ -104,9 +115,45 @@ void uv_winapi_init() {
     uv_fatal_error(GetLastError(), "GetModuleHandleA");
   }
 
+  pGetQueuedCompletionStatusEx = (sGetQueuedCompletionStatusEx) GetProcAddress(
+      kernel32_module,
+      "GetQueuedCompletionStatusEx");
+
+  pSetFileCompletionNotificationModes = (sSetFileCompletionNotificationModes)
+    GetProcAddress(kernel32_module, "SetFileCompletionNotificationModes");
+
+  pCreateSymbolicLinkW = (sCreateSymbolicLinkW)
+    GetProcAddress(kernel32_module, "CreateSymbolicLinkW");
+
+  pCancelIoEx = (sCancelIoEx)
+    GetProcAddress(kernel32_module, "CancelIoEx");
+
+  pInitializeConditionVariable = (sInitializeConditionVariable)
+    GetProcAddress(kernel32_module, "InitializeConditionVariable");
+
+  pSleepConditionVariableCS = (sSleepConditionVariableCS)
+    GetProcAddress(kernel32_module, "SleepConditionVariableCS");
+
+  pSleepConditionVariableSRW = (sSleepConditionVariableSRW)
+    GetProcAddress(kernel32_module, "SleepConditionVariableSRW");
+
+  pWakeAllConditionVariable = (sWakeAllConditionVariable)
+    GetProcAddress(kernel32_module, "WakeAllConditionVariable");
+
+  pWakeConditionVariable = (sWakeConditionVariable)
+    GetProcAddress(kernel32_module, "WakeConditionVariable");
+
+  pCancelSynchronousIo = (sCancelSynchronousIo)
+    GetProcAddress(kernel32_module, "CancelSynchronousIo");
+
+  pGetFinalPathNameByHandleW = (sGetFinalPathNameByHandleW)
+    GetProcAddress(kernel32_module, "GetFinalPathNameByHandleW");
+
+
   powrprof_module = LoadLibraryA("powrprof.dll");
   if (powrprof_module != NULL) {
     pPowerRegisterSuspendResumeNotification = (sPowerRegisterSuspendResumeNotification)
       GetProcAddress(powrprof_module, "PowerRegisterSuspendResumeNotification");
   }
+
 }

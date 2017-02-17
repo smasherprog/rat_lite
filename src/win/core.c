@@ -25,24 +25,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
 #include <crtdbg.h>
+#endif
 
 #include "uv.h"
 #include "internal.h"
 #include "queue.h"
 #include "handle-inl.h"
 #include "req-inl.h"
-#include "heap-inl.h"
-
-
-static uv_loop_t default_loop_struct;
-static uv_loop_t* default_loop_ptr;
 
 /* uv_once initialization guards */
 static uv_once_t uv_init_guard_ = UV_ONCE_INIT;
 
 
-#if defined(_DEBUG)
+#if defined(_DEBUG) && (defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR))
 /* Our crt debug report handler allows us to temporarily disable asserts
  * just for the current thread.
  */
@@ -72,7 +69,7 @@ UV_THREAD_LOCAL int uv__crt_assert_enabled = FALSE;
 #endif
 
 
-#if __MSVCRT_VERSION__ >= 0x800
+#if !defined(__MINGW32__) || __MSVCRT_VERSION__ >= 0x800
 static void uv__crt_invalid_parameter_handler(const wchar_t* expression,
     const wchar_t* function, const wchar_t * file, unsigned int line,
     uintptr_t reserved) {
@@ -80,32 +77,93 @@ static void uv__crt_invalid_parameter_handler(const wchar_t* expression,
 }
 #endif
 
-static void* uv__loops[2];
+static uv_loop_t** uv__loops;
+static int uv__loops_size;
+static int uv__loops_capacity;
+#define UV__LOOPS_CHUNK_SIZE 8
 static uv_mutex_t uv__loops_lock;
 
 static void uv__loops_init() {
   uv_mutex_init(&uv__loops_lock);
-  QUEUE_INIT(&uv__loops);
+  uv__loops = uv__calloc(UV__LOOPS_CHUNK_SIZE, sizeof(uv_loop_t*));
+  if (!uv__loops)
+    uv_fatal_error(ERROR_OUTOFMEMORY, "uv__malloc");
+  uv__loops_size = 0;
+  uv__loops_capacity = UV__LOOPS_CHUNK_SIZE;
 }
 
-static void uv__loops_add(uv_loop_t* loop) {
+static int uv__loops_add(uv_loop_t* loop) {
+  uv_loop_t** new_loops;
+  int new_capacity, i;
+
   uv_mutex_lock(&uv__loops_lock);
-  QUEUE_INSERT_TAIL(&uv__loops, &loop->loops_queue);
+
+  if (uv__loops_size == uv__loops_capacity) {
+    new_capacity = uv__loops_capacity + UV__LOOPS_CHUNK_SIZE;
+    new_loops = uv__realloc(uv__loops, sizeof(uv_loop_t*) * new_capacity);
+    if (!new_loops)
+      goto failed_loops_realloc;
+    uv__loops = new_loops;
+    for (i = uv__loops_capacity; i < new_capacity; ++i)
+      uv__loops[i] = NULL;
+    uv__loops_capacity = new_capacity;
+  }
+  uv__loops[uv__loops_size] = loop;
+  ++uv__loops_size;
+
   uv_mutex_unlock(&uv__loops_lock);
+  return 0;
+
+failed_loops_realloc:
+  uv_mutex_unlock(&uv__loops_lock);
+  return ERROR_OUTOFMEMORY;
 }
 
 static void uv__loops_remove(uv_loop_t* loop) {
+  int loop_index;
+  int smaller_capacity;
+  uv_loop_t** new_loops;
+
   uv_mutex_lock(&uv__loops_lock);
-  QUEUE_REMOVE(&loop->loops_queue);
+
+  for (loop_index = 0; loop_index < uv__loops_size; ++loop_index) {
+    if (uv__loops[loop_index] == loop)
+      break;
+  }
+  /* If loop was not found, ignore */
+  if (loop_index == uv__loops_size)
+    goto loop_removed;
+
+  uv__loops[loop_index] = uv__loops[uv__loops_size - 1];
+  uv__loops[uv__loops_size - 1] = NULL;
+  --uv__loops_size;
+
+  /* If we didn't grow to big skip downsizing */
+  if (uv__loops_capacity < 4 * UV__LOOPS_CHUNK_SIZE)
+    goto loop_removed;
+
+  /* Downsize only if more than half of buffer is free */
+  smaller_capacity = uv__loops_capacity / 2;
+  if (uv__loops_size >= smaller_capacity)
+    goto loop_removed;
+  new_loops = uv__realloc(uv__loops, sizeof(uv_loop_t*) * smaller_capacity);
+  if (!new_loops)
+    goto loop_removed;
+  uv__loops = new_loops;
+  uv__loops_capacity = smaller_capacity;
+
+loop_removed:
   uv_mutex_unlock(&uv__loops_lock);
 }
 
 void uv__wake_all_loops() {
-  QUEUE* q;
+  int i;
+  uv_loop_t* loop;
 
   uv_mutex_lock(&uv__loops_lock);
-  QUEUE_FOREACH(q, &uv__loops) {
-    uv_loop_t* loop = QUEUE_DATA(q, uv_loop_t, loops_queue);
+  for (i = 0; i < uv__loops_size; ++i) {
+    loop = uv__loops[i];
+    assert(loop);
     if (loop->iocp != INVALID_HANDLE_VALUE)
       PostQueuedCompletionStatus(loop->iocp, 0, 0, NULL);
   }
@@ -120,7 +178,7 @@ static void uv_init(void) {
   /* Tell the CRT to not exit the application when an invalid parameter is
    * passed. The main issue is that invalid FDs will trigger this behavior.
    */
-#if __MSVCRT_VERSION__ >= 0x800
+#if !defined(__MINGW32__) || __MSVCRT_VERSION__ >= 0x800
   _set_invalid_parameter_handler(uv__crt_invalid_parameter_handler);
 #endif
 
@@ -128,7 +186,7 @@ static void uv_init(void) {
    * functions (eg _get_osfhandle) raise an assert when called with invalid
    * FDs even though they return the proper error code in the release build.
    */
-#if defined(_DEBUG)
+#if defined(_DEBUG) && (defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR))
   _CrtSetReportHook(uv__crt_dbg_report_handler);
 #endif
 
@@ -160,17 +218,6 @@ static void uv_init(void) {
 }
 
 
-/* The number of milliseconds in one second. */
-#define UV__MILLISEC 1000
-
-
-void uv_update_time(uv_loop_t* loop) {
-  uint64_t new_time = uv__hrtime(UV__MILLISEC);
-  assert(new_time >= loop->time);
-  loop->time = new_time;
-}
-
-
 int uv_loop_init(uv_loop_t* loop) {
   int err;
 
@@ -197,19 +244,22 @@ int uv_loop_init(uv_loop_t* loop) {
 
   loop->endgame_handles = NULL;
 
-  heap_init((struct heap*) &loop->timer_heap);
-  loop->timer_counter = 0;
+  RB_INIT(&loop->timers);
 
-  QUEUE_INIT(&loop->check_handles);
-  QUEUE_INIT(&loop->prepare_handles);
-  QUEUE_INIT(&loop->idle_handles);
+  loop->check_handles = NULL;
+  loop->prepare_handles = NULL;
+  loop->idle_handles = NULL;
 
-  QUEUE_INIT(&loop->async_handles);
-  uv_req_init(loop, &loop->async_req);
-  loop->async_req.type = UV_WAKEUP;
+  loop->next_prepare_handle = NULL;
+  loop->next_check_handle = NULL;
+  loop->next_idle_handle = NULL;
 
   memset(&loop->poll_peer_sockets, 0, sizeof loop->poll_peer_sockets);
 
+  loop->active_tcp_streams = 0;
+  loop->active_udp_streams = 0;
+
+  loop->timer_counter = 0;
   loop->stop_flag = 0;
 
   err = uv_mutex_init(&loop->wq_mutex);
@@ -223,8 +273,9 @@ int uv_loop_init(uv_loop_t* loop) {
   uv__handle_unref(&loop->wq_async);
   loop->wq_async.flags |= UV__HANDLE_INTERNAL;
 
-  QUEUE_INIT(&loop->loops_queue);
-  uv__loops_add(loop);
+  err = uv__loops_add(loop);
+  if (err)
+    goto fail_async_init;
 
   return 0;
 
@@ -276,8 +327,8 @@ int uv__loop_configure(uv_loop_t* loop, uv_loop_option option, va_list ap) {
 }
 
 
-uv_os_fd_t uv_backend_fd(const uv_loop_t* loop) {
-  return loop->iocp;
+int uv_backend_fd(const uv_loop_t* loop) {
+  return -1;
 }
 
 
@@ -294,14 +345,65 @@ int uv_backend_timeout(const uv_loop_t* loop) {
   if (loop->endgame_handles)
     return 0;
 
-  if (!QUEUE_EMPTY(&loop->idle_handles))
+  if (loop->idle_handles)
     return 0;
 
   return uv__next_timeout(loop);
 }
 
 
-static void uv__loop_poll(uv_loop_t* loop, int timeout) {
+static void uv_poll(uv_loop_t* loop, DWORD timeout) {
+  DWORD bytes;
+  ULONG_PTR key;
+  OVERLAPPED* overlapped;
+  uv_req_t* req;
+  int repeat;
+  uint64_t timeout_time;
+
+  timeout_time = loop->time + timeout;
+
+  for (repeat = 0; ; repeat++) {
+    GetQueuedCompletionStatus(loop->iocp,
+                              &bytes,
+                              &key,
+                              &overlapped,
+                              timeout);
+
+    if (overlapped) {
+      /* Package was dequeued */
+      req = uv_overlapped_to_req(overlapped);
+      uv_insert_pending_req(loop, req);
+
+      /* Some time might have passed waiting for I/O,
+       * so update the loop time here.
+       */
+      uv_update_time(loop);
+    } else if (GetLastError() != WAIT_TIMEOUT) {
+      /* Serious error */
+      uv_fatal_error(GetLastError(), "GetQueuedCompletionStatus");
+    } else if (timeout > 0) {
+      /* GetQueuedCompletionStatus can occasionally return a little early.
+       * Make sure that the desired timeout target time is reached.
+       */
+      uv_update_time(loop);
+      if (timeout_time > loop->time) {
+        timeout = (DWORD)(timeout_time - loop->time);
+        /* The first call to GetQueuedCompletionStatus should return very
+         * close to the target time and the second should reach it, but
+         * this is not stated in the documentation. To make sure a busy
+         * loop cannot happen, the timeout is increased exponentially
+         * starting on the third round.
+         */
+        timeout += repeat ? (1 << (repeat - 1)) : 0;
+        continue;
+      }
+    }
+    break;
+  }
+}
+
+
+static void uv_poll_ex(uv_loop_t* loop, DWORD timeout) {
   BOOL success;
   uv_req_t* req;
   OVERLAPPED_ENTRY overlappeds[128];
@@ -313,12 +415,12 @@ static void uv__loop_poll(uv_loop_t* loop, int timeout) {
   timeout_time = loop->time + timeout;
 
   for (repeat = 0; ; repeat++) {
-    success = GetQueuedCompletionStatusEx(loop->iocp,
-                                          overlappeds,
-                                          ARRAY_SIZE(overlappeds),
-                                          &count,
-                                          timeout,
-                                          FALSE);
+    success = pGetQueuedCompletionStatusEx(loop->iocp,
+                                           overlappeds,
+                                           ARRAY_SIZE(overlappeds),
+                                           &count,
+                                           timeout,
+                                           FALSE);
 
     if (success) {
       for (i = 0; i < count; i++) {
@@ -326,7 +428,7 @@ static void uv__loop_poll(uv_loop_t* loop, int timeout) {
          * meant only to wake us up.
          */
         if (overlappeds[i].lpOverlapped) {
-          req = container_of(overlappeds[i].lpOverlapped, uv_req_t, u.io.overlapped);
+          req = uv_overlapped_to_req(overlappeds[i].lpOverlapped);
           uv_insert_pending_req(loop, req);
         }
       }
@@ -373,9 +475,15 @@ int uv_loop_alive(const uv_loop_t* loop) {
 
 
 int uv_run(uv_loop_t *loop, uv_run_mode mode) {
-  int timeout;
+  DWORD timeout;
   int r;
   int ran_pending;
+  void (*poll)(uv_loop_t* loop, DWORD timeout);
+
+  if (pGetQueuedCompletionStatusEx)
+    poll = &uv_poll_ex;
+  else
+    poll = &uv_poll;
 
   r = uv__loop_alive(loop);
   if (!r)
@@ -383,19 +491,19 @@ int uv_run(uv_loop_t *loop, uv_run_mode mode) {
 
   while (r != 0 && loop->stop_flag == 0) {
     uv_update_time(loop);
-    uv__run_timers(loop);
+    uv_process_timers(loop);
 
     ran_pending = uv_process_reqs(loop);
-    uv__run_idle(loop);
-    uv__run_prepare(loop);
+    uv_idle_invoke(loop);
+    uv_prepare_invoke(loop);
 
     timeout = 0;
     if ((mode == UV_RUN_ONCE && !ran_pending) || mode == UV_RUN_DEFAULT)
       timeout = uv_backend_timeout(loop);
 
-    uv__loop_poll(loop, timeout == -1 ? INFINITE : timeout);
+    (*poll)(loop, timeout);
 
-    uv__run_check(loop);
+    uv_check_invoke(loop);
     uv_process_endgames(loop);
 
     if (mode == UV_RUN_ONCE) {
@@ -407,7 +515,7 @@ int uv_run(uv_loop_t *loop, uv_run_mode mode) {
        * UV_RUN_NOWAIT makes no guarantees about progress so it's omitted from
        * the check.
        */
-      uv__run_timers(loop);
+      uv_process_timers(loop);
     }
 
     r = uv__loop_alive(loop);

@@ -27,11 +27,21 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdint.h>
+
+#if defined(_MSC_VER) && _MSC_VER < 1600
+# include "stdint-msvc2008.h"
+#else
+# include <stdint.h>
+#endif
 
 #if !defined(_WIN32)
 # include <sys/time.h>
 # include <sys/resource.h>  /* setrlimit() */
+#endif
+
+#ifdef __clang__
+# pragma clang diagnostic ignored "-Wvariadic-macros"
+# pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
 
 #define TEST_PORT 9123
@@ -156,6 +166,10 @@ enum test_status {
 
 # define TEST_FILE_LIMIT(num) do {} while (0)
 
+#endif
+
+#if !defined(snprintf) && defined(_MSC_VER) && _MSC_VER < 1900
+extern int snprintf(char*, size_t, const char*, ...);
 #endif
 
 #if defined(__clang__) ||                                \

@@ -19,16 +19,17 @@
  * IN THE SOFTWARE.
  */
 
-
-#ifdef _MSC_VER
 /* Don't complain about write(), fileno() etc. being deprecated. */
 #pragma warning(disable : 4996)
-#endif
+
 
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
 
+#if !defined(snprintf) && defined(_MSC_VER) && _MSC_VER < 1900
+extern int snprintf(char*, size_t, const char*, ...);
+#endif
 
 typedef struct {
   HANDLE process;

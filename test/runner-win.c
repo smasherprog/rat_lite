@@ -24,11 +24,22 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <process.h>
-#include <crtdbg.h>
+#if !defined(__MINGW32__)
+# include <crtdbg.h>
+#endif
 
 
 #include "task.h"
 #include "runner.h"
+
+
+/*
+ * Define the stuff that MinGW doesn't have
+ */
+#ifndef GetFileSizeEx
+  WINBASEAPI BOOL WINAPI GetFileSizeEx(HANDLE hFile,
+                                       PLARGE_INTEGER lpFileSize);
+#endif
 
 
 /* Do platform-specific initialization. */
@@ -36,8 +47,10 @@ int platform_init(int argc, char **argv) {
   /* Disable the "application crashed" popup. */
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX |
       SEM_NOOPENFILEERRORBOX);
+#if !defined(__MINGW32__)
   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
   _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+#endif
 
   _setmode(0, _O_BINARY);
   _setmode(1, _O_BINARY);

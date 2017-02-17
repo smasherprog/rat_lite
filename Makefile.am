@@ -27,10 +27,8 @@ libuv_la_LDFLAGS = -no-undefined -version-info 1:0:0
 libuv_la_SOURCES = src/fs-poll.c \
                    src/heap-inl.h \
                    src/inet.c \
-                   src/loop-watcher.c \
                    src/queue.h \
                    src/threadpool.c \
-                   src/timer.c \
                    src/uv-common.c \
                    src/uv-common.h \
                    src/version.c
@@ -38,7 +36,7 @@ libuv_la_SOURCES = src/fs-poll.c \
 if SUNOS
 # Can't be turned into a CC_CHECK_CFLAGS in configure.ac, it makes compilers
 # on other platforms complain that the argument is unused during compilation.
-libuv_la_CFLAGS += -pthread
+libuv_la_CFLAGS += -pthreads
 endif
 
 if WINNT
@@ -48,6 +46,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/win \
                -DWIN32_LEAN_AND_MEAN \
                -D_WIN32_WINNT=0x0600
 libuv_la_SOURCES += src/win/async.c \
+                    src/win/atomicops-inl.h \
                     src/win/core.c \
                     src/win/detect-wakeup.c \
                     src/win/dl.c \
@@ -59,6 +58,7 @@ libuv_la_SOURCES += src/win/async.c \
                     src/win/handle.c \
                     src/win/handle-inl.h \
                     src/win/internal.h \
+                    src/win/loop-watcher.c \
                     src/win/pipe.c \
                     src/win/poll.c \
                     src/win/process-stdio.c \
@@ -70,6 +70,7 @@ libuv_la_SOURCES += src/win/async.c \
                     src/win/stream-inl.h \
                     src/win/tcp.c \
                     src/win/thread.c \
+                    src/win/timer.c \
                     src/win/tty.c \
                     src/win/udp.c \
                     src/win/util.c \
@@ -90,6 +91,7 @@ libuv_la_SOURCES += src/unix/async.c \
                    src/unix/getaddrinfo.c \
                    src/unix/getnameinfo.c \
                    src/unix/internal.h \
+                   src/unix/loop-watcher.c \
                    src/unix/loop.c \
                    src/unix/pipe.c \
                    src/unix/poll.c \
@@ -99,6 +101,7 @@ libuv_la_SOURCES += src/unix/async.c \
                    src/unix/stream.c \
                    src/unix/tcp.c \
                    src/unix/thread.c \
+                   src/unix/timer.c \
                    src/unix/tty.c \
                    src/unix/udp.c
 
@@ -117,6 +120,7 @@ EXTRA_DIST = test/fixtures/empty_file \
              README.md \
              checksparse.sh \
              vcbuild.bat \
+             Makefile.mingw \
              common.gypi \
              gyp_uv.py \
              uv.gyp
@@ -130,6 +134,13 @@ test_run_tests_CFLAGS =
 else
 test_run_tests_CFLAGS = -Wno-long-long
 endif
+
+if SUNOS
+# Can't be turned into a CC_CHECK_CFLAGS in configure.ac, it makes compilers
+# on other platforms complain that the argument is unused during compilation.
+test_run_tests_CFLAGS += -pthreads
+endif
+
 test_run_tests_LDFLAGS =
 test_run_tests_SOURCES = test/blackhole-server.c \
                          test/dns-server.c \
@@ -285,7 +296,7 @@ test_run_tests_CFLAGS += -D_GNU_SOURCE
 endif
 
 if SUNOS
-test_run_tests_CFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=600
+test_run_tests_CFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=500
 endif
 
 if OS390
@@ -305,7 +316,11 @@ test_run_tests_CFLAGS += -D_UNIX03_THREADS \
 endif
 
 if AIX
-libuv_la_CFLAGS += -D_ALL_SOURCE -D_XOPEN_SOURCE=500 -D_LINUX_SOURCE_COMPAT -D_THREAD_SAFE
+libuv_la_CFLAGS += -D_ALL_SOURCE \
+                   -D_XOPEN_SOURCE=500 \
+                   -D_LINUX_SOURCE_COMPAT \
+                   -D_THREAD_SAFE \
+                   -DHAVE_SYS_AHAFS_EVPRODS_H
 include_HEADERS += include/uv-aix.h
 libuv_la_SOURCES += src/unix/aix.c
 endif
@@ -369,7 +384,7 @@ endif
 
 if SUNOS
 include_HEADERS += include/uv-sunos.h
-libuv_la_CFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=600
+libuv_la_CFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=500
 libuv_la_SOURCES += src/unix/sunos.c
 endif
 
@@ -391,8 +406,10 @@ libuv_la_CFLAGS += -D_UNIX03_THREADS \
                    -qFLOAT=IEEE
 libuv_la_LDFLAGS += -qXPLINK
 libuv_la_SOURCES += src/unix/pthread-fixes.c \
-                    src/unix/pthread-barrier.c
-libuv_la_SOURCES += src/unix/os390.c
+                    src/unix/pthread-barrier.c \
+                    src/unix/os390.c \
+                    src/unix/os390-syscalls.c \
+                    src/unix/proctitle.c
 endif
 
 if HAVE_PKG_CONFIG

@@ -4118,37 +4118,42 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 # define DEVICE_TYPE DWORD
 #endif
 
-typedef struct _REPARSE_DATA_BUFFER {
-  ULONG  ReparseTag;
-  USHORT ReparseDataLength;
-  USHORT Reserved;
-  union {
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      ULONG Flags;
-      WCHAR PathBuffer[1];
-    } SymbolicLinkReparseBuffer;
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      WCHAR PathBuffer[1];
-    } MountPointReparseBuffer;
-    struct {
-      UCHAR  DataBuffer[1];
-    } GenericReparseBuffer;
-  } DUMMYUNIONNAME;
-} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+/* MinGW already has a definition for REPARSE_DATA_BUFFER, but mingw-w64 does
+ * not.
+ */
+#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
+  typedef struct _REPARSE_DATA_BUFFER {
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union {
+      struct {
+        USHORT SubstituteNameOffset;
+        USHORT SubstituteNameLength;
+        USHORT PrintNameOffset;
+        USHORT PrintNameLength;
+        ULONG Flags;
+        WCHAR PathBuffer[1];
+      } SymbolicLinkReparseBuffer;
+      struct {
+        USHORT SubstituteNameOffset;
+        USHORT SubstituteNameLength;
+        USHORT PrintNameOffset;
+        USHORT PrintNameLength;
+        WCHAR PathBuffer[1];
+      } MountPointReparseBuffer;
+      struct {
+        UCHAR  DataBuffer[1];
+      } GenericReparseBuffer;
+    };
+  } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+#endif
 
 typedef struct _IO_STATUS_BLOCK {
   union {
     NTSTATUS Status;
     PVOID Pointer;
-  } DUMMYUNIONNAME;
+  };
   ULONG_PTR Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
@@ -4578,6 +4583,15 @@ typedef NTSTATUS (NTAPI *sNtQueryDirectoryFile)
 # define SYMBOLIC_LINK_FLAG_DIRECTORY 0x1
 #endif
 
+#if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+  typedef struct _OVERLAPPED_ENTRY {
+      ULONG_PTR lpCompletionKey;
+      LPOVERLAPPED lpOverlapped;
+      ULONG_PTR Internal;
+      DWORD dwNumberOfBytesTransferred;
+  } OVERLAPPED_ENTRY, *LPOVERLAPPED_ENTRY;
+#endif
+
 /* from wincon.h */
 #ifndef ENABLE_INSERT_MODE
 # define ENABLE_INSERT_MODE 0x20
@@ -4592,6 +4606,10 @@ typedef NTSTATUS (NTAPI *sNtQueryDirectoryFile)
 #endif
 
 /* from winerror.h */
+#ifndef ERROR_ELEVATION_REQUIRED
+# define ERROR_ELEVATION_REQUIRED 740
+#endif
+
 #ifndef ERROR_SYMLINK_NOT_SUPPORTED
 # define ERROR_SYMLINK_NOT_SUPPORTED 1464
 #endif
@@ -4619,6 +4637,56 @@ typedef NTSTATUS (NTAPI *sNtQueryDirectoryFile)
 #ifndef ERROR_MUI_FILE_NOT_LOADED
 # define ERROR_MUI_FILE_NOT_LOADED 15105
 #endif
+
+typedef BOOL (WINAPI *sGetQueuedCompletionStatusEx)
+             (HANDLE CompletionPort,
+              LPOVERLAPPED_ENTRY lpCompletionPortEntries,
+              ULONG ulCount,
+              PULONG ulNumEntriesRemoved,
+              DWORD dwMilliseconds,
+              BOOL fAlertable);
+
+typedef BOOL (WINAPI* sSetFileCompletionNotificationModes)
+             (HANDLE FileHandle,
+              UCHAR Flags);
+
+typedef BOOLEAN (WINAPI* sCreateSymbolicLinkW)
+                (LPCWSTR lpSymlinkFileName,
+                 LPCWSTR lpTargetFileName,
+                 DWORD dwFlags);
+
+typedef BOOL (WINAPI* sCancelIoEx)
+             (HANDLE hFile,
+              LPOVERLAPPED lpOverlapped);
+
+typedef VOID (WINAPI* sInitializeConditionVariable)
+             (PCONDITION_VARIABLE ConditionVariable);
+
+typedef BOOL (WINAPI* sSleepConditionVariableCS)
+             (PCONDITION_VARIABLE ConditionVariable,
+              PCRITICAL_SECTION CriticalSection,
+              DWORD dwMilliseconds);
+
+typedef BOOL (WINAPI* sSleepConditionVariableSRW)
+             (PCONDITION_VARIABLE ConditionVariable,
+              PSRWLOCK SRWLock,
+              DWORD dwMilliseconds,
+              ULONG Flags);
+
+typedef VOID (WINAPI* sWakeAllConditionVariable)
+             (PCONDITION_VARIABLE ConditionVariable);
+
+typedef VOID (WINAPI* sWakeConditionVariable)
+             (PCONDITION_VARIABLE ConditionVariable);
+
+typedef BOOL (WINAPI* sCancelSynchronousIo)
+             (HANDLE hThread);
+
+typedef DWORD (WINAPI* sGetFinalPathNameByHandleW)
+             (HANDLE hFile,
+              LPWSTR lpszFilePath,
+              DWORD cchFilePath,
+              DWORD dwFlags);
 
 /* from powerbase.h */
 #ifndef DEVICE_NOTIFY_CALLBACK
@@ -4665,7 +4733,17 @@ extern sNtQuerySystemInformation pNtQuerySystemInformation;
 
 
 /* Kernel32 function pointers */
-
+extern sGetQueuedCompletionStatusEx pGetQueuedCompletionStatusEx;
+extern sSetFileCompletionNotificationModes pSetFileCompletionNotificationModes;
+extern sCreateSymbolicLinkW pCreateSymbolicLinkW;
+extern sCancelIoEx pCancelIoEx;
+extern sInitializeConditionVariable pInitializeConditionVariable;
+extern sSleepConditionVariableCS pSleepConditionVariableCS;
+extern sSleepConditionVariableSRW pSleepConditionVariableSRW;
+extern sWakeAllConditionVariable pWakeAllConditionVariable;
+extern sWakeConditionVariable pWakeConditionVariable;
+extern sCancelSynchronousIo pCancelSynchronousIo;
+extern sGetFinalPathNameByHandleW pGetFinalPathNameByHandleW;
 
 
 /* Powrprof.dll function pointer */

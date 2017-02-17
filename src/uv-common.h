@@ -30,12 +30,20 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdint.h>
+
+#if defined(_MSC_VER) && _MSC_VER < 1600
+# include "stdint-msvc2008.h"
+#else
+# include <stdint.h>
+#endif
 
 #include "uv.h"
 #include "tree.h"
 #include "queue.h"
 
+#if !defined(snprintf) && defined(_MSC_VER) && _MSC_VER < 1900
+extern int snprintf(char*, size_t, const char*, ...);
+#endif
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -215,15 +223,5 @@ char *uv__strndup(const char* s, size_t n);
 void* uv__malloc(size_t size);
 void uv__free(void* ptr);
 void* uv__realloc(void* ptr, size_t size);
-
-/* Loop watcher prototypes */
-void uv__idle_close(uv_idle_t* handle);
-void uv__prepare_close(uv_prepare_t* handle);
-void uv__check_close(uv_check_t* handle);
-
-/* Timer prototypes */
-void uv__run_timers(uv_loop_t* loop);
-int uv__next_timeout(const uv_loop_t* loop);
-void uv__timer_close(uv_timer_t* handle);
 
 #endif /* UV_COMMON_H_ */

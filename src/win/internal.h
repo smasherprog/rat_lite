@@ -242,12 +242,22 @@ void uv_poll_endgame(uv_loop_t* loop, uv_poll_t* handle);
 
 
 /*
+ * Timers
+ */
+void uv_timer_endgame(uv_loop_t* loop, uv_timer_t* handle);
+
+DWORD uv__next_timeout(const uv_loop_t* loop);
+void uv_process_timers(uv_loop_t* loop);
+
+
+/*
  * Loop watchers
  */
-void uv__loop_watcher_endgame(uv_loop_t* loop, uv_handle_t* handle);
-void uv__run_prepare(uv_loop_t* loop);
-void uv__run_check(uv_loop_t* loop);
-void uv__run_idle(uv_loop_t* loop);
+void uv_loop_watcher_endgame(uv_loop_t* loop, uv_handle_t* handle);
+
+void uv_prepare_invoke(uv_loop_t* loop);
+void uv_check_invoke(uv_loop_t* loop);
+void uv_idle_invoke(uv_loop_t* loop);
 
 void uv__once_init();
 
@@ -258,7 +268,8 @@ void uv__once_init();
 void uv_async_close(uv_loop_t* loop, uv_async_t* handle);
 void uv_async_endgame(uv_loop_t* loop, uv_async_t* handle);
 
-void uv_process_async_wakeup_req(uv_loop_t* loop, uv_req_t* req);
+void uv_process_async_wakeup_req(uv_loop_t* loop, uv_async_t* handle,
+    uv_req_t* req);
 
 
 /*

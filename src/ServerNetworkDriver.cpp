@@ -97,6 +97,7 @@ namespace SL {
 			}
 
 			void SendScreen(ISocket* socket, const Screen_Capture::Image & img, PACKET_TYPES p) {
+				if (Clients.empty()) return;
 				Rect r(Point(0, 0), Height(img), Width(img));
 
 
@@ -107,7 +108,7 @@ namespace SL {
 
 				auto maxsize = std::max(tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set), static_cast<unsigned long>((Screen_Capture::RowStride(img) + Screen_Capture::RowPadding(img)) * Screen_Capture::Height(img))) + sizeof(r) + sizeof(p);
 				auto _jpegSize = maxsize;
-				auto buffer = std::shared_ptr<char>(new char[maxsize], [](char* ptr) { delete[] ptr; });
+				auto buffer = std::shared_ptr<char>(new char[maxsize], [](char* ptr) { delete [] ptr; });
 
 				auto dst = (unsigned char*)buffer.get();
 				memcpy(dst, &p, sizeof(p));
@@ -133,7 +134,7 @@ namespace SL {
 				Send(socket, buffer, finalsize);
 			}
 			void SendMouse(ISocket* socket, const Screen_Capture::Image & img) {
-
+				if (Clients.empty()) return;
 				Point r(Width(img), Height(img));
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE);
 				auto finalsize = (Screen_Capture::RowStride(img) * Screen_Capture::Height(img)) + sizeof(p) + sizeof(r);
@@ -151,6 +152,7 @@ namespace SL {
 			}
 			void SendMouse(ISocket* socket, const Point& pos)
 			{
+				if (Clients.empty()) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
 				const auto size = sizeof(pos) + sizeof(p);
 				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });
@@ -162,6 +164,7 @@ namespace SL {
 			}
 
 			void SendClipboardText(ISocket* socket, const char* data, unsigned int len) {
+				if (Clients.empty()) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT);
 				auto size = len + sizeof(p);
 				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });

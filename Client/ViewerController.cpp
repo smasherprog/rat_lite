@@ -130,7 +130,7 @@ namespace SL {
 			void Close() {
 				if (!_BeingClosed) {
 					Fl::delete_widget(this);
-					//this->hide();
+					this->hide();
 				}
 				_BeingClosed = true;
 			}
@@ -181,13 +181,13 @@ namespace SL {
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 					_NetworkStatsTimer = std::chrono::steady_clock::now();
 
-			
+
 					std::string st = "Client ";
-				
+
 					FPS = FrameCounter;
 					FrameCounter = 0;
 					st += " Fps: " + std::to_string(FPS);
-				
+
 					if (st.size() > sizeof(_Title) - 1) st = st.substr(0, sizeof(_Title) - 1);
 					memcpy(_Title, st.c_str(), st.size() + 1);
 					Fl::awake(awakensettitle, this);

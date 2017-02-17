@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 	}
 
 #else 
-	config->Public_Certficate = std::shared_ptr<SL::RAT::ICryptoLoader>(new SL::RAT::FileCryptoLoader(public_cert_path));
+	config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
 #endif
 
 

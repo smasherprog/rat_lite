@@ -44,7 +44,11 @@ int main(int argc, char* argv[]) {
 		("websocket_port", boost::program_options::value<unsigned short>(&config->WebSocketTLSLPort)->default_value(6001), "websocket listen port")
 		("share_clipboard", boost::program_options::value<bool>(&config->Share_Clipboard)->default_value(true), "share this servers clipboard with clients")
 		("mouse_capture_rate", boost::program_options::value<int>(&config->MousePositionCaptureRate)->default_value(50), "mouse capture rate in ms")
+#if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
+		("screen_capture_rate", boost::program_options::value<int>(&config->ScreenImageCaptureRate)->default_value(1000), "screen capture rate in ms")
+#else
 		("screen_capture_rate", boost::program_options::value<int>(&config->ScreenImageCaptureRate)->default_value(100), "screen capture rate in ms")
+#endif
 		("images_as_grayscale", boost::program_options::value<bool>(&config->SendGrayScaleImages)->default_value(0), "send images as grayscale, this improves performance significantly")
 		("max_connections", boost::program_options::value<int>(&config->MaxNumConnections)->default_value(10)->notifier([](int v) { check_range("max_connections", v, -1, 100); }), "maximum number of concurrent connections -1 is unlimited")
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)

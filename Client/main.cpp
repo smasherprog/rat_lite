@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	auto config = std::make_shared<SL::RAT::Client_Config>();
 
-	std::string public_cert_path, host;
+	std::string host;
 
 
 	boost::program_options::options_description desc("Allowed options", 80, 40);
@@ -30,9 +30,9 @@ int main(int argc, char* argv[]) {
 		("share_clipboard", boost::program_options::value<bool>(&config->Share_Clipboard)->default_value(true), "share this clients clipboard with the server")
 		("host", boost::program_options::value<std::string>(&host), "enter a host or ip address to initite a connection")
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-		("public_cert_path", boost::program_options::value<std::string>(&public_cert_path), "path to the public certificate file")
+		("public_cert_path", boost::program_options::value<std::string>(&config->PathTo_Public_Certficate)->default_value(TEST_CERTIFICATE_PUBLIC_PATH), "path to the public certificate file")
 #else 
-		("public_cert_path", boost::program_options::value<std::string>(&public_cert_path)->required(), "path to the public certificate file")
+		("public_cert_path", boost::program_options::value<std::string>(&config->PathTo_Public_Certficate)->required(), "path to the public certificate file")
 #endif
 		;
 
@@ -52,24 +52,6 @@ int main(int argc, char* argv[]) {
 		std::cout << desc << "\n";
 		return 1;
 	}
-
-#if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-	//in debug mode allow usage of pre-made certs. DO NOT USE IN PRODUCTION!!!
-	if (public_cert_path.empty()) {
-		config->Public_Certficate = SL::RAT::LoadFromMemory(SL::RAT::public_cert, sizeof(SL::RAT::public_cert));
-	}
-	else if (!public_cert_path.empty()) {
-			config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
-	}
-	else {
-		std::cout << desc << "\n";
-		return 1;
-	}
-
-#else 
-	config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
-#endif
-
 
 
 	SL::RAT::ConnectWindow c(config, host);

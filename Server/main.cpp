@@ -44,21 +44,17 @@ int main(int argc, char* argv[]) {
 		("websocket_port", boost::program_options::value<unsigned short>(&config->WebSocketTLSLPort)->default_value(6001), "websocket listen port")
 		("share_clipboard", boost::program_options::value<bool>(&config->Share_Clipboard)->default_value(true), "share this servers clipboard with clients")
 		("mouse_capture_rate", boost::program_options::value<int>(&config->MousePositionCaptureRate)->default_value(50), "mouse capture rate in ms")
-#if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-		("screen_capture_rate", boost::program_options::value<int>(&config->ScreenImageCaptureRate)->default_value(1000), "screen capture rate in ms")
-#else
 		("screen_capture_rate", boost::program_options::value<int>(&config->ScreenImageCaptureRate)->default_value(100), "screen capture rate in ms")
-#endif
 		("images_as_grayscale", boost::program_options::value<bool>(&config->SendGrayScaleImages)->default_value(0), "send images as grayscale, this improves performance significantly")
 		("max_connections", boost::program_options::value<int>(&config->MaxNumConnections)->default_value(10)->notifier([](int v) { check_range("max_connections", v, -1, 100); }), "maximum number of concurrent connections -1 is unlimited")
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-		("private_key_path", boost::program_options::value<std::string>(&private_key_path), "path to the private key file")
-		("private_key_password", boost::program_options::value<std::string>(&config->PasswordToPrivateKey), "password to the private key file")
-		("public_cert_path", boost::program_options::value<std::string>(&public_cert_path), "path to the public certificate file")
+		("private_key_path", boost::program_options::value<std::string>(&config->PathTo_Private_Key)->default_value(TEST_CERTIFICATE_PRIVATE_PATH), "path to the private key file")
+		("private_key_password", boost::program_options::value<std::string>(&config->PasswordToPrivateKey)->default_value(TEST_CERTIFICATE_PRIVATE_PASSWORD), "password to the private key file")
+		("public_cert_path", boost::program_options::value<std::string>(&config->PathTo_Public_Certficate)->default_value(TEST_CERTIFICATE_PUBLIC_PATH), "path to the public certificate file")
 #else 
-		("private_key_path", boost::program_options::value<std::string>(&private_key_path)->required(), "path to the private key file")
+		("private_key_path", boost::program_options::value<std::string>(&config->PathTo_Private_Key)->required(), "path to the private key file")
 		("private_key_password", boost::program_options::value<std::string>(&config->PasswordToPrivateKey)->required(), "password to the private key file")
-		("public_cert_path", boost::program_options::value<std::string>(&public_cert_path)->required(), "path to the public certificate file")
+		("public_cert_path", boost::program_options::value<std::string>(&config->PathTo_Public_Certficate)->required(), "path to the public certificate file")
 #endif
 		;
 
@@ -78,31 +74,6 @@ int main(int argc, char* argv[]) {
 		std::cout << desc << "\n";
 		return 1;
 	}
-
-
-
-#if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-	//in debug mode allow usage of pre-made certs. DO NOT USE IN PRODUCTION!!!
-	if (private_key_path.empty() || config->PasswordToPrivateKey.empty() || public_cert_path.empty()) {
-		
-		config->Private_Key = SL::RAT::LoadFromMemory(SL::RAT::private_key, sizeof(SL::RAT::private_key));
-		config->PasswordToPrivateKey = SL::RAT::private_key_password;
-		config->Public_Certficate = SL::RAT::LoadFromMemory(SL::RAT::public_cert, sizeof(SL::RAT::public_cert));
-	}
-	else if (!private_key_path.empty() && !config->PasswordToPrivateKey.empty() && !public_cert_path.empty()) {
-		config->Private_Key = SL::RAT::LoadFromFile(private_key_path);
-		config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
-	}
-	else {
-		std::cout << desc << "\n";
-		return 1;
-	}
-
-#else 
-	config->Private_Key = SL::RAT::LoadFromFile(private_key_path);
-	config->Public_Certficate = SL::RAT::LoadFromFile(public_cert_path);
-#endif
-
 
 	SL::RAT::Server serv;
 	serv.Start(config);

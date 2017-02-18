@@ -101,7 +101,7 @@ namespace SL {
 				auto action = chooser.show();
 				if (action == -1 || action == 1) return;//cancel was hit
 
-				p->_Config->Public_Certficate = SL::RAT::LoadFromFile(chooser.filename());
+				p->_Config->PathTo_Public_Certficate = chooser.filename();
 			}
 			static void Menu_CB(Fl_Widget*w, void*data) {
 				UNUSED(w);

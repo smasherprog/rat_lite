@@ -27,6 +27,11 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 	Server.cpp
 )
 
+add_definitions(
+	-DTEST_CERTIFICATE_PRIVATE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test_Certs/private.key"
+	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test_Certs/public.key"
+	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
+)
 
 find_package(Boost COMPONENTS program_options REQUIRED)
 

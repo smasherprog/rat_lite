@@ -21,6 +21,9 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 endif()
 
+add_definitions(
+	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test_Certs/public.key"
+)
 
 
 set(${PROJECT_NAME}_EXAMPLE_SRC 

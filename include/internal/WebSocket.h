@@ -4,27 +4,12 @@
 #include <deque>
 #include <functional>
 #include <chrono>
-
-#if defined(_WIN32)
-#if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
-//windows xp
-#define _WIN32_WINNT 0x0501
-#else
-#define _WIN32_WINNT 0x0601
-#endif
-#endif
-
-#include <beast/websocket.hpp>
-#include <beast/websocket/ssl.hpp>
-#include <beast/core/streambuf.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 #include "ISocket.h"
 
 namespace SL {
 	namespace RAT {
 
-		class WebSocket : public ISocket, public std::enable_shared_from_this<WebSocket> {
+		class WebSocket : public ISocket {
 			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> socket_;
 
 			std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)> onMessage_;

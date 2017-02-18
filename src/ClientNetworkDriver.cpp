@@ -63,7 +63,7 @@ namespace SL {
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host) {
 				_Config = config;
 				_dst_host = dst_host;
-				SL::RAT::Connect(_Config.get(), this, dst_host);
+			//	SL::RAT::Connect(_Config.get(), this, dst_host);
 			}
 
 			virtual ~ClientNetworkDriverImpl() {

@@ -4,13 +4,11 @@
 #include "Logging.h"
 #include "Shapes.h"
 #include "ISocket.h"
-#include "ICryptoLoader.h"
 #include "INetworkHandlers.h"
 
 namespace SL {
 	namespace RAT {
 
-		class ICryptoLoader;
 		struct Client_Config {
 
 			//both the viewer and web client communicate over web sockets.
@@ -21,7 +19,7 @@ namespace SL {
 			bool Share_Clipboard = true;//share your clipboard?
 			bool Scale_Image = false;
 
-			std::shared_ptr<ICryptoLoader> Public_Certficate;
+			std::string PathTo_Public_Certficate;
 		};
 
 		struct Server_Config : Client_Config {
@@ -43,7 +41,7 @@ namespace SL {
 			int MaxNumConnections = 10;//
 
 									   //CRYPTO SETTINGS
-			std::shared_ptr<ICryptoLoader> Private_Key;
+			std::string PathTo_Private_Key;
 			std::string PasswordToPrivateKey;
 		};
 	}

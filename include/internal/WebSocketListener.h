@@ -2,24 +2,8 @@
 #include <memory>
 #include <functional>
 #include <vector>
-#if defined(_WIN32)
-#if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
-//windows xp
-#define _WIN32_WINNT 0x0501
-#else
-#define _WIN32_WINNT 0x0601
-#endif
-#endif
 
-
-#include <beast/websocket.hpp>
-#include <beast/websocket/ssl.hpp>
-#include <beast/core/placeholders.hpp>
-#include <beast/core/streambuf.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/optional.hpp>
-
+#include "uWS.h"
 #include "Configs.h"
 
 namespace SL {
@@ -27,12 +11,9 @@ namespace SL {
 		class ISocket;
 	
 
-		class WebSocketListener : public std::enable_shared_from_this<WebSocketListener> {
-			boost::asio::io_service ios_;
-			boost::asio::ip::tcp::acceptor acceptor_;
+		class WebSocketListener {
 			std::vector<std::thread> thread_;
-			boost::optional<boost::asio::io_service::work> work_;
-			boost::asio::ssl::context context_;
+			uS::TLS::Context Context_;
 
 			std::shared_ptr<Server_Config> Server_Config_;
 
@@ -41,7 +22,12 @@ namespace SL {
 			std::function<void(const ISocket* socket)> onDisconnection_;
 		public:
 
-			WebSocketListener(std::shared_ptr<Server_Config>& c);
+			WebSocketListener(std::shared_ptr<Server_Config>& c):Server_Config_(c){
+				uS::TLS::Context c = uS::TLS::createContext("ssl/cert.pem",
+					"ssl/key.pem",
+					"1234");
+
+			}
 			~WebSocketListener();
 		
 			void onConnection(const std::function<void(const std::shared_ptr<ISocket>&)>& func) { onConnection_ = func; }

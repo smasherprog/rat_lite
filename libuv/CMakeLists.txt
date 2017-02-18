@@ -19,9 +19,7 @@ set(SOURCES
     )
 
 if(WIN32)
-   add_definitions(-D_WIN32_WINNT=0x0600 -D_GNU_SOURCE)
-   
- 
+   add_definitions(-D_WIN32_WINNT=0x0600 -D_GNU_SOURCE -D_CRT_SECURE_NO_WARNINGS)
     set (SOURCES ${SOURCES}
         include/uv-win.h
         src/win/async.c

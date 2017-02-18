@@ -16,7 +16,9 @@ add_subdirectory(libuv)
 
 set(LIBUV_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libuv/include)
 set(LIBUV_LIBRARY uv)
-
+if(WIN32)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 add_subdirectory(uwebsockets/src)
 
 if(BUILD_EXAMPLE)

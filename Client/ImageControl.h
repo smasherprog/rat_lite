@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include <memory>
 
 namespace SL {
 
@@ -22,17 +21,18 @@ namespace SL {
 		};
 		class Point;
 		class ImageControlImpl;
+		struct Image;
 		class ImageControl {
-			ImageControlImpl* _ImageControlImpl;
+			ImageControlImpl* ImageControlImpl_;
 		public:
 			ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info);
 			~ImageControl();
 
 			void OnResize(int W, int H, int SS);
 			bool is_ImageScaled() const;
-			void set_ScreenImage(const Rect* rect, std::shared_ptr<char>& data);
-			void set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data);
-			void set_MouseImage(const Size* size, const char* data);
+			void set_ScreenImage(const Image& img);
+			void set_ImageDifference(const Image& img);
+			void set_MouseImage(const Image& img);
 			void set_MousePosition(const Point* pos);
 
 		};

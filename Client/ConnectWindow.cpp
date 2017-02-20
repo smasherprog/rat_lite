@@ -1,6 +1,7 @@
 #include "ConnectWindow.h"
 #include "ViewerController.h"
-#include "RAT.h"
+#include "Logging.h"
+#include "Configs.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>

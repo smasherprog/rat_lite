@@ -64,17 +64,18 @@ namespace SL {
 				ServerNetworkDriver_.Stop();
 
 			}
-			virtual void onConnection(const std::shared_ptr<ISocket>& socket) override {
+			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 				UNUSED(socket);
-				//if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnConnect(socket);
 			}
 
-			virtual void onDisconnection(const ISocket* socket) override {
+			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
 				UNUSED(socket);
-				//if (_IUserNetworkDriver != nullptr) _IUserNetworkDriver->OnClose(socket);
+				UNUSED(code);
+				UNUSED(message);
+				UNUSED(length);
 			}
 
-			virtual void onMessage(const std::shared_ptr<ISocket>& socket, const char* data, size_t len)  override {
+			virtual void onMessage(const IWebSocket& socket, const char* data, size_t len)  override {
 				UNUSED(socket);
 				UNUSED(data);
 				UNUSED(len);

@@ -12,7 +12,7 @@ namespace SL {
 		class ServerNetworkDriverImpl;
 		struct Server_Config;
 		class IServerDriver;
-		class ISocket;
+		class IWebSocket;
 		class ServerNetworkDriver {
 			std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
 
@@ -23,12 +23,12 @@ namespace SL {
 			void Start(IServerDriver * r, std::shared_ptr<Server_Config> config);
 			void Stop();
 			//frames are images
-			void SendFrameChange(ISocket* socket, const Screen_Capture::Image & img);
-			void SendFrame(ISocket* socket, const Screen_Capture::Image & img);
+			void SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img);
+			void SendFrame(IWebSocket* socket, const Screen_Capture::Image & img);
 
-			void SendMouse(ISocket* socket, const Screen_Capture::Image & img);
-			void SendMouse(ISocket* socket, const Point& pos);
-			void SendClipboardText(ISocket* socket, const char* data, unsigned int len);
+			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img);
+			void SendMouse(IWebSocket* socket, const Point& pos);
+			void SendClipboardText(IWebSocket* socket, const char* data, unsigned int len);
 
 		};
 

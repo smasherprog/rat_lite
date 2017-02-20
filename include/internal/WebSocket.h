@@ -1,104 +1,38 @@
 #pragma once
-#include <string>
-#include <memory>
-#include <deque>
-#include <functional>
-#include <chrono>
-#include "ISocket.h"
-
+#include "uWS.h"
+#include "IWebSocket.h"
 namespace SL {
 	namespace RAT {
 
-		class WebSocket : public ISocket {
-			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> socket_;
 
-			std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)> onMessage_;
-			std::function<void(const ISocket* socket)> onDisconnection_;
-
-			boost::asio::deadline_timer read_deadline_;
-			boost::asio::deadline_timer write_deadline_;
-			boost::asio::streambuf db;
-
-			bool Closed_;
-			bool Writing_;
-
-			int readtimeout_ = 5;
-			int writetimeout_ = 5;
-			struct OutgoingPayloads {
-				std::shared_ptr<char> Data;
-				size_t len;
-			};
-			std::atomic<long long> PendingOutgoingBytes;
-		
-
+		template<class SOCKET_TYPE>class WebSocket :public IWebSocket {
+			SOCKET_TYPE ws;
 		public:
-			std::chrono::time_point<std::chrono::steady_clock> SecondTimer;
-			std::atomic<long long> BytesPerSecond;
-			std::deque<OutgoingPayloads> Outgoing;
-			bool Writing;
-
-			WebSocket(boost::asio::ssl::context& context, boost::asio::io_service& io_service);
-			virtual ~WebSocket();
-
-			void onMessage(const std::function<void(const std::shared_ptr<ISocket>&, const char*, size_t)>& cb) { onMessage_ = cb; }
-			void onDisconnection(const std::function<void(const ISocket* socket)>& cb) { onDisconnection_ = cb; }
-			virtual void send(std::shared_ptr<char> data, size_t len) override;
-			beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>& get_Socket() { return socket_; }
-			virtual void close(const std::string& reason) override;
-
-			virtual bool closed() override {
-	
-				return Closed_ || !socket_.lowest_layer().is_open();
+			WebSocket(SOCKET_TYPE w) : ws(w) {}
+			virtual ~WebSocket() {}
+			virtual void send(const char* data, size_t len) override {
+				ws.send(data, len, uWS::OpCode::BINARY);
+			}
+			virtual void close(int code, const char* message, size_t length)  override {
+				ws.close(code, message, length);
 			}
 
-			//s in in seconds
-			virtual void set_ReadTimeout(int s)  override {
-				assert(s > 0);
-				readtimeout_ = s;
+			virtual const char* get_address() override {
+				return ws.getAddress().address;
+			}
+			virtual unsigned short get_port() override {
+				return static_cast<unsigned short>(ws.getAddress().port);
+			}
 
+			virtual const char* get_address_family() override {
+				return ws.getAddress().family;
 			}
-			//s in in seconds
-			virtual void set_WriteTimeout(int s) override {
-				assert(s > 0);
-				writetimeout_ = s;
 
+			virtual bool is_loopback() override {
+				auto str(ws.getAddress().address);
+				return strcmp(str, "::1") == 0 || strcmp(str, "127.0.0.1") == 0 || strcmp(str, "localhost") == 0;
 			}
-			virtual std::string get_address() const override
-			{
-				boost::system::error_code ec;
-				auto rt(socket_.lowest_layer().remote_endpoint(ec));
-				if (!ec) return rt.address().to_string();
-				else return "";
-			}
-			virtual unsigned short get_port() const override
-			{
-				boost::system::error_code ec;
-				auto rt(socket_.lowest_layer().remote_endpoint(ec));
-				if (!ec) return rt.port();
-				else return 0;
-			}
-			virtual bool is_v4() const override
-			{
-				boost::system::error_code ec;
-				auto rt(socket_.lowest_layer().remote_endpoint(ec));
-				if (!ec) return rt.address().is_v4();
-				else return true;
-			}
-			virtual bool is_v6() const override
-			{
-				boost::system::error_code ec;
-				auto rt(socket_.lowest_layer().remote_endpoint(ec));
-				if (!ec) return rt.address().is_v6();
-				else return true;
-			}
-			virtual bool is_loopback() const override {
-				boost::system::error_code ec;
-				auto rt(socket_.lowest_layer().remote_endpoint(ec));
-				if (!ec) return rt.address().is_loopback();
-				else return true;
-			}
-			void read();
-			void write();
 		};
+	
 	}
 }

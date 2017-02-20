@@ -34,13 +34,13 @@ namespace SL {
 			return elems;
 		}
 
-		std::shared_ptr<char> Resize(const std::shared_ptr<char>& inimg, int inheight, int inwidth, int dstheight, int dstwidth)
+		std::unique_ptr<char[]> Resize(const char* inimg, int inheight, int inwidth, int dstheight, int dstwidth)
 		{//linear scaling
 			auto m_width = dstwidth;
 			auto m_height = dstheight;
-			auto outimg = std::shared_ptr<char>(new char[m_width*m_height*PixelStride], [](char* ptr) {delete[] ptr; });
+			auto outimg = std::make_unique<char[]>(m_width*m_height*PixelStride);
 			auto temp = (int*)outimg.get();
-			auto pixels = (int*)inimg.get();
+			auto pixels = (int*)inimg;
 			double x_ratio = inwidth / (double)m_width;
 			double y_ratio = inheight / (double)m_height;
 			double px, py;
@@ -53,7 +53,7 @@ namespace SL {
 			}
 			return outimg;
 		}
-		std::shared_ptr<char> Resize(const std::shared_ptr<char>& inimg, int* inheight, int* inwidth, float scale)
+		std::unique_ptr<char[]> Resize(const char* inimg, int* inheight, int* inwidth, float scale)
 		{
 			auto height = *inheight;
 			auto width = *inwidth;
@@ -61,10 +61,10 @@ namespace SL {
 			*inwidth = static_cast<int>(ceil(static_cast<float>(*inwidth) * scale));
 			return Resize(inimg, height, width, *inheight, *inwidth);
 		}
-		void Copy(Image& src, Rect src_rect, Image & dst, Rect dst_rect)
+		void Copy(const Image& src, Rect src_rect, Image & dst, Rect dst_rect)
 		{
-			auto dst_start = (int*)dst.Data.get();
-			auto src_start = (int*)src.Data.get();
+			auto dst_start = (int*)dst.Data;
+			auto src_start = (int*)src.Data;
 			for (auto row = dst_rect.top(), src_row = 0; row < dst_rect.bottom(); row++, src_row++) {
 				memcpy(dst_start + (dst.Rect.Width * row) + dst_rect.left(), src_start + (src.Rect.Width*src_row) + src_rect.left(), src_rect.Width*PixelStride);
 			}
@@ -74,133 +74,130 @@ namespace SL {
 
 		class ScreenImageImpl {
 		public:
-			Image _OriginalImage;//this is the original image, kept to resize the scaled if needed
-			Image _ScaledImage;
+			Image OriginalImage_, ScaledImage_, MouseImageData_;
+			std::unique_ptr<char[]> OriginalImageBacking_, ScaledImageBacking_, MouseImageBacking_;
+			std::mutex ImageLock_;
 
-			std::mutex _ImageLock;
-
-			float _ScaleFactor;
-			ScreenImageInfo _ScreenImageInfo;
+			float ScaleFactor_;
+			ScreenImageInfo ScreenImageInfo_;
 
 			Point _MousePos;
-			Image _MouseImageData;
-			std::unique_ptr<Fl_RGB_Image> _MouseImage;
+			std::unique_ptr<Fl_RGB_Image> MouseImage_;
 
-			ScreenImageImpl(ScreenImageInfo&& info) : _ScaleFactor(1.0f), _ScreenImageInfo(info) {}
+			ScreenImageImpl(ScreenImageInfo&& info) : ScaleFactor_(1.0f), ScreenImageInfo_(info) {}
 
 			bool is_ImageScaled() const {
-				return !(_ScaleFactor >= .999f && _ScaleFactor <= 1.001f);
+				return !(ScaleFactor_ >= .999f && ScaleFactor_ <= 1.001f);
 			}
 			Point get_UnscaledImageSize() const {
-				return Point(_OriginalImage.Rect.Width, _OriginalImage.Rect.Height);
+				return Point(OriginalImage_.Rect.Width, OriginalImage_.Rect.Height);
 			}
-			void set_ScaleFactor(float factor) {
-				_ScaleFactor = factor;
+			void setScaleFactor_(float factor) {
+				ScaleFactor_ = factor;
 
 			}
-			float get_ScaleFactor() const {
-				return _ScaleFactor;
+			float getScaleFactor_() const {
+				return ScaleFactor_;
 			}
-			void set_ScreenImage(const Rect* rect, std::shared_ptr<char>& data) {
-				auto size = rect->Width*rect->Height*PixelStride;
-				Image original;
-				original.Rect = *rect;
-				original.Data = std::shared_ptr<char>(new char[size], [](char* ptr) {delete[] ptr; });
-				memcpy(original.Data.get(), data.get(), size);
+			void set_ScreenImage(const Image& img) {
+				auto size = img.Rect.Width*img.Rect.Height*PixelStride;
+				auto originalptr = std::make_unique<char[]>(size);
+				Image original(img.Rect, originalptr.get(), size);
+				memcpy(originalptr.get(), img.Data, size);
 
-				Image scaled;
-				scaled.Rect = *rect;
-				scaled.Data = data;
+				auto scaledptr = std::make_unique<char[]>(size);
+				Image scaled(img.Rect, scaledptr.get(), size);
+				memcpy(scaledptr.get(), img.Data, size);
 				{
-					std::lock_guard<std::mutex> lock(_ImageLock);
-					_OriginalImage = original;
-					_ScaledImage = scaled;
+					std::lock_guard<std::mutex> lock(ImageLock_);
+					OriginalImage_ = original;
+					ScaledImage_ = scaled;
+					OriginalImageBacking_ = std::move(originalptr);
+					ScaledImageBacking_ = std::move(scaledptr);
+
 				}
 			}
 			void Draw(int x, int y) {
-				if (_ScaledImage.Data) {
-					std::lock_guard<std::mutex> lock(_ImageLock);
-					if (_ScaledImage.Data) {
-						fl_draw_image((uchar*)_ScaledImage.Data.get(), x, y, _ScaledImage.Rect.Width, _ScaledImage.Rect.Height, 4);
-						if (_MouseImage) _MouseImage->draw(_MousePos.X, _MousePos.Y);
+				if (ScaledImage_.Data) {
+					std::lock_guard<std::mutex> lock(ImageLock_);
+					if (ScaledImage_.Data) {
+						fl_draw_image((uchar*)ScaledImage_.Data, x, y, ScaledImage_.Rect.Width, ScaledImage_.Rect.Height, 4);
+						if (MouseImage_) MouseImage_->draw(_MousePos.X, _MousePos.Y);
 					}
 				}
 			}
-			void set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data) {
-				if (!(_OriginalImage.Data && _ScaledImage.Data)) return;// both images should exist, if not then get out!
+			void set_ImageDifference(const Image& img) {
+				if (!(OriginalImage_.Data && ScaledImage_.Data)) return;// both images should exist, if not then get out!
 
-				Image nonscaled;
-				nonscaled.Rect = *rect;
-				nonscaled.Data = data;
-
+			
 				if (is_ImageScaled()) {//rescale the incoming image image
+					auto scaledrect = img.Rect;
 
-					Image scaledimg;
-					scaledimg.Rect = *rect;
-					scaledimg.Rect.Origin = Point();
-					scaledimg.Data = Resize(data, &scaledimg.Rect.Height, &scaledimg.Rect.Width, _ScaleFactor);
+					auto scaledimgbacking = Resize(img.Data, &scaledrect.Height, &scaledrect.Width, ScaleFactor_);
+					Image scaledimg(scaledrect, scaledimgbacking.get(), scaledrect.Height * scaledrect.Width*PixelStride);
 
-					auto x = static_cast<int>(floor(static_cast<float>(rect->left())*_ScaleFactor));
-					auto y = static_cast<int>(floor(static_cast<float>(rect->top())*_ScaleFactor));
+					auto x = static_cast<int>(floor(static_cast<float>(img.Rect.left())*ScaleFactor_));
+					auto y = static_cast<int>(floor(static_cast<float>(img.Rect.top())*ScaleFactor_));
 
-					auto dst_rect = Rect(Point(x, y), scaledimg.Rect.Height, scaledimg.Rect.Width);
+					auto dst_rect = Rect(Point(x, y), scaledrect.Height, scaledrect.Width);
 
-					std::lock_guard<std::mutex> lock(_ImageLock);
-					Copy(nonscaled, nonscaled.Rect, _OriginalImage, *rect);//keep original in sync
-					Copy(scaledimg, scaledimg.Rect, _ScaledImage, dst_rect);//copy scaled down 
+					std::lock_guard<std::mutex> lock(ImageLock_);
+					Copy(img, img.Rect, OriginalImage_, img.Rect);//keep original in sync
+					Copy(scaledimg, scaledimg.Rect, ScaledImage_, dst_rect);//copy scaled down 
 
 				}
 				else {
-
-					std::lock_guard<std::mutex> lock(_ImageLock);
-					Copy(nonscaled, nonscaled.Rect, _OriginalImage, *rect);//keep original in sync
-					Copy(nonscaled, nonscaled.Rect, _ScaledImage, *rect);//copy scaled down 
-
-
+					std::lock_guard<std::mutex> lock(ImageLock_);
+					Copy(img, img.Rect, OriginalImage_, img.Rect);//keep original in sync
+					Copy(img, img.Rect, ScaledImage_, img.Rect);//copy scaled down 
 				}
 			}
-			void set_MouseImage(const Size* size, const char* data) {
-				auto s = size->X*size->Y*PixelStride;
-				_MouseImageData.Data = std::shared_ptr<char>(new char[s], [](char* p) {delete[] p; });
-				_MouseImageData.Rect.Width = size->X;
-				_MouseImageData.Rect.Height = size->Y;
-				memcpy(_MouseImageData.Data.get(), data, s);
-				_MouseImage = std::make_unique<Fl_RGB_Image>((uchar*)_MouseImageData.Data.get(), size->X, size->Y, PixelStride);
+			void setMouseImage_(const Image& img) {
+				auto s = img.Rect.Width*img.Rect.Height*PixelStride;
+				auto mouseimg = std::make_unique<char[]>(s);
+				Image mouseimgdata(img.Rect, mouseimg.get(), s);
+				memcpy(mouseimg.get(), img.Data, s);
+				std::lock_guard<std::mutex> lock(ImageLock_);
+				MouseImageData_ = mouseimgdata;
+				MouseImageBacking_ = std::move(mouseimg);
+				MouseImage_ = std::make_unique<Fl_RGB_Image>((uchar*)mouseimg.get(), img.Rect.Width, img.Rect.Height, PixelStride);
 			}
 			void set_MousePosition(const Point* pos) {
 				_MousePos = *pos;
 				if (is_ImageScaled()) {//need to scale the mouse pos as well
 
-					_MousePos.X = static_cast<int>(static_cast<float>(_MousePos.X - _ScreenImageInfo.get_Left())*_ScaleFactor);
-					_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y - _ScreenImageInfo.get_Top())*_ScaleFactor);
+					_MousePos.X = static_cast<int>(static_cast<float>(_MousePos.X - ScreenImageInfo_.get_Left())*ScaleFactor_);
+					_MousePos.Y = static_cast<int>(static_cast<float>(_MousePos.Y - ScreenImageInfo_.get_Top())*ScaleFactor_);
 				}
 			}
 			bool Update(int& width, int& height) {
-				if (!_ScaledImage.Data) return false;
+				if (!ScaledImage_.Data) return false;
 				auto ret = false;
 				//make sure the image is scaled properly
 				if (is_ImageScaled()) {
-					auto psize = _ScreenImageInfo.get_Height();
-					if (psize != _ScaledImage.Rect.Height) {//rescale the image
-						std::lock_guard<std::mutex> lock(_ImageLock);
-						_ScaledImage.Rect = Rect(Point(0, 0), psize, static_cast<int>(_ScaleFactor* _OriginalImage.Rect.Height));
-						_ScaledImage.Data = Resize(_OriginalImage.Data, _OriginalImage.Rect.Height, _OriginalImage.Rect.Width, _ScaledImage.Rect.Height, _ScaledImage.Rect.Width);
+					auto psize = ScreenImageInfo_.get_Height();
+					if (psize != ScaledImage_.Rect.Height) {//rescale the image
+						std::lock_guard<std::mutex> lock(ImageLock_);
+						ScaledImage_.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* OriginalImage_.Rect.Height));
+						ScaledImageBacking_ = Resize(OriginalImage_.Data, OriginalImage_.Rect.Height, OriginalImage_.Rect.Width, ScaledImage_.Rect.Height, ScaledImage_.Rect.Width);
+						ScaledImage_.Data = ScaledImageBacking_.get();
 						ret = true;
 					}
 				}
 				else {//NO SCALING!!
-					if (_ScaledImage.Rect.Width != _OriginalImage.Rect.Width || _ScaledImage.Rect.Height != _OriginalImage.Rect.Width) {
-						std::lock_guard<std::mutex> lock(_ImageLock);
-						auto size = _OriginalImage.Rect.Height*_OriginalImage.Rect.Width*PixelStride;
+					if (ScaledImage_.Rect.Width != OriginalImage_.Rect.Width || ScaledImage_.Rect.Height != OriginalImage_.Rect.Width) {
+						std::lock_guard<std::mutex> lock(ImageLock_);
+						auto size = OriginalImage_.Rect.Height*OriginalImage_.Rect.Width*PixelStride;
 
-						_ScaledImage.Rect = _OriginalImage.Rect;
-						_ScaledImage.Data = std::shared_ptr<char>(new char[size], [](char* ptr) {delete[] ptr; });
-						memcpy(_ScaledImage.Data.get(), _OriginalImage.Data.get(), size);
+						ScaledImage_.Rect = OriginalImage_.Rect;
+						ScaledImageBacking_ = std::make_unique<char[]>(size);
+						ScaledImage_.Data = ScaledImageBacking_.get();
+						memcpy((void*)ScaledImage_.Data, OriginalImage_.Data, size);
 						ret = true;
 					}
 				}
-				width = _ScaledImage.Rect.Width;
-				height = _ScaledImage.Rect.Height;
+				width = ScaledImage_.Rect.Width;
+				height = ScaledImage_.Rect.Height;
 				return ret;//no changes
 			}
 		};
@@ -211,13 +208,13 @@ namespace SL {
 		public:
 
 			ScreenImageImpl _ScreenImageDriver;
-			ScreenImageInfo _ScreenImageInfo;
+			ScreenImageInfo ScreenImageInfo_;
 			bool _DNDIncoming = false;
 
 			ImageControlImpl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) :
 				Fl_Box(X, Y, W, H, title),
 				_ScreenImageDriver(std::forward<ScreenImageInfo>(info)),
-				_ScreenImageInfo(info) {
+				ScreenImageInfo_(info) {
 
 			}
 			virtual ~ImageControlImpl() {
@@ -235,7 +232,7 @@ namespace SL {
 					auto pheight = h() - SS;//16 is the scrollbars size
 					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
 					auto dims = _ScreenImageDriver.get_UnscaledImageSize();
-					_ScreenImageDriver.set_ScaleFactor(static_cast<float>(pheight) / static_cast<float>(dims.Y));
+					_ScreenImageDriver.setScaleFactor_(static_cast<float>(pheight) / static_cast<float>(dims.Y));
 				}
 
 			}
@@ -249,32 +246,32 @@ namespace SL {
 			}
 			void handlemouse(int e, int button, Press press, int x, int y) {
 				if (_ScreenImageDriver.is_ImageScaled()) {
-					x = static_cast<int>(static_cast<float>(x) / _ScreenImageDriver.get_ScaleFactor());
-					y = static_cast<int>(static_cast<float>(y) / _ScreenImageDriver.get_ScaleFactor());
+					x = static_cast<int>(static_cast<float>(x) / _ScreenImageDriver.getScaleFactor_());
+					y = static_cast<int>(static_cast<float>(y) / _ScreenImageDriver.getScaleFactor_());
 				}
-				_ScreenImageInfo.OnMouse(e, button, press, x, y);
+				ScreenImageInfo_.OnMouse(e, button, press, x, y);
 			}
 			virtual int handle(int e) override {
 
 				switch (e) {
 				case FL_PUSH:
-					handlemouse(e, Fl::event_button(), Press::DOWN, Fl::event_x() + _ScreenImageInfo.get_Left(), Fl::event_y() + _ScreenImageInfo.get_Top());
+					handlemouse(e, Fl::event_button(), Press::DOWN, Fl::event_x() + ScreenImageInfo_.get_Left(), Fl::event_y() + ScreenImageInfo_.get_Top());
 					return 1;
 				case FL_RELEASE:
-					handlemouse(e, Fl::event_button(), Press::UP, Fl::event_x() + _ScreenImageInfo.get_Left(), Fl::event_y() + _ScreenImageInfo.get_Top());
+					handlemouse(e, Fl::event_button(), Press::UP, Fl::event_x() + ScreenImageInfo_.get_Left(), Fl::event_y() + ScreenImageInfo_.get_Top());
 					break;
 				case FL_ENTER:
 					return 1;
 				case FL_DRAG:
 				case FL_MOUSEWHEEL:
 				case FL_MOVE:
-					handlemouse(e, Events::NO_EVENTDATA, Press::NO_PRESS_DATA, Fl::event_x() + _ScreenImageInfo.get_Left(), Fl::event_y() + _ScreenImageInfo.get_Top());
+					handlemouse(e, Events::NO_EVENTDATA, Press::NO_PRESS_DATA, Fl::event_x() + ScreenImageInfo_.get_Left(), Fl::event_y() + ScreenImageInfo_.get_Top());
 					break;
 				case FL_KEYDOWN:
-					_ScreenImageInfo.OnKey(e, Press::DOWN);
+					ScreenImageInfo_.OnKey(e, Press::DOWN);
 					return 1;
 				case FL_KEYUP:
-					_ScreenImageInfo.OnKey(e, Press::UP);
+					ScreenImageInfo_.OnKey(e, Press::UP);
 					return 1;
 				case FL_FOCUS:
 					return 1;
@@ -302,40 +299,40 @@ namespace SL {
 	}
 }
 SL::RAT::ImageControl::ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) {
-	_ImageControlImpl = new ImageControlImpl(X, Y, W, H, title, std::forward<ScreenImageInfo>(info));
+	ImageControlImpl_ = new ImageControlImpl(X, Y, W, H, title, std::forward<ScreenImageInfo>(info));
 }
 
 SL::RAT::ImageControl::~ImageControl() {
-	delete _ImageControlImpl;
+	delete ImageControlImpl_;
 }
 
 void SL::RAT::ImageControl::OnResize(int W, int H, int SS)
 {
-	_ImageControlImpl->OnResize(W, H, SS);
+	ImageControlImpl_->OnResize(W, H, SS);
 }
 
 bool SL::RAT::ImageControl::is_ImageScaled() const
 {
-	return _ImageControlImpl->_ScreenImageDriver.is_ImageScaled();
+	return ImageControlImpl_->_ScreenImageDriver.is_ImageScaled();
 }
 
-void SL::RAT::ImageControl::set_ScreenImage(const Rect* rect, std::shared_ptr<char>& data)
+void SL::RAT::ImageControl::set_ScreenImage(const Image& img)
 {
-	_ImageControlImpl->size(rect->Width, rect->Height);
-	_ImageControlImpl->_ScreenImageDriver.set_ScreenImage(rect, data);
+	ImageControlImpl_->size(img.Rect.Width, img.Rect.Height);
+	ImageControlImpl_->_ScreenImageDriver.set_ScreenImage(img);
 }
 
-void SL::RAT::ImageControl::set_ImageDifference(const Rect* rect, std::shared_ptr<char>& data)
+void SL::RAT::ImageControl::set_ImageDifference(const Image& img)
 {
-	_ImageControlImpl->_ScreenImageDriver.set_ImageDifference(rect, data);
+	ImageControlImpl_->_ScreenImageDriver.set_ImageDifference(img);
 }
 
-void SL::RAT::ImageControl::set_MouseImage(const Size* size, const char* data)
+void SL::RAT::ImageControl::set_MouseImage(const Image& img)
 {
-	_ImageControlImpl->_ScreenImageDriver.set_MouseImage(size, data);
+	ImageControlImpl_->_ScreenImageDriver.setMouseImage_(img);
 }
 
 void SL::RAT::ImageControl::set_MousePosition(const Point* pos)
 {
-	_ImageControlImpl->_ScreenImageDriver.set_MousePosition(pos);
+	ImageControlImpl_->_ScreenImageDriver.set_MousePosition(pos);
 }

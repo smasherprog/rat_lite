@@ -2,7 +2,7 @@
 #include <memory>
 #include <iostream>
 #include "ConnectWindow.h"
-#include "RAT.h"
+#include "Configs.h"
 
 #if _WIN32
 //work around for now for boost on windows

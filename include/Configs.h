@@ -3,7 +3,6 @@
 #include <memory>
 #include "Logging.h"
 #include "Shapes.h"
-#include "ISocket.h"
 #include "INetworkHandlers.h"
 
 namespace SL {

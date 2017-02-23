@@ -70,7 +70,7 @@ namespace SL {
 			}
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host) {
 				Config_ = config;
-				auto hc = std::string("wss://") + std::string(dst_host) + std::string(":") + std::to_string(config->WebSocketTLSLPort);
+				auto hc = std::string("ws://") + std::string(dst_host) + std::string(":") + std::to_string(config->WebSocketTLSLPort);
 				h.connect(hc, nullptr);
 				h.onConnection([&](uWS::WebSocket<uWS::CLIENT> ws, uWS::HttpRequest req) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");

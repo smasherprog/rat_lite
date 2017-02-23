@@ -5,6 +5,7 @@
 namespace SL {
 	namespace Screen_Capture {
 		struct Image;
+		struct Monitor;
 	};
 	namespace RAT {
 		class Point;
@@ -25,6 +26,7 @@ namespace SL {
 			//frames are images
 			void SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img);
 			void SendFrame(IWebSocket* socket, const Screen_Capture::Image & img);
+			void SendMonitorInfo(IWebSocket* socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>> & monitors);
 
 			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img);
 			void SendMouse(IWebSocket* socket, const Point& pos);

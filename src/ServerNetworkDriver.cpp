@@ -32,9 +32,9 @@ namespace SL {
 			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
 				_IServerDriver(r), Config_(config) {
 				ClientCount = 0;
-				
+
 				threads_.resize(config->MaxWebSocketThreads);
-			
+
 				h.onConnection([&](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
 					static int counter = 0;
 					if (ClientCount + 1 > Config_->MaxNumConnections) {
@@ -42,11 +42,12 @@ namespace SL {
 						ws.close(1000, msg, sizeof(msg));
 					}
 					else {
-						ClientCount += 1;
-						int t = counter++ % (config->MaxWebSocketThreads-1);
+
+						int t = counter++ % Config_->MaxWebSocketThreads;
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
 						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
 						_IServerDriver->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws));
+						ClientCount += 1;
 					}
 				});
 
@@ -54,14 +55,14 @@ namespace SL {
 					new std::thread([&, i] {
 						// register our events
 						threads_[i] = new uWS::Hub();
-					
+
 						threads_[i]->onDisconnection([&, i](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
 							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection on thread " << i);
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws);
 							ClientCount -= 1;
 							_IServerDriver->onDisconnection(sock, code, message, length);
 						});
-						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {	
+						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
 							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage on thread " << i);
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws);
 							auto pactype = PACKET_TYPES::INVALID;
@@ -87,7 +88,7 @@ namespace SL {
 								_IServerDriver->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));
 								break;
 							}
-							
+
 						});
 
 						threads_[i]->getDefaultGroup<uWS::SERVER>().addAsync();
@@ -95,9 +96,9 @@ namespace SL {
 					});
 				}
 
-				uS::TLS::Context c = uS::TLS::createContext(config->PathTo_Public_Certficate, config->PathTo_Private_Key, config->PasswordToPrivateKey);
-			
-				h.listen(Config_->WebSocketTLSLPort, c, 0, nullptr);
+				//uS::TLS::Context c = uS::TLS::createContext(config->PathTo_Public_Certficate, config->PathTo_Private_Key, config->PasswordToPrivateKey);
+
+				h.listen(Config_->WebSocketTLSLPort, nullptr, 0, nullptr);
 
 			}
 			virtual ~ServerNetworkDriverImpl() {
@@ -120,20 +121,18 @@ namespace SL {
 				Runner = std::thread([&]() { h.run(); });
 			}
 			void SendScreen(IWebSocket* socket, const Screen_Capture::Image & img, PACKET_TYPES p) {
-				if (ClientCount<=0) return;
+
+				if (ClientCount <= 0) return;
 				Rect r(Point(0, 0), Height(img), Width(img));
 
-
-				auto compfree = [](void* handle) {tjDestroy(handle); };
-				auto _jpegCompressor(std::unique_ptr<void, decltype(compfree)>(tjInitCompress(), compfree));
-
 				auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
-
 				auto maxsize = std::max(tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set), static_cast<unsigned long>((Screen_Capture::RowStride(img) + Screen_Capture::RowPadding(img)) * Screen_Capture::Height(img))) + sizeof(r) + sizeof(p);
-				auto _jpegSize = maxsize;
-				auto buffer = std::shared_ptr<char>(new char[maxsize], [](char* ptr) { delete[] ptr; });
 
-				auto dst = (unsigned char*)buffer.get();
+				thread_local auto jpegCompressor = tjInitCompress();
+				thread_local std::vector<char> buffer;
+				buffer.reserve(maxsize);
+
+				auto dst = (unsigned char*)buffer.data();
 				memcpy(dst, &p, sizeof(p));
 				dst += sizeof(p);
 				memcpy(dst, &r, sizeof(r));
@@ -148,21 +147,22 @@ namespace SL {
 #else 
 				auto colorencoding = TJPF_BGRX;
 #endif
-
-				if (tjCompress2(_jpegCompressor.get(), srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &_jpegSize, set, Config_->ImageCompressionSetting, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+				auto outjpegsize = maxsize;
+				if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, Config_->ImageCompressionSetting, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
 				//	std::cout << "Sending " << r << std::endl;
-				auto finalsize = sizeof(p) + sizeof(r) + _jpegSize;//adjust the correct size
-				Send(socket, buffer.get(), finalsize);
+				auto finalsize = sizeof(p) + sizeof(r) + outjpegsize;//adjust the correct size
+				Send(socket, buffer.data(), finalsize);
 			}
 			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img) {
+
 				if (ClientCount <= 0) return;
 				Rect r(Point(0, 0), Height(img), Width(img));
 
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE);
 				auto finalsize = (Screen_Capture::RowStride(img) * Screen_Capture::Height(img)) + sizeof(p) + sizeof(r);
-				auto buffer = std::shared_ptr<char>(new char[finalsize], [](char* ptr) { delete[] ptr; });
+				auto buffer = std::make_unique<char[]>(finalsize);
 
 				auto dst = buffer.get();
 				memcpy(dst, &p, sizeof(p));
@@ -174,24 +174,28 @@ namespace SL {
 				Send(socket, buffer.get(), finalsize);
 
 			}
+			void SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors) {
+
+			}
 			void SendMouse(IWebSocket* socket, const Point& pos)
 			{
 				if (ClientCount <= 0) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
 				const auto size = sizeof(pos) + sizeof(p);
-				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });
+				char buffer[size];
 
-				memcpy(buffer.get(), &p, sizeof(p));
-				memcpy(buffer.get() + sizeof(p), &pos, sizeof(pos));
+				memcpy(buffer, &p, sizeof(p));
+				memcpy(buffer + sizeof(p), &pos, sizeof(pos));
 
-				Send(socket, buffer.get(), size);
+				Send(socket, buffer, size);
 			}
 
 			void SendClipboardText(IWebSocket* socket, const char* data, unsigned int len) {
 				if (ClientCount <= 0) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT);
 				auto size = len + sizeof(p);
-				auto buffer = std::shared_ptr<char>(new char[size], [](char* ptr) { delete[] ptr; });
+
+				auto buffer = std::make_unique<char[]>(size);
 				memcpy(buffer.get(), &p, sizeof(p));
 				memcpy(buffer.get() + sizeof(p), data, len);
 
@@ -222,6 +226,10 @@ namespace SL {
 		void ServerNetworkDriver::SendFrame(IWebSocket* socket, const Screen_Capture::Image & img)
 		{
 			_ServerNetworkDriverImpl->SendScreen(socket, img, PACKET_TYPES::SCREENIMAGE);
+		}
+		void ServerNetworkDriver::SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
+		{
+			_ServerNetworkDriverImpl->SendMonitorInfo(socket, monitors);
 		}
 		void ServerNetworkDriver::SendMouse(IWebSocket* socket, const Screen_Capture::Image & img)
 		{

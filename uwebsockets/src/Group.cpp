@@ -85,7 +85,7 @@ void Group<isServer>::removeHttpSocket(uv_poll_t *httpSocket) {
         httpSocketHead = (uv_poll_t *) nullptr;
 
         uv_timer_stop(httpTimer);
-        uv_close((uv_handle_t *) httpTimer, [](uv_handle_t *handle) {
+        uv_close(httpTimer, [](uv_handle_t *handle) {
             delete (uv_timer_t *) handle;
         });
 
@@ -158,13 +158,28 @@ void Group<isServer>::stopListening() {
     if (isServer) {
         uS::ListenData *listenData = (uS::ListenData *) user;
         if (listenData) {
-            uS::Socket(listenData->listenPoll).close();
+            if (listenData->listenPoll)
+                uS::Socket(listenData->listenPoll).close();
+            else if (listenData->listenTimer) {
+                uv_os_sock_t fd = listenData->sock;
+                uv_timer_stop(listenData->listenTimer);
+                ::close(fd);
+
+                SSL *ssl = listenData->ssl;
+                if (ssl) {
+                    SSL_free(ssl);
+                }
+
+                uv_close(listenData->listenTimer, [](uv_handle_t *handle) {
+                    delete handle;
+                });
+            }
             delete listenData;
         }
     }
 
     if (async) {
-        uv_close((uv_handle_t *) async, [](uv_handle_t *h) {
+        uv_close(async, [](uv_handle_t *h) {
             delete (uv_async_t *) h;
         });
     }
@@ -255,7 +270,7 @@ void Group<isServer>::close(int code, char *message, size_t length) {
     stopListening();
     if (timer) {
         uv_timer_stop(timer);
-        uv_close((uv_handle_t *) timer, [](uv_handle_t *handle) {
+        uv_close(timer, [](uv_handle_t *handle) {
             delete (uv_timer_t *) handle;
         });
     }

@@ -53,6 +53,12 @@ public:
             delete p;
             return nullptr;
         }
+
+#ifdef __APPLE__
+        int noSigpipe = 1;
+        setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &noSigpipe, sizeof(int));
+#endif
+
         ::connect(fd, result->ai_addr, result->ai_addrlen);
         freeaddrinfo(result);
 
@@ -62,6 +68,7 @@ public:
             SSL_set_fd(socketData->ssl, fd);
             SSL_set_connect_state(socketData->ssl);
             SSL_set_mode(socketData->ssl, SSL_MODE_RELEASE_BUFFERS);
+            SSL_set_tlsext_host_name(socketData->ssl, hostname);
         } else {
             socketData->ssl = nullptr;
         }
@@ -73,14 +80,53 @@ public:
     }
 
     template <void A(Socket s)>
-    static void accept_cb(uv_poll_t *p, int status, int events) {
+    static void accept_poll_cb(uv_poll_t *p, int status, int events) {
         ListenData *listenData = (ListenData *) p->data;
-        uv_os_sock_t serverFd = Socket(p).getFd();
+        accept_cb<A, false>(listenData);
+    }
+
+    template <void A(Socket s)>
+    static void accept_timer_cb(uv_timer_t *p) {
+        ListenData *listenData = (ListenData *) p->data;
+        accept_cb<A, true>(listenData);
+    }
+
+    template <void A(Socket s), bool TIMER>
+    static void accept_cb(ListenData *listenData) {
+        uv_os_sock_t serverFd = listenData->sock;
         uv_os_sock_t clientFd = accept(serverFd, nullptr, nullptr);
         if (clientFd == INVALID_SOCKET) {
-            return;
-        }
+            /*
+            * If accept is failing, the pending connection won't be removed and the
+            * polling will cause the server to spin, using 100% cpu. Switch to a timer
+            * event instead to avoid this.
+            */
+            if (!TIMER && errno != EAGAIN && errno != EWOULDBLOCK) {
+                uv_poll_stop(listenData->listenPoll);
+                uv_close(listenData->listenPoll, [](uv_handle_t *handle) {
+                    delete handle;
+                });
+                listenData->listenPoll = nullptr;
 
+                listenData->listenTimer = new uv_timer_t();
+                listenData->listenTimer->data = listenData;
+                uv_timer_init(listenData->nodeData->loop, listenData->listenTimer);
+                uv_timer_start(listenData->listenTimer, accept_timer_cb<A>, 1000, 1000);
+            }
+            return;
+        } else if (TIMER) {
+            uv_timer_stop(listenData->listenTimer);
+            uv_close(listenData->listenTimer, [](uv_handle_t *handle) {
+                delete handle;
+            });
+            listenData->listenTimer = nullptr;
+
+            listenData->listenPoll = new uv_poll_t;
+            listenData->listenPoll->data = listenData;
+            uv_poll_init_socket(listenData->nodeData->loop, listenData->listenPoll, serverFd);
+            uv_poll_start(listenData->listenPoll, UV_READABLE, accept_poll_cb<A>);
+        }
+        do {
     #ifdef __APPLE__
         int noSigpipe = 1;
         setsockopt(clientFd, SOL_SOCKET, SO_NOSIGPIPE, &noSigpipe, sizeof(int));
@@ -107,10 +153,12 @@ public:
 
         socketData->poll = UV_READABLE;
         A(clientPoll);
+        } while ((clientFd = accept(serverFd, nullptr, nullptr)) != INVALID_SOCKET);
     }
 
+    // todo: hostname, backlog
     template <void A(Socket s)>
-    bool listen(int port, uS::TLS::Context sslContext, int options, uS::NodeData *nodeData, void *user) {
+    bool listen(const char *host, int port, uS::TLS::Context sslContext, int options, uS::NodeData *nodeData, void *user) {
         addrinfo hints, *result;
         memset(&hints, 0, sizeof(addrinfo));
 
@@ -118,7 +166,7 @@ public:
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
 
-        if (getaddrinfo(nullptr, std::to_string(port).c_str(), &hints, &result)) {
+        if (getaddrinfo(host, std::to_string(port).c_str(), &hints, &result)) {
             return true;
         }
 
@@ -157,7 +205,7 @@ public:
         int enabled = true;
         setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled));
 
-        if (bind(listenFd, listenAddr->ai_addr, listenAddr->ai_addrlen) || ::listen(listenFd, 10)) {
+        if (bind(listenFd, listenAddr->ai_addr, listenAddr->ai_addrlen) || ::listen(listenFd, 512)) {
             ::close(listenFd);
             freeaddrinfo(result);
             return true;
@@ -171,10 +219,11 @@ public:
         listenPoll->data = listenData;
 
         listenData->listenPoll = listenPoll;
+        listenData->sock = listenFd;
         listenData->ssl = nullptr;
 
         uv_poll_init_socket(loop, listenPoll, listenFd);
-        uv_poll_start(listenPoll, UV_READABLE, accept_cb<A>);
+        uv_poll_start(listenPoll, UV_READABLE, accept_poll_cb<A>);
 
         // should be vector of listen data! one group can have many listeners!
         nodeData->user = listenData;

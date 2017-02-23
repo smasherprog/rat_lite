@@ -100,6 +100,7 @@ namespace SL {
 				return ScaleFactor_;
 			}
 			void set_ScreenImage(const Image& img) {
+			
 				auto size = img.Rect.Width*img.Rect.Height*PixelStride;
 				auto originalptr = std::make_unique<char[]>(size);
 				Image original(img.Rect, originalptr.get(), size);
@@ -118,6 +119,7 @@ namespace SL {
 				}
 			}
 			void Draw(int x, int y) {
+				
 				if (ScaledImage_.Data) {
 					std::lock_guard<std::mutex> lock(ImageLock_);
 					if (ScaledImage_.Data) {
@@ -127,6 +129,7 @@ namespace SL {
 				}
 			}
 			void set_ImageDifference(const Image& img) {
+				return;
 				if (!(OriginalImage_.Data && ScaledImage_.Data)) return;// both images should exist, if not then get out!
 
 			
@@ -153,6 +156,7 @@ namespace SL {
 				}
 			}
 			void setMouseImage_(const Image& img) {
+			
 				auto s = img.Rect.Width*img.Rect.Height*PixelStride;
 				auto mouseimg = std::make_unique<char[]>(s);
 				Image mouseimgdata(img.Rect, mouseimg.get(), s);
@@ -160,9 +164,10 @@ namespace SL {
 				std::lock_guard<std::mutex> lock(ImageLock_);
 				MouseImageData_ = mouseimgdata;
 				MouseImageBacking_ = std::move(mouseimg);
-				MouseImage_ = std::make_unique<Fl_RGB_Image>((uchar*)mouseimg.get(), img.Rect.Width, img.Rect.Height, PixelStride);
+				MouseImage_ = std::make_unique<Fl_RGB_Image>((uchar*)MouseImageBacking_.get(), img.Rect.Width, img.Rect.Height, PixelStride);
 			}
 			void set_MousePosition(const Point* pos) {
+			
 				_MousePos = *pos;
 				if (is_ImageScaled()) {//need to scale the mouse pos as well
 
@@ -171,6 +176,7 @@ namespace SL {
 				}
 			}
 			bool Update(int& width, int& height) {
+				return false;
 				if (!ScaledImage_.Data) return false;
 				auto ret = false;
 				//make sure the image is scaled properly

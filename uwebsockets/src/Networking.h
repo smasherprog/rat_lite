@@ -28,12 +28,7 @@
 #define __thread __declspec(thread)
 #define pthread_t DWORD
 #define pthread_self GetCurrentThreadId
-
-#ifdef UWS_SHARED
 #define WIN32_EXPORT __declspec(dllexport)
-#else 
-#define WIN32_EXPORT
-#endif
 
 inline void close(SOCKET fd) {closesocket(fd);}
 inline int setsockopt(SOCKET fd, int level, int optname, const void *optval, socklen_t optlen) {
@@ -57,12 +52,7 @@ inline SOCKET dup(SOCKET socket) {
 #define WIN32_EXPORT
 #endif
 
-#ifdef USE_MICRO_UV
 #include "uUV.h"
-#else
-#include <uv.h>
-#endif
-
 #include <openssl/ssl.h>
 #include <vector>
 #include <string>
@@ -82,7 +72,7 @@ private:
     static int passwordCallback(char *buf, int size, int rwflag, void *u)
     {
         std::string *password = (std::string *) u;
-        int length = std::min<int>(size, static_cast<int>(password->length()));
+        int length = std::min<int>(size, password->length());
         memcpy(buf, password->data(), length);
         buf[length] = '\0';
         return length;
@@ -99,7 +89,7 @@ public:
     Context &operator=(const Context &other);
     ~Context();
     operator bool() {
-		return context != nullptr;
+        return context;
     }
 
     SSL_CTX *getNativeContext() {
@@ -146,7 +136,7 @@ struct WIN32_EXPORT NodeData {
     static void asyncCallback(uv_async_t *async);
 
     static int getMemoryBlockIndex(size_t length) {
-        return (length >> 4) + ((length & 15) != 0 ? 1 :0);
+        return (length >> 4) + bool(length & 15);
     }
 
     char *getSmallMemoryBlock(int index) {
@@ -228,7 +218,9 @@ struct ListenData : SocketData {
 
     }
 
-    uv_poll_t *listenPoll;
+    uv_poll_t *listenPoll = nullptr;
+    uv_timer_t *listenTimer = nullptr;
+    uv_os_sock_t sock;
     uS::TLS::Context sslContext;
 };
 

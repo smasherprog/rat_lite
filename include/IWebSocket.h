@@ -6,6 +6,7 @@ namespace SL {
 		enum class PACKET_TYPES : unsigned int {
 			INVALID,
 			HTTP_MSG,
+			MONITORINFO,
 			SCREENIMAGE,
 			SCREENIMAGEDIF,
 			MOUSEPOS,

@@ -10,7 +10,7 @@
 #include "Configs.h"
 #include "Shapes.h"
 #include "Input.h"
-
+#include "IWebSocket.h"
 
 namespace SL {
 	namespace RAT {
@@ -38,6 +38,7 @@ namespace SL {
 				_ScreenCaptureManager.setMouseChangeInterval(_Config->MousePositionCaptureRate);
 				_ScreenCaptureManager.setFrameChangeInterval(_Config->ScreenImageCaptureRate);
 				_ScreenCaptureManager.setMonitorsToCapture([]() {
+
 					return Screen_Capture::GetMonitors();
 				});
 				_ScreenCaptureManager.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
@@ -66,6 +67,7 @@ namespace SL {
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 				UNUSED(socket);
+				ServerNetworkDriver_.SendMonitorInfo(socket.get(), Screen_Capture::GetMonitors());
 			}
 
 			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {

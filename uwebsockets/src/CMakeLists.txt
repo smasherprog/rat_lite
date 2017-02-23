@@ -15,7 +15,7 @@ if(WIN32)
 	endif()
 endif()
 
-add_library(uWS Extensions.cpp Group.cpp WebSocketImpl.cpp Networking.cpp Hub.cpp Node.cpp WebSocket.cpp HTTPSocket.cpp Socket.cpp)
+add_library(uWS Extensions.cpp Group.cpp WebSocketImpl.cpp Networking.cpp Hub.cpp Node.cpp WebSocket.cpp HTTPSocket.cpp Socket.cpp uUV.cpp)
 target_include_directories(uWS PUBLIC src)
 
 target_include_directories(uWS PUBLIC ${LIBUV_INCLUDE_DIR})

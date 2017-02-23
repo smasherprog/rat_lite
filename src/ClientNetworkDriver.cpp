@@ -8,6 +8,7 @@
 #include "Logging.h"
 #include "Configs.h"
 #include "IWebSocket.h"
+#include "internal/WebSocket.h"
 #include "uWS.h"
 #include <assert.h>
 
@@ -15,7 +16,7 @@
 namespace SL {
 	namespace RAT {
 
-		class ClientNetworkDriverImpl : public INetworkHandlers {
+		class ClientNetworkDriverImpl {
 
 			IClientDriver* IClientDriver_;
 			std::shared_ptr<Client_Config> Config_;
@@ -71,6 +72,41 @@ namespace SL {
 				Config_ = config;
 				auto hc = std::string("wss://") + std::string(dst_host) + std::string(":") + std::to_string(config->WebSocketTLSLPort);
 				h.connect(hc, nullptr);
+				h.onConnection([&](uWS::WebSocket<uWS::CLIENT> ws, uWS::HttpRequest req) {
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
+					IClientDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::CLIENT>>>(ws));
+				});
+				h.onDisconnection([&](uWS::WebSocket<uWS::CLIENT> ws, int code, char *message, size_t length) {
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");
+					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws);
+					IClientDriver_->onDisconnection(sock, code, message, length);
+				});
+				h.onMessage([&](uWS::WebSocket<uWS::CLIENT> ws, char *message, size_t length, uWS::OpCode code) {
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage ");
+					auto p = *reinterpret_cast<const PACKET_TYPES*>(message);
+					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws);
+					switch (p) {
+					case PACKET_TYPES::SCREENIMAGE:
+						ScreenImage(sock, message + sizeof(p), length - sizeof(p), false);
+						break;
+					case PACKET_TYPES::SCREENIMAGEDIF:
+						ScreenImage(sock, message + sizeof(p), length - sizeof(p), true);
+						break;
+					case PACKET_TYPES::MOUSEIMAGE:
+						MouseImage(sock, message + sizeof(p), length - sizeof(p));
+						break;
+					case PACKET_TYPES::MOUSEPOS:
+						MousePos(sock, message + sizeof(p), length - sizeof(p));
+						break;
+					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
+						IClientDriver_->onReceive_ClipboardText(message + sizeof(p), length - sizeof(p));
+						break;
+					default:
+						IClientDriver_->onMessage(sock, message, length);//pass up the chain
+						break;
+					}
+				});
+
 				Runner = std::thread([&]() { h.run(); });
 			}
 
@@ -81,38 +117,7 @@ namespace SL {
 
 			}
 
-			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 
-				IClientDriver_->onConnection(socket);
-			}
-
-			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
-				IClientDriver_->onDisconnection(socket, code, message, length);
-			}
-
-			virtual void onMessage(const IWebSocket& socket, const char* data, size_t length)  override {
-				auto p = *reinterpret_cast<const PACKET_TYPES*>(data);
-				switch (p) {
-				case PACKET_TYPES::SCREENIMAGE:
-					ScreenImage(socket, data + sizeof(p), length - sizeof(p), false);
-					break;
-				case PACKET_TYPES::SCREENIMAGEDIF:
-					ScreenImage(socket, data + sizeof(p), length - sizeof(p), true);
-					break;
-				case PACKET_TYPES::MOUSEIMAGE:
-					MouseImage(socket, data + sizeof(p), length - sizeof(p));
-					break;
-				case PACKET_TYPES::MOUSEPOS:
-					MousePos(socket, data + sizeof(p), length - sizeof(p));
-					break;
-				case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-					IClientDriver_->onReceive_ClipboardText(data + sizeof(p), length - sizeof(p));
-					break;
-				default:
-					IClientDriver_->onMessage(socket, data, length);//pass up the chain
-					break;
-				}
-			}
 			void SendMouse(const MouseEvent& m) {
 				if (!Socket_) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendMouse called on a socket that is not open yet");

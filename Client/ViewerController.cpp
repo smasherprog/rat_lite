@@ -128,8 +128,9 @@ namespace SL {
 			}
 			void Close() {
 				if (!_BeingClosed) {
-					Fl::delete_widget(this);
 					this->hide();
+					Fl::delete_widget(this);
+			
 				}
 				_BeingClosed = true;
 			}

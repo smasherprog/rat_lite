@@ -43,7 +43,7 @@ namespace SL {
 					}
 					else {
 						ClientCount += 1;
-						int t = counter++ % config->MaxWebSocketThreads;
+						int t = counter++ % (config->MaxWebSocketThreads-1);
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
 						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
 						_IServerDriver->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws));
@@ -54,13 +54,15 @@ namespace SL {
 					new std::thread([&, i] {
 						// register our events
 						threads_[i] = new uWS::Hub();
-						uWS::WebSocket<uWS::SERVER> ws;
+					
 						threads_[i]->onDisconnection([&, i](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection on thread " << i);
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws);
 							ClientCount -= 1;
 							_IServerDriver->onDisconnection(sock, code, message, length);
 						});
-						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
+						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {	
+							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage on thread " << i);
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws);
 							auto pactype = PACKET_TYPES::INVALID;
 							assert(length >= sizeof(pactype));
@@ -94,6 +96,7 @@ namespace SL {
 				}
 
 				uS::TLS::Context c = uS::TLS::createContext(config->PathTo_Public_Certficate, config->PathTo_Private_Key, config->PasswordToPrivateKey);
+			
 				h.listen(Config_->WebSocketTLSLPort, c, 0, nullptr);
 
 			}

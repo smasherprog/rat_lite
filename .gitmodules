@@ -1,0 +1,15 @@
+[submodule "zstd"]
+	path = zstd
+	url = https://github.com/facebook/zstd
+[submodule "fltk"]
+	path = test-only
+	url = https://github.com/fltk/test-only
+[submodule "asio"]
+	path = asio
+	url = https://github.com/chriskohlhoff/asio
+[submodule "Openssl_VS"]
+	path = Openssl_VS
+	url = https://github.com/smasherprog/Openssl_VS
+[submodule "Libjpeg-turbo-VS"]
+	path = Libjpeg-turbo-VS
+	url = https://github.com/smasherprog/Libjpeg-turbo-VS

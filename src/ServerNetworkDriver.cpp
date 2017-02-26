@@ -23,7 +23,7 @@ namespace SL {
 		class ServerNetworkDriverImpl {
 
 		public:
-			IServerDriver* _IServerDriver;
+			IServerDriver* IServerDriver_;
 			std::shared_ptr<Server_Config> Config_;
 			std::vector<uWS::Hub*> threads_;
 			uWS::Hub h;
@@ -31,7 +31,7 @@ namespace SL {
 			std::atomic_int ClientCount;
 
 			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
-				_IServerDriver(r), Config_(config) {
+				IServerDriver_(r), Config_(config) {
 				ClientCount = 0;
 
 				threads_.resize(config->MaxWebSocketThreads);
@@ -49,7 +49,7 @@ namespace SL {
 
 						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
 						ws.setUserData(new SocketStats());
-						_IServerDriver->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)threads_[t]->getDefaultGroup<uWS::SERVER>().getUserData()));
+						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)threads_[t]->getDefaultGroup<uWS::SERVER>().getUserData()));
 						ClientCount += 1;
 					}
 				});
@@ -65,7 +65,7 @@ namespace SL {
 							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection on thread " << i);
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)threads_[i]->getDefaultGroup<uWS::SERVER>().getUserData());
 							ClientCount -= 1;
-							_IServerDriver->onDisconnection(sock, code, message, length);
+							IServerDriver_->onDisconnection(sock, code, message, length);
 							delete (SocketStats*)ws.getUserData();
 						});
 						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
@@ -85,17 +85,17 @@ namespace SL {
 							switch (pactype) {
 							case PACKET_TYPES::MOUSEEVENT:
 								assert(length == sizeof(MouseEvent));
-								_IServerDriver->onReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
+								IServerDriver_->onReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
 								break;
 							case PACKET_TYPES::KEYEVENT:
 								assert(length == sizeof(KeyEvent));
-								_IServerDriver->onReceive_Key(reinterpret_cast<const KeyEvent*>(message));
+								IServerDriver_->onReceive_Key(reinterpret_cast<const KeyEvent*>(message));
 								break;
 							case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-								_IServerDriver->onReceive_ClipboardText(message, length);
+								IServerDriver_->onReceive_ClipboardText(message, length);
 								break;
 							default:
-								_IServerDriver->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));
+								IServerDriver_->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));
 								break;
 							}
 
@@ -248,36 +248,36 @@ namespace SL {
 
 		}
 		void ServerNetworkDriver::Start(IServerDriver * r, std::shared_ptr<Server_Config> config) {
-			_ServerNetworkDriverImpl = std::make_unique<ServerNetworkDriverImpl>(r, config);
-			_ServerNetworkDriverImpl->Run();
+			ServerNetworkDriverImpl_ = std::make_unique<ServerNetworkDriverImpl>(r, config);
+			ServerNetworkDriverImpl_->Run();
 		}
 		void ServerNetworkDriver::Stop() {
-			_ServerNetworkDriverImpl.reset();
+			ServerNetworkDriverImpl_.reset();
 		}
 
 		void ServerNetworkDriver::SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
 		{
-			_ServerNetworkDriverImpl->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
+			ServerNetworkDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
 		}
 		void ServerNetworkDriver::SendFrame(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
 		{
-			_ServerNetworkDriverImpl->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGE);
+			ServerNetworkDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGE);
 		}
 		void ServerNetworkDriver::SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
 		{
-			_ServerNetworkDriverImpl->SendMonitorInfo(socket, monitors);
+			ServerNetworkDriverImpl_->SendMonitorInfo(socket, monitors);
 		}
 		void ServerNetworkDriver::SendMouse(IWebSocket* socket, const Screen_Capture::Image & img)
 		{
-			_ServerNetworkDriverImpl->SendMouse(socket, img);
+			ServerNetworkDriverImpl_->SendMouse(socket, img);
 		}
 		void ServerNetworkDriver::SendMouse(IWebSocket* socket, const Point & pos)
 		{
-			_ServerNetworkDriverImpl->SendMouse(socket, pos);
+			ServerNetworkDriverImpl_->SendMouse(socket, pos);
 		}
 
 		void ServerNetworkDriver::SendClipboardText(IWebSocket* socket, const char* data, unsigned int len) {
-			_ServerNetworkDriverImpl->SendClipboardText(socket, data, len);
+			ServerNetworkDriverImpl_->SendClipboardText(socket, data, len);
 		}
 
 

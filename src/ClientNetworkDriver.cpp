@@ -201,33 +201,33 @@ namespace SL {
 }
 
 SL::RAT::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r)
-	: _ClientNetworkDriverImpl(new ClientNetworkDriverImpl(r))
+	: ClientNetworkDriverImpl_(new ClientNetworkDriverImpl(r))
 {
 
 }
 
 SL::RAT::ClientNetworkDriver::~ClientNetworkDriver()
 {
-	delete _ClientNetworkDriverImpl;
+	delete ClientNetworkDriverImpl_;
 }
 
 void SL::RAT::ClientNetworkDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
 {
-	_ClientNetworkDriverImpl->Connect(config, dst_host);
+	ClientNetworkDriverImpl_->Connect(config, dst_host);
 }
 
 
 void SL::RAT::ClientNetworkDriver::SendKey(const KeyEvent & m)
 {
-	_ClientNetworkDriverImpl->SendKey(m);
+	ClientNetworkDriverImpl_->SendKey(m);
 }
 
 void SL::RAT::ClientNetworkDriver::SendMouse(const MouseEvent& m)
 {
-	_ClientNetworkDriverImpl->SendMouse(m);
+	ClientNetworkDriverImpl_->SendMouse(m);
 }
 
 
 void SL::RAT::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
-	return _ClientNetworkDriverImpl->SendClipboardText(data, len);
+	return ClientNetworkDriverImpl_->SendClipboardText(data, len);
 }

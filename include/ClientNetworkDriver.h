@@ -10,7 +10,7 @@ namespace SL {
 		class ClientNetworkDriverImpl;
 		struct Client_Config;
 		class ClientNetworkDriver {
-			ClientNetworkDriverImpl* _ClientNetworkDriverImpl;
+			ClientNetworkDriverImpl* ClientNetworkDriverImpl_;
 
 		public:
 			ClientNetworkDriver(IClientDriver* r );

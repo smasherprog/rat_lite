@@ -28,10 +28,10 @@ namespace SL {
 			ImageControl* ImageControl_ = nullptr;
 
 			Fl_Scroll* Fl_Scroll_ = nullptr;
-			std::shared_ptr<Client_Config> _Config;
+			std::shared_ptr<Client_Config> Config_;
 
 			std::unique_ptr<Clipboard> Clipboard_;
-			ClientNetworkDriver _ClientNetworkDriver;
+			ClientNetworkDriver ClientNetworkDriver_;
 
 			std::chrono::time_point<std::chrono::steady_clock> NetworkStatsTimer_;
 			std::chrono::time_point<std::chrono::steady_clock> FrameTimer_;
@@ -54,8 +54,8 @@ namespace SL {
 			}
 			ViewerControllerImpl(std::shared_ptr<Client_Config> config) :
 				Fl_Double_Window(900, 700, "Remote Host"),
-				_Config(config),
-				_ClientNetworkDriver(this)
+				Config_(config),
+				ClientNetworkDriver_(this)
 			{
 				FrameTimer_ = NetworkStatsTimer_ = std::chrono::steady_clock::now();
 				callback(window_cb);
@@ -76,12 +76,12 @@ namespace SL {
 
 				Clipboard_ = std::make_unique<Clipboard>();
 				Clipboard_->shareClipboard(config->Share_Clipboard);
-				Clipboard_->onChange([&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
+				Clipboard_->onChange([&](const char* c, int len) { ClientNetworkDriver_.SendClipboardText(c, static_cast<unsigned int>(len)); });
 
 			}
 			virtual ~ViewerControllerImpl() {
 				if (Socket_) Socket_->close(1000, "", 0);
-				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
+				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to ClientNetworkDriver_
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
 				Fl_Double_Window::resize(X, Y, W, H);
@@ -102,7 +102,7 @@ namespace SL {
 				k.Key = key;
 				k.PressData = press;
 				k.SpecialKey = Specials::NO_SPECIAL_DATA;
-				_ClientNetworkDriver.SendKey(k);
+				ClientNetworkDriver_.SendKey(k);
 			}
 			void handle_mouse(int e, int button, Press press, int x, int y) {
 				MouseEvent ev;
@@ -129,7 +129,7 @@ namespace SL {
 					};
 				}
 				ev.PressData = press;
-				_ClientNetworkDriver.SendMouse(ev);
+				ClientNetworkDriver_.SendMouse(ev);
 			}
 			void Close() {
 				if (!BeingClosed_) {
@@ -224,8 +224,8 @@ namespace SL {
 
 SL::RAT::ViewerController::ViewerController(std::shared_ptr<Client_Config> config, const char * dst_host) {
 
-	_ViewerControllerImpl = new ViewerControllerImpl(config);
-	_ViewerControllerImpl->_ClientNetworkDriver.Connect(config, dst_host);
+	ViewerControllerImpl_ = new ViewerControllerImpl(config);
+	ViewerControllerImpl_->ClientNetworkDriver_.Connect(config, dst_host);
 }
 
 SL::RAT::ViewerController::~ViewerController() {

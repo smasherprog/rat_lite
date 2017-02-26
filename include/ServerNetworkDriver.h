@@ -15,7 +15,7 @@ namespace SL {
 		class IServerDriver;
 		class IWebSocket;
 		class ServerNetworkDriver {
-			std::unique_ptr<ServerNetworkDriverImpl> _ServerNetworkDriverImpl;
+			std::unique_ptr<ServerNetworkDriverImpl> ServerNetworkDriverImpl_;
 
 		public:
 			ServerNetworkDriver();

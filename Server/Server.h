@@ -15,7 +15,7 @@ namespace SL {
 
 		class ServerImpl;
 		class Server {
-			std::shared_ptr<ServerImpl> _ServerImpl;
+			std::shared_ptr<ServerImpl> ServerImpl_;
 		public:
 
 			Server();

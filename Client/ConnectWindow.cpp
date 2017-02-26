@@ -26,12 +26,12 @@ namespace SL {
 			Fl_Input* bInput = nullptr;
 			Fl_Button* connectbtn = nullptr;
 			//Fl_Check_Button* checkbx = nullptr;
-			Fl_Menu_Bar *_MenuBar = nullptr;
+			Fl_Menu_Bar *MenuBar_ = nullptr;
 	
 			std::string Host;
-			std::unique_ptr<ViewerController> _MainWindow;
-			std::shared_ptr<Client_Config> _Config;
-			ConnectWindowImpl(std::shared_ptr<Client_Config> c) :Fl_Window(400, 420, 350, 110, "Connect to Host"), _Config(c){
+			std::unique_ptr<ViewerController> MainWindow_;
+			std::shared_ptr<Client_Config> Config_;
+			ConnectWindowImpl(std::shared_ptr<Client_Config> c) :Fl_Window(400, 420, 350, 110, "Connect to Host"), Config_(c){
 			
 			}
 			virtual ~ConnectWindowImpl() {
@@ -47,14 +47,14 @@ namespace SL {
 			static void DoConnect(void* userdata) {
 				auto ptr = ((ConnectWindowImpl*)userdata);
 				ptr->ActivateWidgets();
-				ptr->_MainWindow = std::make_unique<ViewerController>(ptr->_Config, ptr->Host.c_str());
+				ptr->MainWindow_ = std::make_unique<ViewerController>(ptr->Config_, ptr->Host.c_str());
 			}
 			static void try_connect(std::string host, ConnectWindowImpl* ptr) {
 				auto portspecified = host.find_last_of(':');
 				if (portspecified != host.npos) {
 					auto port = host.substr(portspecified + 1, host.size() - (portspecified - 1));
 					if (!port.empty()) {
-						ptr->_Config->WebSocketTLSLPort = static_cast<unsigned short>(std::stoul(port));
+						ptr->Config_->WebSocketTLSLPort = static_cast<unsigned short>(std::stoul(port));
 					}
 					ptr->Host = host.substr(0, portspecified);
 				}
@@ -89,7 +89,7 @@ namespace SL {
 			/*static void setscale(Fl_Widget* o, void* userdata) {
 				UNUSED(o);
 				auto ptr = ((ConnectWindowImpl*)userdata);
-				if (ptr->checkbx) ptr->_Config->Scale_Image = ptr->checkbx->value() == 1;
+				if (ptr->checkbx) ptr->Config_->Scale_Image = ptr->checkbx->value() == 1;
 			}*/
 			static void _FullPathToCertifiateCB(Fl_Widget*w, void*data) {
 				UNUSED(w);
@@ -102,7 +102,7 @@ namespace SL {
 				auto action = chooser.show();
 				if (action == -1 || action == 1) return;//cancel was hit
 
-				p->_Config->PathTo_Public_Certficate = chooser.filename();
+				p->Config_->PathTo_Public_Certficate = chooser.filename();
 			}
 			static void Menu_CB(Fl_Widget*w, void*data) {
 				UNUSED(w);
@@ -116,9 +116,9 @@ namespace SL {
 				auto startleft = 80;
 
 
-				_MenuBar = new Fl_Menu_Bar(0, 0, w(), 30);
-				_MenuBar->add("File/Quit", 0, Menu_CB, (void*)this);
-				_MenuBar->add("Certificate/Location", 0, _FullPathToCertifiateCB, (void*)this);
+				MenuBar_ = new Fl_Menu_Bar(0, 0, w(), 30);
+				MenuBar_->add("File/Quit", 0, Menu_CB, (void*)this);
+				MenuBar_->add("Certificate/Location", 0, _FullPathToCertifiateCB, (void*)this);
 				workingy += 30;
 
 				bInput = new Fl_Input(startleft, workingy, w() - startleft, 30, "Host: ");
@@ -147,8 +147,8 @@ namespace SL {
 
 SL::RAT::ConnectWindow::ConnectWindow(const std::shared_ptr<Client_Config> config, const std::string& host)
 {
-	_ConnectWindowImpl = new ConnectWindowImpl(config);
-	_ConnectWindowImpl->Init(host);
+	ConnectWindowImpl_ = new ConnectWindowImpl(config);
+	ConnectWindowImpl_->Init(host);
 
 }
 SL::RAT::ConnectWindow::~ConnectWindow()

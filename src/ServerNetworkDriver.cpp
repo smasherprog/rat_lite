@@ -48,6 +48,7 @@ namespace SL {
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
 
 						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
+						ws.setUserData(new SocketStats());
 						_IServerDriver->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)threads_[t]->getDefaultGroup<uWS::SERVER>().getUserData()));
 						ClientCount += 1;
 					}
@@ -65,10 +66,14 @@ namespace SL {
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)threads_[i]->getDefaultGroup<uWS::SERVER>().getUserData());
 							ClientCount -= 1;
 							_IServerDriver->onDisconnection(sock, code, message, length);
-						
+							delete (SocketStats*)ws.getUserData();
 						});
 						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
 							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage on thread " << i);
+							auto s = (SocketStats*)ws.getUserData();
+							s->TotalBytesReceived += length;
+							s->TotalPacketReceived += 1;
+
 							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)threads_[i]->getDefaultGroup<uWS::SERVER>().getUserData());
 							auto pactype = PACKET_TYPES::INVALID;
 							assert(length >= sizeof(pactype));
@@ -114,14 +119,21 @@ namespace SL {
 				}
 			}
 			void Send(IWebSocket* socket, char* data, size_t len) {
-
 				if (socket) {
 					socket->send(data, len);
 				}
 				else {
 					for (auto& a : threads_) {
 						std::lock_guard<std::mutex> lock(*(std::mutex*)a->getDefaultGroup<uWS::SERVER>().getUserData());
-						a->getDefaultGroup<uWS::SERVER>().broadcast(data, len, uWS::OpCode::BINARY);
+						// uwebsockets broadcast code below
+						auto preparedMessage = uWS::WebSocket<uWS::SERVER>::prepareMessage(data, len, uWS::OpCode::BINARY, false);
+						a->getDefaultGroup<uWS::SERVER>().forEach([preparedMessage, len](uWS::WebSocket<uWS::SERVER> ws) {
+							ws.sendPrepared(preparedMessage);
+							auto s = (SocketStats*)ws.getUserData();
+							s->TotalBytesSent += len;
+							s->TotalPacketSent += 1;
+						});
+						uWS::WebSocket<uWS::SERVER>::finalizeMessage(preparedMessage);
 					}
 				}
 

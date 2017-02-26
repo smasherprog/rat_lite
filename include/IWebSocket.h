@@ -17,6 +17,12 @@ namespace SL {
 			//use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
 			LAST_PACKET_TYPE
 		};
+		struct SocketStats {
+			long long TotalBytesSent = 0;
+			long long TotalPacketSent = 0;
+			long long TotalBytesReceived = 0;
+			long long TotalPacketReceived = 0;
+		};
 		class IWebSocket {
 		public:
 			virtual ~IWebSocket() {}
@@ -28,7 +34,7 @@ namespace SL {
 			virtual const char* get_address() = 0;
 			virtual unsigned short get_port() = 0;
 			virtual const char* get_address_family() = 0;
-
+			virtual SocketStats* get_Stats() = 0;
 			//is the this connection to ourselfs? i.e. 127.0.0.1 or ::1, etc
 			virtual bool is_loopback() = 0;
 		};

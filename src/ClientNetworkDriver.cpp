@@ -89,14 +89,20 @@ namespace SL {
 		
 				h.onConnection([&](uWS::WebSocket<uWS::CLIENT> ws, uWS::HttpRequest req) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
+					ws.setUserData(new SocketStats());
 					IClientDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::CLIENT>>>(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData()));
 				});
 				h.onDisconnection([&](uWS::WebSocket<uWS::CLIENT> ws, int code, char *message, size_t length) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");
 					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
 					IClientDriver_->onDisconnection(sock, code, message, length);
+					delete (SocketStats*)ws.getUserData();
 				});
 				h.onMessage([&](uWS::WebSocket<uWS::CLIENT> ws, char *message, size_t length, uWS::OpCode code) {
+					auto s = (SocketStats*)ws.getUserData();
+					s->TotalBytesReceived += length;
+					s->TotalPacketReceived += 1;
+
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage ");
 					auto p = *reinterpret_cast<const PACKET_TYPES*>(message);
 					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());

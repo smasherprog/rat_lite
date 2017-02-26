@@ -3,6 +3,7 @@
 #include "Shapes.h"
 #include "Input.h"
 #include "Image.h"
+#include "SCCommon.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
@@ -85,6 +86,8 @@ namespace SL {
 
 			Point _MousePos;
 			std::unique_ptr<Fl_RGB_Image> MouseImage_;
+			std::vector<Screen_Capture::Monitor> Monitors;
+
 
 			ScreenImageImpl(ScreenImageInfo&& info) : ScaleFactor_(1.0f), ScreenImageInfo_(info) {}
 
@@ -121,7 +124,7 @@ namespace SL {
 				}
 			}
 			void Draw(int x, int y) {
-				
+
 				if (ScaledImage_.Data) {
 					std::lock_guard<std::mutex> lock(ImageLock_);
 					if (ScaledImage_.Data) {
@@ -134,7 +137,7 @@ namespace SL {
 				return;
 				if (!(OriginalImage_.Data && ScaledImage_.Data)) return;// both images should exist, if not then get out!
 
-			
+
 				if (is_ImageScaled()) {//rescale the incoming image image
 					auto scaledrect = img.Rect;
 
@@ -158,7 +161,7 @@ namespace SL {
 				}
 			}
 			void setMouseImage_(const Image& img) {
-			
+
 				auto s = img.Rect.Width*img.Rect.Height*PixelStride;
 				auto mouseimg = std::make_unique<char[]>(s);
 				Image mouseimgdata(img.Rect, mouseimg.get(), s);
@@ -169,7 +172,7 @@ namespace SL {
 				MouseImage_ = std::make_unique<Fl_RGB_Image>((uchar*)MouseImageBacking_.get(), img.Rect.Width, img.Rect.Height, PixelStride);
 			}
 			void set_MousePosition(const Point* pos) {
-			
+
 				_MousePos = *pos;
 				if (is_ImageScaled()) {//need to scale the mouse pos as well
 
@@ -207,6 +210,12 @@ namespace SL {
 				width = ScaledImage_.Rect.Width;
 				height = ScaledImage_.Rect.Height;
 				return ret;//no changes
+			}
+			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors) {
+				Monitors.resize(num_of_monitors);
+				for (auto i = 0; i < num_of_monitors; i++) {
+					Monitors[i] = monitors[i];
+				}
 			}
 		};
 
@@ -301,46 +310,55 @@ namespace SL {
 				};
 				return Fl_Box::handle(e);
 			}
+			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
+			{
 
+			}
 		};
+		ImageControl::ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) {
+			ImageControlImpl_ = new ImageControlImpl(X, Y, W, H, title, std::forward<ScreenImageInfo>(info));
+		}
+
+		ImageControl::~ImageControl() {
+			delete ImageControlImpl_;
+		}
+
+		void ImageControl::OnResize(int W, int H, int SS)
+		{
+			ImageControlImpl_->OnResize(W, H, SS);
+		}
+
+		bool ImageControl::is_ImageScaled() const
+		{
+			return ImageControlImpl_->_ScreenImageDriver.is_ImageScaled();
+		}
+
+		void ImageControl::set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
+		{
+			return ImageControlImpl_->set_Monitors(monitors, num_of_monitors);
+		}
+
+		void ImageControl::set_ScreenImage(const Image& img, int monitor_id)
+		{
+			ImageControlImpl_->size(img.Rect.Width, img.Rect.Height);
+			ImageControlImpl_->_ScreenImageDriver.set_ScreenImage(img, monitor_id);
+		}
+
+		void ImageControl::set_ImageDifference(const Image& img, int monitor_id)
+		{
+			ImageControlImpl_->_ScreenImageDriver.set_ImageDifference(img, monitor_id);
+		}
+
+		void ImageControl::set_MouseImage(const Image& img)
+		{
+			ImageControlImpl_->_ScreenImageDriver.setMouseImage_(img);
+		}
+
+		void ImageControl::set_MousePosition(const Point* pos)
+		{
+			ImageControlImpl_->_ScreenImageDriver.set_MousePosition(pos);
+		}
 
 	}
 }
-SL::RAT::ImageControl::ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info) {
-	ImageControlImpl_ = new ImageControlImpl(X, Y, W, H, title, std::forward<ScreenImageInfo>(info));
-}
 
-SL::RAT::ImageControl::~ImageControl() {
-	delete ImageControlImpl_;
-}
-
-void SL::RAT::ImageControl::OnResize(int W, int H, int SS)
-{
-	ImageControlImpl_->OnResize(W, H, SS);
-}
-
-bool SL::RAT::ImageControl::is_ImageScaled() const
-{
-	return ImageControlImpl_->_ScreenImageDriver.is_ImageScaled();
-}
-
-void SL::RAT::ImageControl::set_ScreenImage(const Image& img, int monitor_id)
-{
-	ImageControlImpl_->size(img.Rect.Width, img.Rect.Height);
-	ImageControlImpl_->_ScreenImageDriver.set_ScreenImage(img, monitor_id);
-}
-
-void SL::RAT::ImageControl::set_ImageDifference(const Image& img, int monitor_id)
-{
-	ImageControlImpl_->_ScreenImageDriver.set_ImageDifference(img, monitor_id);
-}
-
-void SL::RAT::ImageControl::set_MouseImage(const Image& img)
-{
-	ImageControlImpl_->_ScreenImageDriver.setMouseImage_(img);
-}
-
-void SL::RAT::ImageControl::set_MousePosition(const Point* pos)
-{
-	ImageControlImpl_->_ScreenImageDriver.set_MousePosition(pos);
-}

@@ -43,7 +43,9 @@ namespace SL {
 			bool CursorHidden_ = false;
 			char Title_[255];
 			bool HasFocus_ = false;
-			std::shared_ptr<IWebSocket> Socket;
+			std::shared_ptr<IWebSocket> Socket_;
+			SocketStats LastStats;
+
 
 			static void window_cb(Fl_Widget *widget, void *)
 			{
@@ -78,7 +80,7 @@ namespace SL {
 
 			}
 			virtual ~ViewerControllerImpl() {
-				if (Socket) Socket->close(1000, "", 0);
+				if (Socket_) Socket_->close(1000, "", 0);
 				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
@@ -162,7 +164,7 @@ namespace SL {
 
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
-				Socket = socket;
+				Socket_ = socket;
 			}
 
 			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
@@ -189,13 +191,14 @@ namespace SL {
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - NetworkStatsTimer_).count() > 1000) {
 					NetworkStatsTimer_ = std::chrono::steady_clock::now();
 
-
+					auto stats = Socket_->get_Stats();
 					std::string st = "Client ";
-
+					st += std::to_string((stats->TotalBytesReceived - LastStats.TotalBytesReceived) / 1000) + " Kbs Received ";
+					st += std::to_string((stats->TotalBytesSent - LastStats.TotalBytesSent) / 1000) + " Kbs Sent";
 					FPS = FrameCounter;
 					FrameCounter = 0;
 					st += " Fps: " + std::to_string(FPS);
-
+					LastStats = *stats;
 					if (st.size() > sizeof(Title_) - 1) st = st.substr(0, sizeof(Title_) - 1);
 					memcpy(Title_, st.c_str(), st.size() + 1);
 					Fl::awake(awakensettitle, this);

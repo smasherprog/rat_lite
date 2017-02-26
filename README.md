@@ -42,10 +42,10 @@ Latest standards: c++ 14
 <p>https://tldrlegal.com/license/mit-license</p>
 <p>
 <h5>Windows Connecting to Mac</h5>
-<img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Windows_Mac.PNG" target="_blank"/></p>
+<img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Windows_Mac.PNG" target="_blank"/></p>
 <p>
 <h5>Mac Connecting to Windows</h5>
-<img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Mac_Windows.PNG" target="_blank"/>
+<img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Mac_Windows.PNG" target="_blank"/>
 </p>
 
 <p>

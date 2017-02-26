@@ -12,9 +12,6 @@ Cross-platform:Windows desktop, windows phone, Linux, Modern Web Browsers, Andri
 Performance 
 </li>
 <li>
-Extreme Compression (libjpeg-turbo + zstd)
-</li>
-<li>
 Encryption (openssl)
 </li>
 <li>

@@ -38,9 +38,6 @@ namespace SL {
 
 				h.onConnection([&](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
 					static int counter = 0;
-				
-					ws.setUserData(new std::mutex);
-
 					if (ClientCount + 1 > Config_->MaxNumConnections) {
 						char msg[] = "Closing due to max number of connections!";
 						ws.close(1000, msg, sizeof(msg));
@@ -51,7 +48,7 @@ namespace SL {
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
 
 						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
-						_IServerDriver->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws));
+						_IServerDriver->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)threads_[t]->getDefaultGroup<uWS::SERVER>().getUserData()));
 						ClientCount += 1;
 					}
 				});

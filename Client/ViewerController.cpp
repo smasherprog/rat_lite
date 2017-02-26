@@ -5,6 +5,7 @@
 #include "Clipboard.h"
 #include "IClientDriver.h"
 #include "Configs.h"
+#include "IWebSocket.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -24,24 +25,25 @@ namespace SL {
 
 		class ViewerControllerImpl : public Fl_Double_Window, IClientDriver {
 		public:
-			ImageControl* _ImageControl = nullptr;
+			ImageControl* ImageControl_ = nullptr;
 
-			Fl_Scroll* _Fl_Scroll = nullptr;
+			Fl_Scroll* Fl_Scroll_ = nullptr;
 			std::shared_ptr<Client_Config> _Config;
 
-			std::unique_ptr<Clipboard> _Clipboard;
+			std::unique_ptr<Clipboard> Clipboard_;
 			ClientNetworkDriver _ClientNetworkDriver;
 
-			std::chrono::time_point<std::chrono::steady_clock> _NetworkStatsTimer;
-			std::chrono::time_point<std::chrono::steady_clock> _FrameTimer;
+			std::chrono::time_point<std::chrono::steady_clock> NetworkStatsTimer_;
+			std::chrono::time_point<std::chrono::steady_clock> FrameTimer_;
 			float MaxFPS = 30.0f;
 			int FPS = 0;
 			int FrameCounter = 0;
 
-			bool _BeingClosed = false;
-			bool _CursorHidden = false;
-			char _Title[255];
-			bool _HasFocus = false;
+			bool BeingClosed_ = false;
+			bool CursorHidden_ = false;
+			char Title_[255];
+			bool HasFocus_ = false;
+			std::shared_ptr<IWebSocket> Socket;
 
 			static void window_cb(Fl_Widget *widget, void *)
 			{
@@ -53,35 +55,36 @@ namespace SL {
 				_Config(config),
 				_ClientNetworkDriver(this)
 			{
-				_FrameTimer = _NetworkStatsTimer = std::chrono::steady_clock::now();
+				FrameTimer_ = NetworkStatsTimer_ = std::chrono::steady_clock::now();
 				callback(window_cb);
-				_Fl_Scroll = new Fl_Scroll(0, 0, 900, 700);
+				Fl_Scroll_ = new Fl_Scroll(0, 0, 900, 700);
 
 				ScreenImageInfo info;
 				info.get_Height = [this]() {return this->h(); };
-				info.get_Left = [this]() {return _Fl_Scroll->xposition(); };
-				info.get_Top = [this]() {return _Fl_Scroll->yposition(); };
+				info.get_Left = [this]() {return Fl_Scroll_->xposition(); };
+				info.get_Top = [this]() {return Fl_Scroll_->yposition(); };
 				info.OnKey = [this](int e, Press p) { this->handle_key(e, p); };
 				info.OnMouse = [this](int e, int button, Press press, int x, int y) { this->handle_mouse(e, button, press, x, y); };
 
-				_ImageControl = new ImageControl(0, 0, 900, 700, nullptr, std::move(info));
-				_Fl_Scroll->end();
+				ImageControl_ = new ImageControl(0, 0, 900, 700, nullptr, std::move(info));
+				Fl_Scroll_->end();
 				end();
 				resizable(this);
 				show();
 
-				_Clipboard = std::make_unique<Clipboard>();
-				_Clipboard->shareClipboard(config->Share_Clipboard);
-				_Clipboard->onChange([&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
+				Clipboard_ = std::make_unique<Clipboard>();
+				Clipboard_->shareClipboard(config->Share_Clipboard);
+				Clipboard_->onChange([&](const char* c, int len) { _ClientNetworkDriver.SendClipboardText(c, static_cast<unsigned int>(len)); });
 
 			}
 			virtual ~ViewerControllerImpl() {
-				_Clipboard.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
+				if (Socket) Socket->close(1000, "", 0);
+				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to _ClientNetworkDriver
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
 				Fl_Double_Window::resize(X, Y, W, H);
 
-				_ImageControl->OnResize(W, H, _Fl_Scroll->scrollbar_size());
+				ImageControl_->OnResize(W, H, Fl_Scroll_->scrollbar_size());
 			}
 			void handle_key(int e, Press press) {
 				UNUSED(e);
@@ -127,29 +130,29 @@ namespace SL {
 				_ClientNetworkDriver.SendMouse(ev);
 			}
 			void Close() {
-				if (!_BeingClosed) {
+				if (!BeingClosed_) {
 					this->hide();
 					Fl::delete_widget(this);
-			
+
 				}
-				_BeingClosed = true;
+				BeingClosed_ = true;
 			}
 			static void closethiswindow(void* data) {
 				((ViewerControllerImpl*)data)->Close();
 			}
 			static void awakenredraw(void* data) {
 				auto imp = ((ViewerControllerImpl*)data);
-				if (imp->_BeingClosed) return;
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - imp->_FrameTimer).count() > imp->MaxFPS / 1000.0f) {
-					imp->_FrameTimer = std::chrono::steady_clock::now();
+				if (imp->BeingClosed_) return;
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - imp->FrameTimer_).count() > imp->MaxFPS / 1000.0f) {
+					imp->FrameTimer_ = std::chrono::steady_clock::now();
 					imp->FrameCounter += 1;
-					if (!imp->_BeingClosed) imp->redraw();
+					if (!imp->BeingClosed_) imp->redraw();
 				}
 			}
 			static void awakensettitle(void* data) {
 				auto imp = ((ViewerControllerImpl*)data);
-				if (imp->_BeingClosed) return;
-				imp->label(imp->_Title);
+				if (imp->BeingClosed_) return;
+				imp->label(imp->Title_);
 			}
 			static void awakenhidecursor(void* data) {
 				auto imp = ((ViewerControllerImpl*)data);
@@ -159,7 +162,7 @@ namespace SL {
 
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
-				UNUSED(socket);
+				Socket = socket;
 			}
 
 			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
@@ -176,15 +179,15 @@ namespace SL {
 
 			virtual void onReceive_Image(const Image& img, int monitor_id) override
 			{
-				_ImageControl->set_ScreenImage(img, monitor_id);
+				ImageControl_->set_ScreenImage(img, monitor_id);
 				Fl::awake(awakenredraw, this);
 			}
 
 			virtual void onReceive_ImageDif(const Image& img, int monitor_id) override {
-				_ImageControl->set_ImageDifference(img, monitor_id);
+				ImageControl_->set_ImageDifference(img, monitor_id);
 				Fl::awake(awakenredraw, this);
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
-					_NetworkStatsTimer = std::chrono::steady_clock::now();
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - NetworkStatsTimer_).count() > 1000) {
+					NetworkStatsTimer_ = std::chrono::steady_clock::now();
 
 
 					std::string st = "Client ";
@@ -193,21 +196,21 @@ namespace SL {
 					FrameCounter = 0;
 					st += " Fps: " + std::to_string(FPS);
 
-					if (st.size() > sizeof(_Title) - 1) st = st.substr(0, sizeof(_Title) - 1);
-					memcpy(_Title, st.c_str(), st.size() + 1);
+					if (st.size() > sizeof(Title_) - 1) st = st.substr(0, sizeof(Title_) - 1);
+					memcpy(Title_, st.c_str(), st.size() + 1);
 					Fl::awake(awakensettitle, this);
 				}
 
 			}
 			virtual void onReceive_MouseImage(const Image& img)override {
-				_ImageControl->set_MouseImage(img);
+				ImageControl_->set_MouseImage(img);
 			}
 
 			virtual void onReceive_MousePos(const Point* pos)override {
-				_ImageControl->set_MousePosition(pos);
+				ImageControl_->set_MousePosition(pos);
 			}
 			virtual void  onReceive_ClipboardText(const char* data, unsigned int len) override {
-				_Clipboard->updateClipbard(data, len);
+				Clipboard_->updateClipbard(data, len);
 			}
 
 

@@ -9,6 +9,7 @@
 #include "Configs.h"
 #include "IWebSocket.h"
 #include "internal/WebSocket.h"
+#include "SCCommon.h"
 #include "uWS.h"
 #include <assert.h>
 
@@ -35,6 +36,11 @@ namespace SL {
 				assert(len == sizeof(Point));
 				IClientDriver_->onReceive_MousePos(reinterpret_cast<const Point*>(data));
 			}
+			void MonitorInfo(const IWebSocket& socket, const char* data, size_t len) {
+				auto num = len / sizeof(Screen_Capture::Monitor);
+				assert(num * sizeof(Screen_Capture::Monitor) == len);
+				IClientDriver_->onReceive_Monitors((Screen_Capture::Monitor*)data, num);
+			}
 			void ScreenImage(const IWebSocket& socket, const char* data, size_t len, bool dif) {
 				assert(len >= sizeof(Rect));
 
@@ -42,7 +48,14 @@ namespace SL {
 				thread_local std::vector<char> outputbuffer;
 
 				int jpegSubsamp(0), outwidth(0), outheight(0);
-				auto src = (unsigned char*)(data + sizeof(Rect));
+
+				auto src = (unsigned char*)data;
+				auto monitor_id = 0;
+				memcpy(&monitor_id, src, sizeof(monitor_id));
+				src += sizeof(monitor_id);
+				Rect rect;
+				memcpy(&rect, src, sizeof(rect));
+				src += sizeof(rect);
 
 				if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
@@ -52,13 +65,13 @@ namespace SL {
 				if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
-				Image img(*reinterpret_cast<const Rect*>(data), outputbuffer.data(), outwidth* outheight * PixelStride );
+				Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
 				assert(outwidth == img.Rect.Width && outheight == img.Rect.Height);
 				if (dif) {
-					IClientDriver_->onReceive_ImageDif(img);
+					IClientDriver_->onReceive_ImageDif(img, monitor_id);
 				}
 				else {
-					IClientDriver_->onReceive_Image(img);
+					IClientDriver_->onReceive_Image(img, monitor_id);
 				}
 			}
 
@@ -72,20 +85,25 @@ namespace SL {
 				Config_ = config;
 				auto hc = std::string("ws://") + std::string(dst_host) + std::string(":") + std::to_string(config->WebSocketTLSLPort);
 				h.connect(hc, nullptr);
+				h.getDefaultGroup<uWS::CLIENT>().setUserData(new std::mutex);
+		
 				h.onConnection([&](uWS::WebSocket<uWS::CLIENT> ws, uWS::HttpRequest req) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
 					IClientDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::CLIENT>>>(ws));
 				});
 				h.onDisconnection([&](uWS::WebSocket<uWS::CLIENT> ws, int code, char *message, size_t length) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");
-					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws);
+					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
 					IClientDriver_->onDisconnection(sock, code, message, length);
 				});
 				h.onMessage([&](uWS::WebSocket<uWS::CLIENT> ws, char *message, size_t length, uWS::OpCode code) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage ");
 					auto p = *reinterpret_cast<const PACKET_TYPES*>(message);
-					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws);
+					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
 					switch (p) {
+					case PACKET_TYPES::MONITORINFO:
+						MonitorInfo(sock, message + sizeof(p), length - sizeof(p));
+						break;
 					case PACKET_TYPES::SCREENIMAGE:
 						ScreenImage(sock, message + sizeof(p), length - sizeof(p), false);
 						break;
@@ -107,7 +125,10 @@ namespace SL {
 					}
 				});
 
-				Runner = std::thread([&]() { h.run(); });
+				Runner = std::thread([&]() { 
+					h.run(); 
+					delete (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData();
+				});
 			}
 
 			virtual ~ClientNetworkDriverImpl() {

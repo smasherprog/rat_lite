@@ -134,6 +134,9 @@ namespace SL {
 				}
 				_BeingClosed = true;
 			}
+			static void closethiswindow(void* data) {
+				((ViewerControllerImpl*)data)->Close();
+			}
 			static void awakenredraw(void* data) {
 				auto imp = ((ViewerControllerImpl*)data);
 				if (imp->_BeingClosed) return;
@@ -152,14 +155,16 @@ namespace SL {
 				auto imp = ((ViewerControllerImpl*)data);
 				imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 			}
+			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) override {
 
+			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 				UNUSED(socket);
 			}
 
 			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
 				UNUSED(socket);
-				Close();
+				Fl::awake(closethiswindow, this);
 			}
 
 			virtual void onMessage(const IWebSocket& socket, const char* data, size_t len)  override {
@@ -169,14 +174,14 @@ namespace SL {
 			}
 
 
-			virtual void onReceive_Image(const Image& img) override
+			virtual void onReceive_Image(const Image& img, int monitor_id) override
 			{
-				_ImageControl->set_ScreenImage(img);
+				_ImageControl->set_ScreenImage(img, monitor_id);
 				Fl::awake(awakenredraw, this);
 			}
 
-			virtual void onReceive_ImageDif(const Image& img) override {
-				_ImageControl->set_ImageDifference(img);
+			virtual void onReceive_ImageDif(const Image& img, int monitor_id) override {
+				_ImageControl->set_ImageDifference(img, monitor_id);
 				Fl::awake(awakenredraw, this);
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _NetworkStatsTimer).count() > 1000) {
 					_NetworkStatsTimer = std::chrono::steady_clock::now();

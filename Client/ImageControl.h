@@ -30,8 +30,8 @@ namespace SL {
 
 			void OnResize(int W, int H, int SS);
 			bool is_ImageScaled() const;
-			void set_ScreenImage(const Image& img);
-			void set_ImageDifference(const Image& img);
+			void set_ScreenImage(const Image& img, int monitor_id);
+			void set_ImageDifference(const Image& img, int monitor_id);
 			void set_MouseImage(const Image& img);
 			void set_MousePosition(const Point* pos);
 

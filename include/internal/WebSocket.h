@@ -7,13 +7,17 @@ namespace SL {
 
 		template<class SOCKET_TYPE>class WebSocket :public IWebSocket {
 			SOCKET_TYPE ws;
+			std::mutex* Lock;
 		public:
-			WebSocket(SOCKET_TYPE w) : ws(w) {}
+			WebSocket(SOCKET_TYPE w, std::mutex* m) : ws(w), Lock(m) {}
 			virtual ~WebSocket() {}
 			virtual void send(const char* data, size_t len) override {
+				std::lock_guard<std::mutex> lock(*Lock);
 				ws.send(data, len, uWS::OpCode::BINARY);
 			}
 			virtual void close(int code, const char* message, size_t length)  override {
+				auto d = (std::mutex*)ws.getUserData();
+				std::lock_guard<std::mutex> l(*d);
 				ws.close(code, message, length);
 			}
 

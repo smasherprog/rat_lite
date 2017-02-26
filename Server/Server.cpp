@@ -48,10 +48,10 @@ namespace SL {
 					ServerNetworkDriver_.SendMouse(nullptr, Point(x, y));
 				});
 				_ScreenCaptureManager.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-					ServerNetworkDriver_.SendFrameChange(nullptr, img);
+					ServerNetworkDriver_.SendFrameChange(nullptr, img, monitor);
 				});
 				_ScreenCaptureManager.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-					ServerNetworkDriver_.SendFrame(nullptr, img);
+					ServerNetworkDriver_.SendFrame(nullptr, img, monitor);
 				});		
 				ServerNetworkDriver_.Start(this, config);
 				_ScreenCaptureManager.Start();

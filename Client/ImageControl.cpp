@@ -63,10 +63,12 @@ namespace SL {
 		}
 		void Copy(const Image& src, Rect src_rect, Image & dst, Rect dst_rect)
 		{
-			auto dst_start = (int*)dst.Data;
-			auto src_start = (int*)src.Data;
+			auto dst_start = (char*)dst.Data;
+			auto src_start = (char*)src.Data;
+			auto dst_rowstride = dst.Rect.Width * PixelStride;
+			auto src_rowstride = src.Rect.Width * PixelStride;
 			for (auto row = dst_rect.top(), src_row = 0; row < dst_rect.bottom(); row++, src_row++) {
-				memcpy(dst_start + (dst.Rect.Width * row) + dst_rect.left(), src_start + (src.Rect.Width*src_row) + src_rect.left(), src_rect.Width*PixelStride);
+				memcpy(dst_start + (dst_rowstride* row) + (dst_rect.left()*PixelStride), src_start + (src_rowstride*src_row) + (src_rect.left()*PixelStride), src_rowstride);
 			}
 		}
 
@@ -99,8 +101,8 @@ namespace SL {
 			float getScaleFactor_() const {
 				return ScaleFactor_;
 			}
-			void set_ScreenImage(const Image& img) {
-			
+			void set_ScreenImage(const Image& img, int monitor_id) {
+				if (monitor_id != 0) return;//skip other monitors for now
 				auto size = img.Rect.Width*img.Rect.Height*PixelStride;
 				auto originalptr = std::make_unique<char[]>(size);
 				Image original(img.Rect, originalptr.get(), size);
@@ -128,7 +130,7 @@ namespace SL {
 					}
 				}
 			}
-			void set_ImageDifference(const Image& img) {
+			void set_ImageDifference(const Image& img, int monitor_id) {
 				return;
 				if (!(OriginalImage_.Data && ScaledImage_.Data)) return;// both images should exist, if not then get out!
 
@@ -322,15 +324,15 @@ bool SL::RAT::ImageControl::is_ImageScaled() const
 	return ImageControlImpl_->_ScreenImageDriver.is_ImageScaled();
 }
 
-void SL::RAT::ImageControl::set_ScreenImage(const Image& img)
+void SL::RAT::ImageControl::set_ScreenImage(const Image& img, int monitor_id)
 {
 	ImageControlImpl_->size(img.Rect.Width, img.Rect.Height);
-	ImageControlImpl_->_ScreenImageDriver.set_ScreenImage(img);
+	ImageControlImpl_->_ScreenImageDriver.set_ScreenImage(img, monitor_id);
 }
 
-void SL::RAT::ImageControl::set_ImageDifference(const Image& img)
+void SL::RAT::ImageControl::set_ImageDifference(const Image& img, int monitor_id)
 {
-	ImageControlImpl_->_ScreenImageDriver.set_ImageDifference(img);
+	ImageControlImpl_->_ScreenImageDriver.set_ImageDifference(img, monitor_id);
 }
 
 void SL::RAT::ImageControl::set_MouseImage(const Image& img)

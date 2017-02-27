@@ -18,7 +18,7 @@ Encryption (openssl)
 Extendable 
 </li>
 <li>
-Latest standards: c++ 14 
+Latest standards: c++ 17 
 </li>
 </ul>
 <h3>How to get started:</h3>

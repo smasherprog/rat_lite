@@ -68,6 +68,7 @@ namespace SL {
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 				UNUSED(socket);
+			
 				ServerNetworkDriver_.SendMonitorInfo(socket.get(), Screen_Capture::GetMonitors());
 			}
 

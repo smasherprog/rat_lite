@@ -46,10 +46,11 @@ namespace SL {
 
 						int t = counter++ % Config_->MaxWebSocketThreads;
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
-
-						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
 						ws.setUserData(new SocketStats());
+		
 						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)threads_[t]->getDefaultGroup<uWS::SERVER>().getUserData()));
+						
+						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
 						ClientCount += 1;
 					}
 				});
@@ -69,6 +70,7 @@ namespace SL {
 							delete (SocketStats*)ws.getUserData();
 						});
 						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
+						
 							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage on thread " << i);
 							auto s = (SocketStats*)ws.getUserData();
 							s->TotalBytesReceived += length;

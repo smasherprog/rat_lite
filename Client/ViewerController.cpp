@@ -61,7 +61,7 @@ namespace SL {
 				callback(window_cb);
 				Fl_Scroll_ = new Fl_Scroll(0, 0, 900, 700);
 
-				ScreenImageInfo info;
+				ScreenImageCallbacks info;
 				info.get_Height = [this]() {return this->h(); };
 				info.get_Left = [this]() {return Fl_Scroll_->xposition(); };
 				info.get_Top = [this]() {return Fl_Scroll_->yposition(); };
@@ -80,7 +80,9 @@ namespace SL {
 
 			}
 			virtual ~ViewerControllerImpl() {
-				if (Socket_) Socket_->close(1000, "", 0);
+				if (Socket_) {
+					Socket_->close(1000, "", 0);
+				}
 				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to ClientNetworkDriver_
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
@@ -135,7 +137,6 @@ namespace SL {
 				if (!BeingClosed_) {
 					this->hide();
 					Fl::delete_widget(this);
-
 				}
 				BeingClosed_ = true;
 			}
@@ -161,7 +162,7 @@ namespace SL {
 				imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 			}
 			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) override {
-
+				ImageControl_->set_Monitors(monitors, num_of_monitors);
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 				Socket_ = socket;
@@ -188,7 +189,7 @@ namespace SL {
 			virtual void onReceive_ImageDif(const Image& img, int monitor_id) override {
 				ImageControl_->set_ImageDifference(img, monitor_id);
 				Fl::awake(awakenredraw, this);
-				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - NetworkStatsTimer_).count() > 1000) {
+				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - NetworkStatsTimer_).count() > 1000 && Socket_) {
 					NetworkStatsTimer_ = std::chrono::steady_clock::now();
 
 					auto stats = Socket_->get_Stats();

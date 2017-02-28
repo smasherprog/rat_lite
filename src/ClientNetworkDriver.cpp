@@ -103,9 +103,10 @@ namespace SL {
 					s->TotalBytesReceived += length;
 					s->TotalPacketReceived += 1;
 
-					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage ");
+					
 					auto p = *reinterpret_cast<const PACKET_TYPES*>(message);
 					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
+					//SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
 					switch (p) {
 					case PACKET_TYPES::MONITORINFO:
 						MonitorInfo(sock, message + sizeof(p), length - sizeof(p));

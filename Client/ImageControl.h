@@ -11,7 +11,7 @@ namespace SL {
 	}
 	namespace RAT {
 
-		struct ScreenImageInfo {
+		struct ScreenImageCallbacks {
 
 			std::function<int()> get_Top;
 			std::function<int()> get_Left;
@@ -27,7 +27,7 @@ namespace SL {
 		class ImageControl {
 			ImageControlImpl* ImageControlImpl_;
 		public:
-			ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageInfo&& info);
+			ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageCallbacks&& info);
 			~ImageControl();
 
 			void OnResize(int W, int H, int SS);

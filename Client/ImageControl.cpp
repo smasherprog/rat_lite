@@ -122,31 +122,6 @@ namespace SL {
 			float getScaleFactor_() const {
 				return ScaleFactor_;
 			}
-			void set_ScreenImage(const Image& img, int monitor_id) {
-				if (monitor_id != 0) return;//skip other monitors for now
-				auto size = img.Rect.Width*img.Rect.Height*PixelStride;
-				auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
-				Image original(img.Rect, originalptr.get(), size);
-				memcpy(originalptr.get(), img.Data, size);
-
-				auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
-				Image scaled(img.Rect, scaledptr.get(), size);
-				memcpy(scaledptr.get(), img.Data, size);
-
-				//reader lock to the container
-				std::shared_lock<std::shared_mutex> l(MonitorsLock);
-				auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitor_id == m.Monitor.Id;  });
-				//the monitors should always preceed the image, so this should never trigger
-				assert(found != end(Monitors));
-				{
-					//writer lock to the element
-					std::unique_lock<std::shared_mutex> ml(*found->Lock);
-					found->Original = original;
-					found->OriginalBacking = originalptr;
-					found->Scaled = scaled;
-					found->ScaledBacking = scaledptr;
-				}
-			}
 			void Draw(int x, int y) {
 				//reader lock to the container
 				{
@@ -164,34 +139,17 @@ namespace SL {
 
 			}
 			void set_ImageDifference(const Image& img, int monitor_id) {
-				return;
-
-				//if (!(OriginalImage_.Data && ScaledImage_.Data)) return;// both images should exist, if not then get out!
-
-
-				//if (is_ImageScaled()) {//rescale the incoming image image
-				//	auto scaledrect = img.Rect;
-
-				//	auto scaledimgbacking = Resize(img.Data, &scaledrect.Height, &scaledrect.Width, ScaleFactor_);
-				//	Image scaledimg(scaledrect, scaledimgbacking.get(), scaledrect.Height * scaledrect.Width*PixelStride);
-
-				//	auto x = static_cast<int>(floor(static_cast<float>(img.Rect.left())*ScaleFactor_));
-				//	auto y = static_cast<int>(floor(static_cast<float>(img.Rect.top())*ScaleFactor_));
-
-				//	auto dst_rect = Rect(Point(x, y), scaledrect.Height, scaledrect.Width);
-
-				//	std::lock_guard<std::mutex> lock(ImageLock_);
-				//	Copy(img, img.Rect, OriginalImage_, img.Rect);//keep original in sync
-				//	Copy(scaledimg, scaledimg.Rect, ScaledImage_, dst_rect);//copy scaled down 
-
-				//}
-				//else {
-				//	std::lock_guard<std::mutex> lock(ImageLock_);
-				//	Copy(img, img.Rect, OriginalImage_, img.Rect);//keep original in sync
-				//	Copy(img, img.Rect, ScaledImage_, img.Rect);//copy scaled down 
-				//}
-
-
+				//reader lock to the container
+				std::shared_lock<std::shared_mutex> l(MonitorsLock);
+				auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitor_id == m.Monitor.Id;  });
+				assert(found != end(Monitors));
+				{
+					//writer lock to the element
+					Rect srcrect(Point(0, 0), img.Rect.Height, img.Rect.Width);
+					std::unique_lock<std::shared_mutex> ml(*found->Lock);
+					Copy(img, srcrect, found->Original, img.Rect);//keep original in sync
+					Copy(img, srcrect, found->Scaled, img.Rect);//copy scaled down 
+				}
 			}
 			void setMouseImage_(const Image& img) {
 
@@ -257,6 +215,22 @@ namespace SL {
 						mons[i].Lock = found->Lock;
 					}
 					else {
+
+						//allocate the images needed
+						Rect r(Point(0, 0), Screen_Capture::Height(monitors[i]), Screen_Capture::Width(monitors[i]));
+						auto size = r.Height* r.Width*PixelStride;
+
+						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete [] p; });
+						Image original(r, originalptr.get(), size);
+
+						auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete [] p; });
+						Image scaled(r, scaledptr.get(), size);
+
+						mons[i].Original = original;
+						mons[i].OriginalBacking = originalptr;
+						mons[i].Scaled = scaled;
+						mons[i].ScaledBacking = scaledptr;
+
 						mons[i].Lock = std::make_shared<std::shared_mutex>();
 					}
 				}
@@ -358,6 +332,12 @@ namespace SL {
 			}
 			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
 			{
+				SL::RAT::Point s;
+				for (auto i = 0; i < num_of_monitors; i++) {
+					s.X += monitors[i].Width;
+					s.Y = std::max(s.Y, monitors[i].Height);
+				}
+				this->size(s.X, s.Y);
 				ScreenImageDriver_.set_Monitors(monitors, num_of_monitors);
 			}
 		};
@@ -384,11 +364,6 @@ namespace SL {
 			ImageControlImpl_->set_Monitors(monitors, num_of_monitors);
 		}
 
-		void ImageControl::set_ScreenImage(const Image& img, int monitor_id)
-		{
-			ImageControlImpl_->size(img.Rect.Width, img.Rect.Height);
-			ImageControlImpl_->ScreenImageDriver_.set_ScreenImage(img, monitor_id);
-		}
 
 		void ImageControl::set_ImageDifference(const Image& img, int monitor_id)
 		{

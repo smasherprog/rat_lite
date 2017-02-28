@@ -80,9 +80,6 @@ namespace SL {
 
 			}
 			virtual ~ViewerControllerImpl() {
-				if (Socket_) {
-					Socket_->close(1000, "", 0);
-				}
 				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to ClientNetworkDriver_
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
@@ -137,6 +134,9 @@ namespace SL {
 				if (!BeingClosed_) {
 					this->hide();
 					Fl::delete_widget(this);
+					if (Socket_) {
+						Socket_->close(1000, "", 0);
+					}
 				}
 				BeingClosed_ = true;
 			}
@@ -180,12 +180,7 @@ namespace SL {
 			}
 
 
-			virtual void onReceive_Image(const Image& img, int monitor_id) override
-			{
-				ImageControl_->set_ScreenImage(img, monitor_id);
-				Fl::awake(awakenredraw, this);
-			}
-
+		
 			virtual void onReceive_ImageDif(const Image& img, int monitor_id) override {
 				ImageControl_->set_ImageDifference(img, monitor_id);
 				Fl::awake(awakenredraw, this);
@@ -204,7 +199,7 @@ namespace SL {
 					memcpy(Title_, st.c_str(), st.size() + 1);
 					Fl::awake(awakensettitle, this);
 				}
-
+				
 			}
 			virtual void onReceive_MouseImage(const Image& img)override {
 				ImageControl_->set_MouseImage(img);

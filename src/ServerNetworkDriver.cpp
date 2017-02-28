@@ -25,7 +25,6 @@ namespace SL {
 		public:
 			IServerDriver* IServerDriver_;
 			std::shared_ptr<Server_Config> Config_;
-			std::vector<uWS::Hub*> threads_;
 			uWS::Hub h;
 			std::thread Runner;
 			std::atomic_int ClientCount;
@@ -33,8 +32,6 @@ namespace SL {
 			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
 				IServerDriver_(r), Config_(config) {
 				ClientCount = 0;
-
-				threads_.resize(config->MaxWebSocketThreads);
 
 				h.onConnection([&](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
 					static int counter = 0;
@@ -47,67 +44,59 @@ namespace SL {
 						int t = counter++ % Config_->MaxWebSocketThreads;
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
 						ws.setUserData(new SocketStats());
-		
-						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)threads_[t]->getDefaultGroup<uWS::SERVER>().getUserData()));
-						
-						ws.transfer(&threads_[t]->getDefaultGroup<uWS::SERVER>());
+
+						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData()));
+
 						ClientCount += 1;
 					}
 				});
 
-				for (size_t i = 0; i < threads_.size(); i++) {
-					new std::thread([&, i] {
-						// register our events
 
-						threads_[i] = new uWS::Hub();
-						threads_[i]->getDefaultGroup<uWS::SERVER>().setUserData(new std::mutex);
+				// register our events
 
-						threads_[i]->onDisconnection([&, i](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
-							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection on thread " << i);
-							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)threads_[i]->getDefaultGroup<uWS::SERVER>().getUserData());
-							ClientCount -= 1;
-							IServerDriver_->onDisconnection(sock, code, message, length);
-							delete (SocketStats*)ws.getUserData();
-						});
-						threads_[i]->onMessage([&, i](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
-						
-							SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage on thread " << i);
-							auto s = (SocketStats*)ws.getUserData();
-							s->TotalBytesReceived += length;
-							s->TotalPacketReceived += 1;
+				h.getDefaultGroup<uWS::SERVER>().setUserData(new std::mutex);
 
-							WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)threads_[i]->getDefaultGroup<uWS::SERVER>().getUserData());
-							auto pactype = PACKET_TYPES::INVALID;
-							assert(length >= sizeof(pactype));
+				h.onDisconnection([&](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection  ");
+					WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
+					ClientCount -= 1;
+					IServerDriver_->onDisconnection(sock, code, message, length);
+					delete (SocketStats*)ws.getUserData();
+				});
+				h.onMessage([&](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
 
-							pactype = *reinterpret_cast<const PACKET_TYPES*>(message);
-							length -= sizeof(pactype);
-							message += sizeof(pactype);
+					
+					auto s = (SocketStats*)ws.getUserData();
+					s->TotalBytesReceived += length;
+					s->TotalPacketReceived += 1;
 
-							switch (pactype) {
-							case PACKET_TYPES::MOUSEEVENT:
-								assert(length == sizeof(MouseEvent));
-								IServerDriver_->onReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
-								break;
-							case PACKET_TYPES::KEYEVENT:
-								assert(length == sizeof(KeyEvent));
-								IServerDriver_->onReceive_Key(reinterpret_cast<const KeyEvent*>(message));
-								break;
-							case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-								IServerDriver_->onReceive_ClipboardText(message, length);
-								break;
-							default:
-								IServerDriver_->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));
-								break;
-							}
+					WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
+					auto pactype = PACKET_TYPES::INVALID;
+					assert(length >= sizeof(pactype));
 
-						});
+					pactype = *reinterpret_cast<const PACKET_TYPES*>(message);
+					length -= sizeof(pactype);
+					message += sizeof(pactype);
 
-						threads_[i]->getDefaultGroup<uWS::SERVER>().addAsync();
-						threads_[i]->run();
-						delete (std::mutex*)threads_[i]->getDefaultGroup<uWS::SERVER>().getUserData();
-					});
-				}
+					switch (pactype) {
+					case PACKET_TYPES::MOUSEEVENT:
+						assert(length == sizeof(MouseEvent));
+						IServerDriver_->onReceive_Mouse(reinterpret_cast<const MouseEvent*>(message));
+						break;
+					case PACKET_TYPES::KEYEVENT:
+						assert(length == sizeof(KeyEvent));
+						IServerDriver_->onReceive_Key(reinterpret_cast<const KeyEvent*>(message));
+						break;
+					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
+						IServerDriver_->onReceive_ClipboardText(message, length);
+						break;
+					default:
+						IServerDriver_->onMessage(sock, message - sizeof(pactype), length + sizeof(pactype));
+						break;
+					}
+
+				});
+
 
 				//uS::TLS::Context c = uS::TLS::createContext(config->PathTo_Public_Certficate, config->PathTo_Private_Key, config->PasswordToPrivateKey);
 
@@ -125,35 +114,36 @@ namespace SL {
 					socket->send(data, len);
 				}
 				else {
-					for (auto& a : threads_) {
-						std::lock_guard<std::mutex> lock(*(std::mutex*)a->getDefaultGroup<uWS::SERVER>().getUserData());
-						// uwebsockets broadcast code below
-						auto preparedMessage = uWS::WebSocket<uWS::SERVER>::prepareMessage(data, len, uWS::OpCode::BINARY, false);
-						a->getDefaultGroup<uWS::SERVER>().forEach([preparedMessage, len](uWS::WebSocket<uWS::SERVER> ws) {
-							ws.sendPrepared(preparedMessage);
-							auto s = (SocketStats*)ws.getUserData();
-							s->TotalBytesSent += len;
-							s->TotalPacketSent += 1;
-						});
-						uWS::WebSocket<uWS::SERVER>::finalizeMessage(preparedMessage);
-					}
+					std::lock_guard<std::mutex> lock(*(std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
+					// uwebsockets broadcast code below
+					auto preparedMessage = uWS::WebSocket<uWS::SERVER>::prepareMessage(data, len, uWS::OpCode::BINARY, false);
+					h.getDefaultGroup<uWS::SERVER>().forEach([preparedMessage, len](uWS::WebSocket<uWS::SERVER> ws) {
+						ws.sendPrepared(preparedMessage);
+						auto s = (SocketStats*)ws.getUserData();
+						s->TotalBytesSent += len;
+						s->TotalPacketSent += 1;
+					});
+					uWS::WebSocket<uWS::SERVER>::finalizeMessage(preparedMessage);
 				}
 
 			}
 			void Run() {
-				Runner = std::thread([&]() { h.run(); });
+				Runner = std::thread([&]() {
+					h.run();
+					delete (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData();
+				});
 			}
-			void SendScreen(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor,  PACKET_TYPES p) {
+			void SendScreen(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor, PACKET_TYPES p) {
 
 				if (ClientCount <= 0) return;
-				Rect r(Point(0, 0), Height(img), Width(img));
+				Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
 
 				auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
-				auto maxsize = tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set)  + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
+				auto maxsize = tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
 
 				thread_local auto jpegCompressor = tjInitCompress();
 				auto  buffer = std::make_unique<char[]>(maxsize);
-			
+
 				auto dst = (unsigned char*)buffer.get();
 				memcpy(dst, &p, sizeof(p));
 				dst += sizeof(p);
@@ -177,7 +167,7 @@ namespace SL {
 				}
 				//	std::cout << "Sending " << r << std::endl;
 				auto finalsize = sizeof(p) + sizeof(r) + sizeof(monitor.Id) + outjpegsize;//adjust the correct size
-			
+
 				Send(socket, buffer.get(), finalsize);
 			}
 			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img) {
@@ -200,7 +190,7 @@ namespace SL {
 
 			}
 			void SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors) {
-				
+
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MONITORINFO);
 				const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 
@@ -260,10 +250,6 @@ namespace SL {
 		void ServerNetworkDriver::SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
 		{
 			ServerNetworkDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
-		}
-		void ServerNetworkDriver::SendFrame(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
-		{
-			ServerNetworkDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGE);
 		}
 		void ServerNetworkDriver::SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
 		{

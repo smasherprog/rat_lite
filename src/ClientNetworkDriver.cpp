@@ -41,7 +41,7 @@ namespace SL {
 				assert(num * sizeof(Screen_Capture::Monitor) == len);
 				IClientDriver_->onReceive_Monitors((Screen_Capture::Monitor*)data, num);
 			}
-			void ScreenImage(const IWebSocket& socket, const char* data, size_t len, bool dif) {
+			void ScreenImage(const IWebSocket& socket, const char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 
 				thread_local auto jpegDecompressor = tjInitDecompress();
@@ -67,12 +67,9 @@ namespace SL {
 				}
 				Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
 				assert(outwidth == img.Rect.Width && outheight == img.Rect.Height);
-				if (dif) {
-					IClientDriver_->onReceive_ImageDif(img, monitor_id);
-				}
-				else {
-					IClientDriver_->onReceive_Image(img, monitor_id);
-				}
+
+				IClientDriver_->onReceive_ImageDif(img, monitor_id);
+
 			}
 
 
@@ -86,7 +83,7 @@ namespace SL {
 				auto hc = std::string("ws://") + std::string(dst_host) + std::string(":") + std::to_string(config->WebSocketTLSLPort);
 				h.connect(hc, nullptr);
 				h.getDefaultGroup<uWS::CLIENT>().setUserData(new std::mutex);
-		
+
 				h.onConnection([&](uWS::WebSocket<uWS::CLIENT> ws, uWS::HttpRequest req) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
 					ws.setUserData(new SocketStats());
@@ -103,7 +100,7 @@ namespace SL {
 					s->TotalBytesReceived += length;
 					s->TotalPacketReceived += 1;
 
-					
+
 					auto p = *reinterpret_cast<const PACKET_TYPES*>(message);
 					WebSocket<uWS::WebSocket<uWS::CLIENT>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
 					//SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
@@ -111,11 +108,8 @@ namespace SL {
 					case PACKET_TYPES::MONITORINFO:
 						MonitorInfo(sock, message + sizeof(p), length - sizeof(p));
 						break;
-					case PACKET_TYPES::SCREENIMAGE:
-						ScreenImage(sock, message + sizeof(p), length - sizeof(p), false);
-						break;
 					case PACKET_TYPES::SCREENIMAGEDIF:
-						ScreenImage(sock, message + sizeof(p), length - sizeof(p), true);
+						ScreenImage(sock, message + sizeof(p), length - sizeof(p));
 						break;
 					case PACKET_TYPES::MOUSEIMAGE:
 						MouseImage(sock, message + sizeof(p), length - sizeof(p));
@@ -130,10 +124,11 @@ namespace SL {
 						IClientDriver_->onMessage(sock, message, length);//pass up the chain
 						break;
 					}
+					
 				});
-
-				Runner = std::thread([&]() { 
-					h.run(); 
+				
+				Runner = std::thread([&]() {
+					h.run();
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "Stopping ClientNetworkDriver Thread");
 					delete (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData();
 				});

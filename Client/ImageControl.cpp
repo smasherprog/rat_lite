@@ -90,9 +90,8 @@ namespace SL {
 			std::unique_ptr<Fl_RGB_Image> FlMouseImage;
 		};
 
-		class ScreenImageImpl {
-		public:
 
+		class ImageControlImpl : public Fl_Box {
 			float ScaleFactor_;
 			mutable std::shared_mutex MonitorsLock;
 			std::vector<MonitorData> Monitors;
@@ -100,9 +99,70 @@ namespace SL {
 			mutable std::shared_mutex MouseLock;
 			MouseData MouseData_;
 
+		public:
+			std::function<void(int, int, Press, int, int)> OnMouse;
+			std::function<void(int, Press)> OnKey;
+			std::function<void(std::vector<std::string>&)> OnDragNDrop;
 
-			ScreenImageImpl() : ScaleFactor_(1.0f){}
 
+			bool _DNDIncoming = false;
+
+			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
+				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f) {
+
+			}
+			virtual ~ImageControlImpl() {
+
+			}
+			virtual void draw() override {
+				int height(0), width(0);
+
+				//	auto ret = false;
+				//	//make sure the image is scaled properly
+				//	if (is_ImageScaled()) {
+				//		auto psize = ScreenImageInfo_.get_Height();
+				//		if (psize != ScaledImage_.Rect.Height) {//rescale the image
+				//			std::lock_guard<std::mutex> lock(ImageLock_);
+				//			ScaledImage_.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* OriginalImage_.Rect.Height));
+				//			ScaledImageBacking_ = Resize(OriginalImage_.Data, OriginalImage_.Rect.Height, OriginalImage_.Rect.Width, ScaledImage_.Rect.Height, ScaledImage_.Rect.Width);
+				//			ScaledImage_.Data = ScaledImageBacking_.get();
+				//			ret = true;
+				//		}
+				//	}
+				//	else {//NO SCALING!!
+				//		if (ScaledImage_.Rect.Width != OriginalImage_.Rect.Width || ScaledImage_.Rect.Height != OriginalImage_.Rect.Width) {
+				//			std::lock_guard<std::mutex> lock(ImageLock_);
+				//			auto size = OriginalImage_.Rect.Height*OriginalImage_.Rect.Width*PixelStride;
+
+				//			ScaledImage_.Rect = OriginalImage_.Rect;
+				//			ScaledImageBacking_ = std::make_unique<char[]>(size);
+				//			ScaledImage_.Data = ScaledImageBacking_.get();
+				//			memcpy((void*)ScaledImage_.Data, OriginalImage_.Data, size);
+				//			ret = true;
+				//		}
+				//	}
+				//	width = ScaledImage_.Rect.Width;
+				//	height = ScaledImage_.Rect.Height;
+				//	return ret;//no changes
+
+
+				//if (ScreenImageDriver_.Update(width, height)) {
+				//	this->size(width, height);
+				//}
+				//reader lock to the container
+				{
+					std::shared_lock<std::shared_mutex> l(MonitorsLock);
+					for (auto& a : Monitors) {
+						std::shared_lock<std::shared_mutex> ml(*a.Lock);
+						fl_draw_image((uchar*)a.Scaled.Data, x(), y(), a.Scaled.Rect.Width, a.Scaled.Rect.Height, 4);
+		
+					}
+				}
+
+				std::shared_lock<std::shared_mutex> l(MouseLock);
+				if (MouseData_.MouseImageBacking)
+					MouseData_.FlMouseImage->draw(MouseData_.Pos.X, MouseData_.Pos.Y);
+			}
 			bool is_ImageScaled() const {
 				return !(ScaleFactor_ >= .999f && ScaleFactor_ <= 1.001f);
 			}
@@ -114,28 +174,7 @@ namespace SL {
 					tallest = std::max(tallest, a.Monitor.Height);
 				}
 			}
-			void setScaleFactor_(float factor) {
-				ScaleFactor_ = factor;
-			}
-			float getScaleFactor_() const {
-				return ScaleFactor_;
-			}
-			void Draw(int x, int y) {
-				//reader lock to the container
-				{
-					std::shared_lock<std::shared_mutex> l(MonitorsLock);
-					for (auto& a : Monitors) {
-						std::shared_lock<std::shared_mutex> ml(*a.Lock);
-						fl_draw_image((uchar*)a.Scaled.Data, x, y, a.Scaled.Rect.Width, a.Scaled.Rect.Height, 4);
-						x += a.Scaled.Rect.Width;
-					}
-				}
-
-				std::shared_lock<std::shared_mutex> l(MouseLock);
-				if (MouseData_.MouseImageBacking)
-					MouseData_.FlMouseImage->draw(MouseData_.Pos.X, MouseData_.Pos.Y);
-
-			}
+		
 			void set_ImageDifference(const Image& img, int monitor_id) {
 				//reader lock to the container
 				std::shared_lock<std::shared_mutex> l(MonitorsLock);
@@ -168,100 +207,6 @@ namespace SL {
 					MouseData_.Pos.Y = static_cast<int>(static_cast<float>(MouseData_.Pos.Y)*ScaleFactor_);
 				}
 			}
-			bool Update(int& width, int& height) {
-				return false;
-				//	if (!ScaledImage_.Data) return false;
-				//	auto ret = false;
-				//	//make sure the image is scaled properly
-				//	if (is_ImageScaled()) {
-				//		auto psize = ScreenImageInfo_.get_Height();
-				//		if (psize != ScaledImage_.Rect.Height) {//rescale the image
-				//			std::lock_guard<std::mutex> lock(ImageLock_);
-				//			ScaledImage_.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* OriginalImage_.Rect.Height));
-				//			ScaledImageBacking_ = Resize(OriginalImage_.Data, OriginalImage_.Rect.Height, OriginalImage_.Rect.Width, ScaledImage_.Rect.Height, ScaledImage_.Rect.Width);
-				//			ScaledImage_.Data = ScaledImageBacking_.get();
-				//			ret = true;
-				//		}
-				//	}
-				//	else {//NO SCALING!!
-				//		if (ScaledImage_.Rect.Width != OriginalImage_.Rect.Width || ScaledImage_.Rect.Height != OriginalImage_.Rect.Width) {
-				//			std::lock_guard<std::mutex> lock(ImageLock_);
-				//			auto size = OriginalImage_.Rect.Height*OriginalImage_.Rect.Width*PixelStride;
-
-				//			ScaledImage_.Rect = OriginalImage_.Rect;
-				//			ScaledImageBacking_ = std::make_unique<char[]>(size);
-				//			ScaledImage_.Data = ScaledImageBacking_.get();
-				//			memcpy((void*)ScaledImage_.Data, OriginalImage_.Data, size);
-				//			ret = true;
-				//		}
-				//	}
-				//	width = ScaledImage_.Rect.Width;
-				//	height = ScaledImage_.Rect.Height;
-				//	return ret;//no changes
-			}
-			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors) {
-				std::vector<MonitorData> mons;
-				mons.resize(num_of_monitors);
-				for (auto i = 0; i < num_of_monitors; i++) {
-					mons[i].Monitor = monitors[i];
-					auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitors[i].Id == m.Monitor.Id;  });
-					if (found != end(Monitors)) {
-						mons[i].Original = found->Original;
-						mons[i].OriginalBacking = found->OriginalBacking;
-						mons[i].Scaled = found->Scaled;
-						mons[i].ScaledBacking = found->ScaledBacking;
-						mons[i].Lock = found->Lock;
-					}
-					else {
-
-						//allocate the images needed
-						Rect r(Point(0, 0), Screen_Capture::Height(monitors[i]), Screen_Capture::Width(monitors[i]));
-						auto size = r.Height* r.Width*PixelStride;
-
-						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
-						Image original(r, originalptr.get(), size);
-
-						auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
-						Image scaled(r, scaledptr.get(), size);
-
-						mons[i].Original = original;
-						mons[i].OriginalBacking = originalptr;
-						mons[i].Scaled = scaled;
-						mons[i].ScaledBacking = scaledptr;
-
-						mons[i].Lock = std::make_shared<std::shared_mutex>();
-					}
-				}
-				std::unique_lock<std::shared_mutex> l(MonitorsLock);
-				Monitors = mons;
-			}
-		};
-
-
-		class ImageControlImpl : public Fl_Box {
-
-		public:
-			std::function<void(int, int, Press, int, int)> OnMouse;
-			std::function<void(int, Press)> OnKey;
-			std::function<void(std::vector<std::string>&)> OnDragNDrop;
-
-			ScreenImageImpl ScreenImageDriver_;
-			bool _DNDIncoming = false;
-
-			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
-				Fl_Box(X, Y, W, H, title) {
-
-			}
-			virtual ~ImageControlImpl() {
-
-			}
-			virtual void draw() override {
-				int height(0), width(0);
-				if (ScreenImageDriver_.Update(width, height)) {
-					this->size(width, height);
-				}
-				ScreenImageDriver_.Draw(x(), y());
-			}
 			void OnResize(int W, int H, int SS) {
 				//if (_ScreenImageDriver.is_ImageScaled()) {
 				//	auto pheight = h() - SS;//16 is the scrollbars size
@@ -280,9 +225,9 @@ namespace SL {
 				return 1;
 			}
 			void handlemouse(int e, int button, Press press, int x, int y) {
-				if (ScreenImageDriver_.is_ImageScaled()) {
-					x = static_cast<int>(static_cast<float>(x) / ScreenImageDriver_.getScaleFactor_());
-					y = static_cast<int>(static_cast<float>(y) / ScreenImageDriver_.getScaleFactor_());
+				if (is_ImageScaled()) {
+					x = static_cast<int>(static_cast<float>(x) / ScaleFactor_);
+					y = static_cast<int>(static_cast<float>(y) / ScaleFactor_);
 				}
 
 				OnMouse(e, button, press, x, y);
@@ -337,7 +282,42 @@ namespace SL {
 					s.Y = std::max(s.Y, monitors[i].Height);
 				}
 				this->size(s.X, s.Y);
-				ScreenImageDriver_.set_Monitors(monitors, num_of_monitors);
+
+				std::vector<MonitorData> mons;
+				mons.resize(num_of_monitors);
+				for (auto i = 0; i < num_of_monitors; i++) {
+					mons[i].Monitor = monitors[i];
+					auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitors[i].Id == m.Monitor.Id;  });
+					if (found != end(Monitors)) {
+						mons[i].Original = found->Original;
+						mons[i].OriginalBacking = found->OriginalBacking;
+						mons[i].Scaled = found->Scaled;
+						mons[i].ScaledBacking = found->ScaledBacking;
+						mons[i].Lock = found->Lock;
+					}
+					else {
+
+						//allocate the images needed
+						Rect r(Point(0, 0), Screen_Capture::Height(monitors[i]), Screen_Capture::Width(monitors[i]));
+						auto size = r.Height* r.Width*PixelStride;
+
+						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
+						Image original(r, originalptr.get(), size);
+
+						auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
+						Image scaled(r, scaledptr.get(), size);
+
+						mons[i].Original = original;
+						mons[i].OriginalBacking = originalptr;
+						mons[i].Scaled = scaled;
+						mons[i].ScaledBacking = scaledptr;
+
+						mons[i].Lock = std::make_shared<std::shared_mutex>();
+					}
+				}
+				std::unique_lock<std::shared_mutex> l(MonitorsLock);
+				Monitors = mons;
+
 			}
 		};
 		ImageControl::ImageControl(int X, int Y, int W, int H, const char * title) {
@@ -355,7 +335,7 @@ namespace SL {
 
 		bool ImageControl::isScaled() const
 		{
-			return ImageControlImpl_->ScreenImageDriver_.is_ImageScaled();
+			return ImageControlImpl_->is_ImageScaled();
 		}
 
 		void ImageControl::setMonitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
@@ -366,17 +346,17 @@ namespace SL {
 
 		void ImageControl::setImageDifference(const Image& img, int monitor_id)
 		{
-			ImageControlImpl_->ScreenImageDriver_.set_ImageDifference(img, monitor_id);
+			ImageControlImpl_->set_ImageDifference(img, monitor_id);
 		}
 
 		void ImageControl::setMouseImage(const Image& img)
 		{
-			ImageControlImpl_->ScreenImageDriver_.setMouseImage_(img);
+			ImageControlImpl_->setMouseImage_(img);
 		}
 
 		void ImageControl::setMousePosition(const Point* pos)
 		{
-			ImageControlImpl_->ScreenImageDriver_.set_MousePosition(pos);
+			ImageControlImpl_->set_MousePosition(pos);
 		}
 
 		void ImageControl::onKey(const std::function<void(int, Press)>& func)

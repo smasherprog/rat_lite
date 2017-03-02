@@ -28,8 +28,8 @@ namespace SL {
 			void setMousePosition(const Point* pos);
 
 			void onKey(const std::function<void(int, Press)>& func);
-			void onMouse(const std::function<void(int, int, Press, int, int)>& func);//drag and drop. vector of strings
-			void onDragNDrop(const std::function<void(std::vector<std::string>&)>& func);
+			void onMouse(const std::function<void(int, int, Press, int, int)>& func);
+			void onDragNDrop(const std::function<void(std::vector<std::string>&)>& func);//drag and drop. vector of strings
 
 
 

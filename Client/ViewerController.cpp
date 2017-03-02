@@ -61,14 +61,54 @@ namespace SL {
 				callback(window_cb);
 				Fl_Scroll_ = new Fl_Scroll(0, 0, 900, 700);
 
-				ScreenImageCallbacks info;
-				info.get_Height = [this]() {return this->h(); };
-				info.get_Left = [this]() {return Fl_Scroll_->xposition(); };
-				info.get_Top = [this]() {return Fl_Scroll_->yposition(); };
-				info.OnKey = [this](int e, Press p) { this->handle_key(e, p); };
-				info.OnMouse = [this](int e, int button, Press press, int x, int y) { this->handle_mouse(e, button, press, x, y); };
+				ImageControl_ = new ImageControl(0, 0, 900, 700, nullptr);
+				ImageControl_->onKey([&](int e, Press p) { 
+					UNUSED(e);
+					auto key = Fl::event_key();
+					auto text = Fl::event_text();
+					auto len = Fl::event_length();
+					auto t = *text;
+					SL_RAT_LOG(INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
+					//make sure to map all keys to their lower case equivelents. 
+					if (t >= 'A' && t < 'Z') key = static_cast<unsigned int>(t + ('a' - 'A'));
 
-				ImageControl_ = new ImageControl(0, 0, 900, 700, nullptr, std::move(info));
+					KeyEvent k;
+					k.Key = key;
+					k.PressData = p;
+					k.SpecialKey = Specials::NO_SPECIAL_DATA;
+					ClientNetworkDriver_.SendKey(k);
+				});
+				ImageControl_->onMouse([&](int e, int button, Press press, int x, int y) { 
+					x+= Fl_Scroll_->xposition();
+					y+= Fl_Scroll_->yposition();
+					MouseEvent ev;
+					ev.Pos = Point(x, y);
+					if (e == FL_MOUSEWHEEL) {
+						ev.ScrollDelta = Fl::event_dy();
+						ev.EventData = Events::SCROLL;
+					}
+					else {
+						ev.ScrollDelta = 0;
+						switch (button) {
+						case FL_LEFT_MOUSE:
+							ev.EventData = Events::LEFT;
+							break;
+						case FL_MIDDLE_MOUSE:
+							ev.EventData = Events::MIDDLE;
+							break;
+						case FL_RIGHT_MOUSE:
+							ev.EventData = Events::RIGHT;
+							break;
+						default:
+							ev.EventData = Events::NO_EVENTDATA;
+							break;
+						};
+					}
+					ev.PressData = press;
+					ClientNetworkDriver_.SendMouse(ev);
+				
+				});
+
 				Fl_Scroll_->end();
 				end();
 				resizable(this);
@@ -86,49 +126,6 @@ namespace SL {
 				Fl_Double_Window::resize(X, Y, W, H);
 
 				ImageControl_->OnResize(W, H, Fl_Scroll_->scrollbar_size());
-			}
-			void handle_key(int e, Press press) {
-				UNUSED(e);
-				auto key = Fl::event_key();
-				auto text = Fl::event_text();
-				auto len = Fl::event_length();
-				auto t = *text;
-				SL_RAT_LOG(INFO_log_level, "key: '" << key << "' text: '" << text << "' len: '" << len << "'");
-				//make sure to map all keys to their lower case equivelents. 
-				if (t >= 'A' && t < 'Z') key = static_cast<unsigned int>(t + ('a' - 'A'));
-
-				KeyEvent k;
-				k.Key = key;
-				k.PressData = press;
-				k.SpecialKey = Specials::NO_SPECIAL_DATA;
-				ClientNetworkDriver_.SendKey(k);
-			}
-			void handle_mouse(int e, int button, Press press, int x, int y) {
-				MouseEvent ev;
-				ev.Pos = Point(x, y);
-				if (e == FL_MOUSEWHEEL) {
-					ev.ScrollDelta = Fl::event_dy();
-					ev.EventData = Events::SCROLL;
-				}
-				else {
-					ev.ScrollDelta = 0;
-					switch (button) {
-					case FL_LEFT_MOUSE:
-						ev.EventData = Events::LEFT;
-						break;
-					case FL_MIDDLE_MOUSE:
-						ev.EventData = Events::MIDDLE;
-						break;
-					case FL_RIGHT_MOUSE:
-						ev.EventData = Events::RIGHT;
-						break;
-					default:
-						ev.EventData = Events::NO_EVENTDATA;
-						break;
-					};
-				}
-				ev.PressData = press;
-				ClientNetworkDriver_.SendMouse(ev);
 			}
 			void Close() {
 				if (!BeingClosed_) {
@@ -162,7 +159,7 @@ namespace SL {
 				imp->cursor(Fl_Cursor::FL_CURSOR_NONE);
 			}
 			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) override {
-				ImageControl_->set_Monitors(monitors, num_of_monitors);
+				ImageControl_->setMonitors(monitors, num_of_monitors);
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
 				Socket_ = socket;
@@ -182,7 +179,7 @@ namespace SL {
 
 		
 			virtual void onReceive_ImageDif(const Image& img, int monitor_id) override {
-				ImageControl_->set_ImageDifference(img, monitor_id);
+				ImageControl_->setImageDifference(img, monitor_id);
 				Fl::awake(awakenredraw, this);
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - NetworkStatsTimer_).count() > 1000 && Socket_) {
 					NetworkStatsTimer_ = std::chrono::steady_clock::now();
@@ -202,11 +199,11 @@ namespace SL {
 				
 			}
 			virtual void onReceive_MouseImage(const Image& img)override {
-				ImageControl_->set_MouseImage(img);
+				ImageControl_->setMouseImage(img);
 			}
 
 			virtual void onReceive_MousePos(const Point* pos)override {
-				ImageControl_->set_MousePosition(pos);
+				ImageControl_->setMousePosition(pos);
 			}
 			virtual void  onReceive_ClipboardText(const char* data, unsigned int len) override {
 				Clipboard_->updateClipbard(data, len);

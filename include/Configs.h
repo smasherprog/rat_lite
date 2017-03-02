@@ -36,7 +36,7 @@ namespace SL {
 			bool IgnoreIncomingMouseEvents = false;
 			bool IgnoreIncomingKeyboardEvents = false;
 
-			size_t MaxWebSocketThreads = 2;//
+			int MaxWebSocketThreads = 2;
 			int MaxNumConnections = 10;//
 
 									   //CRYPTO SETTINGS

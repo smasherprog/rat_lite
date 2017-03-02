@@ -94,8 +94,6 @@ namespace SL {
 		public:
 
 			float ScaleFactor_;
-			ScreenImageCallbacks ScreenImageCallbacks_;
-
 			mutable std::shared_mutex MonitorsLock;
 			std::vector<MonitorData> Monitors;
 
@@ -103,7 +101,7 @@ namespace SL {
 			MouseData MouseData_;
 
 
-			ScreenImageImpl(ScreenImageCallbacks&& info) : ScaleFactor_(1.0f), ScreenImageCallbacks_(info) {}
+			ScreenImageImpl() : ScaleFactor_(1.0f){}
 
 			bool is_ImageScaled() const {
 				return !(ScaleFactor_ >= .999f && ScaleFactor_ <= 1.001f);
@@ -166,40 +164,40 @@ namespace SL {
 
 				MouseData_.Pos = *pos;
 				if (is_ImageScaled()) {//need to scale the mouse pos as well
-					MouseData_.Pos.X = static_cast<int>(static_cast<float>(MouseData_.Pos.X - ScreenImageCallbacks_.get_Left())*ScaleFactor_);
-					MouseData_.Pos.Y = static_cast<int>(static_cast<float>(MouseData_.Pos.Y - ScreenImageCallbacks_.get_Top())*ScaleFactor_);
+					MouseData_.Pos.X = static_cast<int>(static_cast<float>(MouseData_.Pos.X)*ScaleFactor_);
+					MouseData_.Pos.Y = static_cast<int>(static_cast<float>(MouseData_.Pos.Y)*ScaleFactor_);
 				}
 			}
 			bool Update(int& width, int& height) {
 				return false;
-			//	if (!ScaledImage_.Data) return false;
-			//	auto ret = false;
-			//	//make sure the image is scaled properly
-			//	if (is_ImageScaled()) {
-			//		auto psize = ScreenImageInfo_.get_Height();
-			//		if (psize != ScaledImage_.Rect.Height) {//rescale the image
-			//			std::lock_guard<std::mutex> lock(ImageLock_);
-			//			ScaledImage_.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* OriginalImage_.Rect.Height));
-			//			ScaledImageBacking_ = Resize(OriginalImage_.Data, OriginalImage_.Rect.Height, OriginalImage_.Rect.Width, ScaledImage_.Rect.Height, ScaledImage_.Rect.Width);
-			//			ScaledImage_.Data = ScaledImageBacking_.get();
-			//			ret = true;
-			//		}
-			//	}
-			//	else {//NO SCALING!!
-			//		if (ScaledImage_.Rect.Width != OriginalImage_.Rect.Width || ScaledImage_.Rect.Height != OriginalImage_.Rect.Width) {
-			//			std::lock_guard<std::mutex> lock(ImageLock_);
-			//			auto size = OriginalImage_.Rect.Height*OriginalImage_.Rect.Width*PixelStride;
+				//	if (!ScaledImage_.Data) return false;
+				//	auto ret = false;
+				//	//make sure the image is scaled properly
+				//	if (is_ImageScaled()) {
+				//		auto psize = ScreenImageInfo_.get_Height();
+				//		if (psize != ScaledImage_.Rect.Height) {//rescale the image
+				//			std::lock_guard<std::mutex> lock(ImageLock_);
+				//			ScaledImage_.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* OriginalImage_.Rect.Height));
+				//			ScaledImageBacking_ = Resize(OriginalImage_.Data, OriginalImage_.Rect.Height, OriginalImage_.Rect.Width, ScaledImage_.Rect.Height, ScaledImage_.Rect.Width);
+				//			ScaledImage_.Data = ScaledImageBacking_.get();
+				//			ret = true;
+				//		}
+				//	}
+				//	else {//NO SCALING!!
+				//		if (ScaledImage_.Rect.Width != OriginalImage_.Rect.Width || ScaledImage_.Rect.Height != OriginalImage_.Rect.Width) {
+				//			std::lock_guard<std::mutex> lock(ImageLock_);
+				//			auto size = OriginalImage_.Rect.Height*OriginalImage_.Rect.Width*PixelStride;
 
-			//			ScaledImage_.Rect = OriginalImage_.Rect;
-			//			ScaledImageBacking_ = std::make_unique<char[]>(size);
-			//			ScaledImage_.Data = ScaledImageBacking_.get();
-			//			memcpy((void*)ScaledImage_.Data, OriginalImage_.Data, size);
-			//			ret = true;
-			//		}
-			//	}
-			//	width = ScaledImage_.Rect.Width;
-			//	height = ScaledImage_.Rect.Height;
-			//	return ret;//no changes
+				//			ScaledImage_.Rect = OriginalImage_.Rect;
+				//			ScaledImageBacking_ = std::make_unique<char[]>(size);
+				//			ScaledImage_.Data = ScaledImageBacking_.get();
+				//			memcpy((void*)ScaledImage_.Data, OriginalImage_.Data, size);
+				//			ret = true;
+				//		}
+				//	}
+				//	width = ScaledImage_.Rect.Width;
+				//	height = ScaledImage_.Rect.Height;
+				//	return ret;//no changes
 			}
 			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors) {
 				std::vector<MonitorData> mons;
@@ -220,10 +218,10 @@ namespace SL {
 						Rect r(Point(0, 0), Screen_Capture::Height(monitors[i]), Screen_Capture::Width(monitors[i]));
 						auto size = r.Height* r.Width*PixelStride;
 
-						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete [] p; });
+						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
 						Image original(r, originalptr.get(), size);
 
-						auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete [] p; });
+						auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
 						Image scaled(r, scaledptr.get(), size);
 
 						mons[i].Original = original;
@@ -243,15 +241,15 @@ namespace SL {
 		class ImageControlImpl : public Fl_Box {
 
 		public:
+			std::function<void(int, int, Press, int, int)> OnMouse;
+			std::function<void(int, Press)> OnKey;
+			std::function<void(std::vector<std::string>&)> OnDragNDrop;
 
 			ScreenImageImpl ScreenImageDriver_;
-			ScreenImageCallbacks ScreenImageCallbacks_;
 			bool _DNDIncoming = false;
 
-			ImageControlImpl(int X, int Y, int W, int H, const char * title, ScreenImageCallbacks&& info) :
-				Fl_Box(X, Y, W, H, title),
-				ScreenImageDriver_(std::forward<ScreenImageCallbacks>(info)),
-				ScreenImageCallbacks_(info) {
+			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
+				Fl_Box(X, Y, W, H, title) {
 
 			}
 			virtual ~ImageControlImpl() {
@@ -286,29 +284,30 @@ namespace SL {
 					x = static_cast<int>(static_cast<float>(x) / ScreenImageDriver_.getScaleFactor_());
 					y = static_cast<int>(static_cast<float>(y) / ScreenImageDriver_.getScaleFactor_());
 				}
-				ScreenImageCallbacks_.OnMouse(e, button, press, x, y);
+
+				OnMouse(e, button, press, x, y);
 			}
 			virtual int handle(int e) override {
 
 				switch (e) {
 				case FL_PUSH:
-					handlemouse(e, Fl::event_button(), Press::DOWN, Fl::event_x() + ScreenImageCallbacks_.get_Left(), Fl::event_y() + ScreenImageCallbacks_.get_Top());
+					handlemouse(e, Fl::event_button(), Press::DOWN, Fl::event_x(), Fl::event_y());
 					return 1;
 				case FL_RELEASE:
-					handlemouse(e, Fl::event_button(), Press::UP, Fl::event_x() + ScreenImageCallbacks_.get_Left(), Fl::event_y() + ScreenImageCallbacks_.get_Top());
+					handlemouse(e, Fl::event_button(), Press::UP, Fl::event_x(), Fl::event_y());
 					break;
 				case FL_ENTER:
 					return 1;
 				case FL_DRAG:
 				case FL_MOUSEWHEEL:
 				case FL_MOVE:
-					handlemouse(e, Events::NO_EVENTDATA, Press::NO_PRESS_DATA, Fl::event_x() + ScreenImageCallbacks_.get_Left(), Fl::event_y() + ScreenImageCallbacks_.get_Top());
+					handlemouse(e, Events::NO_EVENTDATA, Press::NO_PRESS_DATA, Fl::event_x(), Fl::event_y());
 					break;
 				case FL_KEYDOWN:
-					ScreenImageCallbacks_.OnKey(e, Press::DOWN);
+					OnKey(e, Press::DOWN);
 					return 1;
 				case FL_KEYUP:
-					ScreenImageCallbacks_.OnKey(e, Press::UP);
+					OnKey(e, Press::UP);
 					return 1;
 				case FL_FOCUS:
 					return 1;
@@ -341,8 +340,8 @@ namespace SL {
 				ScreenImageDriver_.set_Monitors(monitors, num_of_monitors);
 			}
 		};
-		ImageControl::ImageControl(int X, int Y, int W, int H, const char * title, ScreenImageCallbacks&& info) {
-			ImageControlImpl_ = new ImageControlImpl(X, Y, W, H, title, std::forward<ScreenImageCallbacks>(info));
+		ImageControl::ImageControl(int X, int Y, int W, int H, const char * title) {
+			ImageControlImpl_ = new ImageControlImpl(X, Y, W, H, title);
 		}
 
 		ImageControl::~ImageControl() {
@@ -354,30 +353,45 @@ namespace SL {
 			ImageControlImpl_->OnResize(W, H, SS);
 		}
 
-		bool ImageControl::is_ImageScaled() const
+		bool ImageControl::isScaled() const
 		{
 			return ImageControlImpl_->ScreenImageDriver_.is_ImageScaled();
 		}
 
-		void ImageControl::set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
+		void ImageControl::setMonitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
 		{
 			ImageControlImpl_->set_Monitors(monitors, num_of_monitors);
 		}
 
 
-		void ImageControl::set_ImageDifference(const Image& img, int monitor_id)
+		void ImageControl::setImageDifference(const Image& img, int monitor_id)
 		{
 			ImageControlImpl_->ScreenImageDriver_.set_ImageDifference(img, monitor_id);
 		}
 
-		void ImageControl::set_MouseImage(const Image& img)
+		void ImageControl::setMouseImage(const Image& img)
 		{
 			ImageControlImpl_->ScreenImageDriver_.setMouseImage_(img);
 		}
 
-		void ImageControl::set_MousePosition(const Point* pos)
+		void ImageControl::setMousePosition(const Point* pos)
 		{
 			ImageControlImpl_->ScreenImageDriver_.set_MousePosition(pos);
+		}
+
+		void ImageControl::onKey(const std::function<void(int, Press)>& func)
+		{
+			ImageControlImpl_->OnKey = func;
+		}
+
+		void ImageControl::onMouse(const std::function<void(int, int, Press, int, int)>& func)
+		{
+			ImageControlImpl_->OnMouse = func;
+		}
+
+		void ImageControl::onDragNDrop(const std::function<void(std::vector<std::string>&)>& func)
+		{
+			ImageControlImpl_->OnDragNDrop = func;
 		}
 
 	}

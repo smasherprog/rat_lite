@@ -105,10 +105,11 @@ namespace SL {
 			std::function<void(std::vector<std::string>&)> OnDragNDrop;
 
 
-			bool _DNDIncoming = false;
+			bool Scaling_;
+			bool DNDIncoming_;
 
 			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
-				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f) {
+				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f), DNDIncoming_(false), Scaling_(false){
 
 			}
 			virtual ~ImageControlImpl() {
@@ -151,20 +152,18 @@ namespace SL {
 				//}
 				//reader lock to the container
 				{
+					auto xp = x();
 					std::shared_lock<std::shared_mutex> l(MonitorsLock);
 					for (auto& a : Monitors) {
 						std::shared_lock<std::shared_mutex> ml(*a.Lock);
-						fl_draw_image((uchar*)a.Scaled.Data, x(), y(), a.Scaled.Rect.Width, a.Scaled.Rect.Height, 4);
-		
+						fl_draw_image((uchar*)a.Scaled.Data, xp, y(), a.Scaled.Rect.Width, a.Scaled.Rect.Height, 4);
+						xp += a.Scaled.Rect.Width;
 					}
 				}
 
 				std::shared_lock<std::shared_mutex> l(MouseLock);
 				if (MouseData_.MouseImageBacking)
 					MouseData_.FlMouseImage->draw(MouseData_.Pos.X, MouseData_.Pos.Y);
-			}
-			bool is_ImageScaled() const {
-				return !(ScaleFactor_ >= .999f && ScaleFactor_ <= 1.001f);
 			}
 
 			int get_GreatestHeight() const {
@@ -202,7 +201,7 @@ namespace SL {
 			void set_MousePosition(const Point* pos) {
 
 				MouseData_.Pos = *pos;
-				if (is_ImageScaled()) {//need to scale the mouse pos as well
+				if (Scaling_) {//need to scale the mouse pos as well
 					MouseData_.Pos.X = static_cast<int>(static_cast<float>(MouseData_.Pos.X)*ScaleFactor_);
 					MouseData_.Pos.Y = static_cast<int>(static_cast<float>(MouseData_.Pos.Y)*ScaleFactor_);
 				}
@@ -225,7 +224,7 @@ namespace SL {
 				return 1;
 			}
 			void handlemouse(int e, int button, Press press, int x, int y) {
-				if (is_ImageScaled()) {
+				if (Scaling_) {
 					x = static_cast<int>(static_cast<float>(x) / ScaleFactor_);
 					y = static_cast<int>(static_cast<float>(y) / ScaleFactor_);
 				}
@@ -257,8 +256,8 @@ namespace SL {
 				case FL_FOCUS:
 					return 1;
 				case FL_PASTE:
-					if (_DNDIncoming) {
-						_DNDIncoming = false;
+					if (DNDIncoming_) {
+						DNDIncoming_ = false;
 						return pastedstuff();
 					}
 				case FL_DND_ENTER:
@@ -266,7 +265,7 @@ namespace SL {
 				case FL_DND_DRAG:
 					return 1;
 				case FL_DND_RELEASE:
-					_DNDIncoming = true;
+					DNDIncoming_ = true;
 					return 1;
 
 				default:
@@ -277,15 +276,24 @@ namespace SL {
 			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
 			{
 				SL::RAT::Point s;
-				for (auto i = 0; i < num_of_monitors; i++) {
-					s.X += monitors[i].Width;
-					s.Y = std::max(s.Y, monitors[i].Height);
-				}
-				this->size(s.X, s.Y);
-
+		
 				std::vector<MonitorData> mons;
 				mons.resize(num_of_monitors);
 				for (auto i = 0; i < num_of_monitors; i++) {
+					auto curx = 0, cury = 0;
+					if (Scaling_) {
+						cury = static_cast<int>(static_cast<float>(monitors[i].Height) / ScaleFactor_);
+						curx = static_cast<int>(static_cast<float>(monitors[i].Width) / ScaleFactor_);
+						s.Y = std::max(s.Y, cury);
+						s.X += curx;
+					}
+					else {
+						cury = monitors[i].Height;
+						curx = monitors[i].Width;
+						s.Y = std::max(s.Y, cury);
+						s.X += curx;
+					}
+
 					mons[i].Monitor = monitors[i];
 					auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitors[i].Id == m.Monitor.Id;  });
 					if (found != end(Monitors)) {
@@ -315,6 +323,7 @@ namespace SL {
 						mons[i].Lock = std::make_shared<std::shared_mutex>();
 					}
 				}
+				this->size(s.X, s.Y);
 				std::unique_lock<std::shared_mutex> l(MonitorsLock);
 				Monitors = mons;
 
@@ -333,9 +342,14 @@ namespace SL {
 			ImageControlImpl_->OnResize(W, H, SS);
 		}
 
-		bool ImageControl::isScaled() const
+		void ImageControl::Scaled(bool scaled)
 		{
-			return ImageControlImpl_->is_ImageScaled();
+			ImageControlImpl_->Scaling_ = scaled;
+		}
+
+		bool ImageControl::Scaled() const
+		{
+			return ImageControlImpl_->Scaling_;
 		}
 
 		void ImageControl::setMonitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)

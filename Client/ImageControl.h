@@ -21,7 +21,8 @@ namespace SL {
 			~ImageControl();
 
 			void OnResize(int W, int H, int SS);
-			bool isScaled() const;
+			void Scaled(bool scaled);
+			bool Scaled() const;
 			void setMonitors(const Screen_Capture::Monitor* monitors, int num_of_monitors);
 			void setImageDifference(const Image& img, int monitor_id);
 			void setMouseImage(const Image& img);

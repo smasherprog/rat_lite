@@ -207,12 +207,13 @@ namespace SL {
 				}
 			}
 			void OnResize(int W, int H, int SS) {
-				//if (_ScreenImageDriver.is_ImageScaled()) {
-				//	auto pheight = h() - SS;//16 is the scrollbars size
-				//	if (pheight < 0) pheight = 48;//cannot make image smaller than this..
-				//	auto dims = _ScreenImageDriver.get_UnscaledImageSize();
-				//	_ScreenImageDriver.setScaleFactor_(static_cast<float>(pheight) / static_cast<float>(dims.Y));
-				//}
+				if (Scaling_) {
+					auto pheight = h() - SS;//16 is the scrollbars size
+					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
+					std::shared_lock<std::shared_mutex> l(MonitorsLock);
+
+					_ScreenImageDriver.setScaleFactor_(static_cast<float>(pheight) / static_cast<float>(dims.Y));
+				}
 
 			}
 			int pastedstuff() {
@@ -306,7 +307,7 @@ namespace SL {
 					else {
 
 						//allocate the images needed
-						Rect r(Point(0, 0), Screen_Capture::Height(monitors[i]), Screen_Capture::Width(monitors[i]));
+						Rect r(Point(0, 0), cury, curx);
 						auto size = r.Height* r.Width*PixelStride;
 
 						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });

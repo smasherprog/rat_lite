@@ -153,6 +153,7 @@ namespace SL {
 				auto imp = ((ViewerControllerImpl*)data);
 				if (imp->BeingClosed_) return;
 				imp->label(imp->Title_);
+				imp->redraw_label();
 			}
 			static void awakenhidecursor(void* data) {
 				auto imp = ((ViewerControllerImpl*)data);

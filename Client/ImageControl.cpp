@@ -207,13 +207,13 @@ namespace SL {
 				}
 			}
 			void OnResize(int W, int H, int SS) {
-				if (Scaling_) {
-					auto pheight = h() - SS;//16 is the scrollbars size
-					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
-					std::shared_lock<std::shared_mutex> l(MonitorsLock);
+				//if (Scaling_) {
+				//	auto pheight = h() - SS;//16 is the scrollbars size
+				//	if (pheight < 0) pheight = 48;//cannot make image smaller than this..
+				//	std::shared_lock<std::shared_mutex> l(MonitorsLock);
 
-					_ScreenImageDriver.setScaleFactor_(static_cast<float>(pheight) / static_cast<float>(dims.Y));
-				}
+				//	_ScreenImageDriver.setScaleFactor_(static_cast<float>(pheight) / static_cast<float>(dims.Y));
+				//}
 
 			}
 			int pastedstuff() {

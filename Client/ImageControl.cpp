@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <assert.h>
 
+
 namespace SL {
 	namespace RAT {
 
@@ -40,11 +41,11 @@ namespace SL {
 			return elems;
 		}
 
-		std::unique_ptr<char[]> Resize(const char* inimg, int inheight, int inwidth, int dstheight, int dstwidth)
+		std::shared_ptr<char> Resize(const char* inimg, int inheight, int inwidth, int dstheight, int dstwidth)
 		{//linear scaling
 			auto m_width = dstwidth;
 			auto m_height = dstheight;
-			auto outimg = std::make_unique<char[]>(m_width*m_height*PixelStride);
+			auto outimg = std::shared_ptr<char>(new char[m_width*m_height*PixelStride], [](char* d) { delete [] d; });
 			auto temp = (int*)outimg.get();
 			auto pixels = (int*)inimg;
 			double x_ratio = inwidth / (double)m_width;
@@ -59,7 +60,7 @@ namespace SL {
 			}
 			return outimg;
 		}
-		std::unique_ptr<char[]> Resize(const char* inimg, int* inheight, int* inwidth, float scale)
+		std::shared_ptr<char> Resize(const char* inimg, int* inheight, int* inwidth, float scale)
 		{
 			auto height = *inheight;
 			auto width = *inwidth;
@@ -81,7 +82,7 @@ namespace SL {
 			Screen_Capture::Monitor Monitor;
 			Image Original, Scaled;
 			std::shared_ptr<char> OriginalBacking, ScaledBacking;
-			std::shared_ptr<std::shared_mutex> Lock;
+			std::shared_mutex Lock;
 		};
 		struct MouseData {
 			Image MouseImage;
@@ -93,8 +94,9 @@ namespace SL {
 
 		class ImageControlImpl : public Fl_Box {
 			float ScaleFactor_;
-			mutable std::shared_mutex MonitorsLock;
-			std::vector<MonitorData> Monitors;
+
+			std::vector<std::shared_ptr<MonitorData>> Monitors;
+			std::shared_mutex MonitorsLock;
 
 			mutable std::shared_mutex MouseLock;
 			MouseData MouseData_;
@@ -104,87 +106,70 @@ namespace SL {
 			std::function<void(int, Press)> OnKey;
 			std::function<void(std::vector<std::string>&)> OnDragNDrop;
 
+			Rect TotalUnscaledSize;
 
 			bool Scaling_;
 			bool DNDIncoming_;
 
 			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
-				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f), DNDIncoming_(false), Scaling_(false){
+				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f), DNDIncoming_(false), Scaling_(false) {
 
 			}
 			virtual ~ImageControlImpl() {
 
 			}
 			virtual void draw() override {
-				int height(0), width(0);
+				auto height(0), width(0);
+				auto thix = x();
+				auto thiy = y();
 
-				//	auto ret = false;
-				//	//make sure the image is scaled properly
-				//	if (is_ImageScaled()) {
-				//		auto psize = ScreenImageInfo_.get_Height();
-				//		if (psize != ScaledImage_.Rect.Height) {//rescale the image
-				//			std::lock_guard<std::mutex> lock(ImageLock_);
-				//			ScaledImage_.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* OriginalImage_.Rect.Height));
-				//			ScaledImageBacking_ = Resize(OriginalImage_.Data, OriginalImage_.Rect.Height, OriginalImage_.Rect.Width, ScaledImage_.Rect.Height, ScaledImage_.Rect.Width);
-				//			ScaledImage_.Data = ScaledImageBacking_.get();
-				//			ret = true;
-				//		}
-				//	}
-				//	else {//NO SCALING!!
-				//		if (ScaledImage_.Rect.Width != OriginalImage_.Rect.Width || ScaledImage_.Rect.Height != OriginalImage_.Rect.Width) {
-				//			std::lock_guard<std::mutex> lock(ImageLock_);
-				//			auto size = OriginalImage_.Rect.Height*OriginalImage_.Rect.Width*PixelStride;
-
-				//			ScaledImage_.Rect = OriginalImage_.Rect;
-				//			ScaledImageBacking_ = std::make_unique<char[]>(size);
-				//			ScaledImage_.Data = ScaledImageBacking_.get();
-				//			memcpy((void*)ScaledImage_.Data, OriginalImage_.Data, size);
-				//			ret = true;
-				//		}
-				//	}
-				//	width = ScaledImage_.Rect.Width;
-				//	height = ScaledImage_.Rect.Height;
-				//	return ret;//no changes
-
-
-				//if (ScreenImageDriver_.Update(width, height)) {
-				//	this->size(width, height);
-				//}
-				//reader lock to the container
-				{
-					auto xp = x();
-					std::shared_lock<std::shared_mutex> l(MonitorsLock);
-					for (auto& a : Monitors) {
-						std::shared_lock<std::shared_mutex> ml(*a.Lock);
-						fl_draw_image((uchar*)a.Scaled.Data, xp, y(), a.Scaled.Rect.Width, a.Scaled.Rect.Height, 4);
-						xp += a.Scaled.Rect.Width;
+				//make sure the image is scaled properly
+				std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+				for (auto& a : Monitors) {
+					std::unique_lock<std::shared_mutex> ilock(a->Lock);
+					if (Scaling_) {
+						auto psize = this->parent()->h();
+						if (psize != a->Scaled.Rect.Height) {//rescale the image
+							a->Scaled.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* a->Original.Rect.Height));
+							a->ScaledBacking = Resize(a->Original.Data, a->Original.Rect.Height, a->Original.Rect.Width, a->Scaled.Rect.Height, a->Scaled.Rect.Width);
+							a->Scaled.Data = a->ScaledBacking.get();
+							//ret = true;
+						}
 					}
-				}
+					else {//NO SCALING!!
+						if (a->Scaled.Rect.Width != a->Original.Rect.Width || a->Scaled.Rect.Height != a->Original.Rect.Height) {
+							auto size = a->Original.Rect.Height*a->Original.Rect.Width*PixelStride;
 
+							a->Scaled.Rect = a->Original.Rect;
+							a->ScaledBacking = std::shared_ptr<char>(new char[size], [](char* d) { delete [] d; });
+							a->Scaled.Data = a->ScaledBacking.get();
+							memcpy((void*)a->Scaled.Data, a->Original.Data, size);
+							//ret = true;
+						}//
+					}	
+					height = std::max(height, a->Scaled.Rect.Height);
+					fl_draw_image((uchar*)a->Scaled.Data, thix, thiy, a->Scaled.Rect.Width, a->Scaled.Rect.Height, 4);
+					width += a->Scaled.Rect.Width;
+					thix += a->Scaled.Rect.Width;
+				}
+				this->size(width, height);
+				//reader lock to the container
 				std::shared_lock<std::shared_mutex> l(MouseLock);
 				if (MouseData_.MouseImageBacking)
 					MouseData_.FlMouseImage->draw(MouseData_.Pos.X, MouseData_.Pos.Y);
 			}
 
-			int get_GreatestHeight() const {
-				std::shared_lock<std::shared_mutex> l(MonitorsLock);
-				int tallest = 0;
-				for (auto& a : Monitors) {
-					tallest = std::max(tallest, a.Monitor.Height);
-				}
-			}
-		
 			void set_ImageDifference(const Image& img, int monitor_id) {
 				//reader lock to the container
-				std::shared_lock<std::shared_mutex> l(MonitorsLock);
-				auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitor_id == m.Monitor.Id;  });
+				std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+				auto found = std::find_if(begin(Monitors), end(Monitors), [&](const std::shared_ptr<MonitorData>& m) { return monitor_id == m->Monitor.Id;  });
 				assert(found != end(Monitors));
 				{
 					//writer lock to the element
 					Rect srcrect(Point(0, 0), img.Rect.Height, img.Rect.Width);
-					std::unique_lock<std::shared_mutex> ml(*found->Lock);
-					Copy(img, srcrect, found->Original, img.Rect);//keep original in sync
-					Copy(img, srcrect, found->Scaled, img.Rect);//copy scaled down 
+					std::unique_lock<std::shared_mutex> ml((*found)->Lock);
+					Copy(img, srcrect, (*found)->Original, img.Rect);//keep original in sync
+					Copy(img, srcrect, (*found)->Scaled, img.Rect);//copy scaled down 
 				}
 			}
 			void setMouseImage_(const Image& img) {
@@ -207,14 +192,11 @@ namespace SL {
 				}
 			}
 			void OnResize(int W, int H, int SS) {
-				//if (Scaling_) {
-				//	auto pheight = h() - SS;//16 is the scrollbars size
-				//	if (pheight < 0) pheight = 48;//cannot make image smaller than this..
-				//	std::shared_lock<std::shared_mutex> l(MonitorsLock);
-
-				//	_ScreenImageDriver.setScaleFactor_(static_cast<float>(pheight) / static_cast<float>(dims.Y));
-				//}
-
+				if (Scaling_) {
+					auto pheight = h() - SS;//16 is the scrollbars size
+					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
+					ScaleFactor_ = static_cast<float>(pheight) / static_cast<float>(TotalUnscaledSize.Height);
+				}
 			}
 			int pastedstuff() {
 				auto t = std::string(Fl::event_text(), Fl::event_length());
@@ -276,58 +258,67 @@ namespace SL {
 			}
 			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
 			{
-				SL::RAT::Point s;
-		
-				std::vector<MonitorData> mons;
-				mons.resize(num_of_monitors);
-				for (auto i = 0; i < num_of_monitors; i++) {
-					auto curx = 0, cury = 0;
-					if (Scaling_) {
-						cury = static_cast<int>(static_cast<float>(monitors[i].Height) / ScaleFactor_);
-						curx = static_cast<int>(static_cast<float>(monitors[i].Width) / ScaleFactor_);
-						s.Y = std::max(s.Y, cury);
-						s.X += curx;
-					}
-					else {
-						cury = monitors[i].Height;
-						curx = monitors[i].Width;
-						s.Y = std::max(s.Y, cury);
-						s.X += curx;
-					}
+				Point s;
+				Rect unscaledsize;
+				assert(num_of_monitors < 8);//more than 8 wouldnt make sense
+				std::vector<std::shared_ptr<MonitorData>> vm;
 
-					mons[i].Monitor = monitors[i];
-					auto found = std::find_if(begin(Monitors), end(Monitors), [&](const MonitorData& m) { return monitors[i].Id == m.Monitor.Id;  });
-					if (found != end(Monitors)) {
-						mons[i].Original = found->Original;
-						mons[i].OriginalBacking = found->OriginalBacking;
-						mons[i].Scaled = found->Scaled;
-						mons[i].ScaledBacking = found->ScaledBacking;
-						mons[i].Lock = found->Lock;
-					}
-					else {
+				{
+					std::shared_lock<std::shared_mutex> lock(MonitorsLock);
 
-						//allocate the images needed
-						Rect r(Point(0, 0), cury, curx);
-						auto size = r.Height* r.Width*PixelStride;
+					for (auto i = 0; i < num_of_monitors; i++) {
+						unscaledsize.Height = std::max(monitors[i].Height, unscaledsize.Height);
+						unscaledsize.Width += monitors[i].Height;
 
-						auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
-						Image original(r, originalptr.get(), size);
+						auto curx = 0, cury = 0;
+						if (Scaling_) {
+							cury = static_cast<int>(static_cast<float>(monitors[i].Height) / ScaleFactor_);
+							curx = static_cast<int>(static_cast<float>(monitors[i].Width) / ScaleFactor_);
+							s.Y = std::max(s.Y, cury);
+							s.X += curx;
+						}
+						else {
+							cury = monitors[i].Height;
+							curx = monitors[i].Width;
+							s.Y = std::max(s.Y, cury);
+							s.X += curx;
+						}
 
-						auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
-						Image scaled(r, scaledptr.get(), size);
 
-						mons[i].Original = original;
-						mons[i].OriginalBacking = originalptr;
-						mons[i].Scaled = scaled;
-						mons[i].ScaledBacking = scaledptr;
+						auto found = std::find_if(begin(Monitors), end(Monitors), [&](const std::shared_ptr<MonitorData>& m) { return monitors[i].Id == m->Monitor.Id;  });
+						if (found != end(Monitors) &&
+							(*found)->Original.Rect.Height == monitors[i].Height &&
+							(*found)->Original.Rect.Width == monitors[i].Width) {
+							vm.emplace_back(*found);
+						}
+						else {
+							auto newmonitor = std::make_shared<MonitorData>();
 
-						mons[i].Lock = std::make_shared<std::shared_mutex>();
+							newmonitor->Monitor = monitors[i];
+							//allocate the images needed
+							Rect r(Point(0, 0), cury, curx);
+							auto size = r.Height* r.Width*PixelStride;
+
+							auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
+							Image original(r, originalptr.get(), size);
+
+							auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
+							Image scaled(r, scaledptr.get(), size);
+
+							newmonitor->Original = original;
+							newmonitor->OriginalBacking = originalptr;
+							newmonitor->Scaled = scaled;
+							newmonitor->ScaledBacking = scaledptr;
+							vm.emplace_back(newmonitor);
+
+						}
 					}
 				}
+				{
+					std::unique_lock<std::shared_mutex> lock(MonitorsLock);
+					Monitors = vm;
+				}
 				this->size(s.X, s.Y);
-				std::unique_lock<std::shared_mutex> l(MonitorsLock);
-				Monitors = mons;
-
 			}
 		};
 		ImageControl::ImageControl(int X, int Y, int W, int H, const char * title) {

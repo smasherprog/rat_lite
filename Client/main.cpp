@@ -15,7 +15,7 @@
 int main(int argc, char* argv[]) {
 	Fl::args(argc, argv);
 	Fl::get_system_colors();
-	Fl::visual(FL_RGB);
+	Fl::visual(FL_DOUBLE | FL_INDEX | FL_RGB);
 
 	auto config = std::make_shared<SL::RAT::Client_Config>();
 

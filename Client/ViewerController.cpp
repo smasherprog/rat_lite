@@ -9,11 +9,8 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
-#include <FL/fl_draw.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Scroll.H>
-#include <FL/Fl_RGB_Image.H>
-#include <FL/Fl_PNG_Image.H>
 
 #include <chrono>
 #include <mutex>
@@ -110,8 +107,9 @@ namespace SL {
 				});
 
 				Fl_Scroll_->end();
-				end();
 				resizable(this);
+				end();
+				
 				show();
 
 				Clipboard_ = std::make_unique<Clipboard>();
@@ -131,10 +129,8 @@ namespace SL {
 				if (!BeingClosed_) {
 					this->hide();
 					Fl::delete_widget(this);
-					if (Socket_) {
-						Socket_->close(1000, "", 0);
-					}
-				}
+				
+				}//
 				BeingClosed_ = true;
 			}
 			static void closethiswindow(void* data) {
@@ -168,6 +164,9 @@ namespace SL {
 
 			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
 				UNUSED(socket);
+				UNUSED(code);
+				UNUSED(message);
+				UNUSED(length);
 				Fl::awake(closethiswindow, this);
 			}
 

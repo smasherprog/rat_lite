@@ -10,8 +10,6 @@
 #include <FL/Fl_Box.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_RGB_Image.H>
-#include <FL/Fl_PNG_Image.H>
-
 
 #include <vector>
 #include <sstream>
@@ -45,7 +43,7 @@ namespace SL {
 		{//linear scaling
 			auto m_width = dstwidth;
 			auto m_height = dstheight;
-			auto outimg = std::shared_ptr<char>(new char[m_width*m_height*PixelStride], [](char* d) { delete [] d; });
+			auto outimg = std::shared_ptr<char>(new char[m_width*m_height*PixelStride], [](char* d) { delete[] d; });
 			auto temp = (int*)outimg.get();
 			auto pixels = (int*)inimg;
 			double x_ratio = inwidth / (double)m_width;
@@ -83,6 +81,7 @@ namespace SL {
 			Image Original, Scaled;
 			std::shared_ptr<char> OriginalBacking, ScaledBacking;
 			std::shared_mutex Lock;
+
 		};
 		struct MouseData {
 			Image MouseImage;
@@ -114,6 +113,7 @@ namespace SL {
 			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
 				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f), DNDIncoming_(false), Scaling_(false) {
 
+
 			}
 			virtual ~ImageControlImpl() {
 
@@ -133,7 +133,6 @@ namespace SL {
 							a->Scaled.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* a->Original.Rect.Height));
 							a->ScaledBacking = Resize(a->Original.Data, a->Original.Rect.Height, a->Original.Rect.Width, a->Scaled.Rect.Height, a->Scaled.Rect.Width);
 							a->Scaled.Data = a->ScaledBacking.get();
-							//ret = true;
 						}
 					}
 					else {//NO SCALING!!
@@ -141,20 +140,22 @@ namespace SL {
 							auto size = a->Original.Rect.Height*a->Original.Rect.Width*PixelStride;
 
 							a->Scaled.Rect = a->Original.Rect;
-							a->ScaledBacking = std::shared_ptr<char>(new char[size], [](char* d) { delete [] d; });
+							a->ScaledBacking = std::shared_ptr<char>(new char[size], [](char* d) { delete[] d; });
 							a->Scaled.Data = a->ScaledBacking.get();
 							memcpy((void*)a->Scaled.Data, a->Original.Data, size);
-							//ret = true;
+
 						}//
-					}	
+					}
 					height = std::max(height, a->Scaled.Rect.Height);
 					fl_draw_image((uchar*)a->Scaled.Data, thix, thiy, a->Scaled.Rect.Width, a->Scaled.Rect.Height, 4);
 					width += a->Scaled.Rect.Width;
 					thix += a->Scaled.Rect.Width;
+
 				}
-				this->size(width, height);
+				//this->size(width, height);
 				//reader lock to the container
 				std::shared_lock<std::shared_mutex> l(MouseLock);
+
 				if (MouseData_.MouseImageBacking)
 					MouseData_.FlMouseImage->draw(MouseData_.Pos.X, MouseData_.Pos.Y);
 			}
@@ -164,11 +165,26 @@ namespace SL {
 				std::shared_lock<std::shared_mutex> lock(MonitorsLock);
 				auto found = std::find_if(begin(Monitors), end(Monitors), [&](const std::shared_ptr<MonitorData>& m) { return monitor_id == m->Monitor.Id;  });
 				assert(found != end(Monitors));
-				{
-					//writer lock to the element
-					Rect srcrect(Point(0, 0), img.Rect.Height, img.Rect.Width);
-					std::unique_lock<std::shared_mutex> ml((*found)->Lock);
-					Copy(img, srcrect, (*found)->Original, img.Rect);//keep original in sync
+			
+				//writer lock to the element
+				Rect srcrect(Point(0, 0), img.Rect.Height, img.Rect.Width);
+				std::unique_lock<std::shared_mutex> ml((*found)->Lock);
+				Copy(img, srcrect, (*found)->Original, img.Rect);//keep original in sync
+				if (Scaling_) {
+					Rect r(Point(0, 0), img.Rect.Height, img.Rect.Width);
+					auto reseiz = Resize(img.Data, &r.Height, &r.Width, ScaleFactor_);
+					Image resizedimg(r, reseiz.get(), r.Height*r.Width*PixelStride);
+					
+					auto sr = img.Rect;
+					sr.Origin.X  = static_cast<int>(static_cast<float>(sr.Origin.X)*ScaleFactor_);
+					sr.Origin.Y = static_cast<int>(static_cast<float>(sr.Origin.Y)*ScaleFactor_);
+					sr.Height = r.Height;
+					sr.Width = r.Width;
+
+					Copy(resizedimg, r, (*found)->Scaled, sr);//keep original in sync
+
+				}
+				else {
 					Copy(img, srcrect, (*found)->Scaled, img.Rect);//copy scaled down 
 				}
 			}
@@ -192,10 +208,10 @@ namespace SL {
 				}
 			}
 			void OnResize(int W, int H, int SS) {
-				if (Scaling_) {
+				if (Scaling_&& TotalUnscaledSize.Height>10) {
 					auto pheight = h() - SS;//16 is the scrollbars size
 					if (pheight < 0) pheight = 48;//cannot make image smaller than this..
-					ScaleFactor_ = static_cast<float>(pheight) / static_cast<float>(TotalUnscaledSize.Height);
+				//	ScaleFactor_ = static_cast<float>(pheight) / static_cast<float>(TotalUnscaledSize.Height);
 				}
 			}
 			int pastedstuff() {
@@ -258,6 +274,7 @@ namespace SL {
 			}
 			void set_Monitors(const Screen_Capture::Monitor * monitors, int num_of_monitors)
 			{
+
 				Point s;
 				Rect unscaledsize;
 				assert(num_of_monitors < 8);//more than 8 wouldnt make sense
@@ -272,8 +289,8 @@ namespace SL {
 
 						auto curx = 0, cury = 0;
 						if (Scaling_) {
-							cury = static_cast<int>(static_cast<float>(monitors[i].Height) / ScaleFactor_);
-							curx = static_cast<int>(static_cast<float>(monitors[i].Width) / ScaleFactor_);
+							cury = static_cast<int>(static_cast<float>(monitors[i].Height) *ScaleFactor_);
+							curx = static_cast<int>(static_cast<float>(monitors[i].Width) * ScaleFactor_);
 							s.Y = std::max(s.Y, cury);
 							s.X += curx;
 						}
@@ -296,12 +313,16 @@ namespace SL {
 
 							newmonitor->Monitor = monitors[i];
 							//allocate the images needed
-							Rect r(Point(0, 0), cury, curx);
+
+							Rect r(Point(0, 0), monitors[i].Height, monitors[i].Width);
 							auto size = r.Height* r.Width*PixelStride;
 
 							auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
 							Image original(r, originalptr.get(), size);
 
+							r.Height = cury;
+							r.Width = curx;
+							size = r.Height* r.Width*PixelStride;
 							auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
 							Image scaled(r, scaledptr.get(), size);
 
@@ -318,7 +339,9 @@ namespace SL {
 					std::unique_lock<std::shared_mutex> lock(MonitorsLock);
 					Monitors = vm;
 				}
+				SL_RAT_LOG(Logging_Levels::INFO_log_level, "Setting Size of window " << s);
 				this->size(s.X, s.Y);
+
 			}
 		};
 		ImageControl::ImageControl(int X, int Y, int W, int H, const char * title) {

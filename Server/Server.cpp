@@ -167,16 +167,6 @@ namespace SL {
 			return ServerImpl_->get_Status();
 		}
 
-		std::string Server::Server::Validate_Settings(std::shared_ptr<Server_Config> config)
-		{
-			std::string ret;
-			//assert(config.get() != nullptr);
-			//ret += Crypto::ValidateCertificate(config->Public_Certficate.get());
-			//ret += Crypto::ValidatePrivateKey(config->Private_Key.get(), config->PasswordToPrivateKey);
-			//if (!SL::Directory_Exists(config->WWWRoot)) ret += "You must supply a valid folder for wwwroot!\n";
-
-			return ret;
-		}
 #if __ANDROID__
 		void Server::Server::OnImage(char* buf, int width, int height)
 		{

@@ -3,9 +3,6 @@
 <p>This library is intended to be a VNC-like application, but with a few design goals:
 <ul>
 <li>
-Simple  (download and press build -- no complicated steps)
-</li>
-<li>
 Cross-platform:Windows desktop, windows phone, Linux, Modern Web Browsers, Andriod, Mac desktop, iphone
 </li>
 <li>

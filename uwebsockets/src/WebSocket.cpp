@@ -95,7 +95,6 @@ void WebSocket<isServer>::sendPrepared(typename WebSocket<isServer>::PreparedMes
             messagePtr->reserved = callbackData;
         }
     } else {
-        getSocketData()->nodeData->freeSmallMemoryBlock((char *) messagePtr, memoryIndex);
         if (callback) {
             callback(*this, preparedMessage, true, callbackData);
         }
@@ -144,7 +143,7 @@ void WebSocket<isServer>::close(int code, const char *message, size_t length) {
     int closePayloadLength = WebSocketProtocol<isServer>::formatClosePayload(closePayload, code, message, length);
     send(closePayload, closePayloadLength, OpCode::CLOSE, [](void *p, void *data, bool cancelled, void *reserved) {
         if (!cancelled) {
-            Socket((Poll *) p).shutdown();
+            Socket((uv_poll_t *) p).shutdown();
         }
     });
 }

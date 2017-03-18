@@ -15,7 +15,6 @@ template <bool isServer>
 struct WIN32_EXPORT Group : uS::NodeData {
     friend struct Hub;
     std::function<void(WebSocket<isServer>, HttpRequest)> connectionHandler;
-    std::function<void(WebSocket<isServer>)> transferHandler;
     std::function<void(WebSocket<isServer>, char *message, size_t length, OpCode opCode)> messageHandler;
     std::function<void(WebSocket<isServer>, int code, char *message, size_t length)> disconnectionHandler;
     std::function<void(WebSocket<isServer>, char *, size_t)> pingHandler;
@@ -34,7 +33,7 @@ struct WIN32_EXPORT Group : uS::NodeData {
 
     Hub *hub;
     int extensionOptions;
-    Timer *timer = nullptr;
+    uv_timer_t *timer = nullptr;
     std::string userPingMessage;
 
     // todo: cannot be named user, collides with parent!
@@ -42,18 +41,18 @@ struct WIN32_EXPORT Group : uS::NodeData {
     void setUserData(void *user);
     void *getUserData();
     void startAutoPing(int intervalMs, std::string userMessage = "");
-    static void timerCallback(Timer *timer);
+    static void timerCallback(uv_timer_t *timer);
 
-    Poll *webSocketHead = nullptr, *httpSocketHead = nullptr;
-    void addWebSocket(Poll *webSocket);
-    void removeWebSocket(Poll *webSocket);
+    uv_poll_t *webSocketHead = nullptr, *httpSocketHead = nullptr;
+    void addWebSocket(uv_poll_t *webSocket);
+    void removeWebSocket(uv_poll_t *webSocket);
 
-    Timer *httpTimer = nullptr;
-    void addHttpSocket(Poll *httpSocket);
-    void removeHttpSocket(Poll *httpSocket);
+    uv_timer_t *httpTimer = nullptr;
+    void addHttpSocket(uv_poll_t *httpSocket);
+    void removeHttpSocket(uv_poll_t *httpSocket);
 
 
-    std::stack<Poll *> iterators;
+    std::stack<uv_poll_t *> iterators;
 
 protected:
     Group(int extensionOptions, Hub *hub, uS::NodeData *nodeData);
@@ -61,7 +60,6 @@ protected:
 
 public:
     void onConnection(std::function<void(WebSocket<isServer>, HttpRequest)> handler);
-    void onTransfer(std::function<void(WebSocket<isServer>)> handler);
     void onMessage(std::function<void(WebSocket<isServer>, char *, size_t, OpCode)> handler);
     void onDisconnection(std::function<void(WebSocket<isServer>, int code, char *message, size_t length)> handler);
     void onPing(std::function<void(WebSocket<isServer>, char *, size_t)> handler);
@@ -84,14 +82,14 @@ public:
     // todo: handle nested forEachs with removeWebSocket
     template <class F>
     void forEach(const F &cb) {
-        Poll *iterator = webSocketHead;
+        uv_poll_t *iterator = webSocketHead;
         iterators.push(iterator);
         while (iterator) {
-            Poll *lastIterator = iterator;
+            uv_poll_t *lastIterator = iterator;
             cb(WebSocket<isServer>(iterator));
             iterator = iterators.top();
             if (lastIterator == iterator) {
-                iterator = ((uS::SocketData *) iterator->getData())->next;
+                iterator = ((uS::SocketData *) iterator->data)->next;
                 iterators.top() = iterator;
             }
         }
@@ -101,14 +99,14 @@ public:
     // duplicated code for now!
     template <class F>
     void forEachHttpSocket(const F &cb) {
-        Poll *iterator = httpSocketHead;
+        uv_poll_t *iterator = httpSocketHead;
         iterators.push(iterator);
         while (iterator) {
-            Poll *lastIterator = iterator;
+            uv_poll_t *lastIterator = iterator;
             cb(HttpSocket<isServer>(iterator));
             iterator = iterators.top();
             if (lastIterator == iterator) {
-                iterator = ((uS::SocketData *) iterator->getData())->next;
+                iterator = ((uS::SocketData *) iterator->data)->next;
                 iterators.top() = iterator;
             }
         }

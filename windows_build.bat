@@ -1,3 +1,5 @@
+mkdir build
+cd build
 CMake  .
 git clone https://github.com/Microsoft/vcpkg
 cd vcpkg

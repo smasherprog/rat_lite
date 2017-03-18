@@ -14,6 +14,7 @@
 #endif
 
 #ifdef __APPLE__
+#include <libkern/OSByteOrder.h>
 #define htobe64(x) OSSwapHostToBigInt64(x)
 #define be64toh(x) OSSwapBigToHostInt64(x)
 #endif
@@ -23,11 +24,17 @@
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
 #define SHUT_WR SD_SEND
-#define htobe64(x) htonll(x)
-#define be64toh(x) ntohll(x)
-#define __thread __declspec(thread)
-#define pthread_t DWORD
-#define pthread_self GetCurrentThreadId
+#ifdef __MINGW32__
+    // Windows has always been tied to LE
+    #define htobe64(x) __builtin_bswap64(x)
+    #define be64toh(x) __builtin_bswap64(x)
+#else
+    #define __thread __declspec(thread)
+    #define htobe64(x) htonll(x)
+    #define be64toh(x) ntohll(x)
+    #define pthread_t DWORD
+    #define pthread_self GetCurrentThreadId
+#endif
 #define WIN32_EXPORT __declspec(dllexport)
 
 inline void close(SOCKET fd) {closesocket(fd);}
@@ -45,15 +52,19 @@ inline SOCKET dup(SOCKET socket) {
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <cstring>
 #define SOCKET_ERROR -1
 #define INVALID_SOCKET -1
 #define WIN32_EXPORT
 #endif
 
-#include "uUV.h"
+#include "Backend.h"
 #include <openssl/ssl.h>
+#include <csignal>
 #include <vector>
 #include <string>
 #include <mutex>
@@ -107,33 +118,33 @@ struct WIN32_EXPORT NodeData {
     char *recvBufferMemoryBlock;
     char *recvBuffer;
     int recvLength;
-    uv_loop_t *loop;
+    Loop *loop;
     void *user = nullptr;
     static const int preAllocMaxSize = 1024;
     char **preAlloc;
     SSL_CTX *clientContext;
 
-    uv_async_t *async = nullptr;
+    Async *async = nullptr;
     pthread_t tid;
 
     struct TransferData {
-        uv_poll_t *p;
+        Poll *p;
         uv_os_sock_t fd;
         SocketData *socketData;
-        uv_poll_cb pollCb;
-        void (*cb)(uv_poll_t *);
+        void (*pollCb)(Poll *, int, int);
+        void (*cb)(Poll *);
     };
 
     void addAsync() {
-        async = new uv_async_t;
-        async->data = this;
-        uv_async_init(loop, async, NodeData::asyncCallback);
+        async = new Async(loop);
+        async->setData(this);
+        async->start(NodeData::asyncCallback);
     }
 
     std::mutex *asyncMutex;
     std::vector<TransferData> transferQueue;
-    std::vector<uv_poll_t *> changePollQueue;
-    static void asyncCallback(uv_async_t *async);
+    std::vector<Poll *> changePollQueue;
+    static void asyncCallback(Async *async);
 
     static int getMemoryBlockIndex(size_t length) {
         return (length >> 4) + bool(length & 15);
@@ -209,7 +220,7 @@ struct SocketData {
         }
     } messageQueue;
 
-    uv_poll_t *next = nullptr, *prev = nullptr;
+    Poll *next = nullptr, *prev = nullptr;
 };
 
 struct ListenData : SocketData {
@@ -218,8 +229,8 @@ struct ListenData : SocketData {
 
     }
 
-    uv_poll_t *listenPoll = nullptr;
-    uv_timer_t *listenTimer = nullptr;
+    Poll *listenPoll = nullptr;
+    Timer *listenTimer = nullptr;
     uv_os_sock_t sock;
     uS::TLS::Context sslContext;
 };

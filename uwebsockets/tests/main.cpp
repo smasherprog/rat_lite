@@ -50,8 +50,8 @@ void serveAutobahn() {
         }
     });
 
-    uS::TLS::Context c = uS::TLS::createContext("ssl/cert.pem",
-                                                "ssl/key.pem",
+    uS::TLS::Context c = uS::TLS::createContext("misc/ssl/cert.pem",
+                                                "misc/ssl/key.pem",
                                                 "1234");
     if (!h.listen(3001, c, 0, sslGroup) || !h.listen(3000, nullptr, 0, group)) {
         std::cout << "FAILURE: Error listening for Autobahn connections!" << std::endl;
@@ -61,14 +61,14 @@ void serveAutobahn() {
     }
 
     std::thread t([]() {
-        system("wstest -m fuzzingclient -s Autobahn.json");
+        system("wstest -m fuzzingclient -s misc/Autobahn.json");
     });
 
     h.run();
     t.join();
 
     // "FAILED", "OK", "NON-STRICT"
-    std::ifstream fin("/home/alexhultman/uWebSockets/autobahn/index.json");
+    std::ifstream fin("misc/autobahn/index.json");
     fin.seekg (0, fin.end);
     int length = fin.tellg();
     fin.seekg (0, fin.beg);
@@ -109,8 +109,8 @@ void measureInternalThroughput(unsigned int payloadLength, int echoes, bool ssl)
     const char *closeMessage = "I'm closing now";
     size_t closeMessageLength = strlen(closeMessage);
 
-    uS::TLS::Context c = uS::TLS::createContext("ssl/cert.pem",
-                                                "ssl/key.pem",
+    uS::TLS::Context c = uS::TLS::createContext("misc/ssl/cert.pem",
+                                                "misc/ssl/key.pem",
                                                 "1234");
 
     h.onConnection([payload, payloadLength, echoes](uWS::WebSocket<uWS::CLIENT> ws, uWS::HttpRequest req) {
@@ -168,7 +168,9 @@ void measureInternalThroughput(unsigned int payloadLength, int echoes, bool ssl)
     });
 
     // we need to update libuv internal timepoint!
+#ifndef USE_ASIO
     h.run();
+#endif
 
     if (ssl) {
         if (!h.listen(3000, c)) {
@@ -522,18 +524,25 @@ void testMultithreading() {
         });
 
         if (ssl) {
-            h.listen(3000, uS::TLS::createContext("ssl/cert.pem",
-                                                  "ssl/key.pem",
-                                                  "1234"));
+            if (!h.listen(3000,
+                          uS::TLS::createContext("misc/ssl/cert.pem",
+                          "misc/ssl/key.pem", "1234"))) {
+                std::cerr << "FAILURE: Cannot listen!" << std::endl;
+                exit(-1);
+            }
             h.connect("wss://localhost:3000", nullptr);
         } else {
-            h.listen(3000);
+            if (!h.listen(3000)) {
+                std::cerr << "FAILURE: Cannot listen!" << std::endl;
+                exit(-1);
+            }
             h.connect("ws://localhost:3000", nullptr);
         }
 
         h.run();
         t.join();
     }
+    std::cout << "Falling through testMultithreading" << std::endl;
 }
 
 void testSendCallback() {
@@ -886,12 +895,10 @@ void serveEventSource() {
 
     // stop and delete the libuv timer on http disconnection
     h.onHttpDisconnection([](uWS::HttpSocket<uWS::SERVER> s) {
-        uv_timer_t *timer = (uv_timer_t *) s.getUserData();
+        Timer *timer = (Timer *) s.getUserData();
         if (timer) {
-            uv_timer_stop(timer);
-            uv_close((uv_handle_t *) timer, [](uv_handle_t *handle) {
-                delete (uv_timer_t *) handle;
-            });
+            timer->stop();
+            timer->close();
         }
     });
 
@@ -915,13 +922,12 @@ void serveEventSource() {
                 res->write((char *) header.data(), header.length());
 
                 // create and attach a libuv timer to the socket and let it send messages to the client each second
-                uv_timer_t *timer = new uv_timer_t;
-                uv_timer_init(h.getLoop(), timer);
-                timer->data = res;//s.getPollHandle();
-                uv_timer_start(timer, [](uv_timer_t *timer) {
+                Timer *timer = new Timer(h.getLoop());
+                timer->setData(res);
+                timer->start([](Timer *timer) {
                     // send a message to the browser
                     std::string message = "data: Clock sent from the server: " + std::to_string(clock()) + "\n\n";
-                    ((uWS::HttpResponse *) timer->data)->write((char *) message.data(), message.length());
+                    ((uWS::HttpResponse *) timer->getData())->write((char *) message.data(), message.length());
                 }, 1000, 1000);
                 res->setUserData(timer);
             } else {

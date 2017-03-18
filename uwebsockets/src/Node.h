@@ -14,7 +14,7 @@ enum ListenOptions : int {
 
 class WIN32_EXPORT Node {
 protected:
-    uv_loop_t *loop;
+    Loop *loop;
     NodeData *nodeData;
     std::mutex asyncMutex;
 
@@ -23,19 +23,19 @@ public:
     ~Node();
     void run();
 
-    uv_loop_t *getLoop() {
+    Loop *getLoop() {
         return loop;
     }
 
     template <void C(Socket p, bool error)>
-    static void connect_cb(uv_poll_t *p, int status, int events) {
+    static void connect_cb(Poll *p, int status, int events) {
         C(p, status < 0);
     }
 
     template <void C(Socket p, bool error)>
     uS::Socket connect(const char *hostname, int port, bool secure, uS::SocketData *socketData) {
-        uv_poll_t *p = new uv_poll_t;
-        p->data = socketData;
+        Poll *p = new Poll;
+        p->setData(socketData);
 
         addrinfo hints, *result;
         memset(&hints, 0, sizeof(addrinfo));
@@ -74,20 +74,21 @@ public:
         }
 
         socketData->poll = UV_READABLE;
-        uv_poll_init_socket(loop, p, fd);
-        uv_poll_start(p, UV_WRITABLE, connect_cb<C>);
+        p->init(loop, fd);
+        p->setCb(connect_cb<C>);
+        p->start(UV_WRITABLE);
         return p;
     }
 
     template <void A(Socket s)>
-    static void accept_poll_cb(uv_poll_t *p, int status, int events) {
-        ListenData *listenData = (ListenData *) p->data;
+    static void accept_poll_cb(Poll *p, int status, int events) {
+        ListenData *listenData = (ListenData *) p->getData();
         accept_cb<A, false>(listenData);
     }
 
     template <void A(Socket s)>
-    static void accept_timer_cb(uv_timer_t *p) {
-        ListenData *listenData = (ListenData *) p->data;
+    static void accept_timer_cb(Timer *p) {
+        ListenData *listenData = (ListenData *) p->getData();
         accept_cb<A, true>(listenData);
     }
 
@@ -102,29 +103,23 @@ public:
             * event instead to avoid this.
             */
             if (!TIMER && errno != EAGAIN && errno != EWOULDBLOCK) {
-                uv_poll_stop(listenData->listenPoll);
-                uv_close(listenData->listenPoll, [](uv_handle_t *handle) {
-                    delete handle;
-                });
+                listenData->listenPoll->stop();
+                listenData->listenPoll->close();
                 listenData->listenPoll = nullptr;
 
-                listenData->listenTimer = new uv_timer_t();
-                listenData->listenTimer->data = listenData;
-                uv_timer_init(listenData->nodeData->loop, listenData->listenTimer);
-                uv_timer_start(listenData->listenTimer, accept_timer_cb<A>, 1000, 1000);
+                listenData->listenTimer = new Timer(listenData->nodeData->loop);
+                listenData->listenTimer->setData(listenData);
+                listenData->listenTimer->start(accept_timer_cb<A>, 1000, 1000);
             }
             return;
         } else if (TIMER) {
-            uv_timer_stop(listenData->listenTimer);
-            uv_close(listenData->listenTimer, [](uv_handle_t *handle) {
-                delete handle;
-            });
+            listenData->listenTimer->stop();
+            listenData->listenTimer->close();
             listenData->listenTimer = nullptr;
-
-            listenData->listenPoll = new uv_poll_t;
-            listenData->listenPoll->data = listenData;
-            uv_poll_init_socket(listenData->nodeData->loop, listenData->listenPoll, serverFd);
-            uv_poll_start(listenData->listenPoll, UV_READABLE, accept_poll_cb<A>);
+            listenData->listenPoll = new Poll(listenData->nodeData->loop, serverFd);
+            listenData->listenPoll->setData(listenData);
+            listenData->listenPoll->setCb(accept_poll_cb<A>);
+            listenData->listenPoll->start(UV_READABLE);
         }
         do {
     #ifdef __APPLE__
@@ -143,13 +138,8 @@ public:
         SocketData *socketData = new SocketData(listenData->nodeData);
         socketData->ssl = ssl;
 
-        uv_poll_t *clientPoll = new uv_poll_t;
-#ifdef USE_MICRO_UV
-        uv_poll_init_socket(listenData->listenPoll->get_loop(), clientPoll, clientFd);
-#else
-        uv_poll_init_socket(listenData->listenPoll->loop, clientPoll, clientFd);
-#endif
-        clientPoll->data = socketData;
+        Poll *clientPoll = new Poll(listenData->listenPoll->getLoop(), clientFd);
+        clientPoll->setData(socketData);
 
         socketData->poll = UV_READABLE;
         A(clientPoll);
@@ -215,15 +205,14 @@ public:
         listenData->sslContext = sslContext;
         listenData->nodeData = nodeData;
 
-        uv_poll_t *listenPoll = new uv_poll_t;
-        listenPoll->data = listenData;
+        Poll *listenPoll = new Poll(loop, listenFd);
+        listenPoll->setData(listenData);
+        listenPoll->setCb(accept_poll_cb<A>);
+        listenPoll->start(UV_READABLE);
 
         listenData->listenPoll = listenPoll;
         listenData->sock = listenFd;
         listenData->ssl = nullptr;
-
-        uv_poll_init_socket(loop, listenPoll, listenFd);
-        uv_poll_start(listenPoll, UV_READABLE, accept_poll_cb<A>);
 
         // should be vector of listen data! one group can have many listeners!
         nodeData->user = listenData;

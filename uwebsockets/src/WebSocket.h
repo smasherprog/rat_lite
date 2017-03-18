@@ -43,13 +43,14 @@ struct WIN32_EXPORT WebSocket : protected uS::Socket {
 
     void transfer(Group<isServer> *group) {
         ((Group<isServer> *) getSocketData()->nodeData)->removeWebSocket(p);
-        uS::Socket::transfer((uS::NodeData *) group, [](uv_poll_t *p) {
+        uS::Socket::transfer((uS::NodeData *) group, [](Poll *p) {
             uS::Socket s(p);
             ((Group<isServer> *) s.getSocketData()->nodeData)->addWebSocket(s);
+            ((Group<isServer> *) s.getSocketData()->nodeData)->transferHandler(s);
         });
     }
 
-    uv_poll_t *getPollHandle() const {return p;}
+    Poll *getPollHandle() const {return p;}
     void terminate();
     void close(int code = 1000, const char *message = nullptr, size_t length = 0);
     void ping(const char *message) {send(message, OpCode::PING);}
@@ -77,7 +78,7 @@ template <bool isServer>
 struct hash<uWS::WebSocket<isServer>> {
     std::size_t operator()(const uWS::WebSocket<isServer> &webSocket) const
     {
-        return std::hash<uv_poll_t *>()(webSocket.getPollHandle());
+        return std::hash<Poll *>()(webSocket.getPollHandle());
     }
 };
 

@@ -7,4 +7,5 @@ os:
     
 before_install:
     - brew update
-    - brew install fltk boost openssl libjpeg-turbo
+    - brew outdated boost || brew upgrade boost
+    - brew install fltk openssl libjpeg-turbo

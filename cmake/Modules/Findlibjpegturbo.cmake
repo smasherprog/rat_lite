@@ -3,9 +3,11 @@ find_library(JPEG_LIBRARY
  )
  find_library(TURBOJPEG_LIBRARY
   NAMES turbojpeg
+PATHS /usr/local/opt/libjpeg-turbo/lib
 )
 find_path(LibLIBJPEGTURBO_INCLUDE_DIR
   NAMES turbojpeg.h
+   PATHS /usr/local/opt/libjpeg-turbo/include
 )
 mark_as_advanced(TURBOJPEG_LIBRARY JPEG_LIBRARY LibLIBJPEGTURBO_INCLUDE_DIR)
 

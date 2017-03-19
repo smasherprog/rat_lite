@@ -119,7 +119,7 @@ namespace SL {
 				UNUSED(len);
 			}
 
-			virtual void onReceive_ClipboardText(const char* data, size_t len) override {
+			virtual void onReceive_ClipboardText(const char* data, unsigned int len) override {
 				SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceiveClipboard_Text " << len);
 				Clipboard_->updateClipbard(data, static_cast<int>(len));
 			}

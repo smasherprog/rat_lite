@@ -1,7 +1,9 @@
 #include "Input.h"
-#include <assert.h>
+
 #include "Logging.h"
 #include <FL/Enumerations.H>
+#include <assert.h>
+#include <vector>
 
 #if __APPLE__
 #include <ApplicationServices/ApplicationServices.h>

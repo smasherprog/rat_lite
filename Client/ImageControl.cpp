@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <assert.h>
 
-
 namespace SL {
 	namespace RAT {
 
@@ -111,7 +110,7 @@ namespace SL {
 			bool DNDIncoming_;
 
 			ImageControlImpl(int X, int Y, int W, int H, const char * title) :
-				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f), DNDIncoming_(false), Scaling_(false) {
+				Fl_Box(X, Y, W, H, title), ScaleFactor_(1.0f),  Scaling_(false), DNDIncoming_(false){
 
 
 			}

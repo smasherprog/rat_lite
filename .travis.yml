@@ -1,0 +1,15 @@
+language : cpp
+
+osx_image: xcode8.2
+
+os:
+   - osx
+    
+before_install:
+    - brew update
+    - brew outdated boost || brew upgrade boost
+    - brew install fltk openssl libjpeg-turbo
+
+install:
+    - cmake .
+    - .configure && make

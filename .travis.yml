@@ -5,8 +5,9 @@ matrix:
     - os: linux
       
 before_install:
+
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    "sudo apt-get install -y libfltk1.3-dev";
+    sudo ;
   fi
     
 script:

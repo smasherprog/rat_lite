@@ -4,6 +4,7 @@ matrix:
   include:
     - os: osx
     - os: linux
+      env: CLANG_VERSION=3.8 BUILD_TYPE=Release
       sudo: required
       addons: &clang38
         apt:
@@ -15,6 +16,7 @@ matrix:
             - llvm-toolchain-precise-3.8
       
 before_install:
+ - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
         brew update && brew outdated boost || brew upgrade boost && brew install fltk openssl libjpeg-turbo && brew upgrade cmake || brew install cmake;
     fi
@@ -45,5 +47,5 @@ script:
         cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ . && make;
     fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-       cmake -DOPENSSL_ROOT_DIR=/usr/include -DOPENSSL_LIBRARIES=/usr/lib . && make;
+       cmake -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
     fi  

@@ -36,8 +36,8 @@ namespace SL {
         template <typename T>
         using SharedLock = typename std::shared_lock<T>;
         
-        template <typename T>
-        @@ -40,7 +31,6 @@ namespace SL {
+		template <typename T>
+		using UniqueLock = typename std::unique_lock<T>;
             
             typedef std::shared_mutex SharedMutex;
             

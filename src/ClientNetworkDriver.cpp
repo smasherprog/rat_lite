@@ -25,6 +25,9 @@ namespace SL {
 			Point LastMousePosition_;
 			std::shared_ptr<IWebSocket> Socket_;
 			std::thread Runner;
+			std::mutex outputbufferLock;
+			std::vector<char> outputbuffer;
+
 			void MouseImage(const IWebSocket& socket, const char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 				Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
@@ -45,10 +48,7 @@ namespace SL {
 				assert(len >= sizeof(Rect));
 
 				auto jpegDecompressor = tjInitDecompress();
-#if __APPLE__
-				thread_local
-#endif
-				std::vector<char> outputbuffer;
+
 				int jpegSubsamp(0), outwidth(0), outheight(0);
 
 				auto src = (unsigned char*)data;
@@ -62,6 +62,7 @@ namespace SL {
 				if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
+				std::lock_guard<std::mutex> lock(outputbufferLock);
 				outputbuffer.reserve(outwidth* outheight * PixelStride);
 
 				if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {

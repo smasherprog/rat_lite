@@ -8,7 +8,7 @@ matrix:
       
 before_install:
   - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - "https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C cmake && export PATH=cmakeup/cmake/bin:${PATH};
+      mkdir cmakeup && travis_retry wget --no-check-certificate --quiet -O - "https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C cmake && export PATH=cmakeup/cmake/bin:${PATH};
     else
       brew upgrade cmake || brew install cmake;
     fi

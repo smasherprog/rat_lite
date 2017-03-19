@@ -67,7 +67,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Boost COMPONENTS program_options system date_time REQUIRED)
 find_package(libjpegturbo REQUIRED)
 set(FLTK_SKIP_FLUID TRUE)
-find_package(fltk REQUIRED)
+find_package(FLTK REQUIRED)
 
 set(REMOTE_ACCESS_INCLUDE_DIRS 
 	${REMOTE_ACCESS_COMMON_INC} 

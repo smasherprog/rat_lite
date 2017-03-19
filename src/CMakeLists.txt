@@ -63,7 +63,7 @@ set(REMOTE_ACCESS_COMMON_INC
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
 
-find_package(openssl REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(Boost COMPONENTS program_options system date_time REQUIRED)
 find_package(libjpegturbo REQUIRED)
 set(FLTK_SKIP_FLUID TRUE)

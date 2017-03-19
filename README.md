@@ -1,6 +1,6 @@
 <h2>All development happens in the master branch. To get stable releases, use tags by going to the release section.</h2>
 <h3>Remote Access Library</h3>
-<p>Windows <img src="https://smasherprog.visualstudio.com/_apis/public/build/definitions/2b1c8ec9-6597-41c5-a3e8-d23b4a2e45f7/4/badge"/></p>
+<img src="https://travis-ci.org/smasherprog/Remote_Access_Library.svg?branch=master"/>
 
 <p>This library is intended to be a VNC-like application, but with a few design goals:
 <ul>

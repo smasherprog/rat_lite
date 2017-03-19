@@ -25,7 +25,7 @@ if(WIN32)
         src/win/async.c
         src/win/atomicops-inl.h
         src/win/core.c
-		src/win/detect-wakeup.c
+	 src/win/detect-wakeup.c
         src/win/dl.c
         src/win/error.c
         src/win/fs.c
@@ -99,6 +99,7 @@ else()
             src/unix/kqueue.c
             src/unix/darwin.c
             src/unix/fsevents.c
+            src/unix/pthread-barrier.c
             src/unix/darwin-proctitle.c
             )
 
@@ -175,7 +176,7 @@ else()
     add_library(uv ${SOURCES})
 
     find_library(M_LIB NAMES m)
-    find_package(Threads)
+    find_package(Threads REQUIRED)
     target_link_libraries(uv ${CMAKE_THREAD_LIBS_INIT} ${M_LIB})
 	
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")

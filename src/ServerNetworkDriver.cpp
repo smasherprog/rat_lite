@@ -141,7 +141,7 @@ namespace SL {
 				auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
 				auto maxsize = tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
 
-				thread_local auto jpegCompressor = tjInitCompress();
+				auto jpegCompressor = tjInitCompress();
 				auto  buffer = std::make_unique<char[]>(maxsize);
 
 				auto dst = (unsigned char*)buffer.get();
@@ -167,7 +167,7 @@ namespace SL {
 				}
 				//	std::cout << "Sending " << r << std::endl;
 				auto finalsize = sizeof(p) + sizeof(r) + sizeof(monitor.Id) + outjpegsize;//adjust the correct size
-
+				tjDestroy(jpegCompressor);
 				Send(socket, buffer.get(), finalsize);
 			}
 			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img) {

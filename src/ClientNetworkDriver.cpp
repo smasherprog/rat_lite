@@ -72,7 +72,7 @@ namespace SL {
 				assert(outwidth == img.Rect.Width && outheight == img.Rect.Height);
 
 				IClientDriver_->onReceive_ImageDif(img, monitor_id);
-
+				tjDestroy(jpegDecompressor);
 			}
 
 

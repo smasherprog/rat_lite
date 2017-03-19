@@ -1,17 +1,12 @@
 language : cpp
 
-osx_image: xcode8.2
-
-os:
-   - osx
-   
+matrix:
+  include:
+    - os: linux
+      
 before_install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        brew update && brew outdated boost || brew upgrade boost && brew install fltk openssl libjpeg-turbo;
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        sudo apt-get install -y libfltk1.3-dev ;
     fi
-    
-script:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ . && make;
-    fi
+
 

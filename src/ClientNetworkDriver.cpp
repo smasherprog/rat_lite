@@ -44,9 +44,11 @@ namespace SL {
 			void ScreenImage(const IWebSocket& socket, const char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 
-				thread_local auto jpegDecompressor = tjInitDecompress();
-				thread_local std::vector<char> outputbuffer;
-
+				auto jpegDecompressor = tjInitDecompress();
+#if __APPLE__
+				thread_local
+#endif
+				std::vector<char> outputbuffer;
 				int jpegSubsamp(0), outwidth(0), outheight(0);
 
 				auto src = (unsigned char*)data;

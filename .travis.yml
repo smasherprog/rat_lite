@@ -9,3 +9,7 @@ before_install:
     - brew update
     - brew outdated boost || brew upgrade boost
     - brew install fltk openssl libjpeg-turbo
+
+install:
+    - cmake .
+    - .configure && make

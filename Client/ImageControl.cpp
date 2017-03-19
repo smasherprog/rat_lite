@@ -22,6 +22,26 @@
 
 namespace SL {
 	namespace RAT {
+#if __APPLE__
+		typedef std::mutex SharedMutex;
+
+		template <typename T>
+		using SharedLock = typename std::lock_guard<T>;
+
+		template <typename T>
+		using UniqueLock = typename std::lock_guard<T>;
+
+#else 
+		template <typename T>
+		using SharedLock = typename std::shared_lock<T>;
+
+		template <typename T>
+		using UniqueLock = typename std::unique_lock<T>;
+
+		typedef std::shared_mutex SharedMutex;
+
+#endif
+	
 
 		std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
 			std::stringstream ss(s);
@@ -79,7 +99,7 @@ namespace SL {
 			Screen_Capture::Monitor Monitor;
 			Image Original, Scaled;
 			std::shared_ptr<char> OriginalBacking, ScaledBacking;
-			std::shared_mutex Lock;
+			SharedMutex Lock;
 
 		};
 		struct MouseData {
@@ -94,9 +114,9 @@ namespace SL {
 			float ScaleFactor_;
 
 			std::vector<std::shared_ptr<MonitorData>> Monitors;
-			std::shared_mutex MonitorsLock;
+			SharedMutex MonitorsLock;
 
-			mutable std::shared_mutex MouseLock;
+			mutable SharedMutex MouseLock;
 			MouseData MouseData_;
 
 		public:
@@ -123,9 +143,9 @@ namespace SL {
 				auto thiy = y();
 
 				//make sure the image is scaled properly
-				std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+				SharedLock<SharedMutex> lock(MonitorsLock);
 				for (auto& a : Monitors) {
-					std::unique_lock<std::shared_mutex> ilock(a->Lock);
+					UniqueLock<SharedMutex> ilock(a->Lock);
 					if (Scaling_) {
 						auto psize = this->parent()->h();
 						if (psize != a->Scaled.Rect.Height) {//rescale the image
@@ -153,7 +173,7 @@ namespace SL {
 				}
 				//this->size(width, height);
 				//reader lock to the container
-				std::shared_lock<std::shared_mutex> l(MouseLock);
+				SharedLock<SharedMutex> l(MouseLock);
 
 				if (MouseData_.MouseImageBacking)
 					MouseData_.FlMouseImage->draw(MouseData_.Pos.X, MouseData_.Pos.Y);
@@ -161,13 +181,13 @@ namespace SL {
 
 			void set_ImageDifference(const Image& img, int monitor_id) {
 				//reader lock to the container
-				std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+				SharedLock<SharedMutex> lock(MonitorsLock);
 				auto found = std::find_if(begin(Monitors), end(Monitors), [&](const std::shared_ptr<MonitorData>& m) { return monitor_id == m->Monitor.Id;  });
 				assert(found != end(Monitors));
 			
 				//writer lock to the element
 				Rect srcrect(Point(0, 0), img.Rect.Height, img.Rect.Width);
-				std::unique_lock<std::shared_mutex> ml((*found)->Lock);
+				UniqueLock<SharedMutex> ml((*found)->Lock);
 				Copy(img, srcrect, (*found)->Original, img.Rect);//keep original in sync
 				if (Scaling_) {
 					Rect r(Point(0, 0), img.Rect.Height, img.Rect.Width);
@@ -193,7 +213,7 @@ namespace SL {
 				auto mouseimg = std::make_unique<char[]>(s);
 				Image mouseimgdata(img.Rect, mouseimg.get(), s);
 				memcpy(mouseimg.get(), img.Data, s);
-				std::unique_lock<std::shared_mutex> l(MouseLock);
+				UniqueLock<SharedMutex> l(MouseLock);
 				MouseData_.MouseImageBacking = std::move(mouseimg);
 				MouseData_.MouseImage = mouseimgdata;
 				MouseData_.FlMouseImage = std::make_unique<Fl_RGB_Image>((uchar*)MouseData_.MouseImageBacking.get(), img.Rect.Width, img.Rect.Height, PixelStride);
@@ -280,7 +300,7 @@ namespace SL {
 				std::vector<std::shared_ptr<MonitorData>> vm;
 
 				{
-					std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+					SharedLock<SharedMutex> lock(MonitorsLock);
 
 					for (auto i = 0; i < num_of_monitors; i++) {
 						unscaledsize.Height = std::max(monitors[i].Height, unscaledsize.Height);
@@ -335,7 +355,7 @@ namespace SL {
 					}
 				}
 				{
-					std::unique_lock<std::shared_mutex> lock(MonitorsLock);
+					UniqueLock<SharedMutex> lock(MonitorsLock);
 					Monitors = vm;
 				}
 				SL_RAT_LOG(Logging_Levels::INFO_log_level, "Setting Size of window " << s);

@@ -1,3 +1,4 @@
+rd /s /q build
 mkdir build
 cd build
 git clone https://github.com/Microsoft/vcpkg

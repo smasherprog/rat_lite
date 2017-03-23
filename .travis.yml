@@ -4,6 +4,7 @@ matrix:
   include:
     - os: osx
     - os: linux
+      dist: trusty
       env: CLANG_VERSION=3.8 BUILD_TYPE=Release
       sudo: required
       addons: &clang38

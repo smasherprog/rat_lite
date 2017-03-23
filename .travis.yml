@@ -25,6 +25,7 @@ before_install:
         sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev clang libxext-dev libx11-dev libxfixes-dev libxtst-dev;
     fi  
     
+    
 install:    
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p "${DEPS_DIR}" && cd "${DEPS_DIR}"

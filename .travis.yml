@@ -4,13 +4,10 @@ matrix:
   include:
     - os: osx
     - os: linux
+      env: VERSION=3.8 BUILD_TYPE=Release
+      compiler: clang
       dist: trusty
       sudo: required
-      addons: &clang36
-        apt:
-          packages:
-            - clang-3.6
-            - libssl-dev
             
 before_install:
   - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi

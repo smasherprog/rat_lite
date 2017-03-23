@@ -35,6 +35,11 @@ install:
       export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
     fi
   - cd ..    
+  - if [ -n "${VERSION}" ]; then
+      export CC="${CC}-${VERSION}";
+      export CXX="${CXX}-${VERSION}";
+    fi
+  - ${CXX} --version
   
 script:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then

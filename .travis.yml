@@ -7,14 +7,6 @@ matrix:
       dist: trusty
       sudo: required
       env: CLANG_VERSION=3.8 BUILD_TYPE=Release
-      addons: &clang38
-        apt:
-          packages:
-            - clang-3.8
-            - libssl-dev
-          sources: &sources
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
       
 before_install:
   - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi

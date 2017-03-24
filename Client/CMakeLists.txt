@@ -38,5 +38,5 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-
+set(CMAKE_CXX_FLAGS "-lboost_program_options")
 target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS})

@@ -28,7 +28,7 @@ before_install:
       sudo apt-add-repository -y "deb http://llvm.org/apt/trusty llvm-toolchain-trusty-${VERSION} main";
       sudo apt-get update -qq;
       sudo apt-get install -qq -y "clang-${VERSION}";
-      sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libboost-dev libfltk1.3-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
+      sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libboost-dev libboost-program-options-dev libfltk1.3-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
     fi
   # Set the correct `CXXFLAGS` environment variable.
   - if [ "${TRAVIS_OS_NAME}" = "linux" ] && [ "${CC}" = "clang" ]; then

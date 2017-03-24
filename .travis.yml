@@ -25,6 +25,7 @@ before_install:
       sudo apt-add-repository -y "deb http://llvm.org/apt/trusty llvm-toolchain-trusty-${VERSION} main";
       sudo apt-get update -qq;
       sudo apt-get install -qq -y "clang-${VERSION}";
+      sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
     fi
   # Set the correct `CXXFLAGS` environment variable.
   - if [ "${TRAVIS_OS_NAME}" = "linux" ] && [ "${CC}" = "clang" ]; then
@@ -37,13 +38,16 @@ before_install:
     fi
   - ${CXX} --version
 
-script:
+install:
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
           -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ ..
   - cmake --build .
 
+script:
+  - ctest -V
+  
 notifications:
   email: false
   

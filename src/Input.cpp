@@ -5,8 +5,19 @@
 #include <assert.h>
 #include <vector>
 
-#if __APPLE__
+#if _WIN32
+
+#elif __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
+
+#elif __ANDROID__
+
+#elif __linux__
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/XInput.h>
+#include <X11/extensions/XTest.h>
+
 #endif
 
 #if _WIN32

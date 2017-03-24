@@ -8,7 +8,10 @@ matrix:
       compiler: clang
       dist: trusty
       sudo: required
-      addons: *libcxx
+      addons: &libcxx
+        apt:
+          packages:
+            - libc++-dev
       
 before_install:
   # Install the newest `cmake`.

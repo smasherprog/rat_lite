@@ -28,7 +28,7 @@ before_install:
     fi
   # Set the correct `CXXFLAGS` environment variable.
   - if [ "${TRAVIS_OS_NAME}" = "linux" ] && [ "${CC}" = "clang" ]; then
-      export CXXFLAGS="${CXXFLAGS} -stdlib=libc++";
+      export CXXFLAGS="${CXXFLAGS}";
     fi
   # Set the correct `CC` and `CXX` environment variables.
   - if [ -n "${VERSION}" ]; then

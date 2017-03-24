@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 	std::string host;
 
 
-	boost::program_options::options_description desc("Allowed options", 80, 40);
+	boost::program_options::options_description desc("Allowed options", 80);
 	desc.add_options()
 		("help", "<Usage Options>")
 		("https_port", boost::program_options::value<unsigned short>(&config->HttpTLSPort)->default_value(8080), "https connetion port")

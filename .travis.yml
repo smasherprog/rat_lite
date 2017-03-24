@@ -8,7 +8,8 @@ matrix:
       compiler: clang
       dist: trusty
       sudo: required
-            
+      addons: *libcxx
+      
 before_install:
   # Install the newest `cmake`.
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
@@ -28,7 +29,7 @@ before_install:
     fi
   # Set the correct `CXXFLAGS` environment variable.
   - if [ "${TRAVIS_OS_NAME}" = "linux" ] && [ "${CC}" = "clang" ]; then
-      export CXXFLAGS="${CXXFLAGS}";
+      export CXXFLAGS="${CXXFLAGS} -stdlib=libc++";
     fi
   # Set the correct `CC` and `CXX` environment variables.
   - if [ -n "${VERSION}" ]; then

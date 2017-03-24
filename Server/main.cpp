@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 	std::string private_key_path, public_cert_path;
 
 
-	boost::program_options::options_description desc("Allowed options");
+	boost::program_options::options_description desc("Allowed options", 80, 40);
 	desc.add_options()
 		("help", "<Usage Options>")
 		("image_compression", boost::program_options::value<int>(&config->ImageCompressionSetting)->default_value(70)->notifier([](int v) { check_range("image_compression", v, 30, 100); }), "Jpeg Compression setting [30, 100]")

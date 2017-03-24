@@ -4,9 +4,9 @@
 #include "ConnectWindow.h"
 #include "Configs.h"
 
+#define BOOST_PROGRAM_OPTIONS_DYN_LINK 
 #if _WIN32
 //work around for now for boost on windows
-#define BOOST_PROGRAM_OPTIONS_DYN_LINK 
 #include "windows/resource.h"
 #endif
 #include <boost/program_options.hpp>

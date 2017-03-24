@@ -30,6 +30,7 @@ namespace SL {
 		public:
 
 			static void clip_callback(int source, void *data) {
+#if FLTK_ABI_VERSION >= 10303
 				auto p = (ClipboardImpl*)data;
 
 				if (source == 1 && p->is_ClipboardShared()) {
@@ -39,20 +40,26 @@ namespace SL {
 						Fl::paste(*p, 1, Fl::clipboard_plain_text);
 					}
 				}
+#endif
 			}
 
 			ClipboardImpl() : Fl_Widget(0, 0, 0, 0) {
 				sharedClipboard = false;
+#if FLTK_ABI_VERSION >= 10303
 				Fl::add_clipboard_notify(clip_callback, this);
+#endif
 			}
 			virtual ~ClipboardImpl() {
+#if FLTK_ABI_VERSION >= 10303
 				Fl::remove_clipboard_notify(clip_callback);
+#endif
 			}
 
 
 
 			virtual void draw() override {}
-			virtual int handle(int event)override {
+			virtual int handle(int event) override {
+#if FLTK_ABI_VERSION >= 10303
 				if (event == FL_PASTE) {
 
 					if (strcmp(Fl::event_clipboard_type(), Fl::clipboard_image) == 0) { // an image is being pasted
@@ -77,6 +84,7 @@ namespace SL {
 					}
 
 				}
+#endif
 				return 1;
 			}
 			bool is_ClipboardShared()const { return sharedClipboard; }

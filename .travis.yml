@@ -37,7 +37,7 @@ before_install:
     fi
   - ${CXX} --version
 
-install:
+script:
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE}

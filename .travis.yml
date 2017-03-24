@@ -18,33 +18,41 @@ before_install:
         sudo apt-get update && sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev clang libxext-dev libx11-dev libxfixes-dev libxtst-dev;
     fi  
     
-    
-install:    
-  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir -p "${DEPS_DIR}" && cd "${DEPS_DIR}"
- 
-  ############################################################################
-  # Install a recent CMake (unless already installed on OS X)
-  ############################################################################
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      if [[ -z "$(ls -A ${DEPS_DIR}/cmake/bin)" ]]; then
-        CMAKE_URL="https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz"
-        mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C cmake
-      fi
-      export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
+before_install:
+  # Install the newest `cmake`.
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      brew update && brew outdated boost || brew upgrade boost && brew install fltk openssl libjpeg-turbo && brew upgrade cmake || brew install cmake;
+    elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+      wget https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.sh;
+      chmod u+x cmake-3.7.2-Linux-x86_64.sh;
+      sudo ./cmake-3.7.2-Linux-x86_64.sh --skip-license --prefix=/usr/local;
     fi
-  - cd ..    
+  # Install a specific clang version.
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ] && [ "${CC}" = "clang" ] && [ -n "${VERSION}" ]; then
+    sudo apt-get update && sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
+      wget -nv -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -;
+      sudo apt-add-repository -y "deb http://llvm.org/apt/trusty llvm-toolchain-trusty-${VERSION} main";
+      sudo apt-get update -qq;
+      sudo apt-get install -qq -y "clang-${VERSION}";
+    fi
+  # Set the correct `CXXFLAGS` environment variable.
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ] && [ "${CC}" = "clang" ]; then
+      export CXXFLAGS="${CXXFLAGS} -stdlib=libc++";
+    fi
+  # Set the correct `CC` and `CXX` environment variables.
   - if [ -n "${VERSION}" ]; then
       export CC="${CC}-${VERSION}";
       export CXX="${CXX}-${VERSION}";
     fi
   - ${CXX} --version
+
+install:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+          -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ ..
+  - cmake --build .
+
+notifications:
+  email: false
   
-script:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ . && make;
-    fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-       cmake . && make;
-    fi  

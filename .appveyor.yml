@@ -16,7 +16,8 @@ before_build:
   - powershell -exec bypass scripts\bootstrap.ps1
   - vcpkg install fltk libjpeg-turbo zlib
   - cd ..
+  - cmake  .. "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake"
   
 build:
   verbosity: detailed
-  - cmake  .. "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake"
+  project: rat.sln 

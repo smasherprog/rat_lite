@@ -1,1 +1,8 @@
 
+build:
+  verbosity: detailed
+  
+image: Visual Studio 2017
+
+configuration:
+  - Debug

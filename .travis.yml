@@ -8,7 +8,7 @@ matrix:
       compiler: clang
       dist: trusty
       sudo: required
-     addons:
+      addons:
         apt:
           packages:
             - clang-3.8

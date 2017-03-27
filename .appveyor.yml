@@ -30,7 +30,7 @@ before_build:
   - powershell -exec bypass scripts\bootstrap.ps1
   - vcpkg install fltk libjpeg-turbo zlib
   - cd ..
-  - cmake  .. "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake"
+  - cmake "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake" "-DOPENSSL_ROOT_DIR=C:\OpenSSL-Win32\bin" ..
   
 build:
   verbosity: detailed

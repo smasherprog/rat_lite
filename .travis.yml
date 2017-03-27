@@ -4,18 +4,18 @@ matrix:
   include:
     - os: osx
     - os: linux
-      env: VERSION=3.8 BUILD_TYPE=Release CC=clang-3.8 CXX=clang++-3.8
+      env: VERSION=3.9 BUILD_TYPE=Release CC=clang-3.9 CXX=clang++-3.9
       compiler: clang
       dist: trusty
       sudo: required
-      addons: &clang38
+      addons: &clang39
         apt:
           packages:
-            - clang-3.8
-            - g++-5
+            - clang-3.9
+            - g++-6
           sources: &sources
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
+            - llvm-toolchain-precise-3.9
       
 before_install:
   # Install the newest `cmake`.

@@ -4,7 +4,7 @@ matrix:
   include:
     - os: osx
     - os: linux
-      env: VERSION=3.8 BUILD_TYPE=Debug CC=clang CXX=clang++ CXXFLAGS=-lstdc++
+      env: VERSION=3.8 BUILD_TYPE=Debug CC=clang-3.8 CXX=clang++-3.8 CXXFLAGS=-lstdc++
       compiler: clang
       dist: trusty
       sudo: required
@@ -13,8 +13,8 @@ matrix:
           packages:
             - clang-3.8
           sources: 
-            - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
       
 before_install:
   # Install the newest `cmake`.

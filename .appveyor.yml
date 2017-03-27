@@ -6,3 +6,13 @@ image: Visual Studio 2017
 
 configuration:
   - Debug
+  
+clone_folder: c:\projects\rat
+
+before_build:
+  - echo Running cmake...
+  - cd c:\projects\rat
+  - cmake -G "Visual Studio 15 2017 Win64"
+  
+build:
+  project: rat.sln

@@ -35,9 +35,8 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 	ViewerController.cpp
 	ImageControl.cpp
 )
-find_package(Boost COMPONENTS program_options REQUIRED)
-
 include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${Boost_LIBRARIES})
+
+target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS})

@@ -5,8 +5,20 @@
 #include <assert.h>
 #include <vector>
 
-#if __APPLE__
+#if _WIN32
+
+#elif __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
+
+#elif __ANDROID__
+
+#elif __linux__
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/XInput.h>
+#include <X11/extensions/XTest.h>
+#include <X11/keysym.h>
+#include <thread>
 #endif
 
 #if _WIN32
@@ -588,7 +600,7 @@ namespace SL {
 
 			auto display = XOpenDisplay(NULL);
 			auto keycode = XKeysymToKeycode(display, ev.Key);
-			SL_RAT_LOG(Utilities::Logging_Levels::Debug_log_level, "AFter XKeysymToKeycode '" << keycode << "'");
+			SL_RAT_LOG(Logging_Levels::Debug_log_level, "AFter XKeysymToKeycode '" << keycode << "'");
 			if (keycode == 0) return;
 			//XTestGrabControl(display, True);
 

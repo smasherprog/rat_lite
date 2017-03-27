@@ -154,7 +154,7 @@ namespace SL {
 
 				auto srcbuffer = std::make_unique<char[]>(RowStride(img)*Height(img));
 				Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img)*Height(img));
-				auto srcbuf = (const unsigned char*)srcbuffer.get();
+				auto srcbuf = (unsigned char*)srcbuffer.get();
 
 #if __ANDROID__
 				auto colorencoding = TJPF_RGBX;
@@ -162,6 +162,7 @@ namespace SL {
 				auto colorencoding = TJPF_BGRX;
 #endif
 				auto outjpegsize = maxsize;
+				
 				if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, Config_->ImageCompressionSetting, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}

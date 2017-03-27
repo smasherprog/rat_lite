@@ -13,8 +13,8 @@ matrix:
           packages:
             - clang-3.8
           sources: 
-           - ubuntu-toolchain-r-test
-           - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
       
 before_install:
   # Install the newest `cmake`.

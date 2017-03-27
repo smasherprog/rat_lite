@@ -8,10 +8,13 @@ matrix:
       compiler: clang
       dist: trusty
       sudo: required
-      addons: &libcxx
+     addons:
         apt:
           packages:
-            - libc++-dev
+            - clang-3.8
+          sources: 
+           - ubuntu-toolchain-r-test
+           - llvm-toolchain-precise-3.8
       
 before_install:
   # Install the newest `cmake`.

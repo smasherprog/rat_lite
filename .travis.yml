@@ -4,7 +4,7 @@ matrix:
   include:
     - os: osx
     - os: linux
-      env: VERSION=3.8 BUILD_TYPE=Debug CC=clang-3.8 CXX=clang++-3.8
+      env: VERSION=3.8 BUILD_TYPE=Release CC=clang-3.8 CXX=clang++-3.8
       compiler: clang
       dist: trusty
       sudo: required

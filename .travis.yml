@@ -26,8 +26,8 @@ before_install:
       chmod u+x cmake-3.8.0-rc3-Linux-x86_64.sh;
       sudo ./cmake-3.8.0-rc3-Linux-x86_64.sh --skip-license --prefix=/usr/local;
       sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
-      export CC=clang-3.9
-      export CXX=clang++-3.9
+      export CC=clang-3.9;
+      export CXX=clang++-3.9;
       ${CXX} --version;
     fi
 

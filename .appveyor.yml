@@ -34,7 +34,7 @@ before_build:
   - powershell -exec bypass scripts\bootstrap.ps1
   - vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static
   - cd ..
-  - cmake -G "Visual Studio 15 2017" -DCMAKE_TOOLCHAIN_FILE=c:\projects\rat\build\vcpkg\scripts\buildsystems\vcpkg.cmake -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win32 ..
+  - cmake -G "Visual Studio 14 2015" -DCMAKE_TOOLCHAIN_FILE=c:\projects\rat\build\vcpkg\scripts\buildsystems\vcpkg.cmake -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win32 ..
 
 build:
   verbosity: detailed

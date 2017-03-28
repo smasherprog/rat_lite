@@ -10,10 +10,6 @@ platform:
 - x86
 - x64     
 
-environment:
-  BOOST_ROOT: C:\Libraries\boost_1_63_0
-  OPENSSL_ROOT_DIR: C:\OpenSSL-Win32
-  
 install:
   - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
         https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
@@ -31,7 +27,7 @@ before_build:
   - powershell -exec bypass scripts\bootstrap.ps1
   - vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static
   - cd ..
-  - cmake .. "-DCMAKE_TOOLCHAIN_FILE=c:\projects\rat\build\vcpkg\scripts\buildsystems\vcpkg.cmake"
+  - cmake .. "-DCMAKE_TOOLCHAIN_FILE=c:\projects\rat\build\vcpkg\scripts\buildsystems\vcpkg.cmake" "-DBOOST_ROOT=C:\Libraries\boost_1_63_0" "-DOPENSSL_ROOT_DIR=C:\OpenSSL-Win32"
 
 build:
   verbosity: detailed

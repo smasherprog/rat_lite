@@ -1,4 +1,3 @@
-
 image: Visual Studio 2017
 
 configuration:
@@ -6,24 +5,31 @@ configuration:
   
 clone_folder: c:\projects\rat
 
+platform:
+- x86
+- x64     
+
 install:
-  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
-        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
-        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
-          throw "There are newer queued builds for this pull request, failing early." }
-          
-before_build:
+  - cd "C:\Program Files (x86)"
+  - rd /s /q CMake
+  - mkdir C:\projects\deps
+  - cd C:\projects\deps
+  - set CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.0-rc3-win32-x86.zip"	
+  - appveyor DownloadFile %CMAKE_URL% -FileName cmake.zip		
+  - 7z x cmake.zip -oC:\projects\deps > nul		
+  - cd "C:\Program Files (x86)"
+  - move C:\projects\deps\cmake-* cmake
+  - cmake --version
   - echo Running cmake...
   - cd c:\projects\rat
   - mkdir build
   - cd build
   - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
-  - powershell -exec bypass scripts\bootstrap.ps1
-  - vcpkg install fltk libjpeg-turbo zlib
+  - powershell -exec bypass scripts\bootstrap.ps1  
+  - .\vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static boost:%PLATFORM%-windows-static
   - cd ..
-  - cmake  .. "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake"
-  
-build:
-  verbosity: detailed
-  project: rat.sln 
+  - cmake -G "Visual Studio 15 2017" -DCMAKE_TOOLCHAIN_FILE=c:/projects/sc/build/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+
+build_script:
+  - cmake --build .

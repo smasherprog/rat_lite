@@ -9,7 +9,7 @@ platform:
 - x86
 - x64     
 
-install:
+install:  
   - cd "C:\Program Files (x86)"
   - rd /s /q CMake
   - mkdir C:\projects\deps
@@ -25,7 +25,6 @@ install:
   - cd build
   - git clone https://github.com/Microsoft/vcpkg
   - powershell -exec bypass vcpkg\scripts\bootstrap.ps1  
-  
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\proj\build\vcpkg
  - .\vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static openssl:%PLATFORM%-windows-static boost:%PLATFORM%-windows-static

@@ -32,7 +32,7 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
 
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} uWebSockets/include)
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${CMAKE_THREAD_LIBS_INIT})

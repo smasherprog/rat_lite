@@ -504,10 +504,10 @@ namespace SL {
 
 							for (auto& r : imgdifs) {
 								auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
-								auto startsrc = DXFrameProcessorImpl_->NewImageBuffer.get();
-								startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
+								auto startsrci = DXFrameProcessorImpl_->NewImageBuffer.get();
+								startsrci += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
 
-								auto difimg = Create(r, PixelStride, padding, startsrc);
+								auto difimg = Create(r, PixelStride, padding, startsrci);
 								DXFrameProcessorImpl_->Data->CaptureDifMonitor(difimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
 
 							}

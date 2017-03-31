@@ -22,24 +22,54 @@ enum {
     SERVER
 };
 
-template <const bool isServer>
-class WebSocketProtocol {
+// 24 bytes perfectly
+template <bool isServer>
+struct WebSocketState {
 public:
-    static const int SHORT_MESSAGE_HEADER = isServer ? 6 : 2;
-    static const int MEDIUM_MESSAGE_HEADER = isServer ? 8 : 4;
-    static const int LONG_MESSAGE_HEADER = isServer ? 14 : 10;
+    static const unsigned int SHORT_MESSAGE_HEADER = isServer ? 6 : 2;
+    static const unsigned int MEDIUM_MESSAGE_HEADER = isServer ? 8 : 4;
+    static const unsigned int LONG_MESSAGE_HEADER = isServer ? 14 : 10;
+
+    // 16 bytes
+    struct State {
+        unsigned int wantsHead : 1;
+        unsigned int spillLength : 4;
+        int opStack : 2; // -1, 0, 1
+        unsigned int lastFin : 1;
+
+        // 15 bytes
+        unsigned char spill[LONG_MESSAGE_HEADER - 1];
+        OpCode opCode[2];
+
+        State() {
+            wantsHead = true;
+            spillLength = 0;
+            opStack = -1;
+            lastFin = true;
+        }
+
+    } state;
+
+    // 8 bytes
+    unsigned int remainingBytes = 0;
+    char mask[isServer ? 4 : 1];
+};
+
+template <const bool isServer, class Impl>
+class WIN32_EXPORT WebSocketProtocol {
+public:
+    static const unsigned int SHORT_MESSAGE_HEADER = isServer ? 6 : 2;
+    static const unsigned int MEDIUM_MESSAGE_HEADER = isServer ? 8 : 4;
+    static const unsigned int LONG_MESSAGE_HEADER = isServer ? 14 : 10;
 
 private:
-    typedef uint16_t frameFormat;
-    static inline bool isFin(frameFormat &frame) {return frame & 128;}
-    static inline unsigned char getOpCode(frameFormat &frame) {return frame & 15;}
-    static inline unsigned char payloadLength(frameFormat &frame) {return (frame >> 8) & 127;}
-    static inline bool rsv23(frameFormat &frame) {return frame & 48;}
-    static inline bool rsv1(frameFormat &frame) {return frame & 64;}
-    static inline bool getMask(frameFormat &frame) {return frame & 32768;}
+    static inline bool isFin(char *frame) {return *((unsigned char *) frame) & 128;}
+    static inline unsigned char getOpCode(char *frame) {return *((unsigned char *) frame) & 15;}
+    static inline unsigned char payloadLength(char *frame) {return ((unsigned char *) frame)[1] & 127;}
+    static inline bool rsv23(char *frame) {return *((unsigned char *) frame) & 48;}
+    static inline bool rsv1(char *frame) {return *((unsigned char *) frame) & 64;}
 
-    static inline void unmaskImprecise(char *dst, char *src, char *mask, unsigned int length)
-    {
+    static inline void unmaskImprecise(char *dst, char *src, char *mask, unsigned int length) {
         for (unsigned int n = (length >> 2) + 1; n; n--) {
             *(dst++) = *(src++) ^ mask[0];
             *(dst++) = *(src++) ^ mask[1];
@@ -48,14 +78,12 @@ private:
         }
     }
 
-    static inline void unmaskImpreciseCopyMask(char *dst, char *src, char *maskPtr, unsigned int length)
-    {
+    static inline void unmaskImpreciseCopyMask(char *dst, char *src, char *maskPtr, unsigned int length) {
         char mask[4] = {maskPtr[0], maskPtr[1], maskPtr[2], maskPtr[3]};
         unmaskImprecise(dst, src, mask, length);
     }
 
-    static inline void rotateMask(unsigned int offset, char *mask)
-    {
+    static inline void rotateMask(unsigned int offset, char *mask) {
         char originalMask[4] = {mask[0], mask[1], mask[2], mask[3]};
         mask[(0 + offset) % 4] = originalMask[0];
         mask[(1 + offset) % 4] = originalMask[1];
@@ -63,8 +91,7 @@ private:
         mask[(3 + offset) % 4] = originalMask[3];
     }
 
-    static inline void unmaskInplace(char *data, char *stop, char *mask)
-    {
+    static inline void unmaskInplace(char *data, char *stop, char *mask) {
         while (data < stop) {
             *(data++) ^= mask[0];
             *(data++) ^= mask[1];
@@ -73,122 +100,106 @@ private:
         }
     }
 
-    enum state_t {
-        READ_HEAD,
-        READ_MESSAGE
-    };
-
-    enum send_state_t {
+    enum {
         SND_CONTINUATION = 1,
         SND_NO_FIN = 2,
         SND_COMPRESSED = 64
     };
 
-    template <const int MESSAGE_HEADER, typename T>
-    inline bool consumeMessage(T payLength, char *&src, unsigned int &length, frameFormat frame, void *user) {
-        if (getOpCode(frame)) {
-            if (opStack == 1 || (!lastFin && getOpCode(frame) < 2)) {
-                forceClose(user);
+    template <unsigned int MESSAGE_HEADER, typename T>
+    static inline bool consumeMessage(T payLength, char *&src, unsigned int &length, WebSocketState<isServer> *wState) {
+        if (getOpCode(src)) {
+            if (wState->state.opStack == 1 || (!wState->state.lastFin && getOpCode(src) < 2)) {
+                Impl::forceClose(wState);
                 return true;
             }
-            opCode[(unsigned char) ++opStack] = (OpCode) getOpCode(frame);
-        } else if (opStack == -1) {
-            forceClose(user);
+            wState->state.opCode[++wState->state.opStack] = (OpCode) getOpCode(src);
+        } else if (wState->state.opStack == -1) {
+            Impl::forceClose(wState);
             return true;
         }
-        lastFin = isFin(frame);
+        wState->state.lastFin = isFin(src);
 
-        if (refusePayloadLength(user, payLength)) {
-            forceClose(user);
+        if (Impl::refusePayloadLength(payLength, wState)) {
+            Impl::forceClose(wState);
             return true;
         }
 
-        if (int(payLength) <= int(length - MESSAGE_HEADER)) {
+        if (payLength + MESSAGE_HEADER <= length) {
             if (isServer) {
-                unmaskImpreciseCopyMask(src, src + MESSAGE_HEADER, src + MESSAGE_HEADER - 4, payLength);
-                if (handleFragment(src, payLength, 0, opCode[(unsigned char) opStack], isFin(frame), user)) {
+                unmaskImpreciseCopyMask(src + MESSAGE_HEADER - 4, src + MESSAGE_HEADER, src + MESSAGE_HEADER - 4, payLength);
+                if (Impl::handleFragment(src + MESSAGE_HEADER - 4, payLength, 0, wState->state.opCode[wState->state.opStack], isFin(src), wState)) {
                     return true;
                 }
             } else {
-                if (handleFragment(src + MESSAGE_HEADER, payLength, 0, opCode[(unsigned char) opStack], isFin(frame), user)) {
+                if (Impl::handleFragment(src + MESSAGE_HEADER, payLength, 0, wState->state.opCode[wState->state.opStack], isFin(src), wState)) {
                     return true;
                 }
             }
 
-            if (isFin(frame)) {
-                opStack--;
+            if (isFin(src)) {
+                wState->state.opStack--;
             }
 
             src += payLength + MESSAGE_HEADER;
             length -= payLength + MESSAGE_HEADER;
-            spillLength = 0;
+            wState->state.spillLength = 0;
             return false;
         } else {
-            spillLength = 0;
-            state = READ_MESSAGE;
-            remainingBytes = payLength - length + MESSAGE_HEADER;
-
+            wState->state.spillLength = 0;
+            wState->state.wantsHead = false;
+            wState->remainingBytes = payLength - length + MESSAGE_HEADER;
+            bool fin = isFin(src);
             if (isServer) {
-                memcpy(mask, src + MESSAGE_HEADER - 4, 4);
-                unmaskImprecise(src, src + MESSAGE_HEADER, mask, length);
-                rotateMask(4 - (length - MESSAGE_HEADER) % 4, mask);
+                memcpy(wState->mask, src + MESSAGE_HEADER - 4, 4);
+                unmaskImprecise(src, src + MESSAGE_HEADER, wState->mask, length - MESSAGE_HEADER);
+                rotateMask(4 - (length - MESSAGE_HEADER) % 4, wState->mask);
             } else {
                 src += MESSAGE_HEADER;
             }
-            handleFragment(src, length - MESSAGE_HEADER, remainingBytes, opCode[(unsigned char) opStack], isFin(frame), user);
+            Impl::handleFragment(src, length - MESSAGE_HEADER, wState->remainingBytes, wState->state.opCode[wState->state.opStack], fin, wState);
             return true;
         }
     }
 
-    inline bool consumeContinuation(char *&src, unsigned int &length, void *user) {
-        if (remainingBytes <= length) {
+    static inline bool consumeContinuation(char *&src, unsigned int &length, WebSocketState<isServer> *wState) {
+        if (wState->remainingBytes <= length) {
             if (isServer) {
-                int n = remainingBytes >> 2;
-                unmaskInplace(src, src + n * 4, mask);
-                for (int i = 0, s = remainingBytes % 4; i < s; i++) {
-                    src[n * 4 + i] ^= mask[i];
+                int n = wState->remainingBytes >> 2;
+                unmaskInplace(src, src + n * 4, wState->mask);
+                for (int i = 0, s = wState->remainingBytes % 4; i < s; i++) {
+                    src[n * 4 + i] ^= wState->mask[i];
                 }
             }
 
-            if (handleFragment(src, remainingBytes, 0, opCode[(unsigned char) opStack], lastFin, user)) {
+            if (Impl::handleFragment(src, wState->remainingBytes, 0, wState->state.opCode[wState->state.opStack], wState->state.lastFin, wState)) {
                 return false;
             }
 
-            if (lastFin) {
-                opStack--;
+            if (wState->state.lastFin) {
+                wState->state.opStack--;
             }
 
-            src += remainingBytes;
-            length -= remainingBytes;
-            state = READ_HEAD;
+            src += wState->remainingBytes;
+            length -= wState->remainingBytes;
+            wState->state.wantsHead = true;
             return true;
         } else {
             if (isServer) {
-                unmaskInplace(src, src + ((length >> 2) + 1) * 4, mask);
+                unmaskInplace(src, src + ((length >> 2) + 1) * 4, wState->mask);
             }
 
-            remainingBytes -= length;
-            if (handleFragment(src, length, remainingBytes, opCode[(unsigned char) opStack], lastFin, user)) {
+            wState->remainingBytes -= length;
+            if (Impl::handleFragment(src, length, wState->remainingBytes, wState->state.opCode[wState->state.opStack], wState->state.lastFin, wState)) {
                 return false;
             }
 
             if (isServer && length % 4) {
-                rotateMask(4 - (length % 4), mask);
+                rotateMask(4 - (length % 4), wState->mask);
             }
             return false;
         }
     }
-
-    // this can hold two states (1 bit)
-    // this can hold length of spill (up to 16 = 4 bit)
-    unsigned char state = READ_HEAD;
-    unsigned char spillLength = 0; // remove this!
-    char opStack = -1; // remove this too
-    char lastFin = true; // hold in state!
-    unsigned char spill[LONG_MESSAGE_HEADER - 1];
-    unsigned int remainingBytes = 0; // denna kan hålla spillLength om state är READ_HEAD, och remainingBytes när state är annat?
-    char mask[isServer ? 4 : 1];
-    OpCode opCode[2];
 
 public:
     WebSocketProtocol() {
@@ -197,7 +208,8 @@ public:
 
     // Based on utf8_check.c by Markus Kuhn, 2005
     // https://www.cl.cam.ac.uk/~mgk25/ucs/utf8_check.c
-    // Optimized for predominantly 7-bit content, 2016
+    // Optimized for predominantly 7-bit content by Alex Hultman, 2016
+    // Licensed as Zlib, like the rest of this project
     static bool isValidUtf8(unsigned char *s, size_t length)
     {
         for (unsigned char *e = s + length; s != e; ) {
@@ -314,57 +326,50 @@ public:
         return messageLength;
     }
 
-    void consume(char *src, unsigned int length, void *user) {
-        if (spillLength) {
-            src -= spillLength;
-            length += spillLength;
-            memcpy(src, spill, spillLength);
+    static inline void consume(char *src, unsigned int length, WebSocketState<isServer> *wState) {
+        if (wState->state.spillLength) {
+            src -= wState->state.spillLength;
+            length += wState->state.spillLength;
+            memcpy(src, wState->state.spill, wState->state.spillLength);
         }
-        if (state == READ_HEAD) {
+        if (wState->state.wantsHead) {
             parseNext:
-            for (frameFormat frame; length >= SHORT_MESSAGE_HEADER; ) {
-                memcpy(&frame, src, sizeof(frameFormat));
+            while (length >= SHORT_MESSAGE_HEADER) {
 
                 // invalid reserved bits / invalid opcodes / invalid control frames / set compressed frame
-                if ((rsv1(frame) && !setCompressed(user)) || rsv23(frame) || (getOpCode(frame) > 2 && getOpCode(frame) < 8) ||
-                    getOpCode(frame) > 10 || (getOpCode(frame) > 2 && (!isFin(frame) || payloadLength(frame) > 125))) {
-                    forceClose(user);
+                if ((rsv1(src) && !Impl::setCompressed(wState)) || rsv23(src) || (getOpCode(src) > 2 && getOpCode(src) < 8) ||
+                    getOpCode(src) > 10 || (getOpCode(src) > 2 && (!isFin(src) || payloadLength(src) > 125))) {
+                    Impl::forceClose(wState);
                     return;
                 }
 
-                if (payloadLength(frame) < 126) {
-                    if (consumeMessage<SHORT_MESSAGE_HEADER, uint8_t>(payloadLength(frame), src, length, frame, user)) {
+                if (payloadLength(src) < 126) {
+                    if (consumeMessage<SHORT_MESSAGE_HEADER, uint8_t>(payloadLength(src), src, length, wState)) {
                         return;
                     }
-                } else if (payloadLength(frame) == 126) {
+                } else if (payloadLength(src) == 126) {
                     if (length < MEDIUM_MESSAGE_HEADER) {
                         break;
-                    } else if(consumeMessage<MEDIUM_MESSAGE_HEADER, uint16_t>(ntohs(*(uint16_t *) &src[2]), src, length, frame, user)) {
+                    } else if(consumeMessage<MEDIUM_MESSAGE_HEADER, uint16_t>(ntohs(*(uint16_t *) &src[2]), src, length, wState)) {
                         return;
                     }
                 } else if (length < LONG_MESSAGE_HEADER) {
                     break;
-                } else if (consumeMessage<LONG_MESSAGE_HEADER, uint64_t>(be64toh(*(uint64_t *) &src[2]), src, length, frame, user)) {
+                } else if (consumeMessage<LONG_MESSAGE_HEADER, uint64_t>(be64toh(*(uint64_t *) &src[2]), src, length, wState)) {
                     return;
                 }
             }
             if (length) {
-                memcpy(spill, src, length);
-                spillLength = length;
+                memcpy(wState->state.spill, src, length);
+                wState->state.spillLength = length;
             }
-        } else if (consumeContinuation(src, length, user)) {
+        } else if (consumeContinuation(src, length, wState)) {
             goto parseNext;
         }
     }
 
-    static const int CONSUME_POST_PADDING = 18;
+    static const int CONSUME_POST_PADDING = 4;
     static const int CONSUME_PRE_PADDING = LONG_MESSAGE_HEADER - 1;
-
-    // events to be implemented by application (can't be inline currently)
-    bool refusePayloadLength(void *user, int length);
-    bool setCompressed(void *user);
-    void forceClose(void *user);
-    bool handleFragment(char *data, size_t length, unsigned int remainingBytes, int opCode, bool fin, void *user);
 };
 
 }

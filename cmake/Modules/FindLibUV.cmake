@@ -6,28 +6,9 @@
 #  LIBUV_LIBRARIES - link these to use libuv
 #
 
-if(NOT USE_BUNDLED_LIBUV)
-  find_package(PkgConfig)
-  if (PKG_CONFIG_FOUND)
-    pkg_check_modules(PC_LIBUV QUIET libuv)
-  endif()
-else()
-  set(PC_LIBUV_INCLUDEDIR)
-  set(PC_LIBUV_INCLUDE_DIRS)
-  set(PC_LIBUV_LIBDIR)
-  set(PC_LIBUV_LIBRARY_DIRS)
-  set(LIMIT_SEARCH NO_DEFAULT_PATH)
-endif()
-
 find_path(LIBUV_INCLUDE_DIR uv.h
   HINTS ${PC_LIBUV_INCLUDEDIR} ${PC_LIBUV_INCLUDE_DIRS}
   ${LIMIT_SEARCH})
-
-# If we're asked to use static linkage, add libuv.a as a preferred library name.
-if(BUILD_SHARED_LIBS)
-  list(APPEND LIBUV_NAMES
-    "${CMAKE_STATIC_LIBRARY_PREFIX}uv${CMAKE_STATIC_LIBRARY_SUFFIX}")
-endif(BUILD_SHARED_LIBS)
 
 if(MSVC)
   list(APPEND LIBUV_NAMES libuv)

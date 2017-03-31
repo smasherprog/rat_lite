@@ -33,19 +33,19 @@ namespace SL {
 				IServerDriver_(r), Config_(config) {
 				ClientCount = 0;
 
-				h.onConnection([&](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+				h.onConnection([&](uWS::WebSocket<uWS::SERVER>* ws, uWS::HttpRequest req) {
 					static int counter = 0;
 					if (ClientCount + 1 > Config_->MaxNumConnections) {
 						char msg[] = "Closing due to max number of connections!";
-						ws.close(1000, msg, sizeof(msg));
+						ws->close(1000, msg, sizeof(msg));
 					}
 					else {
 
 						int t = counter++ % Config_->MaxWebSocketThreads;
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
-						ws.setUserData(new SocketStats());
+						ws->setUserData(new SocketStats());
 
-						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>>>(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData()));
+						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>*>>(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData()));
 
 						ClientCount += 1;
 					}
@@ -56,21 +56,21 @@ namespace SL {
 
 				h.getDefaultGroup<uWS::SERVER>().setUserData(new std::mutex);
 
-				h.onDisconnection([&](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+				h.onDisconnection([&](uWS::WebSocket<uWS::SERVER>* ws, int code, char *message, size_t length) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection  ");
-					WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
+					WebSocket<uWS::WebSocket<uWS::SERVER>*> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
 					ClientCount -= 1;
 					IServerDriver_->onDisconnection(sock, code, message, length);
-					delete (SocketStats*)ws.getUserData();
+					delete (SocketStats*)ws->getUserData();
 				});
-				h.onMessage([&](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode code) {
+				h.onMessage([&](uWS::WebSocket<uWS::SERVER>* ws, char *message, size_t length, uWS::OpCode code) {
 
 					
-					auto s = (SocketStats*)ws.getUserData();
+					auto s = (SocketStats*)ws->getUserData();
 					s->TotalBytesReceived += length;
 					s->TotalPacketReceived += 1;
 
-					WebSocket<uWS::WebSocket<uWS::SERVER>> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
+					WebSocket<uWS::WebSocket<uWS::SERVER>*> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
 					auto pactype = PACKET_TYPES::INVALID;
 					assert(length >= sizeof(pactype));
 
@@ -117,9 +117,9 @@ namespace SL {
 					std::lock_guard<std::mutex> lock(*(std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData());
 					// uwebsockets broadcast code below
 					auto preparedMessage = uWS::WebSocket<uWS::SERVER>::prepareMessage(data, len, uWS::OpCode::BINARY, false);
-					h.getDefaultGroup<uWS::SERVER>().forEach([preparedMessage, len](uWS::WebSocket<uWS::SERVER> ws) {
-						ws.sendPrepared(preparedMessage);
-						auto s = (SocketStats*)ws.getUserData();
+					h.getDefaultGroup<uWS::SERVER>().forEach([preparedMessage, len](uWS::WebSocket<uWS::SERVER>* ws) {
+						ws->sendPrepared(preparedMessage);
+						auto s = (SocketStats*)ws->getUserData();
 						s->TotalBytesSent += len;
 						s->TotalPacketSent += 1;
 					});

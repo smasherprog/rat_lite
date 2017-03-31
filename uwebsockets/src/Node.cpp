@@ -2,23 +2,31 @@
 
 namespace uS {
 
-void NodeData::asyncCallback(uv_async_t *async)
+// this should be Node
+void NodeData::asyncCallback(Async *async)
 {
-    NodeData *nodeData = (NodeData *) async->data;
+    NodeData *nodeData = (NodeData *) async->getData();
 
     nodeData->asyncMutex->lock();
-    for (TransferData transferData : nodeData->transferQueue) {
-        uv_poll_init_socket(nodeData->loop, transferData.p, transferData.fd);
-        transferData.p->data = transferData.socketData;
-        transferData.socketData->nodeData = nodeData;
-        uv_poll_start(transferData.p, transferData.socketData->poll, transferData.pollCb);
+    for (Poll *p : nodeData->transferQueue) {
+        Socket *s = (Socket *) p;
+        TransferData *transferData = (TransferData *) s->getUserData();
 
-        transferData.cb(transferData.p);
+        s->reInit(nodeData->loop, transferData->fd);
+        s->setCb(transferData->pollCb);
+        s->start(nodeData->loop, s, s->setPoll(transferData->pollEvents));
+
+        s->nodeData = transferData->destination;
+        s->setUserData(transferData->userData);
+        auto *transferCb = transferData->transferCb;
+
+        delete transferData;
+        transferCb(s);
     }
 
-    for (uv_poll_t *p : nodeData->changePollQueue) {
-        SocketData *socketData = (SocketData *) p->data;
-        uv_poll_start(p, socketData->poll, /*p->poll_cb*/ Socket(p).getPollCallback());
+    for (Poll *p : nodeData->changePollQueue) {
+        Socket *s = (Socket *) p;
+        s->change(s->nodeData->loop, s, s->getPoll());
     }
 
     nodeData->changePollQueue.clear();
@@ -33,12 +41,10 @@ Node::Node(int recvLength, int prePadding, int postPadding, bool useDefaultLoop)
     nodeData->recvLength = recvLength - prePadding - postPadding;
 
     nodeData->tid = pthread_self();
+    loop = Loop::createLoop(useDefaultLoop);
 
-    if (useDefaultLoop) {
-        loop = uv_default_loop();
-    } else {
-        loop = uv_loop_new();
-    }
+    // each node has a context
+    nodeData->netContext = new Context();
 
     nodeData->loop = loop;
     nodeData->asyncMutex = &asyncMutex;
@@ -55,8 +61,7 @@ Node::Node(int recvLength, int prePadding, int postPadding, bool useDefaultLoop)
 
 void Node::run() {
     nodeData->tid = pthread_self();
-
-    uv_run(loop, UV_RUN_DEFAULT);
+    loop->run();
 }
 
 Node::~Node() {
@@ -70,12 +75,9 @@ Node::~Node() {
         }
     }
     delete [] nodeData->preAlloc;
-
+    delete nodeData->netContext;
     delete nodeData;
-
-    if (loop != uv_default_loop()) {
-        uv_loop_delete(loop);
-    }
+    loop->destroy();
 }
 
 }

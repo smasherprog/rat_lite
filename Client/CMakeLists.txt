@@ -35,7 +35,7 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 	ViewerController.cpp
 	ImageControl.cpp
 )
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} uWebSockets/include)
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 

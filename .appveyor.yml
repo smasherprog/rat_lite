@@ -29,7 +29,12 @@ install:
   - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
   - powershell -exec bypass scripts\bootstrap.ps1
-  - IF NOT EXIST c:\projects\build cd c:\projects\build && .\vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static openssl:%PLATFORM%-windows-static boost:%PLATFORM%-windows-static libuv:%PLATFORM%-windows-static
+  - IF NOT EXIST c:\projects\build (
+      cd c:projects
+      mkdir build
+      cd build
+      .\vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static openssl:%PLATFORM%-windows-static boost:%PLATFORM%-windows-static libuv:%PLATFORM%-windows-static
+   )
   - cd c:\projects\proj\build
   - cmake .. -DCMAKE_TOOLCHAIN_FILE=c:/projects/build/vcpkg/scripts/buildsystems/vcpkg.cmake
   

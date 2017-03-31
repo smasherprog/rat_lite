@@ -33,7 +33,7 @@ install:
   - cd c:\projects\proj
   - mkdir build
   - cd build
-  - cmake .. "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake"
+  - cmake "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
   
 build_script:
   - cmake --build .

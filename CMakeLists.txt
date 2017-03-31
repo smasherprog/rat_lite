@@ -15,7 +15,7 @@ add_subdirectory(src)
 if(WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
-add_subdirectory(uwebsockets/src)
+add_subdirectory(uWebSockets/src)
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(Client)

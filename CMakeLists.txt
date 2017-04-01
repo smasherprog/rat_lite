@@ -10,21 +10,16 @@ set(BUILD_SHARED_LIBS OFF)
 option(BUILD_EXAMPLE "Build example" On)
 
 add_subdirectory(Screen_Capture/src)
-add_subdirectory(libuv)
-
-set(LIBUV_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libuv/include)
-set(LIBUV_LIBRARY uv)
-
-set(LIBUWS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/uwebsockets/src)
-set(LIBUWS_LIBRARY uWS)
 
 add_subdirectory(src)
 if(WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
-add_subdirectory(uwebsockets/src)
+add_subdirectory(uWebSockets/src)
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(Client)
 	add_subdirectory(Server)
 endif()
+
+add_subdirectory(Test)

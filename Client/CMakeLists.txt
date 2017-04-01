@@ -22,7 +22,7 @@ else()
 endif()
 
 add_definitions(
-	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test_Certs/public.crt"
+	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/public.crt"
 )
 
 
@@ -35,7 +35,7 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 	ViewerController.cpp
 	ImageControl.cpp
 )
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} uWebSockets/src)
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 

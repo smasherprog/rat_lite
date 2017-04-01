@@ -1,17 +1,12 @@
-project(RAT_Server)
+project(RAT_Test)
 
 
 if(WIN32)
-	set(${PROJECT_NAME}_PLATFORM_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/windows/resource.h
-		${CMAKE_CURRENT_SOURCE_DIR}/windows/RAT_Server.rc
-		${CMAKE_CURRENT_SOURCE_DIR}/../Desktop_Server.ico
-	)
+	
 elseif(APPLE)
 
-
 else()
-    find_package(Threads REQUIRED)
+
 endif()
 
 if(MSVC)
@@ -22,8 +17,6 @@ endif()
 
 set(${PROJECT_NAME}_EXAMPLE_SRC 
 	main.cpp
-	Server.h
-	Server.cpp
 )
 
 add_definitions(

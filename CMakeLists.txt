@@ -21,3 +21,5 @@ if(BUILD_EXAMPLE)
 	add_subdirectory(Client)
 	add_subdirectory(Server)
 endif()
+
+add_subdirectory(Test)

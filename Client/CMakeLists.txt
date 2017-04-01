@@ -22,7 +22,7 @@ else()
 endif()
 
 add_definitions(
-	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test_Certs/public.crt"
+	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/public.crt"
 )
 
 

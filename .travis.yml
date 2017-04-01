@@ -22,7 +22,7 @@ before_install:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       brew update;
       brew outdated boost || brew upgrade boost;
-      brew install fltk openssl libjpeg-turbo;
+      brew install fltk openssl libjpeg-turbo libuv;
       brew upgrade cmake --devel || brew install cmake --devel;
       
     elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then

@@ -14,9 +14,9 @@ find_path(LIBUV_INCLUDE_DIR
 if(MSVC)
   list(APPEND LIBUV_NAMES libuv)
 else()
-  list(APPEND LIBUV_NAMES uv)
+  list(APPEND v uv)
 endif()
-
+ message(STATUS  "looking for libuv at " ${LIBUV_NAMES})
 find_library(LIBUV_LIBRARY 
     NAMES ${LIBUV_NAMES}
     PATHS /usr/local/opt/libuv/lib

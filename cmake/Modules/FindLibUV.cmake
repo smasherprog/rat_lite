@@ -6,9 +6,10 @@
 #  LIBUV_LIBRARIES - link these to use libuv
 #
 
-find_path(LIBUV_INCLUDE_DIR uv.h
-  HINTS ${PC_LIBUV_INCLUDEDIR} ${PC_LIBUV_INCLUDE_DIRS}
-  ${LIMIT_SEARCH})
+find_path(LIBUV_INCLUDE_DIR 
+    NAMES uv.h
+    PATHS /usr/local/opt/libuv/include
+)
 
 if(MSVC)
   list(APPEND LIBUV_NAMES libuv)
@@ -16,15 +17,12 @@ else()
   list(APPEND LIBUV_NAMES uv)
 endif()
 
-find_library(LIBUV_LIBRARY NAMES ${LIBUV_NAMES}
-  HINTS ${PC_LIBUV_LIBDIR} ${PC_LIBUV_LIBRARY_DIRS}
-  ${LIMIT_SEARCH})
+find_library(LIBUV_LIBRARY 
+    NAMES ${LIBUV_NAMES}
+    PATHS /usr/local/opt/libuv/lib
+  )
 
 mark_as_advanced(LIBUV_INCLUDE_DIR LIBUV_LIBRARY)
-
-if(PC_LIBUV_LIBRARIES)
-    list(REMOVE_ITEM PC_LIBUV_LIBRARIES uv)
-endif()
 
 set(LIBUV_LIBRARIES ${LIBUV_LIBRARY} ${PC_LIBUV_LIBRARIES})
 set(LIBUV_INCLUDE_DIRS ${LIBUV_INCLUDE_DIR})

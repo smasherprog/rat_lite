@@ -6,8 +6,7 @@ configuration:
 clone_folder: c:\projects\proj
 
 cache:
-- C:\Users\scott\Documents\GitHub\vcpkg\scripts -> appveyor.yml
-- c:\projects\build\vcpkg\installed\x86-windows-static -> appveyor.yml
+- c:\projects\build\vcpkg\installed -> appveyor.yml
 
 platform:
 - x86
@@ -29,8 +28,8 @@ install:
   - cd build
   - IF NOT EXIST c:\projects\build\vcpkg git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
-  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows-static powershell -exec bypass scripts\bootstrap.ps1
-  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows-static .\vcpkg install fltk:%PLATFORM%-windows-static libjpeg-turbo:%PLATFORM%-windows-static zlib:%PLATFORM%-windows-static openssl:%PLATFORM%-windows-static boost:%PLATFORM%-windows-static libuv:%PLATFORM%-windows-static
+  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows powershell -exec bypass scripts\bootstrap.ps1
+  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows .\vcpkg install fltk libjpeg-turbo zlib openssl boost libuv
   - cd c:\projects\proj
   - mkdir build
   - cd build

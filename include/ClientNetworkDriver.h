@@ -7,14 +7,14 @@ namespace SL {
 		struct MouseEvent;
 		struct KeyEvent;
 		class IClientDriver;
-		class ClientNetworkDriverImpl;
+		class ClientDriverImpl;
 		struct Client_Config;
-		class ClientNetworkDriver {
-			ClientNetworkDriverImpl* ClientNetworkDriverImpl_;
+		class ClientDriver {
+			ClientDriverImpl* ClientDriverImpl_;
 
 		public:
-			ClientNetworkDriver(IClientDriver* r );
-			virtual ~ClientNetworkDriver();
+			ClientDriver(IClientDriver* r );
+			virtual ~ClientDriver();
 
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host);
 

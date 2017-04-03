@@ -1,4 +1,4 @@
-#include "ClientNetworkDriver.h"
+#include "ClientDriver.h"
 #include "turbojpeg.h"
 #include "IClientDriver.h"
 #include "WebSocket.h"
@@ -17,7 +17,7 @@
 namespace SL {
 	namespace RAT {
 
-		class ClientNetworkDriverImpl {
+		class ClientDriverImpl {
 
 			IClientDriver* IClientDriver_;
 			std::shared_ptr<Client_Config> Config_;
@@ -77,7 +77,7 @@ namespace SL {
 
 
 		public:
-			ClientNetworkDriverImpl(IClientDriver* r) :
+			ClientDriverImpl(IClientDriver* r) :
 				IClientDriver_(r) {
 
 			}
@@ -132,12 +132,12 @@ namespace SL {
 				
 				Runner = std::thread([&]() {
 					h.run();
-					SL_RAT_LOG(Logging_Levels::INFO_log_level, "Stopping ClientNetworkDriver Thread");
+					SL_RAT_LOG(Logging_Levels::INFO_log_level, "Stopping ClientDriver Thread");
 					delete (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData();
 				});
 			}
 
-			virtual ~ClientNetworkDriverImpl() {
+			virtual ~ClientDriverImpl() {
 				if (Runner.joinable()) {
 					Runner.join();
 				}
@@ -199,34 +199,34 @@ namespace SL {
 	}
 }
 
-SL::RAT::ClientNetworkDriver::ClientNetworkDriver(IClientDriver * r)
-	: ClientNetworkDriverImpl_(new ClientNetworkDriverImpl(r))
+SL::RAT::ClientDriver::ClientDriver(IClientDriver * r)
+	: ClientDriverImpl_(new ClientDriverImpl(r))
 {
 
 }
 
-SL::RAT::ClientNetworkDriver::~ClientNetworkDriver()
+SL::RAT::ClientDriver::~ClientDriver()
 {
-	delete ClientNetworkDriverImpl_;
+	delete ClientDriverImpl_;
 }
 
-void SL::RAT::ClientNetworkDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
+void SL::RAT::ClientDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
 {
-	ClientNetworkDriverImpl_->Connect(config, dst_host);
-}
-
-
-void SL::RAT::ClientNetworkDriver::SendKey(const KeyEvent & m)
-{
-	ClientNetworkDriverImpl_->SendKey(m);
-}
-
-void SL::RAT::ClientNetworkDriver::SendMouse(const MouseEvent& m)
-{
-	ClientNetworkDriverImpl_->SendMouse(m);
+	ClientDriverImpl_->Connect(config, dst_host);
 }
 
 
-void SL::RAT::ClientNetworkDriver::SendClipboardText(const char* data, unsigned int len) {
-	return ClientNetworkDriverImpl_->SendClipboardText(data, len);
+void SL::RAT::ClientDriver::SendKey(const KeyEvent & m)
+{
+	ClientDriverImpl_->SendKey(m);
+}
+
+void SL::RAT::ClientDriver::SendMouse(const MouseEvent& m)
+{
+	ClientDriverImpl_->SendMouse(m);
+}
+
+
+void SL::RAT::ClientDriver::SendClipboardText(const char* data, unsigned int len) {
+	return ClientDriverImpl_->SendClipboardText(data, len);
 }

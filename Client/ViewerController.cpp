@@ -1,7 +1,7 @@
 #include "ViewerController.h"
 #include "ImageControl.h"
 #include "Logging.h"
-#include "ClientNetworkDriver.h"
+#include "ClientDriver.h"
 #include "Clipboard.h"
 #include "IClientDriver.h"
 #include "Configs.h"
@@ -28,7 +28,7 @@ namespace SL {
 			std::shared_ptr<Client_Config> Config_;
 
 			std::unique_ptr<Clipboard> Clipboard_;
-			ClientNetworkDriver ClientNetworkDriver_;
+			ClientDriver ClientDriver_;
 
 			std::chrono::time_point<std::chrono::steady_clock> NetworkStatsTimer_;
 			std::chrono::time_point<std::chrono::steady_clock> FrameTimer_;
@@ -52,7 +52,7 @@ namespace SL {
 			ViewerControllerImpl(std::shared_ptr<Client_Config> config) :
 				Fl_Double_Window(900, 700, "Remote Host"),
 				Config_(config),
-				ClientNetworkDriver_(this)
+				ClientDriver_(this)
 			{
 				FrameTimer_ = NetworkStatsTimer_ = std::chrono::steady_clock::now();
 				callback(window_cb);
@@ -73,7 +73,7 @@ namespace SL {
 					k.Key = key;
 					k.PressData = p;
 					k.SpecialKey = Specials::NO_SPECIAL_DATA;
-					ClientNetworkDriver_.SendKey(k);
+					ClientDriver_.SendKey(k);
 				});
 				ImageControl_->onMouse([&](int e, int button, Press press, int x, int y) { 
 					x+= Fl_Scroll_->xposition();
@@ -102,7 +102,7 @@ namespace SL {
 						};
 					}
 					ev.PressData = press;
-					ClientNetworkDriver_.SendMouse(ev);
+					ClientDriver_.SendMouse(ev);
 				
 				});
 
@@ -114,11 +114,11 @@ namespace SL {
 
 				Clipboard_ = std::make_unique<Clipboard>();
 				Clipboard_->shareClipboard(config->Share_Clipboard);
-				Clipboard_->onChange([&](const char* c, int len) { ClientNetworkDriver_.SendClipboardText(c, static_cast<unsigned int>(len)); });
+				Clipboard_->onChange([&](const char* c, int len) { ClientDriver_.SendClipboardText(c, static_cast<unsigned int>(len)); });
 
 			}
 			virtual ~ViewerControllerImpl() {
-				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to ClientNetworkDriver_
+				Clipboard_.reset();//need to manually do this to avoid a possible race condition with the captured reference to ClientDriver_
 			}
 			virtual void resize(int X, int Y, int W, int H) override {
 				Fl_Double_Window::resize(X, Y, W, H);
@@ -218,7 +218,7 @@ namespace SL {
 SL::RAT::ViewerController::ViewerController(std::shared_ptr<Client_Config> config, const char * dst_host) {
 
 	ViewerControllerImpl_ = new ViewerControllerImpl(config);
-	ViewerControllerImpl_->ClientNetworkDriver_.Connect(config, dst_host);
+	ViewerControllerImpl_->ClientDriver_.Connect(config, dst_host);
 }
 
 SL::RAT::ViewerController::~ViewerController() {

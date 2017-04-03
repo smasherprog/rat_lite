@@ -42,13 +42,13 @@ endif()
 
 set(REMOTE_ACCESS_COMMON_SRC 	
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/ClientNetworkDriver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/ClientDriver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/Clipboard.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/Input.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/ServerDriver.cpp
 
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/IClientDriver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/ClientNetworkDriver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/ClientDriver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Input.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/ServerDriver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/IServerDriver.h

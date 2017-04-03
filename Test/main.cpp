@@ -1,7 +1,7 @@
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch.hpp"
-#include "ClientNetworkDriver.h"
+#include "ClientDriver.h"
 #include "ServerDriver.h"
 #include "IClientDriver.h"
 #include "IServerDriver.h"
@@ -10,9 +10,9 @@ class TestClientDriver : public SL::RAT::IClientDriver {
 public:
 	std::shared_ptr<SL::RAT::Client_Config> Config_;
 
-	SL::RAT::ClientNetworkDriver ClientNetworkDriver_;
+	SL::RAT::ClientDriver ClientDriver_;
 
-	TestClientDriver(): ClientNetworkDriver_(this){
+	TestClientDriver(): ClientDriver_(this){
 
 	}
 

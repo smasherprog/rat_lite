@@ -1,7 +1,5 @@
 project(RAT_Test)
 
-enable_testing()  # Enables unit-testing.
-
 if(WIN32)
 	
 elseif(APPLE)

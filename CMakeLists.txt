@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(BUILD_SHARED_LIBS OFF)
 
+
 option(BUILD_EXAMPLE "Build example" On)
 
 add_subdirectory(Screen_Capture/src)
@@ -22,4 +23,5 @@ if(BUILD_EXAMPLE)
 	add_subdirectory(Server)
 endif()
 
+enable_testing() 
 add_subdirectory(Test)

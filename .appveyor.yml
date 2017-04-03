@@ -6,8 +6,8 @@ configuration:
 clone_folder: c:\projects\proj
 
 cache:		
-  - c:\projects\build\vcpkg\scripts -> appveyor.yml		
-  - c:\projects\build\vcpkg\installed -> appveyor.yml
+  - c:\projects\build1\vcpkg\scripts -> appveyor.yml		
+  - c:\projects\build1\vcpkg\installed -> appveyor.yml
  
 platform:
 - x86
@@ -25,16 +25,16 @@ install:
   - move C:\projects\deps\cmake-* cmake
   - cmake --version
   - cd c:\projects
-  - IF NOT EXIST c:\projects\build mkdir build
-  - cd build
-  - IF NOT EXIST c:\projects\build\vcpkg git clone https://github.com/Microsoft/vcpkg
+  - IF NOT EXIST c:\projects\build1 mkdir build1
+  - cd build1
+  - IF NOT EXIST c:\projects\build1\vcpkg git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
-  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows powershell -exec bypass scripts\bootstrap.ps1
-  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows .\vcpkg install fltk libjpeg-turbo zlib openssl boost libuv
+  - IF NOT EXIST c:\projects\build1\vcpkg\installed\x86-windows powershell -exec bypass scripts\bootstrap.ps1
+  - IF NOT EXIST c:\projects\build1\vcpkg\installed\x86-windows .\vcpkg install fltk libjpeg-turbo zlib openssl boost libuv
   - cd c:\projects\proj
   - mkdir build
   - cd build
-  - cmake "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
+  - cmake "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build1\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
   
 build_script:
   - cmake --build .

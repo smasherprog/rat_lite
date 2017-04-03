@@ -10,16 +10,16 @@ namespace SL {
 	namespace RAT {
 		class Point;
 
-		class ServerNetworkDriverImpl;
+		class ServerDriverImpl;
 		struct Server_Config;
 		class IServerDriver;
 		class IWebSocket;
-		class ServerNetworkDriver {
-			std::unique_ptr<ServerNetworkDriverImpl> ServerNetworkDriverImpl_;
+		class ServerDriver {
+			std::unique_ptr<ServerDriverImpl> ServerDriverImpl_;
 
 		public:
-			ServerNetworkDriver();
-			~ServerNetworkDriver();
+			ServerDriver();
+			~ServerDriver();
 
 			void Start(IServerDriver * r, std::shared_ptr<Server_Config> config);
 			void Stop();

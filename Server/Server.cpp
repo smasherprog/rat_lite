@@ -5,7 +5,7 @@
 #include <mutex>
 
 #include "ScreenCapture.h"
-#include "ServerNetworkDriver.h"
+#include "ServerDriver.h"
 #include "IServerDriver.h"
 #include "Clipboard.h"
 #include "Configs.h"
@@ -25,7 +25,7 @@ namespace SL {
 
 			SL::Screen_Capture::ScreenCaptureManager ScreenCaptureManager_;
 
-			ServerNetworkDriver ServerNetworkDriver_;
+			ServerDriver ServerDriver_;
 			std::unique_ptr<Clipboard> Clipboard_;
 
 			Server_Status _Status = Server_Status::SERVER_STOPPED;
@@ -35,20 +35,20 @@ namespace SL {
 			std::vector<NewClient> ClientsThatNeedFullFrames;
 
 			ServerImpl(std::shared_ptr<Server_Config> config) :
-				ServerNetworkDriver_(), Config_(config)
+				ServerDriver_(), Config_(config)
 			{
 				_Status = Server_Status::SERVER_RUNNING;
 
 				Clipboard_ = std::make_unique<Clipboard>();
 				Clipboard_->shareClipboard(Config_->Share_Clipboard);
-				Clipboard_->onChange([&](const char* c, int len) { ServerNetworkDriver_.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
+				Clipboard_->onChange([&](const char* c, int len) { ServerDriver_.SendClipboardText(nullptr, c, static_cast<unsigned int>(len)); });
 
 				ScreenCaptureManager_.setMouseChangeInterval(Config_->MousePositionCaptureRate);
 				ScreenCaptureManager_.setFrameChangeInterval(Config_->ScreenImageCaptureRate);
 				ScreenCaptureManager_.setMonitorsToCapture([&]() {
 					auto p = Screen_Capture::GetMonitors();
 
-					ServerNetworkDriver_.SendMonitorInfo(nullptr, p);
+					ServerDriver_.SendMonitorInfo(nullptr, p);
 					//rebuild any ids
 					std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
 					std::vector<NewClient> newclients;
@@ -64,24 +64,24 @@ namespace SL {
 				});
 				ScreenCaptureManager_.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 					if (img) {
-						ServerNetworkDriver_.SendMouse(nullptr, *img);
+						ServerDriver_.SendMouse(nullptr, *img);
 					}
-					ServerNetworkDriver_.SendMouse(nullptr, Point(x, y));
+					ServerDriver_.SendMouse(nullptr, Point(x, y));
 				});
 				ScreenCaptureManager_.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-					ServerNetworkDriver_.SendFrameChange(nullptr, img, monitor);
+					ServerDriver_.SendFrameChange(nullptr, img, monitor);
 				});
 				ScreenCaptureManager_.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 					if (!ClientsThatNeedFullFrames.empty()) {
 						std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
 						for (auto& a : ClientsThatNeedFullFrames) {
 							a.mids.erase(std::remove_if(begin(a.mids), end(a.mids), [&](const auto i) {  return i == Screen_Capture::Id(monitor);  }), end(a.mids));
-							ServerNetworkDriver_.SendFrameChange(a.s.get(), img, monitor);
+							ServerDriver_.SendFrameChange(a.s.get(), img, monitor);
 						}
 						ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames), [&](const auto i) {  return i.mids.empty(); }), end(ClientsThatNeedFullFrames));
 					}
 				});
-				ServerNetworkDriver_.Start(this, config);
+				ServerDriver_.Start(this, config);
 				ScreenCaptureManager_.Start();
 
 			}
@@ -90,7 +90,7 @@ namespace SL {
 				ScreenCaptureManager_.Stop();
 				Clipboard_.reset();//make sure to prevent race conditions
 				_Status = Server_Status::SERVER_STOPPED;
-				ServerNetworkDriver_.Stop();
+				ServerDriver_.Stop();
 
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
@@ -100,7 +100,7 @@ namespace SL {
 				for (auto& a : p) {
 					ids.push_back(Screen_Capture::Id(*a));
 				}
-				ServerNetworkDriver_.SendMonitorInfo(socket.get(), p);
+				ServerDriver_.SendMonitorInfo(socket.get(), p);
 
 				std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
 				ClientsThatNeedFullFrames.push_back({ socket, ids });
@@ -134,7 +134,7 @@ namespace SL {
 
 
 			void OnMousePos(Point p) {
-				ServerNetworkDriver_.SendMouse(nullptr, p);
+				ServerDriver_.SendMouse(nullptr, p);
 			}
 
 			Server_Status get_Status() const {

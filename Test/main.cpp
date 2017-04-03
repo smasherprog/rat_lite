@@ -2,8 +2,9 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch.hpp"
 #include "ClientNetworkDriver.h"
-#include "ServerNetworkDriver.h"
+#include "ServerDriver.h"
 #include "IClientDriver.h"
+#include "IServerDriver.h"
 
 class TestClientDriver : public SL::RAT::IClientDriver {
 public:
@@ -44,10 +45,53 @@ public:
 	}
 };
 
+class TestServerDriver : public SL::RAT::IServerDriver {
+public:
+
+	std::shared_ptr<SL::RAT::Server_Config> Config_;
+
+	TestServerDriver() {
+
+	}
+
+
+	virtual ~TestServerDriver() {}
+	
+
+
+
+	// Inherited via IServerDriver
+	virtual void onConnection(const std::shared_ptr<SL::RAT::IWebSocket>& socket) override
+	{
+	}
+
+	virtual void onMessage(const SL::RAT::IWebSocket & socket, const char * data, size_t length) override
+	{
+	}
+
+	virtual void onDisconnection(const SL::RAT::IWebSocket & socket, int code, char * message, size_t length) override
+	{
+	}
+
+	virtual void onReceive_Mouse(const SL::RAT::MouseEvent * m) override
+	{
+	}
+
+	virtual void onReceive_Key(const SL::RAT::KeyEvent * m) override
+	{
+	}
+
+	virtual void onReceive_ClipboardText(const char * data, unsigned int len) override
+	{
+	}
+
+};
+
 
 TEST_CASE("Testing Client Driver", "[TestClientDriver]") {
-	auto t = new TestClientDriver();
+	TestClientDriver client;
+	TestServerDriver server;
 
-	REQUIRE(t != nullptr);
+
 
 }

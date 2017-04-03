@@ -1,4 +1,4 @@
-#include "ServerNetworkDriver.h"
+#include "ServerDriver.h"
 #include "Shapes.h"
 #include "IServerDriver.h"
 #include "internal/WebSocket.h"
@@ -20,7 +20,7 @@
 namespace SL {
 	namespace RAT {
 
-		class ServerNetworkDriverImpl {
+		class ServerDriverImpl {
 
 		public:
 			IServerDriver* IServerDriver_;
@@ -29,7 +29,7 @@ namespace SL {
 			std::thread Runner;
 			std::atomic_int ClientCount;
 
-			ServerNetworkDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
+			ServerDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
 				IServerDriver_(r), Config_(config) {
 				ClientCount = 0;
 
@@ -103,7 +103,7 @@ namespace SL {
 				h.listen(Config_->WebSocketTLSLPort, nullptr, 0, nullptr);
 
 			}
-			virtual ~ServerNetworkDriverImpl() {
+			virtual ~ServerDriverImpl() {
 
 				if (Runner.joinable()) {
 					Runner.join();
@@ -232,41 +232,41 @@ namespace SL {
 
 			}
 		};
-		ServerNetworkDriver::ServerNetworkDriver()
+		ServerDriver::ServerDriver()
 		{
 
 		}
-		ServerNetworkDriver::~ServerNetworkDriver()
+		ServerDriver::~ServerDriver()
 		{
 
 		}
-		void ServerNetworkDriver::Start(IServerDriver * r, std::shared_ptr<Server_Config> config) {
-			ServerNetworkDriverImpl_ = std::make_unique<ServerNetworkDriverImpl>(r, config);
-			ServerNetworkDriverImpl_->Run();
+		void ServerDriver::Start(IServerDriver * r, std::shared_ptr<Server_Config> config) {
+			ServerDriverImpl_ = std::make_unique<ServerDriverImpl>(r, config);
+			ServerDriverImpl_->Run();
 		}
-		void ServerNetworkDriver::Stop() {
-			ServerNetworkDriverImpl_.reset();
-		}
-
-		void ServerNetworkDriver::SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
-		{
-			ServerNetworkDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
-		}
-		void ServerNetworkDriver::SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
-		{
-			ServerNetworkDriverImpl_->SendMonitorInfo(socket, monitors);
-		}
-		void ServerNetworkDriver::SendMouse(IWebSocket* socket, const Screen_Capture::Image & img)
-		{
-			ServerNetworkDriverImpl_->SendMouse(socket, img);
-		}
-		void ServerNetworkDriver::SendMouse(IWebSocket* socket, const Point & pos)
-		{
-			ServerNetworkDriverImpl_->SendMouse(socket, pos);
+		void ServerDriver::Stop() {
+			ServerDriverImpl_.reset();
 		}
 
-		void ServerNetworkDriver::SendClipboardText(IWebSocket* socket, const char* data, unsigned int len) {
-			ServerNetworkDriverImpl_->SendClipboardText(socket, data, len);
+		void ServerDriver::SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
+		{
+			ServerDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
+		}
+		void ServerDriver::SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
+		{
+			ServerDriverImpl_->SendMonitorInfo(socket, monitors);
+		}
+		void ServerDriver::SendMouse(IWebSocket* socket, const Screen_Capture::Image & img)
+		{
+			ServerDriverImpl_->SendMouse(socket, img);
+		}
+		void ServerDriver::SendMouse(IWebSocket* socket, const Point & pos)
+		{
+			ServerDriverImpl_->SendMouse(socket, pos);
+		}
+
+		void ServerDriver::SendClipboardText(IWebSocket* socket, const char* data, unsigned int len) {
+			ServerDriverImpl_->SendClipboardText(socket, data, len);
 		}
 
 

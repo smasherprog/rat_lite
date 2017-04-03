@@ -5,7 +5,7 @@ if(WIN32)
     set(REMOTE_ACCESS_PLATFORM_SRC     
 
     )
-	find_package(LibUV REQUIRED)
+	find_package(LIBUV REQUIRED)
 	set(REMOTE_ACCESS_PLATFORM_LIBS    
 		${LIBUV_LIBRARIES}
     )

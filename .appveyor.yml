@@ -39,5 +39,5 @@ install:
 build_script:
   - cmake --build .
   
- test_script:
+test_script:
   - ctest

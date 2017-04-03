@@ -1,5 +1,6 @@
 project(RAT_Test)
 
+enable_testing()  # Enables unit-testing.
 
 if(WIN32)
 	
@@ -29,3 +30,5 @@ include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} uWebSockets/src)
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+add_test (NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

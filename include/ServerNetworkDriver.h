@@ -25,7 +25,6 @@ namespace SL {
 			void Stop();
 			//frames are images
 			void SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
-			void SendFrame(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
 			void SendMonitorInfo(IWebSocket* socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>> & monitors);
 
 			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img);

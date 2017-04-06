@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 	serverconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
 	TestServerDriver testserver;
 
-	server.Start(&testserver, serverconfig);
+	//server.Start(&testserver, serverconfig);
 
 	auto clientconfig = std::make_shared<SL::RAT::Client_Config>();
 	clientconfig->HttpTLSPort=8080;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
 	TestClientDriver testclient;
 	SL::RAT::ClientDriver client(&testclient);
-	client.Connect(clientconfig, host);
+	//client.Connect(clientconfig, host);
 
 
 

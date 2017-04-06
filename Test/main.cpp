@@ -131,9 +131,9 @@ TEST_CASE("Testing Client Driver", "[TestClientDriver]") {
 
 
 
-	auto keeprunningserver = true;
-	while (keeprunningserver) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	}
+	//auto keeprunningserver = true;
+	//while (keeprunningserver) {
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	//}
 
 }

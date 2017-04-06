@@ -1,18 +1,22 @@
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch.hpp"
-#include "ClientDriver.h"
-#include "ServerDriver.h"
 #include "IClientDriver.h"
 #include "IServerDriver.h"
+#include "ClientDriver.h"
+#include "ServerDriver.h"
+
+#include <memory>
+#include "Configs.h"
+#include <thread>
+#include <chrono>
+
 
 class TestClientDriver : public SL::RAT::IClientDriver {
 public:
-	std::shared_ptr<SL::RAT::Client_Config> Config_;
 
-	SL::RAT::ClientDriver ClientDriver_;
 
-	TestClientDriver(): ClientDriver_(this){
+	TestClientDriver()  {
 
 	}
 
@@ -48,7 +52,6 @@ public:
 class TestServerDriver : public SL::RAT::IServerDriver {
 public:
 
-	std::shared_ptr<SL::RAT::Server_Config> Config_;
 
 	TestServerDriver() {
 
@@ -56,7 +59,7 @@ public:
 
 
 	virtual ~TestServerDriver() {}
-	
+
 
 
 
@@ -88,10 +91,49 @@ public:
 };
 
 
+
+
 TEST_CASE("Testing Client Driver", "[TestClientDriver]") {
-	TestClientDriver client;
-	TestServerDriver server;
+
+	SL::RAT::ServerDriver server;
+
+	auto serverconfig = std::make_shared<SL::RAT::Server_Config>();
+
+	serverconfig->WebSocketTLSLPort = 6001;// listen for websockets
+	serverconfig->HttpTLSPort = 8080;
+	serverconfig->Share_Clipboard = true;
+
+	serverconfig->ImageCompressionSetting = 70;
+	serverconfig->MousePositionCaptureRate = 50;
+	serverconfig->ScreenImageCaptureRate = 100;
+	serverconfig->SendGrayScaleImages = false;
+	serverconfig->MaxNumConnections = 2;
+	serverconfig->MaxWebSocketThreads = 2;
+	serverconfig->PathTo_Private_Key = TEST_CERTIFICATE_PRIVATE_PATH;
+	serverconfig->PasswordToPrivateKey=TEST_CERTIFICATE_PRIVATE_PASSWORD;
+	serverconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
+	TestServerDriver testserver;
+
+	server.Start(&testserver, serverconfig);
+
+	auto clientconfig = std::make_shared<SL::RAT::Client_Config>();
+	clientconfig->HttpTLSPort=8080;
+	auto host = "localhost";
+	clientconfig->WebSocketTLSLPort=6001;
+	clientconfig->Share_Clipboard=true;
+	clientconfig->PathTo_Public_Certficate=TEST_CERTIFICATE_PUBLIC_PATH;
 
 
+	TestClientDriver testclient;
+	SL::RAT::ClientDriver client(&testclient);
+	client.Connect(clientconfig, host);
+
+
+
+
+	auto keeprunningserver = true;
+	while (keeprunningserver) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 
 }

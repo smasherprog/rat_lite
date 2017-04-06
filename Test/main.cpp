@@ -93,7 +93,7 @@ public:
 
 
 
-TEST_CASE("Testing Client Driver", "[TestClientDriver]") {
+int main(int argc, char* argv[]) {
 
 	SL::RAT::ServerDriver server;
 
@@ -135,5 +135,5 @@ TEST_CASE("Testing Client Driver", "[TestClientDriver]") {
 	//while (keeprunningserver) {
 	//	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	//}
-
+	return 0;
 }

@@ -25,7 +25,6 @@ if(WIN32)
     )
 
 elseif(APPLE)
-
 find_library(corefoundation_lib CoreFoundation)
 find_library(cocoa_lib Cocoa)
 set(SCREEN_CAPTURE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
@@ -92,8 +91,8 @@ set(SCREEN_CAPTURE_LIB
 set(SCREEN_CAPTURE_INCLUDE_DIRS 
 	${CMAKE_CURRENT_SOURCE_DIR}/../include
 	${CMAKE_CURRENT_SOURCE_DIR}/../src
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/Internal
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/Internal
 	${SCREEN_CAPTURE_PLATFORM_INC}
 	CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
  )

@@ -79,8 +79,6 @@ int main(int argc, char* argv[]) {
 	SL::RAT::Server serv;
 	serv.Start(config);
 
-	while (serv.get_Status() != SL::RAT::Server_Status::SERVER_STOPPED) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	}
+
 	return 0;
 }

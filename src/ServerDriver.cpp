@@ -32,7 +32,7 @@ namespace SL {
 			ServerDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) :
 				IServerDriver_(r), Config_(config) {
 				ClientCount = 0;
-
+				
 				h.onConnection([&](uWS::WebSocket<uWS::SERVER>* ws, uWS::HttpRequest req) {
 					static int counter = 0;
 					if (ClientCount + 1 > Config_->MaxNumConnections) {
@@ -191,7 +191,7 @@ namespace SL {
 
 			}
 			void SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors) {
-
+				if (ClientCount <= 0) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MONITORINFO);
 				const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 

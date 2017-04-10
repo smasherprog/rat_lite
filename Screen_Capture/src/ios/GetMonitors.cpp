@@ -19,9 +19,14 @@ namespace SL{
                 //only include non-mirrored displays
                 if(CGDisplayMirrorsDisplay(displays[i]) == kCGNullDirectDisplay){
                     
+    
+                    auto width = CGDisplayPixelsWide(displays[i]);
+                    auto height = CGDisplayPixelsHigh(displays[i]);
+      
                     auto r = CGDisplayBounds(displays[i]);
+                 
                     auto name = std::string("Monitor ") + std::to_string(displays[i]);
-                    ret.push_back(CreateMonitor(i, displays[i], int(r.size.height),int(r.size.width), int(r.origin.x), int(r.origin.y), name ));
+                    ret.push_back(CreateMonitor(i, displays[i],height,width, int(r.origin.x), int(r.origin.y), name ));
                 }
             }
             return ret;

@@ -34,8 +34,7 @@ namespace SL {
 			std::mutex ClientsThatNeedFullFramesLock;
 			std::vector<NewClient> ClientsThatNeedFullFrames;
 
-			ServerImpl(std::shared_ptr<Server_Config> config) :
-				ServerDriver_(), Config_(config)
+			ServerImpl(std::shared_ptr<Server_Config> config) :ServerDriver_(this, config), Config_(config)
 			{
 				_Status = Server_Status::SERVER_RUNNING;
 
@@ -57,7 +56,7 @@ namespace SL {
 						for (auto& a : p) {
 							ids.push_back(Screen_Capture::Id(*a));
 						}
-						newclients.push_back({old.s, ids});
+						newclients.push_back({ old.s, ids });
 					}
 					ClientsThatNeedFullFrames = newclients;
 					return p;
@@ -81,7 +80,7 @@ namespace SL {
 						ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames), [&](const auto i) {  return i.mids.empty(); }), end(ClientsThatNeedFullFrames));
 					}
 				});
-				ServerDriver_.Start(this, config);
+
 				ScreenCaptureManager_.Start();
 
 			}
@@ -90,7 +89,7 @@ namespace SL {
 				ScreenCaptureManager_.Stop();
 				Clipboard_.reset();//make sure to prevent race conditions
 				_Status = Server_Status::SERVER_STOPPED;
-				ServerDriver_.Stop();
+
 
 			}
 			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
@@ -137,35 +136,24 @@ namespace SL {
 				ServerDriver_.SendMouse(nullptr, p);
 			}
 
-			Server_Status get_Status() const {
-				return _Status;
-			}
+
 		};
 
-		Server::Server()
+		Server::Server(std::shared_ptr<Server_Config> config)
 		{
+			ServerImpl_ = std::make_shared<ServerImpl>(config);
 		}
 
 		Server::~Server()
 		{
-			Stop();
+
 		}
 
-		void Server::Server::Start(std::shared_ptr<Server_Config> config)
+		void Server::Server::Run()
 		{
-			ServerImpl_ = std::make_shared<ServerImpl>(config);
-
+			ServerImpl_->ServerDriver_.Run();
 		}
 
-		void Server::Server::Stop()
-		{
-			ServerImpl_.reset();
-		}
-
-		Server_Status Server::Server::get_Status() const
-		{
-			return ServerImpl_->get_Status();
-		}
 
 #if __ANDROID__
 		void Server::Server::OnImage(char* buf, int width, int height)

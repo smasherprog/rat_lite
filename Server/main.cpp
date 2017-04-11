@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	SL::RAT::Server serv;
-	serv.Start(config);
+	SL::RAT::Server serv(config);
+	serv.Run();
 
 
 	return 0;

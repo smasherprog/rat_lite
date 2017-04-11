@@ -36,6 +36,7 @@ protected:
     std::function<void(HttpSocket<isServer> *)> httpDisconnectionHandler;
     std::function<void(HttpSocket<isServer> *, HttpRequest)> httpUpgradeHandler;
 
+
     using errorType = typename std::conditional<isServer, int, void *>::type;
     std::function<void(errorType)> errorHandler;
 

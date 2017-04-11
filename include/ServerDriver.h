@@ -18,11 +18,10 @@ namespace SL {
 			std::unique_ptr<ServerDriverImpl> ServerDriverImpl_;
 
 		public:
-			ServerDriver();
+			ServerDriver(IServerDriver * r, std::shared_ptr<Server_Config> config);
 			~ServerDriver();
 
-			void Start(IServerDriver * r, std::shared_ptr<Server_Config> config);
-			void Stop();
+			void Run();
 			//frames are images
 			void SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
 			void SendMonitorInfo(IWebSocket* socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>> & monitors);

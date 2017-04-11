@@ -93,7 +93,7 @@ public:
 
 int main(int argc, char* argv[]) {
 
-	SL::RAT::ServerDriver server;
+
 
 	auto serverconfig = std::make_shared<SL::RAT::Server_Config>();
 
@@ -112,7 +112,8 @@ int main(int argc, char* argv[]) {
 	serverconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
 	TestServerDriver testserver;
 
-	//server.Start(&testserver, serverconfig);
+	SL::RAT::ServerDriver server;
+	server.Start(&testserver, serverconfig);
 
 	auto clientconfig = std::make_shared<SL::RAT::Client_Config>();
 	clientconfig->HttpTLSPort=8080;
@@ -124,14 +125,9 @@ int main(int argc, char* argv[]) {
 
 	TestClientDriver testclient;
 	SL::RAT::ClientDriver client(&testclient);
-	//client.Connect(clientconfig, host);
+	client.Connect(clientconfig, host);
 
 
 
-
-	//auto keeprunningserver = true;
-	//while (keeprunningserver) {
-	//	std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	//}
 	return 0;
 }

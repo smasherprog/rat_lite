@@ -138,6 +138,9 @@ namespace SL {
 			}
 
 			virtual ~ClientDriverImpl() {
+				
+				h.getDefaultGroup<uWS::CLIENT>().close();
+
 				if (Runner.joinable()) {
 					Runner.join();
 				}

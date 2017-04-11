@@ -18,14 +18,10 @@ namespace SL {
 			std::shared_ptr<ServerImpl> ServerImpl_;
 		public:
 
-			Server();
+			Server(std::shared_ptr<Server_Config> config);
 			~Server();
+			void Run();
 
-			void Start(std::shared_ptr<Server_Config> config);
-			void Stop();
-		
-			Server_Status get_Status() const;
-			static std::string Validate_Settings(std::shared_ptr<Server_Config> config);
 
 #if __ANDROID__
 			void OnImage(char* buf, int width, int height);

@@ -14,7 +14,7 @@ namespace SL {
 		public:
 			std::shared_ptr<Server_Config> Config_;
 			uWS::Hub h;
-			std::thread Runner;
+	
 			std::atomic_int ClientCount;
 			IServerDriver * IServerDriver_;
 			std::function<void(const std::shared_ptr<IWebSocket>&)> onConnection;
@@ -114,9 +114,6 @@ namespace SL {
 				uv_async_send(&asyncHandle);
 				delete (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData();
 
-				if (Runner.joinable()) {
-					Runner.join();
-				}
 			}
 	
 			void Broadcast(char * data, size_t len) {

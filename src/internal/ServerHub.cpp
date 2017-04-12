@@ -21,7 +21,7 @@ namespace SL {
 			std::function<void(const IWebSocket&, const char*, size_t)> onMessage;
 			std::function<void(const IWebSocket&, int, char*, size_t)> onDisconnection;
 
-			ServerHubImpl(IServerDriver* r, std::shared_ptr<Server_Config> config): IServerDriver_(r), Config_(config) {
+			ServerHubImpl(IServerDriver* r, std::shared_ptr<Server_Config> config): IServerDriver_(r), Config_(config), h(0, true) {
 
 				ClientCount = 0;
 

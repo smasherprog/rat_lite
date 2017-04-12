@@ -1,6 +1,5 @@
 project(libRemote_Access)
 
-
 if(WIN32)
     set(REMOTE_ACCESS_PLATFORM_SRC     
 
@@ -14,6 +13,7 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows
 		${LIBUV_INCLUDE_DIRS}
     )
+	add_definitions(-DUSE_LIBUV)
 elseif(APPLE)
 
     set(REMOTE_ACCESS_PLATFORM_SRC
@@ -23,6 +23,7 @@ elseif(APPLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios
     )
+	add_definitions(-DUSE_LIBUV)
 else()
 	set(REMOTE_ACCESS_PLATFORM_SRC
 	
@@ -37,7 +38,7 @@ else()
 	set(REMOTE_ACCESS_PLATFORM_LIBS
 		${CMAKE_THREAD_LIBS_INIT}
 	)
-	
+		add_definitions(-DUSE_ASIO)
 endif()
 
 set(REMOTE_ACCESS_COMMON_SRC 	

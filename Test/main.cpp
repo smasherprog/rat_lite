@@ -4,7 +4,7 @@
 #include "ClientDriver.h"
 #include "ServerDriver.h"
 #include "Input.h"
-#include "internal\WebSocket.h"
+#include "internal/WebSocket.h"
 #include"SCCommon.h"
 #include "Configs.h"
 

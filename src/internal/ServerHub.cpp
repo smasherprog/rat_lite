@@ -93,6 +93,7 @@ namespace SL {
 				h.listen(Config_->WebSocketTLSLPort, nullptr, 0, nullptr);
 			}
 			~ServerHubImpl() {
+#if !USE_ASIO
 				auto uv_async_callback = [](uv_async_t* handle) {
 					auto uv_walk_callback = [](uv_handle_t* handle, void* /*arg*/) {
 						if (!uv_is_closing(handle))
@@ -116,6 +117,7 @@ namespace SL {
 				asyncHandle.data = this;
 				uv_async_init(loop, &asyncHandle, uv_async_callback);
 				uv_async_send(&asyncHandle);
+#endif
 				//block until closed properly
 				while (!thisclosed) {
 					std::this_thread::sleep_for(50ms);

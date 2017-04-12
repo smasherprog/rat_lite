@@ -1,11 +1,12 @@
 project(RAT_Test)
 
+
 if(WIN32)
-	
+	add_definitions(-DUSE_LIBUV)
 elseif(APPLE)
-
+	add_definitions(-DUSE_LIBUV)
 else()
-
+	add_definitions(-DUSE_ASIO)
 endif()
 
 if(MSVC)

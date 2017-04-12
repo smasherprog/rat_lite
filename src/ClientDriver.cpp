@@ -90,7 +90,8 @@ namespace SL {
 				h.onConnection([&](uWS::WebSocket<uWS::CLIENT>* ws, uWS::HttpRequest req) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
 					ws->setUserData(new SocketStats());
-					IClientDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::CLIENT>*>>(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData()));
+					Socket_ = std::make_shared<WebSocket<uWS::WebSocket<uWS::CLIENT>*>>(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
+					IClientDriver_->onConnection(Socket_);
 				});
 				h.onDisconnection([&](uWS::WebSocket<uWS::CLIENT>* ws, int code, char *message, size_t length) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");

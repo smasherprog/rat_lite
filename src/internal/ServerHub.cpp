@@ -6,7 +6,9 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <chrono>
 #include <assert.h>
+using namespace std::chrono_literals;
 
 namespace SL {
 	namespace RAT {
@@ -20,6 +22,7 @@ namespace SL {
 			std::function<void(const std::shared_ptr<IWebSocket>&)> onConnection;
 			std::function<void(const IWebSocket&, const char*, size_t)> onMessage;
 			std::function<void(const IWebSocket&, int, char*, size_t)> onDisconnection;
+			bool thisclosed = false;
 
 			ServerHubImpl(IServerDriver* r, std::shared_ptr<Server_Config> config): IServerDriver_(r), Config_(config), h(0, true) {
 
@@ -36,10 +39,10 @@ namespace SL {
 						int t = counter++ % Config_->MaxWebSocketThreads;
 						SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
 						ws->setUserData(new SocketStats());
-
+						ClientCount += 1;
 						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>*>>(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData()));
 
-						ClientCount += 1;
+						
 					}
 				});
 
@@ -97,9 +100,10 @@ namespace SL {
 					};
 
 					auto loop = handle->loop;
-					auto hub = (uWS::Hub *)handle->data;
-					hub->getDefaultGroup<true>().close();
-
+					auto hub = (ServerHubImpl*)handle->data;
+			
+					hub->h.getDefaultGroup<true>().close();
+					hub->thisclosed = true;
 					uv_stop(loop);
 					uv_walk(loop, uv_walk_callback, nullptr);
 					uv_run(loop, UV_RUN_DEFAULT);
@@ -109,9 +113,13 @@ namespace SL {
 				auto loop = h.getLoop();
 
 				uv_async_t asyncHandle;
-				asyncHandle.data = &h;
+				asyncHandle.data = this;
 				uv_async_init(loop, &asyncHandle, uv_async_callback);
 				uv_async_send(&asyncHandle);
+				//block until closed properly
+				while (!thisclosed) {
+					std::this_thread::sleep_for(50ms);
+				}
 				delete (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData();
 
 			}

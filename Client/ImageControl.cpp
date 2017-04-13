@@ -89,8 +89,8 @@ namespace SL {
 		{
 			auto dst_start = (char*)dst.Data;
 			auto src_start = (char*)src.Data;
-			auto dst_rowstride = dst.Rect.Width * PixelStride;
-			auto src_rowstride = src.Rect.Width * PixelStride;
+			auto dst_rowstride = dst.Rect_.Width * PixelStride;
+			auto src_rowstride = src.Rect_.Width * PixelStride;
 			for (auto row = dst_rect.top(), src_row = 0; row < dst_rect.bottom(); row++, src_row++) {
 				memcpy(dst_start + (dst_rowstride* row) + (dst_rect.left()*PixelStride), src_start + (src_rowstride*src_row) + (src_rect.left()*PixelStride), src_rowstride);
 			}
@@ -148,27 +148,27 @@ namespace SL {
 					UniqueLock<SharedMutex> ilock(a->Lock);
 					if (Scaling_) {
 						auto psize = this->parent()->h();
-						if (psize != a->Scaled.Rect.Height) {//rescale the image
-							a->Scaled.Rect = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* a->Original.Rect.Height));
-							a->ScaledBacking = Resize(a->Original.Data, a->Original.Rect.Height, a->Original.Rect.Width, a->Scaled.Rect.Height, a->Scaled.Rect.Width);
+						if (psize != a->Scaled.Rect_.Height) {//rescale the image
+							a->Scaled.Rect_ = Rect(Point(0, 0), psize, static_cast<int>(ScaleFactor_* a->Original.Rect_.Height));
+							a->ScaledBacking = Resize(a->Original.Data, a->Original.Rect_.Height, a->Original.Rect_.Width, a->Scaled.Rect_.Height, a->Scaled.Rect_.Width);
 							a->Scaled.Data = a->ScaledBacking.get();
 						}
 					}
 					else {//NO SCALING!!
-						if (a->Scaled.Rect.Width != a->Original.Rect.Width || a->Scaled.Rect.Height != a->Original.Rect.Height) {
-							auto size = a->Original.Rect.Height*a->Original.Rect.Width*PixelStride;
+						if (a->Scaled.Rect_.Width != a->Original.Rect_.Width || a->Scaled.Rect_.Height != a->Original.Rect_.Height) {
+							auto size = a->Original.Rect_.Height*a->Original.Rect_.Width*PixelStride;
 
-							a->Scaled.Rect = a->Original.Rect;
+							a->Scaled.Rect_ = a->Original.Rect_;
 							a->ScaledBacking = std::shared_ptr<char>(new char[size], [](char* d) { delete[] d; });
 							a->Scaled.Data = a->ScaledBacking.get();
 							memcpy((void*)a->Scaled.Data, a->Original.Data, size);
 
 						}//
 					}
-					height = std::max(height, a->Scaled.Rect.Height);
-					fl_draw_image((uchar*)a->Scaled.Data, thix, thiy, a->Scaled.Rect.Width, a->Scaled.Rect.Height, 4);
-					width += a->Scaled.Rect.Width;
-					thix += a->Scaled.Rect.Width;
+					height = std::max(height, a->Scaled.Rect_.Height);
+					fl_draw_image((uchar*)a->Scaled.Data, thix, thiy, a->Scaled.Rect_.Width, a->Scaled.Rect_.Height, 4);
+					width += a->Scaled.Rect_.Width;
+					thix += a->Scaled.Rect_.Width;
 
 				}
 				//this->size(width, height);
@@ -186,15 +186,15 @@ namespace SL {
 				assert(found != end(Monitors));
 			
 				//writer lock to the element
-				Rect srcrect(Point(0, 0), img.Rect.Height, img.Rect.Width);
+				Rect srcrect(Point(0, 0), img.Rect_.Height, img.Rect_.Width);
 				UniqueLock<SharedMutex> ml((*found)->Lock);
-				Copy(img, srcrect, (*found)->Original, img.Rect);//keep original in sync
+				Copy(img, srcrect, (*found)->Original, img.Rect_);//keep original in sync
 				if (Scaling_) {
-					Rect r(Point(0, 0), img.Rect.Height, img.Rect.Width);
+					Rect r(Point(0, 0), img.Rect_.Height, img.Rect_.Width);
 					auto reseiz = Resize(img.Data, &r.Height, &r.Width, ScaleFactor_);
 					Image resizedimg(r, reseiz.get(), r.Height*r.Width*PixelStride);
 					
-					auto sr = img.Rect;
+					auto sr = img.Rect_;
 					sr.Origin.X  = static_cast<int>(static_cast<float>(sr.Origin.X)*ScaleFactor_);
 					sr.Origin.Y = static_cast<int>(static_cast<float>(sr.Origin.Y)*ScaleFactor_);
 					sr.Height = r.Height;
@@ -204,19 +204,19 @@ namespace SL {
 
 				}
 				else {
-					Copy(img, srcrect, (*found)->Scaled, img.Rect);//copy scaled down 
+					Copy(img, srcrect, (*found)->Scaled, img.Rect_);//copy scaled down 
 				}
 			}
 			void setMouseImage_(const Image& img) {
 
-				auto s = img.Rect.Width*img.Rect.Height*PixelStride;
+				auto s = img.Rect_.Width*img.Rect_.Height*PixelStride;
 				auto mouseimg = std::make_unique<char[]>(s);
-				Image mouseimgdata(img.Rect, mouseimg.get(), s);
+				Image mouseimgdata(img.Rect_, mouseimg.get(), s);
 				memcpy(mouseimg.get(), img.Data, s);
 				UniqueLock<SharedMutex> l(MouseLock);
 				MouseData_.MouseImageBacking = std::move(mouseimg);
 				MouseData_.MouseImage = mouseimgdata;
-				MouseData_.FlMouseImage = std::make_unique<Fl_RGB_Image>((uchar*)MouseData_.MouseImageBacking.get(), img.Rect.Width, img.Rect.Height, PixelStride);
+				MouseData_.FlMouseImage = std::make_unique<Fl_RGB_Image>((uchar*)MouseData_.MouseImageBacking.get(), img.Rect_.Width, img.Rect_.Height, PixelStride);
 			}
 			void set_MousePosition(const Point* pos) {
 
@@ -323,8 +323,8 @@ namespace SL {
 
 						auto found = std::find_if(begin(Monitors), end(Monitors), [&](const std::shared_ptr<MonitorData>& m) { return monitors[i].Id == m->Monitor.Id;  });
 						if (found != end(Monitors) &&
-							(*found)->Original.Rect.Height == monitors[i].Height &&
-							(*found)->Original.Rect.Width == monitors[i].Width) {
+							(*found)->Original.Rect_.Height == monitors[i].Height &&
+							(*found)->Original.Rect_.Width == monitors[i].Width) {
 							vm.emplace_back(*found);
 						}
 						else {

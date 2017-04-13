@@ -8,10 +8,13 @@
 #include <thread>
 #include <chrono>
 #include <assert.h>
+#include "uv.h"
+
 using namespace std::chrono_literals;
 
 namespace SL {
 	namespace RAT {
+        void uvclocsecallback (uv_async_t* handle, int);
 		class ServerHubImpl {
 		public:
 			std::shared_ptr<Server_Config> Config_;
@@ -92,36 +95,23 @@ namespace SL {
 				//uS::TLS::Context c = uS::TLS::createContext(config->PathTo_Public_Certficate, config->PathTo_Private_Key, config->PasswordToPrivateKey);
 				h.listen(Config_->WebSocketTLSLPort, nullptr, 0, nullptr);
 			}
+    
 			~ServerHubImpl() {
-#if !USE_ASIO
-				auto uv_async_callback = [](uv_async_t* handle) {
-					auto uv_walk_callback = [](uv_handle_t* handle, void* /*arg*/) {
-						if (!uv_is_closing(handle))
-							uv_close(handle, nullptr);
-					};
 
-					auto loop = handle->loop;
-					auto hub = (ServerHubImpl*)handle->data;
 			
-					hub->h.getDefaultGroup<true>().close();
-					hub->thisclosed = true;
-					uv_stop(loop);
-					uv_walk(loop, uv_walk_callback, nullptr);
-					uv_run(loop, UV_RUN_DEFAULT);
-					uv_loop_close(loop);
-				};
 
 				auto loop = h.getLoop();
 
 				uv_async_t asyncHandle;
 				asyncHandle.data = this;
-				uv_async_init(loop, &asyncHandle, uv_async_callback);
+				uv_async_init(loop, &asyncHandle, uvclocsecallback);
 				uv_async_send(&asyncHandle);
-#endif
-				//block until closed properly
-				while (!thisclosed) {
+                while (!thisclosed) {
 					std::this_thread::sleep_for(50ms);
 				}
+
+				//block until closed properly
+				
 				delete (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData();
 
 			}
@@ -143,12 +133,25 @@ namespace SL {
 
 
 		};
+                void uvclocsecallback (uv_async_t* handle, int) {
+					auto uv_walk_callback = [](uv_handle_t* handle, void* /*arg*/) {
+						if (!uv_is_closing(handle))
+							uv_close(handle, nullptr);
+					};
+
+					auto loop = handle->loop;
+					auto hub = (ServerHubImpl*)handle->data;
+			
+					hub->h.getDefaultGroup<true>().close();
+					hub->thisclosed = true;
+					uv_stop(loop);
+					uv_walk(loop, uv_walk_callback, nullptr);
+					uv_run(loop, UV_RUN_DEFAULT);
+					//uv_close((uv_handle_t*)handle, NULL);
+				};
 
 	}
 }
-
-
-
 
 SL::RAT::ServerHub::ServerHub(IServerDriver * r, std::shared_ptr<Server_Config> config)
 {

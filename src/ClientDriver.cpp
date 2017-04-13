@@ -31,7 +31,7 @@ namespace SL {
 			void MouseImage(const IWebSocket& socket, const char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 				Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
-				assert(len >= sizeof(Rect) + (img.Rect.Width * img.Rect.Height * PixelStride));
+				assert(len >= sizeof(Rect) + (img.Rect_.Width * img.Rect_.Height * PixelStride));
 				IClientDriver_->onReceive_MouseImage(img);
 			}
 
@@ -69,7 +69,7 @@ namespace SL {
 					SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
 				}
 				Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
-				assert(outwidth == img.Rect.Width && outheight == img.Rect.Height);
+				assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
 
 				IClientDriver_->onReceive_ImageDif(img, monitor_id);
 				tjDestroy(jpegDecompressor);

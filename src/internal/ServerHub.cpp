@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 
 namespace SL {
 	namespace RAT {
-#if UV_VERSION_MINOR == 10 && UV_VERSION_MINOR == 0
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10
 		void uvclocsecallback(uv_async_t* handle, int);
 #else 
 		void uvclocsecallback(uv_async_t* handle);
@@ -139,7 +139,7 @@ namespace SL {
 
 
 		};
-#if UV_VERSION_MINOR == 10 && UV_VERSION_MINOR == 0
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10
 		void uvclocsecallback(uv_async_t* handle, int) {
 #else 
 		void uvclocsecallback(uv_async_t* handle) {

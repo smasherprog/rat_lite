@@ -4,16 +4,16 @@ if(WIN32)
     set(REMOTE_ACCESS_PLATFORM_SRC     
 
     )
-	find_package(LIBUV REQUIRED)
+
 	set(REMOTE_ACCESS_PLATFORM_LIBS    
-		${LIBUV_LIBRARIES}
+	
     )
 	set(REMOTE_ACCESS_PLATFORM_INC     
         ${CMAKE_CURRENT_SOURCE_DIR}/../include/windows
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows
-		${LIBUV_INCLUDE_DIRS}
+		
     )
-	add_definitions(-DUSE_LIBUV)
+
 elseif(APPLE)
 
     set(REMOTE_ACCESS_PLATFORM_SRC
@@ -23,7 +23,7 @@ elseif(APPLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios
     )
-	add_definitions(-DUSE_LIBUV)
+
 else()
 	set(REMOTE_ACCESS_PLATFORM_SRC
 	
@@ -38,8 +38,10 @@ else()
 	set(REMOTE_ACCESS_PLATFORM_LIBS
 		${CMAKE_THREAD_LIBS_INIT}
 	)
-		add_definitions(-DUSE_ASIO)
+
 endif()
+
+	
 
 set(REMOTE_ACCESS_COMMON_SRC 	
 
@@ -76,6 +78,9 @@ find_package(libjpegturbo REQUIRED)
 set(FLTK_SKIP_FLUID TRUE)
 find_package(FLTK REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(LIBUV REQUIRED)
+
+add_definitions(-DUSE_LIBUV)
 
 set(REMOTE_ACCESS_INCLUDE_DIRS 
 	${REMOTE_ACCESS_COMMON_INC} 
@@ -84,6 +89,7 @@ set(REMOTE_ACCESS_INCLUDE_DIRS
 	${LIBJPEGTURBO_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 	${FLTK_INCLUDE_DIR}
+	${LIBUV_INCLUDE_DIRS}
 	${SCREEN_CAPTURE_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}/../uWebSockets/src/
 	CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
@@ -98,6 +104,7 @@ set(REMOTE_ACCESS_LIBS
 	${FLTK_LIBRARIES}
 	${SCREEN_CAPTURE_LIB}
 	${Boost_LIBRARIES}
+	${LIBUV_LIBRARIES}
 	uWS
 	CACHE INTERNAL "${PROJECT_NAME}: Include Libraries" FORCE
 )

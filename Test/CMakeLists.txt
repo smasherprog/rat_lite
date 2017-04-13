@@ -1,14 +1,6 @@
 project(RAT_Test)
 
 
-if(WIN32)
-	add_definitions(-DUSE_LIBUV)
-elseif(APPLE)
-	add_definitions(-DUSE_LIBUV)
-else()
-	add_definitions(-DUSE_ASIO)
-endif()
-
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4100")
 else()
@@ -23,6 +15,7 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/private.key"
 	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/public.crt"
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
+	-DUSE_LIBUV
 )
 
 include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} uWebSockets/src)

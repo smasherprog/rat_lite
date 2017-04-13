@@ -3,16 +3,9 @@ find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
 
-if(WIN32)
-	find_package(LibUV REQUIRED)
-	add_definitions(-DUSE_LIBUV)
-elseif(APPLE)
-	find_package(LibUV REQUIRED)
-	add_definitions(-DUSE_LIBUV)
-else()
-	add_definitions(-DUSE_ASIO)
-endif()
 
+find_package(LibUV REQUIRED)
+add_definitions(-DUSE_LIBUV)
 
 add_library(uWS WebSocket.cpp Socket.cpp Node.cpp Networking.cpp Hub.cpp HTTPSocket.cpp Group.cpp Extensions.cpp Epoll.cpp)
 

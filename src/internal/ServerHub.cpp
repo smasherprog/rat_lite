@@ -14,12 +14,18 @@ using namespace std::chrono_literals;
 
 namespace SL {
 	namespace RAT {
-        void uvclocsecallback (uv_async_t* handle, int);
+#if UV_VERSION_MINOR == 10 && UV_VERSION_MINOR == 0
+		void uvclocsecallback(uv_async_t* handle, int);
+#else 
+		void uvclocsecallback(uv_async_t* handle);
+#endif
+
+
 		class ServerHubImpl {
 		public:
 			std::shared_ptr<Server_Config> Config_;
 			uWS::Hub h;
-	
+
 			std::atomic_int ClientCount;
 			IServerDriver * IServerDriver_;
 			std::function<void(const std::shared_ptr<IWebSocket>&)> onConnection;
@@ -27,7 +33,7 @@ namespace SL {
 			std::function<void(const IWebSocket&, int, char*, size_t)> onDisconnection;
 			bool thisclosed = false;
 
-			ServerHubImpl(IServerDriver* r, std::shared_ptr<Server_Config> config): IServerDriver_(r), Config_(config), h(0, true) {
+			ServerHubImpl(IServerDriver* r, std::shared_ptr<Server_Config> config) : IServerDriver_(r), Config_(config), h(0, true) {
 
 				ClientCount = 0;
 
@@ -45,7 +51,7 @@ namespace SL {
 						ClientCount += 1;
 						IServerDriver_->onConnection(std::make_shared<WebSocket<uWS::WebSocket<uWS::SERVER>*>>(ws, (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData()));
 
-						
+
 					}
 				});
 
@@ -95,10 +101,10 @@ namespace SL {
 				//uS::TLS::Context c = uS::TLS::createContext(config->PathTo_Public_Certficate, config->PathTo_Private_Key, config->PasswordToPrivateKey);
 				h.listen(Config_->WebSocketTLSLPort, nullptr, 0, nullptr);
 			}
-    
+
 			~ServerHubImpl() {
 
-			
+
 
 				auto loop = h.getLoop();
 
@@ -106,16 +112,16 @@ namespace SL {
 				asyncHandle.data = this;
 				uv_async_init(loop, &asyncHandle, uvclocsecallback);
 				uv_async_send(&asyncHandle);
-                while (!thisclosed) {
+				while (!thisclosed) {
 					std::this_thread::sleep_for(50ms);
 				}
 
 				//block until closed properly
-				
+
 				delete (std::mutex*)h.getDefaultGroup<uWS::SERVER>().getUserData();
 
 			}
-	
+
 			void Broadcast(char * data, size_t len) {
 				if (ClientCount <= 0) return;//no one here to send to
 
@@ -133,22 +139,26 @@ namespace SL {
 
 
 		};
-                void uvclocsecallback (uv_async_t* handle, int) {
-					auto uv_walk_callback = [](uv_handle_t* handle, void* /*arg*/) {
-						if (!uv_is_closing(handle))
-							uv_close(handle, nullptr);
-					};
+#if UV_VERSION_MINOR == 10 && UV_VERSION_MINOR == 0
+		void uvclocsecallback(uv_async_t* handle, int) {
+#else 
+		void uvclocsecallback(uv_async_t* handle) {
+#endif
 
-					auto loop = handle->loop;
-					auto hub = (ServerHubImpl*)handle->data;
-			
-					hub->h.getDefaultGroup<true>().close();
-					hub->thisclosed = true;
-					uv_stop(loop);
-					uv_walk(loop, uv_walk_callback, nullptr);
-					uv_run(loop, UV_RUN_DEFAULT);
-					//uv_close((uv_handle_t*)handle, NULL);
-				};
+			auto uv_walk_callback = [](uv_handle_t* handle, void* /*arg*/) {
+				if (!uv_is_closing(handle))
+					uv_close(handle, nullptr);
+			};
+
+			auto loop = handle->loop;
+			auto hub = (ServerHubImpl*)handle->data;
+
+			hub->h.getDefaultGroup<true>().close();
+			hub->thisclosed = true;
+			uv_stop(loop);
+			uv_walk(loop, uv_walk_callback, nullptr);
+			uv_run(loop, UV_RUN_DEFAULT);
+		};
 
 	}
 }

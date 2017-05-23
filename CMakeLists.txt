@@ -10,15 +10,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif(NOT CMAKE_BUILD_TYPE)
 
-option(BUILD_EXAMPLE "Build example" On)
-
 add_subdirectory(Screen_Capture/src)
 
 add_subdirectory(src)
 if(WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
-add_subdirectory(uWebSockets/src)
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(Client)

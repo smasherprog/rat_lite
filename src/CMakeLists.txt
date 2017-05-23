@@ -57,13 +57,11 @@ set(REMOTE_ACCESS_COMMON_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/IServerDriver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Clipboard.h
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/WebSocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/ServerHub.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/ServerHub.cpp
 
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Image.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Configs.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/IWebSocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/INetworkHandlers.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Logging.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Shapes.h
@@ -78,9 +76,6 @@ find_package(libjpegturbo REQUIRED)
 set(FLTK_SKIP_FLUID TRUE)
 find_package(FLTK REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(LIBUV REQUIRED)
-
-add_definitions(-DUSE_LIBUV)
 
 set(REMOTE_ACCESS_INCLUDE_DIRS 
 	${REMOTE_ACCESS_COMMON_INC} 
@@ -89,9 +84,7 @@ set(REMOTE_ACCESS_INCLUDE_DIRS
 	${LIBJPEGTURBO_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 	${FLTK_INCLUDE_DIR}
-	${LIBUV_INCLUDE_DIRS}
 	${SCREEN_CAPTURE_INCLUDE_DIRS}
-	${CMAKE_CURRENT_SOURCE_DIR}/../uWebSockets/src/
 	CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
 )
 
@@ -99,13 +92,10 @@ set(REMOTE_ACCESS_LIBS
 	${PROJECT_NAME}
 	${REMOTE_ACCESS_PLATFORM_LIBS} 
 	${OPENSSL_LIBRARIES} 
-	${LIBUWS_LIBRARY} 
 	${LIBJPEGTURBO_LIBRARIES}
 	${FLTK_LIBRARIES}
 	${SCREEN_CAPTURE_LIB}
 	${Boost_LIBRARIES}
-	${LIBUV_LIBRARIES}
-	uWS
 	CACHE INTERNAL "${PROJECT_NAME}: Include Libraries" FORCE
 )
 

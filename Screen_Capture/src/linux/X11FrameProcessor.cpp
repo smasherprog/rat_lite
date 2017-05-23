@@ -18,9 +18,6 @@ namespace SL {
 		struct X11FrameProcessorImpl {
 
 			std::shared_ptr<Monitor_Thread_Data> Data;
-			std::vector<char> OldImageBuffer, NewImageBuffer;
-		
-			bool FirstRun;
 			Display* SelectedDisplay;
 			Window RootWindow;
 			XImage* Image;
@@ -31,7 +28,6 @@ namespace SL {
 		X11FrameProcessor::X11FrameProcessor()
 		{
 			_X11FrameProcessorImpl = std::make_unique<X11FrameProcessorImpl>();
-			_X11FrameProcessorImpl->FirstRun = true;
 			_X11FrameProcessorImpl->SelectedDisplay = nullptr;
 			_X11FrameProcessorImpl->Image = nullptr;
 		}
@@ -87,10 +83,10 @@ namespace SL {
 		DUPL_RETURN X11FrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
-			ImageRect imgrect;
-			imgrect.left = imgrect.top = 0;
-			imgrect.right = Width(_X11FrameProcessorImpl->Data->SelectedMonitor);
-			imgrect.bottom = Height(_X11FrameProcessorImpl->Data->SelectedMonitor);
+			ImageRect ret;
+			ret.left = ret.top = 0;
+			ret.right = Width(_X11FrameProcessorImpl->Data->SelectedMonitor);
+			ret.bottom = Height(_X11FrameProcessorImpl->Data->SelectedMonitor);
             
             //check to see if the display has changed
             auto t = XOpenDisplay(NULL);
@@ -98,43 +94,15 @@ namespace SL {
             auto monw = DisplayWidth(t, Id(_X11FrameProcessorImpl->Data->SelectedMonitor));
             XCloseDisplay(t);
             
-            if( monh!= imgrect.bottom || monw!= imgrect.right){
+            if( monh!= ret.bottom || monw!= ret.right){
                    return DUPL_RETURN_ERROR_EXPECTED;  
             }
 
 			if(!XShmGetImage(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->RootWindow, _X11FrameProcessorImpl->Image, 0, 0, AllPlanes)){
                 return DUPL_RETURN_ERROR_EXPECTED;
             }
-            _X11FrameProcessorImpl->NewImageBuffer.resize(PixelStride*imgrect.right*imgrect.bottom);
-            _X11FrameProcessorImpl->OldImageBuffer.resize(PixelStride*imgrect.right*imgrect.bottom);
-			memcpy(_X11FrameProcessorImpl->NewImageBuffer.data(), _X11FrameProcessorImpl->Image->data, PixelStride*imgrect.right*imgrect.bottom);
-			if (_X11FrameProcessorImpl->Data->CaptureEntireMonitor) {
-				auto img = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
-				_X11FrameProcessorImpl->Data->CaptureEntireMonitor(img, _X11FrameProcessorImpl->Data->SelectedMonitor);
-			}
-			if (_X11FrameProcessorImpl->Data->CaptureDifMonitor) {
-				if (_X11FrameProcessorImpl->FirstRun) {
-					//first time through, just send the whole image
-					auto wholeimgfirst = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
-					_X11FrameProcessorImpl->Data->CaptureDifMonitor(wholeimgfirst, _X11FrameProcessorImpl->Data->SelectedMonitor);
-					_X11FrameProcessorImpl->FirstRun = false;
-				}
-				else {
-					//user wants difs, lets do it!
-					auto newimg = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
-					auto oldimg = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->OldImageBuffer.data());
-					auto imgdifs = GetDifs(oldimg, newimg);
-					for (auto& r : imgdifs) {
-						auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
-						auto startsrc = _X11FrameProcessorImpl->NewImageBuffer.data();
-						startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
-						auto difimg = Create(r, PixelStride, padding, startsrc);
-						_X11FrameProcessorImpl->Data->CaptureDifMonitor(difimg, _X11FrameProcessorImpl->Data->SelectedMonitor);
-
-					}
-				}
-				_X11FrameProcessorImpl->NewImageBuffer.swap(_X11FrameProcessorImpl->OldImageBuffer);
-			}
+			memcpy(_X11FrameProcessorImpl->Data->NewImageBuffer.get(), _X11FrameProcessorImpl->Image->data, PixelStride*ret.right*ret.bottom);
+            ProcessMonitorCapture(*_X11FrameProcessorImpl->Data, ret);
 			return Ret;
 		}
 

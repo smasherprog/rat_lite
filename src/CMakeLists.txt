@@ -69,6 +69,7 @@ set(REMOTE_ACCESS_COMMON_SRC
 set(REMOTE_ACCESS_COMMON_INC
     ${CMAKE_CURRENT_SOURCE_DIR}/../include
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
+	${CMAKE_CURRENT_SOURCE_DIR}/../websocket_lite/include
 )
 
 find_package(Boost COMPONENTS program_options system date_time REQUIRED)

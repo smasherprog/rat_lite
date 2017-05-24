@@ -11,13 +11,14 @@
 #include "Configs.h"
 #include "Shapes.h"
 #include "Input.h"
-#include "IWebSocket.h"
 #include "Logging.h"
+
+#include "WS_Lite.h"
 
 namespace SL {
 	namespace RAT {
 		struct NewClient {
-			std::shared_ptr<IWebSocket> s;
+		    WS_LITE::WSocket s;
 			std::vector<int> mids;
 		};
 		class ServerImpl : public IServerDriver {
@@ -75,7 +76,7 @@ namespace SL {
 						std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
 						for (auto& a : ClientsThatNeedFullFrames) {
 							a.mids.erase(std::remove_if(begin(a.mids), end(a.mids), [&](const auto i) {  return i == Screen_Capture::Id(monitor);  }), end(a.mids));
-							ServerDriver_.SendFrameChange(a.s.get(), img, monitor);
+							ServerDriver_.SendFrameChange(&a.s, img, monitor);
 						}
 						ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames), [&](const auto i) {  return i.mids.empty(); }), end(ClientsThatNeedFullFrames));
 					}
@@ -92,35 +93,33 @@ namespace SL {
 
 
 			}
-			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
+			virtual void onConnection(const WS_LITE::WSocket& socket) override {
 				UNUSED(socket);
 				std::vector<int> ids;
 				auto p = Screen_Capture::GetMonitors();
 				for (auto& a : p) {
 					ids.push_back(Screen_Capture::Id(*a));
 				}
-				ServerDriver_.SendMonitorInfo(socket.get(), p);
+				ServerDriver_.SendMonitorInfo(&socket, p);
 
 				std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
 				ClientsThatNeedFullFrames.push_back({ socket, ids });
 			}
 
-			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
+			virtual void onDisconnection(const WS_LITE::WSocket& socket, unsigned short code, const std::string& msg) override {
 				UNUSED(socket);
 				UNUSED(code);
-				UNUSED(message);
-				UNUSED(length);
+				UNUSED(msg);
 			}
 
-			virtual void onMessage(const IWebSocket& socket, const char* data, size_t len)  override {
+			virtual void onMessage(const WS_LITE::WSocket& socket, const WS_LITE::WSMessage& msg )  override {
 				UNUSED(socket);
-				UNUSED(data);
-				UNUSED(len);
+				UNUSED(msg);
 			}
 
-			virtual void onReceive_ClipboardText(const char* data, unsigned int len) override {
+			virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int len) override {
 				SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceiveClipboard_Text " << len);
-				Clipboard_->updateClipbard(data, static_cast<int>(len));
+				Clipboard_->updateClipbard(reinterpret_cast<const char*>(data), static_cast<int>(len));
 			}
 
 
@@ -133,7 +132,7 @@ namespace SL {
 
 
 			void OnMousePos(Point p) {
-				ServerDriver_.SendMouse(nullptr, p);
+				//ServerDriver_.SendMouse(nullptr, p);
 			}
 
 

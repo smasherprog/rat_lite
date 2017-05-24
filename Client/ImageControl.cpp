@@ -58,11 +58,11 @@ namespace SL {
 			return elems;
 		}
 
-		std::shared_ptr<char> Resize(const char* inimg, int inheight, int inwidth, int dstheight, int dstwidth)
+		std::shared_ptr<unsigned char> Resize(const unsigned char* inimg, int inheight, int inwidth, int dstheight, int dstwidth)
 		{//linear scaling
 			auto m_width = dstwidth;
 			auto m_height = dstheight;
-			auto outimg = std::shared_ptr<char>(new char[m_width*m_height*PixelStride], [](char* d) { delete[] d; });
+			auto outimg = std::shared_ptr<unsigned char>(new unsigned char[m_width*m_height*PixelStride], [](auto* d) { delete[] d; });
 			auto temp = (int*)outimg.get();
 			auto pixels = (int*)inimg;
 			double x_ratio = inwidth / (double)m_width;
@@ -77,7 +77,7 @@ namespace SL {
 			}
 			return outimg;
 		}
-		std::shared_ptr<char> Resize(const char* inimg, int* inheight, int* inwidth, float scale)
+		std::shared_ptr<unsigned char> Resize(const unsigned char* inimg, int* inheight, int* inwidth, float scale)
 		{
 			auto height = *inheight;
 			auto width = *inwidth;
@@ -98,13 +98,13 @@ namespace SL {
 		struct MonitorData {
 			Screen_Capture::Monitor Monitor;
 			Image Original, Scaled;
-			std::shared_ptr<char> OriginalBacking, ScaledBacking;
+			std::shared_ptr<unsigned char> OriginalBacking, ScaledBacking;
 			SharedMutex Lock;
 
 		};
 		struct MouseData {
 			Image MouseImage;
-			std::unique_ptr<char[]> MouseImageBacking;
+			std::unique_ptr<unsigned char[]> MouseImageBacking;
 			Point Pos;
 			std::unique_ptr<Fl_RGB_Image> FlMouseImage;
 		};
@@ -159,7 +159,7 @@ namespace SL {
 							auto size = a->Original.Rect_.Height*a->Original.Rect_.Width*PixelStride;
 
 							a->Scaled.Rect_ = a->Original.Rect_;
-							a->ScaledBacking = std::shared_ptr<char>(new char[size], [](char* d) { delete[] d; });
+							a->ScaledBacking = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* d) { delete[] d; });
 							a->Scaled.Data = a->ScaledBacking.get();
 							memcpy((void*)a->Scaled.Data, a->Original.Data, size);
 
@@ -210,7 +210,7 @@ namespace SL {
 			void setMouseImage_(const Image& img) {
 
 				auto s = img.Rect_.Width*img.Rect_.Height*PixelStride;
-				auto mouseimg = std::make_unique<char[]>(s);
+				auto mouseimg = std::make_unique<unsigned char[]>(s);
 				Image mouseimgdata(img.Rect_, mouseimg.get(), s);
 				memcpy(mouseimg.get(), img.Data, s);
 				UniqueLock<SharedMutex> l(MouseLock);
@@ -336,13 +336,13 @@ namespace SL {
 							Rect r(Point(0, 0), monitors[i].Height, monitors[i].Width);
 							auto size = r.Height* r.Width*PixelStride;
 
-							auto originalptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
+							auto originalptr = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
 							Image original(r, originalptr.get(), size);
 
 							r.Height = cury;
 							r.Width = curx;
 							size = r.Height* r.Width*PixelStride;
-							auto scaledptr = std::shared_ptr<char>(new char[size], [](char* p) { delete[] p; });
+							auto scaledptr = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
 							Image scaled(r, scaledptr.get(), size);
 
 							newmonitor->Original = original;

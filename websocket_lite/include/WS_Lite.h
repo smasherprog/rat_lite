@@ -45,10 +45,9 @@ namespace SL {
         class WSListener;
         class WSClient;
         struct WSocketImpl;
-        class WSocket {
+        struct WSocket {
             std::shared_ptr<WSocketImpl> WSocketImpl_;
-        public:
-            WSocket(const std::shared_ptr<WSocketImpl>& ptr) : WSocketImpl_(ptr) {}
+
             //can be used to compare two WSocket objects
             bool operator=(const WSocket& s) { return s.WSocketImpl_ == WSocketImpl_; }
             bool is_open();
@@ -57,6 +56,7 @@ namespace SL {
             bool is_v4();
             bool is_v6();
             bool is_loopback();
+            operator bool() const { return WSocketImpl_.operator bool(); }
             friend WSListener;
             friend WSClient;
         };

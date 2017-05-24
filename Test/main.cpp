@@ -4,9 +4,10 @@
 #include "ClientDriver.h"
 #include "ServerDriver.h"
 #include "Input.h"
-#include "internal/WebSocket.h"
-#include"SCCommon.h"
+#include "SCCommon.h"
 #include "Configs.h"
+
+#include "WS_Lite.h"
 
 #include <memory>
 #include <thread>
@@ -58,17 +59,17 @@ public:
 	virtual void onReceive_MousePos(const SL::RAT::Point* pos) {
 
 	}
-	virtual void onReceive_ClipboardText(const char* data, unsigned int length) {
+	virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int length) {
 
 	}
 
-	virtual void onConnection(const std::shared_ptr<SL::RAT::IWebSocket>& socket) override
+	virtual void onConnection(const SL::WS_LITE::WSocket& socket) override
 	{
 	}
-	virtual void onMessage(const SL::RAT::IWebSocket & socket, const char * data, size_t length) override
+	virtual void onMessage(const SL::WS_LITE::WSocket& socket, const SL::WS_LITE::WSMessage& msg) override
 	{
 	}
-	virtual void onDisconnection(const SL::RAT::IWebSocket & socket, int code, char * message, size_t length) override
+	virtual void onDisconnection(const SL::WS_LITE::WSocket& socket, unsigned short code, const std::string& msg) override
 	{
 	}
 };
@@ -90,16 +91,16 @@ public:
 
 
 	// Inherited via IServerDriver
-	virtual void onConnection(const std::shared_ptr<SL::RAT::IWebSocket>& socket) override
+	virtual void onConnection(const SL::WS_LITE::WSocket&  socket) override
 	{
-		lowerlevel->SendMonitorInfo(socket.get(), MonitorsToSend);
+		lowerlevel->SendMonitorInfo(&socket, MonitorsToSend);
 	}
 
-	virtual void onMessage(const SL::RAT::IWebSocket & socket, const char * data, size_t length) override
+	virtual void onMessage(const SL::WS_LITE::WSocket& socket, const SL::WS_LITE::WSMessage& msg) override
 	{
 	}
 
-	virtual void onDisconnection(const SL::RAT::IWebSocket & socket, int code, char * message, size_t length) override
+	virtual void onDisconnection(const SL::WS_LITE::WSocket&  socket, unsigned short code, const std::string& msg) override
 	{
 		done = true;
 	}
@@ -114,7 +115,7 @@ public:
 		done = true;
 	}
 
-	virtual void onReceive_ClipboardText(const char * data, unsigned int len) override
+	virtual void onReceive_ClipboardText(const unsigned char * data, unsigned int len) override
 	{
 	}
 

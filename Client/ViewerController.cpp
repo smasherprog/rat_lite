@@ -5,7 +5,8 @@
 #include "Clipboard.h"
 #include "IClientDriver.h"
 #include "Configs.h"
-#include "IWebSocket.h"
+
+#include "WS_Lite.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
@@ -40,8 +41,8 @@ namespace SL {
 			bool CursorHidden_ = false;
 			char Title_[255];
 			bool HasFocus_ = false;
-			std::shared_ptr<IWebSocket> Socket_;
-			SocketStats LastStats;
+			WS_LITE::WSocket Socket_;
+			//SocketStats LastStats;
 
 
 			static void window_cb(Fl_Widget *widget, void *)
@@ -158,22 +159,20 @@ namespace SL {
 			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) override {
 				ImageControl_->setMonitors(monitors, num_of_monitors);
 			}
-			virtual void onConnection(const std::shared_ptr<IWebSocket>& socket) override {
+			virtual void onConnection(const WS_LITE::WSocket& socket) override {
 				Socket_ = socket;
 			}
 
-			virtual void onDisconnection(const IWebSocket& socket, int code, char* message, size_t length) override {
+			virtual void onDisconnection(const WS_LITE::WSocket& socket, unsigned short code, const std::string& msg) override {
 				UNUSED(socket);
-				UNUSED(code);
-				UNUSED(message);
-				UNUSED(length);
+				UNUSED(code); 
+                UNUSED(msg);
 				Fl::awake(closethiswindow, this);
 			}
 
-			virtual void onMessage(const IWebSocket& socket, const char* data, size_t len)  override {
+			virtual void onMessage(const WS_LITE::WSocket& socket, const WS_LITE::WSMessage& msg)  override {
 				UNUSED(socket);
-				UNUSED(data);
-				UNUSED(len);
+                UNUSED(msg);
 			}
 
 
@@ -184,14 +183,14 @@ namespace SL {
 				if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - NetworkStatsTimer_).count() > 1000 && Socket_) {
 					NetworkStatsTimer_ = std::chrono::steady_clock::now();
 
-					auto stats = Socket_->get_Stats();
+					//auto stats = Socket_->get_Stats();
 					std::string st = "Client ";
-					st += std::to_string((stats->TotalBytesReceived - LastStats.TotalBytesReceived) / 1000) + " Kbs Received ";
-					st += std::to_string((stats->TotalBytesSent - LastStats.TotalBytesSent) / 1000) + " Kbs Sent";
+				//	st += std::to_string((stats->TotalBytesReceived - LastStats.TotalBytesReceived) / 1000) + " Kbs Received ";
+				//	st += std::to_string((stats->TotalBytesSent - LastStats.TotalBytesSent) / 1000) + " Kbs Sent";
 					FPS = FrameCounter;
 					FrameCounter = 0;
 					st += " Fps: " + std::to_string(FPS);
-					LastStats = *stats;
+					//LastStats = *stats;
 					if (st.size() > sizeof(Title_) - 1) st = st.substr(0, sizeof(Title_) - 1);
 					memcpy(Title_, st.c_str(), st.size() + 1);
 					Fl::awake(awakensettitle, this);
@@ -205,8 +204,8 @@ namespace SL {
 			virtual void onReceive_MousePos(const Point* pos)override {
 				ImageControl_->setMousePosition(pos);
 			}
-			virtual void  onReceive_ClipboardText(const char* data, unsigned int len) override {
-				Clipboard_->updateClipbard(data, len);
+			virtual void  onReceive_ClipboardText(const unsigned char* data, unsigned int len) override {
+				Clipboard_->updateClipbard(reinterpret_cast<const char*>(data), len);
 			}
 
 

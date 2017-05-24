@@ -1,18 +1,17 @@
 #include "ClientDriver.h"
 #include "turbojpeg.h"
 #include "IClientDriver.h"
-#include "WebSocket.h"
 #include "Shapes.h"
 #include "Image.h"
 #include "Input.h"
 #include "Logging.h"
 #include "Configs.h"
-#include "IWebSocket.h"
-#include "internal/WebSocket.h"
 #include "SCCommon.h"
-#include "uWS.h"
-#include <assert.h>
 
+#include "WS_Lite.h"
+
+#include <assert.h>
+#include <mutex>
 
 namespace SL {
 	namespace RAT {
@@ -21,30 +20,30 @@ namespace SL {
 
 			IClientDriver* IClientDriver_;
 			std::shared_ptr<Client_Config> Config_;
-			uWS::Hub h;
+            WS_LITE::WSClient h;
 			Point LastMousePosition_;
-			std::shared_ptr<IWebSocket> Socket_;
+			std::shared_ptr<WS_LITE::WSocket> Socket_;
 			std::thread Runner;
 			std::mutex outputbufferLock;
-			std::vector<char> outputbuffer;
+			std::vector<unsigned char> outputbuffer;
 
-			void MouseImage(const IWebSocket& socket, const char* data, size_t len) {
+			void MouseImage(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 				Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
 				assert(len >= sizeof(Rect) + (img.Rect_.Width * img.Rect_.Height * PixelStride));
 				IClientDriver_->onReceive_MouseImage(img);
 			}
 
-			void MousePos(const IWebSocket& socket, const char* data, size_t len) {
+			void MousePos(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
 				assert(len == sizeof(Point));
 				IClientDriver_->onReceive_MousePos(reinterpret_cast<const Point*>(data));
 			}
-			void MonitorInfo(const IWebSocket& socket, const char* data, size_t len) {
+			void MonitorInfo(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
 				auto num = len / sizeof(Screen_Capture::Monitor);
 				assert(num * sizeof(Screen_Capture::Monitor) == len);
 				IClientDriver_->onReceive_Monitors((Screen_Capture::Monitor*)data, num);
 			}
-			void ScreenImage(const IWebSocket& socket, const char* data, size_t len) {
+			void ScreenImage(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 
 				auto jpegDecompressor = tjInitDecompress();
@@ -83,69 +82,48 @@ namespace SL {
 			}
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host) {
 				Config_ = config;
-				auto hc = std::string("ws://") + std::string(dst_host) + std::string(":") + std::to_string(config->WebSocketTLSLPort);
-				h.connect(hc, nullptr);
-				h.getDefaultGroup<uWS::CLIENT>().setUserData(new std::mutex);
+                auto hc = std::string("ws://") + std::string(dst_host);
+				h.connect(hc.c_str(), config->WebSocketTLSLPort);
 
-				h.onConnection([&](uWS::WebSocket<uWS::CLIENT>* ws, uWS::HttpRequest req) {
+				h.onConnection([&](WS_LITE::WSocket& ws, const std::unordered_map<std::string, std::string>& header) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
-					ws->setUserData(new SocketStats());
-					Socket_ = std::make_shared<WebSocket<uWS::WebSocket<uWS::CLIENT>*>>(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
-					IClientDriver_->onConnection(Socket_);
+					IClientDriver_->onConnection(ws);
 				});
-				h.onDisconnection([&](uWS::WebSocket<uWS::CLIENT>* ws, int code, char *message, size_t length) {
+				h.onDisconnection([&](WS_LITE::WSocket& ws, unsigned short code, const std::string& msg) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");
-					WebSocket<uWS::WebSocket<uWS::CLIENT>*> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
-					IClientDriver_->onDisconnection(sock, code, message, length);
-					delete (SocketStats*)ws->getUserData();
+                    IClientDriver_->onDisconnection(ws, code, msg);
 				});
-				h.onMessage([&](uWS::WebSocket<uWS::CLIENT>* ws, char *message, size_t length, uWS::OpCode code) {
-					auto s = (SocketStats*)ws->getUserData();
-					s->TotalBytesReceived += length;
-					s->TotalPacketReceived += 1;
-
-
-					auto p = *reinterpret_cast<const PACKET_TYPES*>(message);
-					WebSocket<uWS::WebSocket<uWS::CLIENT>*> sock(ws, (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData());
+				h.onMessage([&](WS_LITE::WSocket& ws, const WS_LITE::WSMessage& msg) {
+			
+					auto p = *reinterpret_cast<const PACKET_TYPES*>(msg.data);
 					//SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
 					switch (p) {
 					case PACKET_TYPES::MONITORINFO:
-						MonitorInfo(sock, message + sizeof(p), length - sizeof(p));
+						MonitorInfo(ws, msg.data + sizeof(p), msg.len - sizeof(p));
 						break;
 					case PACKET_TYPES::SCREENIMAGEDIF:
-						ScreenImage(sock, message + sizeof(p), length - sizeof(p));
+						ScreenImage(ws, msg.data + sizeof(p), msg.len - sizeof(p));
 						break;
 					case PACKET_TYPES::MOUSEIMAGE:
-						MouseImage(sock, message + sizeof(p), length - sizeof(p));
+						MouseImage(ws, msg.data + sizeof(p), msg.len - sizeof(p));
 						break;
 					case PACKET_TYPES::MOUSEPOS:
-						MousePos(sock, message + sizeof(p), length - sizeof(p));
+						MousePos(ws, msg.data + sizeof(p), msg.len - sizeof(p));
 						break;
 					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-						IClientDriver_->onReceive_ClipboardText(message + sizeof(p), length - sizeof(p));
+						IClientDriver_->onReceive_ClipboardText(msg.data + sizeof(p), msg.len - sizeof(p));
 						break;
 					default:
-						IClientDriver_->onMessage(sock, message, length);//pass up the chain
+						IClientDriver_->onMessage(ws, msg);//pass up the chain
 						break;
 					}
 					
 				});
 				
-				Runner = std::thread([&]() {
-					h.run();
-					SL_RAT_LOG(Logging_Levels::INFO_log_level, "Stopping ClientDriver Thread");
-					delete (std::mutex*)h.getDefaultGroup<uWS::CLIENT>().getUserData();
-				});
 			}
 
 			virtual ~ClientDriverImpl() {
 				
-				h.getDefaultGroup<uWS::CLIENT>().close();
-
-				if (Runner.joinable()) {
-					Runner.join();
-				}
-
 			}
 
 
@@ -165,7 +143,7 @@ namespace SL {
 				char ptr[size];
 				*reinterpret_cast<PACKET_TYPES*>(ptr) = ptype;
 				memcpy(ptr + sizeof(ptype), &m, sizeof(m));
-				Socket_->send(ptr, size);
+               // h.send(Socket_, ptr, size);
 			}
 			void SendKey(const KeyEvent & m) {
 				if (!Socket_) {
@@ -177,7 +155,7 @@ namespace SL {
 				char ptr[size];
 				*reinterpret_cast<PACKET_TYPES*>(ptr) = ptype;
 				memcpy(ptr + sizeof(ptype), &m, sizeof(m));
-				Socket_->send(ptr, size);
+				//Socket_->send(ptr, size);
 
 			}
 			void SendClipboardText(const char* data, unsigned int len) {
@@ -192,11 +170,8 @@ namespace SL {
 				auto ptr(std::make_unique<char[]>(size));
 				*reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
 				memcpy(ptr.get() + sizeof(ptype), data, len);
-				Socket_->send(ptr.get(), size);
+				//Socket_->send(ptr.get(), size);
 
-			}
-			std::shared_ptr<IWebSocket> getSocket()const {
-				return Socket_;
 			}
 		};
 

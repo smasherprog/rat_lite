@@ -1,7 +1,6 @@
 #include "ServerDriver.h"
 #include "Shapes.h"
 #include "IServerDriver.h"
-#include "internal/WebSocket.h"
 #include "Configs.h"
 #include "turbojpeg.h"
 #include "Input.h"
@@ -25,16 +24,16 @@ namespace SL {
 			virtual ~ServerDriverImpl() {
 
 			}
-			void Send(IWebSocket* socket, char* data, size_t len) {
+			void Send(const WS_LITE::WSocket* socket, char* data, size_t len) {
 				if (socket) {
-					socket->send(data, len);
+					//socket->send(data, len);
 				}
 				else {
-					ServerHub_.Broadcast(data, len);
+					//ServerHub_.Broadcast(data, len);
 				}
 			}
 
-			void SendScreen(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor, PACKET_TYPES p) {
+			void SendScreen(const WS_LITE::WSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor, PACKET_TYPES p) {
 
 				if (ServerHub_.get_ClientCount() <= 0) return;
 				Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
@@ -72,7 +71,7 @@ namespace SL {
 				tjDestroy(jpegCompressor);
 				Send(socket, buffer.get(), finalsize);
 			}
-			void SendMouse(IWebSocket* socket, const Screen_Capture::Image & img) {
+			void SendMouse(const WS_LITE::WSocket* socket, const Screen_Capture::Image & img) {
 
 				if (ServerHub_.get_ClientCount() <= 0) return;
 				Rect r(Point(0, 0), Height(img), Width(img));
@@ -91,7 +90,7 @@ namespace SL {
 				Send(socket, buffer.get(), finalsize);
 
 			}
-			void SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors) {
+			void SendMonitorInfo(const WS_LITE::WSocket* socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors) {
 				if (ServerHub_.get_ClientCount() <= 0) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MONITORINFO);
 				const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
@@ -107,7 +106,7 @@ namespace SL {
 				Send(socket, buffer.get(), size);
 
 			}
-			void SendMouse(IWebSocket* socket, const Point& pos)
+			void SendMouse(const WS_LITE::WSocket* socket, const Point& pos)
 			{
 				if (ServerHub_.get_ClientCount() <= 0) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
@@ -120,7 +119,7 @@ namespace SL {
 				Send(socket, buffer, size);
 			}
 
-			void SendClipboardText(IWebSocket* socket, const char* data, unsigned int len) {
+			void SendClipboardText(const WS_LITE::WSocket* socket, const char* data, unsigned int len) {
 				if (ServerHub_.get_ClientCount() <= 0) return;
 				auto p = static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT);
 				auto size = len + sizeof(p);
@@ -144,24 +143,24 @@ namespace SL {
 		void ServerDriver::Run() {
 			ServerDriverImpl_->ServerHub_.Run();
 		}
-		void ServerDriver::SendFrameChange(IWebSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
+		void ServerDriver::SendFrameChange(const WS_LITE::WSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
 		{
 			ServerDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
 		}
-		void ServerDriver::SendMonitorInfo(IWebSocket * socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
+		void ServerDriver::SendMonitorInfo(const WS_LITE::WSocket* socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
 		{
 			ServerDriverImpl_->SendMonitorInfo(socket, monitors);
 		}
-		void ServerDriver::SendMouse(IWebSocket* socket, const Screen_Capture::Image & img)
+		void ServerDriver::SendMouse(const WS_LITE::WSocket* socket, const Screen_Capture::Image & img)
 		{
 			ServerDriverImpl_->SendMouse(socket, img);
 		}
-		void ServerDriver::SendMouse(IWebSocket* socket, const Point & pos)
+		void ServerDriver::SendMouse(const WS_LITE::WSocket* socket, const Point & pos)
 		{
 			ServerDriverImpl_->SendMouse(socket, pos);
 		}
 
-		void ServerDriver::SendClipboardText(IWebSocket* socket, const char* data, unsigned int len) {
+		void ServerDriver::SendClipboardText(const WS_LITE::WSocket* socket, const char* data, unsigned int len) {
 			ServerDriverImpl_->SendClipboardText(socket, data, len);
 		}
 

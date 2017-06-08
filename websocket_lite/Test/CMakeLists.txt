@@ -16,7 +16,7 @@ add_definitions(
 	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/public.crt"
 	-DTEST_DH_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/dh.key"
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
-	-DTEST_FUZZING_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/wssfuzzingclient.json"
+	-DTEST_FUZZING_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/fuzzingclient.json"
 )
 
 include_directories(${WEBSOCKET_LITE_INCLUDE_DIRS})

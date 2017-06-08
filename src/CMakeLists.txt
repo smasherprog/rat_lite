@@ -57,9 +57,6 @@ set(REMOTE_ACCESS_COMMON_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/IServerDriver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Clipboard.h
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/ServerHub.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/ServerHub.cpp
-
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Image.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Configs.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/INetworkHandlers.h

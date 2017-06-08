@@ -24,9 +24,9 @@ namespace SL {
 		public:
 			virtual ~INetworkHandlers() {}
 
-			virtual void onConnection(const WS_LITE::WSocket& socket) = 0;
-			virtual void onMessage(const WS_LITE::WSocket&, const WS_LITE::WSMessage& msg) = 0;
-			virtual void onDisconnection(const WS_LITE::WSocket&, unsigned short code, const std::string& msg) = 0;
+			virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) = 0;
+			virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg) = 0;
+			virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) = 0;
 		};
 	}
 }

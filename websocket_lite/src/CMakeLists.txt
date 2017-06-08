@@ -14,6 +14,7 @@ if(WIN32)
    
     )
 	set(WEBSOCKET_LITE_PLATFORM_LIBS
+		Crypt32
     )
 
 elseif(APPLE)
@@ -24,6 +25,7 @@ elseif(APPLE)
 	set(WEBSOCKET_LITE_PLATFORM_LIBS
 
     )
+    set(OPENSSL_ROOT_DIR /usr/local/opt/openssl/*)
 else()
 	find_package(Threads REQUIRED)
 
@@ -40,10 +42,13 @@ endif()
 set(WEBSOCKET_LITE_COMMON_SRC 
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/WebSocketProtocol.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/Utils.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/Utils.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Logging.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/WS_Lite.h
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/ListenerImpl.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/ClientImpl.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/DataStructures.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/WSContext.cpp
 )
 
 find_package(OpenSSL REQUIRED)

@@ -22,28 +22,28 @@ namespace SL {
 			std::shared_ptr<Client_Config> Config_;
             WS_LITE::WSClient h;
 			Point LastMousePosition_;
-			std::shared_ptr<WS_LITE::WSocket> Socket_;
+			std::shared_ptr<WS_LITE::IWSocket> Socket_;
 			std::thread Runner;
 			std::mutex outputbufferLock;
 			std::vector<unsigned char> outputbuffer;
 
-			void MouseImage(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
+			void MouseImage(const unsigned char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 				Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
 				assert(len >= sizeof(Rect) + (img.Rect_.Width * img.Rect_.Height * PixelStride));
 				IClientDriver_->onReceive_MouseImage(img);
 			}
 
-			void MousePos(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
+			void MousePos(const unsigned char* data, size_t len) {
 				assert(len == sizeof(Point));
 				IClientDriver_->onReceive_MousePos(reinterpret_cast<const Point*>(data));
 			}
-			void MonitorInfo(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
+			void MonitorInfo(const unsigned char* data, size_t len) {
 				auto num = len / sizeof(Screen_Capture::Monitor);
 				assert(num * sizeof(Screen_Capture::Monitor) == len);
 				IClientDriver_->onReceive_Monitors((Screen_Capture::Monitor*)data, num);
 			}
-			void ScreenImage(const WS_LITE::WSocket& socket, const unsigned char* data, size_t len) {
+			void ScreenImage(const unsigned char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 
 				auto jpegDecompressor = tjInitDecompress();
@@ -83,43 +83,43 @@ namespace SL {
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host) {
 				Config_ = config;
                 auto hc = std::string("ws://") + std::string(dst_host);
-				h.connect(hc.c_str(), config->WebSocketTLSLPort);
-
-				h.onConnection([&](WS_LITE::WSocket& ws, const std::unordered_map<std::string, std::string>& header) {
+                h = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
+                    .CreateClient()
+                    .onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::unordered_map<std::string, std::string>& header) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
-					IClientDriver_->onConnection(ws);
-				});
-				h.onDisconnection([&](WS_LITE::WSocket& ws, unsigned short code, const std::string& msg) {
+                    Socket_ = socket;
+					IClientDriver_->onConnection(socket);
+                }).onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) {
 					SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");
-                    IClientDriver_->onDisconnection(ws, code, msg);
-				});
-				h.onMessage([&](WS_LITE::WSocket& ws, const WS_LITE::WSMessage& msg) {
+                    Socket_.reset();
+                    IClientDriver_->onDisconnection(socket, code, msg);
+                }).onMessage([&](const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const SL::WS_LITE::WSMessage& message) {
 			
-					auto p = *reinterpret_cast<const PACKET_TYPES*>(msg.data);
+					auto p = *reinterpret_cast<const PACKET_TYPES*>(message.data);
 					//SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
 					switch (p) {
 					case PACKET_TYPES::MONITORINFO:
-						MonitorInfo(ws, msg.data + sizeof(p), msg.len - sizeof(p));
+						MonitorInfo( message.data + sizeof(p), message.len - sizeof(p));
 						break;
 					case PACKET_TYPES::SCREENIMAGEDIF:
-						ScreenImage(ws, msg.data + sizeof(p), msg.len - sizeof(p));
+						ScreenImage( message.data + sizeof(p), message.len - sizeof(p));
 						break;
 					case PACKET_TYPES::MOUSEIMAGE:
-						MouseImage(ws, msg.data + sizeof(p), msg.len - sizeof(p));
+						MouseImage( message.data + sizeof(p), message.len - sizeof(p));
 						break;
 					case PACKET_TYPES::MOUSEPOS:
-						MousePos(ws, msg.data + sizeof(p), msg.len - sizeof(p));
+						MousePos( message.data + sizeof(p), message.len - sizeof(p));
 						break;
 					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-						IClientDriver_->onReceive_ClipboardText(msg.data + sizeof(p), msg.len - sizeof(p));
+						IClientDriver_->onReceive_ClipboardText(message.data + sizeof(p), message.len - sizeof(p));
 						break;
 					default:
-						IClientDriver_->onMessage(ws, msg);//pass up the chain
+						IClientDriver_->onMessage(socket, message);//pass up the chain
 						break;
 					}
 					
-				});
-				
+				}).connect(hc.c_str(), config->WebSocketTLSLPort);
+
 			}
 
 			virtual ~ClientDriverImpl() {
@@ -140,10 +140,16 @@ namespace SL {
 				LastMousePosition_ = m.Pos;
 				auto ptype = PACKET_TYPES::MOUSEEVENT;
 				const auto size = sizeof(ptype) + sizeof(m);
-				char ptr[size];
-				*reinterpret_cast<PACKET_TYPES*>(ptr) = ptype;
-				memcpy(ptr + sizeof(ptype), &m, sizeof(m));
-               // h.send(Socket_, ptr, size);
+                auto ptr(std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; }));
+                *reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
+                memcpy(ptr.get() + sizeof(ptype), &m, sizeof(m));
+
+                SL::WS_LITE::WSMessage buf;
+                buf.code = WS_LITE::OpCode::BINARY;
+                buf.Buffer = ptr;
+                buf.len = size;
+                buf.data = ptr.get();
+                Socket_->send(buf, false);
 			}
 			void SendKey(const KeyEvent & m) {
 				if (!Socket_) {
@@ -152,10 +158,16 @@ namespace SL {
 				}
 				auto ptype = PACKET_TYPES::KEYEVENT;
 				const auto size = sizeof(ptype) + sizeof(m);
-				char ptr[size];
-				*reinterpret_cast<PACKET_TYPES*>(ptr) = ptype;
-				memcpy(ptr + sizeof(ptype), &m, sizeof(m));
-				//Socket_->send(ptr, size);
+                auto ptr(std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; }));
+				*reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
+				memcpy(ptr.get() + sizeof(ptype), &m, sizeof(m));
+
+                SL::WS_LITE::WSMessage buf;
+                buf.code = WS_LITE::OpCode::BINARY;
+                buf.Buffer = ptr;
+                buf.len = size;
+                buf.data = ptr.get();
+                Socket_->send(buf, false);
 
 			}
 			void SendClipboardText(const char* data, unsigned int len) {
@@ -167,10 +179,16 @@ namespace SL {
 
 				auto ptype = PACKET_TYPES::CLIPBOARDTEXTEVENT;
 				auto size = sizeof(ptype) + len;
-				auto ptr(std::make_unique<char[]>(size));
+                auto ptr(std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; }));
 				*reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
 				memcpy(ptr.get() + sizeof(ptype), data, len);
-				//Socket_->send(ptr.get(), size);
+
+                SL::WS_LITE::WSMessage buf;
+                buf.code = WS_LITE::OpCode::BINARY;
+                buf.Buffer = ptr;
+                buf.len = size;
+                buf.data = ptr.get();
+				Socket_->send(buf, false);
 
 			}
 		};

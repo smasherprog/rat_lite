@@ -12,6 +12,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 add_subdirectory(Screen_Capture/src)
+add_subdirectory(websocket_lite/src)
 
 add_subdirectory(src)
 if(WIN32)

@@ -139,15 +139,28 @@ namespace SL {
                 return SL::WS_LITE::is_loopback(Socket);
             }
             virtual void send(WSMessage& msg, bool compressmessage) {
-                auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>( shared_from_this()));
+                auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>(shared_from_this()));
                 auto p(Parent.lock());
-                if(p) sendImpl(p, self, msg, compressmessage);
+                if (p) sendImpl(p, self, msg, compressmessage);
             }
             //send a close message and close the socket
             virtual void close(unsigned short code, const std::string& msg) {
                 auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>(shared_from_this()));
                 auto p(Parent.lock());
-                if(p) closeImpl(p, self, code, msg);
+                if (p) closeImpl(p, self, code, msg);
+            }
+            virtual void send(WSPreparedMessage& msg) {
+
+            }
+            virtual WSPreparedMessage prepare(WSMessage& msg, bool compressmessage) {
+                WSPreparedMessage ret;
+                ret.Buffer = msg.Buffer;
+                ret.code = msg.code;
+                ret.data = msg.data;
+                ret.len = msg.len;
+                writeheader(ret.header, msg);
+                writemask<PARENTTYPE>(ret.mask, msg);
+                return ret;
             }
 
             void canceltimers() {

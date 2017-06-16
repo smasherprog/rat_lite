@@ -62,16 +62,15 @@ public:
 	virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int length) {
 
 	}
-
-	virtual void onConnection(const SL::WS_LITE::WSocket& socket) override
-	{
-	}
-	virtual void onMessage(const SL::WS_LITE::WSocket& socket, const SL::WS_LITE::WSMessage& msg) override
-	{
-	}
-	virtual void onDisconnection(const SL::WS_LITE::WSocket& socket, unsigned short code, const std::string& msg) override
-	{
-	}
+    virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) override
+    {
+    }
+    virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const SL::WS_LITE::WSMessage& msg) override
+    {
+    }
+    virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override
+    {
+    }
 };
 
 class TestServerDriver : public SL::RAT::IServerDriver {
@@ -88,22 +87,17 @@ public:
 	virtual ~TestServerDriver() {}
 
 
-
-
-	// Inherited via IServerDriver
-	virtual void onConnection(const SL::WS_LITE::WSocket&  socket) override
-	{
-		lowerlevel->SendMonitorInfo(&socket, MonitorsToSend);
-	}
-
-	virtual void onMessage(const SL::WS_LITE::WSocket& socket, const SL::WS_LITE::WSMessage& msg) override
-	{
-	}
-
-	virtual void onDisconnection(const SL::WS_LITE::WSocket&  socket, unsigned short code, const std::string& msg) override
-	{
-		done = true;
-	}
+    virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) override
+    {
+      //  lowerlevel->SendMonitorInfo(socket.get(), MonitorsToSend);
+    }
+    virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const SL::WS_LITE::WSMessage& msg) override
+    {
+    }
+    virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override
+    {
+        done = true;
+    }
 
 	virtual void onReceive_Mouse(const SL::RAT::MouseEvent * m) override
 	{

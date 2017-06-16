@@ -64,7 +64,10 @@ namespace SL {
             //users should set the *data variable to be the beginning of the data to send. Then, set the Buffer shared ptr as well to make sure the lifetime of the data
             std::shared_ptr<unsigned char> Buffer;
         };
-
+        struct WSPreparedMessage: public WSMessage {
+            unsigned char header[10];
+            unsigned char mask[4];
+        };
 
         class IWSocket : public std::enable_shared_from_this<IWSocket> {
         public:
@@ -76,6 +79,9 @@ namespace SL {
             virtual bool is_v6() const = 0;
             virtual bool is_loopback() const = 0;
             virtual void send(WSMessage& msg, bool compressmessage) = 0;
+            virtual void send(WSPreparedMessage& msg) = 0;
+            virtual WSPreparedMessage prepare(WSMessage& msg, bool compressmessage) = 0;
+
             //send a close message and close the socket
             virtual void close(unsigned short code = 1000, const std::string& msg = "") = 0;
         };

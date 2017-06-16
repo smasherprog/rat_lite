@@ -8,7 +8,7 @@ namespace SL {
 		struct Monitor;
 	};
     namespace WS_LITE{
-        struct WSocket;
+        class IWSocket;
     }
 	namespace RAT {
 		class Point;
@@ -25,12 +25,12 @@ namespace SL {
 
 			void Run();
 			//frames are images
-			void SendFrameChange(const WS_LITE::WSocket* socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
-			void SendMonitorInfo(const WS_LITE::WSocket*  socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>> & monitors);
+			void SendFrameChange(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
+			void SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>> & monitors);
 
-			void SendMouse(const WS_LITE::WSocket* socket, const Screen_Capture::Image & img);
-			void SendMouse(const WS_LITE::WSocket* socket, const Point& pos);
-			void SendClipboardText(const WS_LITE::WSocket* socket, const char* data, unsigned int len);
+			void SendMouse(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img);
+			void SendMouse(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Point& pos);
+			void SendClipboardText(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const char* data, unsigned int len);
 
 		};
 

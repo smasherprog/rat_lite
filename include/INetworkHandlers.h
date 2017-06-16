@@ -4,7 +4,7 @@
 
 namespace SL {
     namespace WS_LITE {
-        struct WSocket;
+        class IWSocket;
     };
 	namespace RAT {
         enum class PACKET_TYPES : unsigned int {

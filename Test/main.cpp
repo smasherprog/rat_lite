@@ -141,7 +141,6 @@ int main(int argc, char* argv[]) {
 	TestServerDriver testserver;
 	auto server = new SL::RAT::ServerDriver(&testserver, serverconfig);
 	testserver.lowerlevel = server;
-	auto runnerthread = std::thread([&] {server->Run(); });
 
 	auto clientconfig = std::make_shared<SL::RAT::Client_Config>();
 	clientconfig->HttpTLSPort = 8080;
@@ -160,6 +159,6 @@ int main(int argc, char* argv[]) {
 		std::this_thread::sleep_for(1s);
 	}
 	delete server;
-	runnerthread.join();
+
 	return 0;
 }

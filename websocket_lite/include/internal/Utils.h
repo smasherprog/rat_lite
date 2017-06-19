@@ -14,7 +14,6 @@
 
 #include <zlib.h>
 #include <math.h>
-#include <random>
 
 namespace asio {
     namespace ssl {
@@ -86,48 +85,6 @@ namespace SL {
         template<>inline void set_MaskBitForSending<std::shared_ptr<WSListenerImpl>>(unsigned char* frame) { setMask(frame, 0x00); }
         template<>inline void set_MaskBitForSending<std::shared_ptr<WSClientImpl >>(unsigned char* frame) { setMask(frame, 0xff); }
 
-        template<class SENDBUFFERTYPE>size_t writeheader(unsigned char header[10], const SENDBUFFERTYPE& msg) {
-            setFin(header, 0xFF);
-            set_MaskBitForSending<PARENTTYPE>(header);
-            setOpCode(header, msg.code);
-            setrsv1(header, 0x00);
-            setrsv2(header, 0x00);
-            setrsv3(header, 0x00);
-            if (msg.len <= 125) {
-                setpayloadLength1(header, hton(static_cast<unsigned char>(msg.len)));
-                return 2;
-            }
-            else if (msg.len > USHRT_MAX) {
-                setpayloadLength8(header, hton(static_cast<unsigned long long int>(msg.len)));
-                setpayloadLength1(header, 127);
-                return 10;
-            }
-            else {
-                setpayloadLength2(header, hton(static_cast<unsigned short>(msg.len)));
-                setpayloadLength1(header, 126);
-                return  4;
-            }
-        }
-        template<class PARENTTYPE>void writemask(unsigned char mask[4], const WSPreparedMessage& msg) {
-            UNUSED(mask);
-            UNUSED(msg);
-        }
-        template<>void writemask<std::shared_ptr<WSListenerImpl>>(unsigned char mask[4], const WSPreparedMessage& msg) {
-            UNUSED(mask);
-            UNUSED(msg);
-        }      
-        template<>void writemask<std::shared_ptr<WSClientImpl>>(unsigned char mask[4], const WSPreparedMessage& msg) {
-            std::uniform_int_distribution<unsigned int> dist(0, 255);
-            std::random_device rd;
-
-            for (auto c = 0; c < 4; c++) {
-                mask[c] = static_cast<unsigned char>(dist(rd));
-            }
-            auto p = reinterpret_cast<unsigned char*>(msg.data);
-            for (decltype(msg.len) i = 0; i < msg.len; i++) {
-                *p++ ^= mask[i % 4];
-            }
-        }
         template<class T>std::string get_address(T& _socket)
         {
             std::error_code ec;

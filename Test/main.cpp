@@ -22,11 +22,20 @@ using namespace std::chrono_literals;
 std::vector<std::shared_ptr<SL::Screen_Capture::Monitor>> MonitorsToSend;
 
 class TestClientDriver : public SL::RAT::IClientDriver {
+   
+ 
 public:
 
-	SL::RAT::ClientDriver *lowerlevel;
+    std::shared_ptr<SL::RAT::Client_Config> clientconfig;
+    std::unique_ptr<SL::RAT::ClientDriver> lowerlevel;
 
 	TestClientDriver() {
+        clientconfig = std::make_shared<SL::RAT::Client_Config>();
+        clientconfig->HttpTLSPort = 8080;
+        clientconfig->WebSocketTLSLPort = 6001;
+        clientconfig->Share_Clipboard = true;
+        clientconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
+        lowerlevel = std::make_unique<SL::RAT::ClientDriver>(this);
 
 	}
 
@@ -74,12 +83,31 @@ public:
 };
 
 class TestServerDriver : public SL::RAT::IServerDriver {
-
+    std::shared_ptr<SL::RAT::Server_Config> serverconfig;
+    std::unique_ptr<SL::RAT::ServerDriver> lowerlevel;
 public:
 
-	SL::RAT::ServerDriver* lowerlevel;
 	bool done = false;
-	TestServerDriver() {
+
+    TestServerDriver() {
+        serverconfig = std::make_shared<SL::RAT::Server_Config>();
+
+        serverconfig->WebSocketTLSLPort = 6001;// listen for websockets
+        serverconfig->HttpTLSPort = 8080;
+        serverconfig->Share_Clipboard = true;
+
+        serverconfig->ImageCompressionSetting = 70;
+        serverconfig->MousePositionCaptureRate = 50;
+        serverconfig->ScreenImageCaptureRate = 100;
+        serverconfig->SendGrayScaleImages = false;
+        serverconfig->MaxNumConnections = 2;
+        serverconfig->MaxWebSocketThreads = 2;
+        serverconfig->PathTo_Private_Key = TEST_CERTIFICATE_PRIVATE_PATH;
+        serverconfig->PasswordToPrivateKey = TEST_CERTIFICATE_PRIVATE_PASSWORD;
+        serverconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
+
+        lowerlevel = std::make_unique<SL::RAT::ServerDriver>(this, serverconfig);
+
 		MonitorsToSend.push_back(SL::Screen_Capture::CreateMonitor(2, 4, 1028, 2046, -1, -3, std::string("firstmonitor")));
 	}
 
@@ -89,7 +117,7 @@ public:
 
     virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) override
     {
-      //  lowerlevel->SendMonitorInfo(socket.get(), MonitorsToSend);
+        lowerlevel->SendMonitorInfo(socket, MonitorsToSend);
     }
     virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const SL::WS_LITE::WSMessage& msg) override
     {
@@ -121,45 +149,14 @@ public:
 int main(int argc, char* argv[]) {
 
 
-
-	auto serverconfig = std::make_shared<SL::RAT::Server_Config>();
-
-	serverconfig->WebSocketTLSLPort = 6001;// listen for websockets
-	serverconfig->HttpTLSPort = 8080;
-	serverconfig->Share_Clipboard = true;
-
-	serverconfig->ImageCompressionSetting = 70;
-	serverconfig->MousePositionCaptureRate = 50;
-	serverconfig->ScreenImageCaptureRate = 100;
-	serverconfig->SendGrayScaleImages = false;
-	serverconfig->MaxNumConnections = 2;
-	serverconfig->MaxWebSocketThreads = 2;
-	serverconfig->PathTo_Private_Key = TEST_CERTIFICATE_PRIVATE_PATH;
-	serverconfig->PasswordToPrivateKey = TEST_CERTIFICATE_PRIVATE_PASSWORD;
-	serverconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
-
 	TestServerDriver testserver;
-	auto server = new SL::RAT::ServerDriver(&testserver, serverconfig);
-	testserver.lowerlevel = server;
-	auto runnerthread = std::thread([&] {server->Run(); });
-
-	auto clientconfig = std::make_shared<SL::RAT::Client_Config>();
-	clientconfig->HttpTLSPort = 8080;
-	auto host = "localhost";
-	clientconfig->WebSocketTLSLPort = 6001;
-	clientconfig->Share_Clipboard = true;
-	clientconfig->PathTo_Public_Certficate = TEST_CERTIFICATE_PUBLIC_PATH;
-
-
 	TestClientDriver testclient;
-	SL::RAT::ClientDriver client(&testclient);
-	testclient.lowerlevel = &client;
-	client.Connect(clientconfig, host);
+    auto host = "localhost";
+    testclient.lowerlevel->Connect(testclient.clientconfig, host);
 
 	while (!testserver.done) {
 		std::this_thread::sleep_for(1s);
 	}
-	delete server;
-	runnerthread.join();
+
 	return 0;
 }

@@ -64,12 +64,9 @@ namespace SL {
             //users should set the *data variable to be the beginning of the data to send. Then, set the Buffer shared ptr as well to make sure the lifetime of the data
             std::shared_ptr<unsigned char> Buffer;
         };
-        struct WSPreparedMessage: public WSMessage {
-            unsigned char header[10];
-            unsigned char mask[4];
-        };
 
-        class IWSocket : public std::enable_shared_from_this<IWSocket> {
+   
+        class IWSocket: public std::enable_shared_from_this<IWSocket> {
         public:
             virtual ~IWSocket() {}
             virtual bool is_open() const = 0;
@@ -79,9 +76,6 @@ namespace SL {
             virtual bool is_v6() const = 0;
             virtual bool is_loopback() const = 0;
             virtual void send(WSMessage& msg, bool compressmessage) = 0;
-            virtual void send(WSPreparedMessage& msg) = 0;
-            virtual WSPreparedMessage prepare(WSMessage& msg, bool compressmessage) = 0;
-
             //send a close message and close the socket
             virtual void close(unsigned short code = 1000, const std::string& msg = "") = 0;
         };
@@ -123,7 +117,7 @@ namespace SL {
             //when a pong is received from a client
             WSListener_Configuration onPong(const std::function<void(const std::shared_ptr<IWSocket>&, const unsigned char *, size_t)>& handle);
             //start the process to listen for clients. This is non-blocking and will return immediatly
-            WSListener listen(bool no_delay = true, bool reuse_address = true);
+            WSListener listen(bool no_delay=true, bool reuse_address=true);
         };
 
 
@@ -147,7 +141,7 @@ namespace SL {
             std::chrono::seconds get_WriteTimeout();
             operator bool() const { return Impl_.operator bool(); }
             //will stop the library from processing and release all memory
-            void destroy() { Impl_.reset(); }
+            void destroy() { Impl_.reset();  }
         };
         class WSContextImpl;
         class WSClient_Configuration {
@@ -166,10 +160,10 @@ namespace SL {
             //when a pong is received from a client
             WSClient_Configuration onPong(const std::function<void(const std::shared_ptr<IWSocket>&, const unsigned char *, size_t)>& handle);
             //connect to an endpoint. This is non-blocking and will return immediatly. If the library is unable to establish a connection, ondisconnection will be called. 
-            WSClient connect(const std::string& host, PortNumber port, bool no_delay = true, const std::string& endpoint = "/", const std::unordered_map<std::string, std::string>& extraheaders = {});
+            WSClient connect(const std::string& host, PortNumber port, bool no_delay=true, const std::string& endpoint = "/", const std::unordered_map<std::string, std::string>& extraheaders = {});
         };
 
-        class WSSClient_Configuration : public WSClient_Configuration {
+        class WSSClient_Configuration: public WSClient_Configuration {
         public:
             WSSClient_Configuration(const std::shared_ptr<WSClientImpl>& impl) :WSClient_Configuration(impl) {}
             //set this if you want to verify the server's cert
@@ -187,7 +181,7 @@ namespace SL {
                 std::string Password,
                 std::string Privatekey_File,
                 std::string Publiccertificate_File,
-                std::string dh_File,
+                std::string dh_File, 
                 ExtensionOptions options = ExtensionOptions::NO_OPTIONS);
 
             WSClient_Configuration CreateClient(ExtensionOptions options = ExtensionOptions::NO_OPTIONS);

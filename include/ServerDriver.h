@@ -23,7 +23,6 @@ namespace SL {
 			ServerDriver(IServerDriver * r, std::shared_ptr<Server_Config> config);
 			~ServerDriver();
 
-			void Run();
 			//frames are images
 			void SendFrameChange(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
 			void SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>> & monitors);

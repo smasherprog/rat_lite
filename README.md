@@ -16,9 +16,6 @@ Performance
 Encryption (openssl)
 </li>
 <li>
-Extendable 
-</li>
-<li>
 Latest standards: c++ 17 
 </li>
 </ul>
@@ -27,27 +24,20 @@ Latest standards: c++ 17
 <p>The library is not yet stable and in development . . . </p>
 
 
-<h3>LICENSE:</h3>
-<p>https://tldrlegal.com/license/mit-license</p>
-<p>
 <h5>Windows Connecting to Mac</h5>
-<img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Windows_Mac.PNG" target="_blank"/></p>
-<p>
+<img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Windows_Mac.PNG" target="_blank"/>
+
 <h5>Mac Connecting to Windows</h5>
 <img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Mac_Windows.PNG" target="_blank"/>
-</p>
 
-<p>
 <h5>Windows Connecting to Android</h5>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Android.PNG" target="_blank"/>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/android2.PNG" target="_blank"/>
-</p>
-<p>
+
 <h5>Windows Connecting to Linux</h5>
 <img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/Windows_to_Linux.png" target="_blank"/>
-</p>
-<p>
+
 <h5>Linux Connecting to Windows</h5>
 <img src="https://raw.githubusercontent.com/smasherprog/Remote_Access_Library/master/Content/linux_to_windows.png" target="_blank"/>
-</p>
+
 

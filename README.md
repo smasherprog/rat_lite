@@ -23,19 +23,7 @@ Latest standards: c++ 17
 </li>
 </ul>
 <h3>How to get started:</h3>
-<ul>
-<li>
-<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Windows-Development">Windows</a>
-</li>
-<li><a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Android-Development">Android</a> </li>
-<li>
-<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Linux-Development">Linux</a>
-</li>
-<li>
-<a href="https://github.com/smasherprog/Remote_Access_Library/wiki/Mac-Development">Mac</a>
-</li>
-</ul>
-</p>
+<p>https://github.com/smasherprog/Projects_Setup</p>
 <p>The library is not yet stable and in development . . . </p>
 
 

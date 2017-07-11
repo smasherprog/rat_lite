@@ -6,12 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(BUILD_SHARED_LIBS OFF)
+set(BUILD_EXAMPLE ON)
 
 if(NOT CMAKE_BUILD_TYPE) 
     set(CMAKE_BUILD_TYPE Debug)
 endif(NOT CMAKE_BUILD_TYPE)
 
-add_subdirectory(Screen_Capture/src)
+add_subdirectory(screen_capture_lite/src)
 add_subdirectory(websocket_lite/src)
 
 add_subdirectory(src)
@@ -23,6 +24,7 @@ if(BUILD_EXAMPLE)
 	add_subdirectory(Client)
 	add_subdirectory(Server)
 endif()
+
 
 enable_testing() 
 add_subdirectory(Test)

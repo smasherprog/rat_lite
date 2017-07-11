@@ -1,0 +1,49 @@
+language : cpp
+
+matrix:
+  include:
+    - os: osx
+    - os: linux
+      env: VERSION=3.9 BUILD_TYPE=Release CC=clang-3.9 CXX=clang++-3.9
+      compiler: clang
+      dist: trusty
+      sudo: required
+      addons: &clang39
+        apt:
+          packages:
+            - clang-3.9
+            - g++-6
+          sources: &sources
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
+      
+before_install:
+  # Install the newest `cmake`.
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
+      brew update;
+      brew install openssl zlib;
+      brew upgrade cmake --devel || brew install cmake --devel;
+      
+    elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+      wget https://cmake.org/files/v3.8/cmake-3.8.1-Linux-x86_64.sh;
+      chmod u+x cmake-3.8.1-Linux-x86_64.sh;
+      sudo ./cmake-3.8.1-Linux-x86_64.sh --skip-license --prefix=/usr/local;
+      sudo apt-get install -y python-pip;
+      pip install autobahntestsuite;
+      export CC=clang-3.9;
+      export CXX=clang++-3.9;
+      ${CXX} --version;
+    fi
+
+install:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+  - cmake --build .
+
+script:
+  - ctest -V
+  
+notifications:
+  email: false
+  

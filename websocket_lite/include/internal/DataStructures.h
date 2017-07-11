@@ -13,7 +13,6 @@
 #include <thread>
 #include <deque>
 
-
 #include "asio.hpp"
 #include "asio/ssl.hpp"
 #include "asio/deadline_timer.hpp"

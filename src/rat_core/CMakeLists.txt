@@ -1,4 +1,4 @@
-project(libRemote_Access)
+project(librat_core)
 
 if(WIN32)
     set(REMOTE_ACCESS_PLATFORM_SRC     
@@ -9,8 +9,8 @@ if(WIN32)
 	
     )
 	set(REMOTE_ACCESS_PLATFORM_INC     
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include/windows
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows
+        ../../include/windows
+        ../src/windows
 		
     )
 
@@ -20,8 +20,8 @@ elseif(APPLE)
   
     )
     set(REMOTE_ACCESS_PLATFORM_INC
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios
+        ../../include/ios
+        ../src/ios
     )
 
 else()
@@ -30,8 +30,8 @@ else()
 	)
   
 	set(REMOTE_ACCESS_PLATFORM_INC
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include/linux
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux
+        ../../include/linux
+        ../src/linux
 		${X11_INCLUDE_DIR}
     )
 	find_package(Threads REQUIRED)
@@ -45,26 +45,26 @@ endif()
 
 set(REMOTE_ACCESS_COMMON_SRC 	
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/ClientDriver.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/Input.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/ServerDriver.cpp
+	ClientDriver.cpp
+	Input.cpp
+	ServerDriver.cpp
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/IClientDriver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/ClientDriver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Input.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/ServerDriver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/IServerDriver.h
+	../../include/IClientDriver.h
+	../../include/ClientDriver.h
+	../../include/Input.h
+	../../include/ServerDriver.h
+	../../include/IServerDriver.h
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Image.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Configs.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/INetworkHandlers.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Logging.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Shapes.h
+	../../include/Image.h
+	../../include/Configs.h
+	../../include/INetworkHandlers.h
+	../../include/Logging.h
+	../../include/Shapes.h
 )
 set(REMOTE_ACCESS_COMMON_INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src
-	${CMAKE_CURRENT_SOURCE_DIR}/../websocket_lite/include
+    ../../include
+    ../src
+	../websocket_lite/include
 )
 
 find_package(Boost COMPONENTS program_options system date_time REQUIRED)

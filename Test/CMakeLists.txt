@@ -1,4 +1,4 @@
-project(RAT_Test)
+project(rat_test)
 
 
 if(MSVC)

@@ -12,19 +12,21 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif(NOT CMAKE_BUILD_TYPE)
 
-add_subdirectory(screen_capture_lite/src)
-add_subdirectory(websocket_lite/src)
+add_subdirectory(libs/screen_capture_lite/src)
+add_subdirectory(libs/websocket_lite/src)
+add_subdirectory(libs/clipboard_lite/src)
+add_subdirectory(libs/input_lite/src)
+add_subdirectory(src/rat_core)
 
-add_subdirectory(src)
 if(WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 if(BUILD_EXAMPLE)
-	add_subdirectory(Client)
-	add_subdirectory(Server)
+	add_subdirectory(src/client)
+	add_subdirectory(src/server)
 endif()
 
 
 enable_testing() 
-add_subdirectory(Test)
+add_subdirectory(test)

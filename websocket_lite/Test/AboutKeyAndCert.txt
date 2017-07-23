@@ -1,8 +1,0 @@
-These two files I generated for testing purposes. 
-THIS SHOULD NOT BE USED FOR PRODUCTION.. GENERATE OR GET REAL FILES!
-The password for the private key file is
-
-		Test pass
-
-
-

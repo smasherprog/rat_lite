@@ -8,6 +8,7 @@
 #include "ScreenCapture.h"
 
 #include "SCCommon.h"
+#include "WS_Lite.h"
 
 #include <shared_mutex>
 
@@ -115,7 +116,7 @@ namespace SL {
                 memcpy(dst, &r, sizeof(r));
                 dst += sizeof(r);
 
-                auto srcbuffer = std::make_unique<char[]>(RowStride(img)*Height(img));
+                auto srcbuffer = std::make_unique<unsigned char[]>(RowStride(img)*Height(img));
                 Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img)*Height(img));
                 auto srcbuf = (unsigned char*)srcbuffer.get();
 
@@ -148,7 +149,7 @@ namespace SL {
                 dst += sizeof(p);
                 memcpy(dst, &r, sizeof(r));
                 dst += sizeof(r);
-                Screen_Capture::Extract(img, (char*)dst, Screen_Capture::RowStride(img) * Screen_Capture::Height(img));
+                Screen_Capture::Extract(img, (unsigned char*)dst, Screen_Capture::RowStride(img) * Screen_Capture::Height(img));
 
                 Send(socket, buffer, finalsize);
 

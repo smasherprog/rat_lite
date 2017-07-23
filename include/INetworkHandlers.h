@@ -1,10 +1,11 @@
 #pragma once
 #include <memory>
-
+#include <string>
 
 namespace SL {
     namespace WS_LITE {
         class IWSocket;
+        struct WSMessage;
     }
 	namespace RAT {
         enum class PACKET_TYPES : unsigned int {

@@ -36,8 +36,8 @@ namespace SL {
 			bool IgnoreIncomingMouseEvents = false;
 			bool IgnoreIncomingKeyboardEvents = false;
 
-			int MaxWebSocketThreads = 2;
-			int MaxNumConnections = 10;//
+			size_t MaxWebSocketThreads = 2;
+			size_t MaxNumConnections = 10;//
 
 									   //CRYPTO SETTINGS
 			std::string PathTo_Private_Key;

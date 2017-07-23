@@ -1,4 +1,4 @@
-project(libwebSocket_lite)
+project(libwebsocket_lite)
 
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")

@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "WS_Lite.h"
+
 
 namespace SL {
     namespace WS_LITE {

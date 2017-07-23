@@ -1,4 +1,4 @@
-project(libInput_Lite)
+project(libinput_lite)
 
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")

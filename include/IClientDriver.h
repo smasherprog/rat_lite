@@ -1,6 +1,7 @@
 #pragma once
 #include "INetworkHandlers.h"
 #include "Image.h"
+#include <string>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -14,11 +15,14 @@ namespace SL {
 		public:
 
 			virtual ~IClientDriver() {}
-			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) = 0;
-			virtual void onReceive_ImageDif(const Image& img, int monitor_id) = 0;
-			virtual void onReceive_MouseImage(const Image& img) = 0;
-			virtual void onReceive_MousePos(const Point* pos) = 0;
-			virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int length) = 0;
+            //server notifying client of changes for below events
+			virtual void onMonitorsChanged(const Screen_Capture::Monitor monitors[], int num_of_monitors) = 0;
+			virtual void onFrameChanged(const Image& img, int monitor_id) = 0;
+            virtual void onNewFrame(const Image& img, int monitor_id) = 0;
+            virtual void onMouseChanged(const Image& img) = 0;
+            virtual void onMouseChanged(const Point& pos) = 0;
+            virtual void onClipboardChanged(const std::string& text) = 0;
+
 
 		};
 

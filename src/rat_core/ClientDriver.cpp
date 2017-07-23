@@ -27,23 +27,30 @@ namespace SL {
 			std::mutex outputbufferLock;
 			std::vector<unsigned char> outputbuffer;
 
-			void MouseImage(const unsigned char* data, size_t len) {
+			void onMouseImageChanged(const unsigned char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 				Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
 				assert(len >= sizeof(Rect) + (img.Rect_.Width * img.Rect_.Height * PixelStride));
-				IClientDriver_->onReceive_MouseImage(img);
+				IClientDriver_->onMouseChanged(img);
 			}
 
-			void MousePos(const unsigned char* data, size_t len) {
+			void onMousePositionChanged(const unsigned char* data, size_t len) {
 				assert(len == sizeof(Point));
-				IClientDriver_->onReceive_MousePos(reinterpret_cast<const Point*>(data));
+                auto p = reinterpret_cast<const Point*>(data);
+				IClientDriver_->onMouseChanged(*p);
 			}
-			void MonitorInfo(const unsigned char* data, size_t len) {
+			void onMonitorsChanged(const unsigned char* data, size_t len) {
 				auto num = len / sizeof(Screen_Capture::Monitor);
 				assert(num * sizeof(Screen_Capture::Monitor) == len);
-				IClientDriver_->onReceive_Monitors((Screen_Capture::Monitor*)data, num);
+				IClientDriver_->onMonitorsChanged((Screen_Capture::Monitor*)data, num);
 			}
-			void ScreenImage(const unsigned char* data, size_t len) {
+
+            void onClipboardTextChanged(const unsigned char* data, size_t len) {
+                assert(len == sizeof(Point));
+                auto p = reinterpret_cast<const Point*>(data);
+                IClientDriver_->onMouseChanged(*p);
+            }
+			void onFrameChanged(const unsigned char* data, size_t len) {
 				assert(len >= sizeof(Rect));
 
 				auto jpegDecompressor = tjInitDecompress();
@@ -70,7 +77,7 @@ namespace SL {
 				Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
 				assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
 
-				IClientDriver_->onReceive_ImageDif(img, monitor_id);
+				IClientDriver_->onFrameChanged(img, monitor_id);
 				tjDestroy(jpegDecompressor);
 			}
 
@@ -98,20 +105,23 @@ namespace SL {
 					auto p = *reinterpret_cast<const PACKET_TYPES*>(message.data);
 					//SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
 					switch (p) {
-					case PACKET_TYPES::MONITORINFO:
-						MonitorInfo( message.data + sizeof(p), message.len - sizeof(p));
+					case PACKET_TYPES::ONMONITORSCHANGED:
+                        onMonitorsChanged( message.data + sizeof(p), message.len - sizeof(p));
 						break;
-					case PACKET_TYPES::SCREENIMAGEDIF:
-						ScreenImage( message.data + sizeof(p), message.len - sizeof(p));
+                    case PACKET_TYPES::ONFRAMECHANGED:
+                        onFrameChanged( message.data + sizeof(p), message.len - sizeof(p));
 						break;
-					case PACKET_TYPES::MOUSEIMAGE:
-						MouseImage( message.data + sizeof(p), message.len - sizeof(p));
+                    case PACKET_TYPES::ONNEWFRAME:
+                        onFrameChanged(message.data + sizeof(p), message.len - sizeof(p));
+                        break;
+					case PACKET_TYPES::ONMOUSEIMAGECHANGED:
+                        onMouseImageChanged( message.data + sizeof(p), message.len - sizeof(p));
 						break;
-					case PACKET_TYPES::MOUSEPOS:
-						MousePos( message.data + sizeof(p), message.len - sizeof(p));
+                    case PACKET_TYPES::ONMOUSEPOSITIONCHANGED:
+						onMousePositionChanged( message.data + sizeof(p), message.len - sizeof(p));
 						break;
-					case PACKET_TYPES::CLIPBOARDTEXTEVENT:
-						IClientDriver_->onReceive_ClipboardText(message.data + sizeof(p), message.len - sizeof(p));
+                    case PACKET_TYPES::ONCLIPBOARDTEXTCHANGED:
+                        onClipboardTextChanged(message.data + sizeof(p), message.len - sizeof(p));
 						break;
 					default:
 						IClientDriver_->onMessage(socket, message);//pass up the chain

@@ -6,7 +6,7 @@ namespace SL {
 	namespace Screen_Capture {
 		struct Image;
 		struct Monitor;
-	};
+	}
     namespace WS_LITE{
         class IWSocket;
     }

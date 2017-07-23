@@ -5,7 +5,7 @@
 namespace SL {
     namespace WS_LITE {
         class IWSocket;
-    };
+    }
 	namespace RAT {
         enum class PACKET_TYPES : unsigned int {
             INVALID,

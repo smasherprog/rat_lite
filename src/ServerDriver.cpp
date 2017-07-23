@@ -82,13 +82,15 @@ namespace SL {
             }
             void Send(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, std::shared_ptr<unsigned char>& data, size_t len) {
                     if (socket) {   
-                        socket->send(SL::WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data }, false);
+                        auto msg = SL::WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data };
+                        socket->send(msg, false);
                 }
                 else {
                     {
                         std::shared_lock<std::shared_mutex> lock(mutex);
                         for (auto& s : Clients) {
-                            s->send(SL::WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data }, false);
+                            auto msg = SL::WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data };
+                            s->send(msg, false);
                         }
                     }
                 }

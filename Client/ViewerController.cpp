@@ -2,7 +2,6 @@
 #include "ImageControl.h"
 #include "Logging.h"
 #include "ClientDriver.h"
-#include "Clipboard.h"
 #include "IClientDriver.h"
 #include "Configs.h"
 
@@ -41,7 +40,7 @@ namespace SL {
 			bool CursorHidden_ = false;
 			char Title_[255];
 			bool HasFocus_ = false;
-			WS_LITE::WSocket Socket_;
+            std::shared_ptr<SL::WS_LITE::IWSocket> Socket_;
 			//SocketStats LastStats;
 
 
@@ -159,18 +158,18 @@ namespace SL {
 			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) override {
 				ImageControl_->setMonitors(monitors, num_of_monitors);
 			}
-			virtual void onConnection(const WS_LITE::WSocket& socket) override {
+			virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) override {
 				Socket_ = socket;
 			}
 
-			virtual void onDisconnection(const WS_LITE::WSocket& socket, unsigned short code, const std::string& msg) override {
+			virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override {
 				UNUSED(socket);
 				UNUSED(code); 
                 UNUSED(msg);
 				Fl::awake(closethiswindow, this);
 			}
 
-			virtual void onMessage(const WS_LITE::WSocket& socket, const WS_LITE::WSMessage& msg)  override {
+			virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg)  override {
 				UNUSED(socket);
                 UNUSED(msg);
 			}

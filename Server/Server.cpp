@@ -7,7 +7,6 @@
 #include "ScreenCapture.h"
 #include "ServerDriver.h"
 #include "IServerDriver.h"
-#include "Clipboard.h"
 #include "Configs.h"
 #include "Shapes.h"
 #include "Input.h"

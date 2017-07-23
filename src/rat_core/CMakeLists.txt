@@ -62,9 +62,8 @@ set(REMOTE_ACCESS_COMMON_SRC
 	../../include/Shapes.h
 )
 set(REMOTE_ACCESS_COMMON_INC
-    ../../include
-    ../src
-	../websocket_lite/include
+	${CMAKE_CURRENT_SOURCE_DIR}/../../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
 find_package(libjpegturbo REQUIRED)
 find_package(OpenSSL REQUIRED)

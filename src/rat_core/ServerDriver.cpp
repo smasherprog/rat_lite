@@ -154,7 +154,7 @@ namespace SL {
                 Send(socket, buffer, finalsize);
 
             }
-            void SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors) {
+            void SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors) {
                 if (Clients.empty()) return;
                 auto p = static_cast<unsigned int>(PACKET_TYPES::MONITORINFO);
                 const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
@@ -164,7 +164,7 @@ namespace SL {
                 memcpy(buf, &p, sizeof(p));
                 buf += sizeof(p);
                 for (auto& a : monitors) {
-                    memcpy(buf, a.get(), sizeof(Screen_Capture::Monitor));
+                    memcpy(buf, &a, sizeof(a));
                     buf += sizeof(Screen_Capture::Monitor);
                 }
                 Send(socket, buffer, size);
@@ -208,7 +208,7 @@ namespace SL {
         {
             ServerDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
         }
-        void ServerDriver::SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<std::shared_ptr<Screen_Capture::Monitor>>& monitors)
+        void ServerDriver::SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors)
         {
             ServerDriverImpl_->SendMonitorInfo(socket, monitors);
         }

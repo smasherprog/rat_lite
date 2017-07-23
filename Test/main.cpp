@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 
 
 
-std::vector<std::shared_ptr<SL::Screen_Capture::Monitor>> MonitorsToSend;
+std::vector<SL::Screen_Capture::Monitor> MonitorsToSend;
 
 class TestClientDriver : public SL::RAT::IClientDriver {
    
@@ -45,13 +45,13 @@ public:
 		SL_RAT_LOG(SL::RAT::Logging_Levels::INFO_log_level, "Received Monitors from Server " << num_of_monitors);
 		assert(num_of_monitors == (int)MonitorsToSend.size());
 		for (auto i = 0; i < num_of_monitors; i++) {
-			assert(MonitorsToSend[i]->Height == monitors[i].Height);
-			assert(MonitorsToSend[i]->Id == monitors[i].Id);
-			assert(MonitorsToSend[i]->Index == monitors[i].Index);
-			assert(MonitorsToSend[i]->Name == std::string(monitors[i].Name));
-			assert(MonitorsToSend[i]->OffsetX == monitors[i].OffsetX);
-			assert(MonitorsToSend[i]->OffsetY == monitors[i].OffsetY);
-			assert(MonitorsToSend[i]->Width == monitors[i].Width);
+			assert(MonitorsToSend[i].Height == monitors[i].Height);
+			assert(MonitorsToSend[i].Id == monitors[i].Id);
+			assert(MonitorsToSend[i].Index == monitors[i].Index);
+			assert(MonitorsToSend[i].Name == std::string(monitors[i].Name));
+			assert(MonitorsToSend[i].OffsetX == monitors[i].OffsetX);
+			assert(MonitorsToSend[i].OffsetY == monitors[i].OffsetY);
+			assert(MonitorsToSend[i].Width == monitors[i].Width);
 		}
 		SL::RAT::KeyEvent k;
 		k.Key = 'a';

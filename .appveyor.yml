@@ -1,0 +1,20 @@
+image: Visual Studio 2017
+
+configuration:
+  - Debug
+  - Relase 
+  
+clone_folder: c:\projects\sc
+
+platform:
+- x86
+- x64
+
+install:
+  - cd c:\projects\sc
+  - mkdir build
+  - cd build
+  - cmake -G "Visual Studio 15 2017" ..
+
+build_script:
+  - cmake --build .

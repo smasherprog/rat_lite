@@ -1,0 +1,175 @@
+{
+   "agent": "WebSockets SSL",
+   "behavior": "OK",
+   "behaviorClose": "OK",
+   "case": 45,
+   "closedByMe": false,
+   "createStats": true,
+   "createWirelog": true,
+   "description": "Send Ping fragmented into 2 fragments.",
+   "droppedByMe": false,
+   "duration": 2,
+   "expectation": "Connection is failed immediately, since control message MUST NOT be fragmented.",
+   "expected": {
+      "OK": []
+   },
+   "expectedClose": {
+      "closeCode": [
+         1002
+      ],
+      "closedByMe": false,
+      "requireClean": false
+   },
+   "failedByMe": false,
+   "httpRequest": "GET / HTTP/1.1\r\nUser-Agent: AutobahnTestSuite/0.7.6-0.10.9\r\nHost: localhost:3001\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nSec-WebSocket-Key: yzsW5/qgFY05GQaCh/K8Ig==\r\nSec-WebSocket-Version: 13\r\n\r\n",
+   "httpResponse": "HTTP/1.1 101 Web Socket Protocol Handshake\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: xjB19hRJTqijQWQmWWwwOm7/QpY=\r\n\r\n",
+   "id": "5.1",
+   "isServer": false,
+   "localCloseCode": 1000,
+   "localCloseReason": null,
+   "received": [],
+   "remoteCloseCode": 1002,
+   "remoteCloseReason": "Closing connection. Control Frames must be Fin",
+   "reportCompressionRatio": false,
+   "reportTime": false,
+   "result": "Actual events match at least one expected.",
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "8": 1
+   },
+   "rxOctetStats": {
+      "2": 1,
+      "48": 1,
+      "139": 1
+   },
+   "started": "2017-05-28T14:15:23.002Z",
+   "trafficStats": null,
+   "txFrameStats": {
+      "0": 1,
+      "8": 1,
+      "9": 1
+   },
+   "txOctetStats": {
+      "8": 1,
+      "15": 2,
+      "240": 1
+   },
+   "wasClean": true,
+   "wasCloseHandshakeTimeout": false,
+   "wasNotCleanReason": null,
+   "wasOpenHandshakeTimeout": false,
+   "wasServerConnectionDropTimeout": false,
+   "wirelog": [
+      [
+         "TO",
+         [
+            240,
+            "474554202f20485454502f312e310d0a557365722d4167656e743a204175746f6261686e5465737453756974652f302e372e362d302e31302e390d0a486f7374 ..."
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            139,
+            "485454502f312e31203130312057656220536f636b65742050726f746f636f6c2048616e647368616b650d0a557067726164653a20776562736f636b65740d0a ..."
+         ]
+      ],
+      [
+         "TF",
+         [
+            9,
+            "fragment1"
+         ],
+         9,
+         false,
+         0,
+         "3f43a467",
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            15,
+            "09893f43a4675931c5005226ca130e"
+         ],
+         false
+      ],
+      [
+         "TF",
+         [
+            9,
+            "fragment2"
+         ],
+         0,
+         true,
+         0,
+         "35843669",
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            15,
+            "80893584366953f6570e58e1581d07"
+         ],
+         false
+      ],
+      [
+         "KL",
+         1
+      ],
+      [
+         "RO",
+         [
+            2,
+            "8830"
+         ]
+      ],
+      [
+         "RO",
+         [
+            48,
+            "03ea436c6f73696e6720636f6e6e656374696f6e2e20436f6e74726f6c204672616d6573206d7573742062652046696e"
+         ]
+      ],
+      [
+         "RF",
+         [
+            48,
+            "0x03ea436c6f73696e6720636f6e6e656374696f6e2e20436f6e74726f6c204672616d6573206d7573742062652046696e"
+         ],
+         8,
+         true,
+         0,
+         false,
+         null
+      ],
+      [
+         "TF",
+         [
+            2,
+            "0x03e8"
+         ],
+         8,
+         true,
+         0,
+         "c391b88d",
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            8,
+            "8882c391b88dc079"
+         ],
+         false
+      ]
+   ]
+}

@@ -261,7 +261,7 @@ namespace SL {
         void SendMousePosition(const Offset& offset) {
             SendMousePosition_Impl(offset.X, offset.Y, 0);
         }
-        void SendMousePosition(const Absolute& absolute) {
+        void SendMousePosition(const AbsolutePos& absolute) {
             SendMousePosition_Impl(
                 (absolute.X * 65536) / GetSystemMetrics(SM_CXSCREEN),
                 (absolute.Y * 65536) / GetSystemMetrics(SM_CYSCREEN),

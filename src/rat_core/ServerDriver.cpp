@@ -61,15 +61,15 @@ namespace SL {
                     length -= sizeof(pactype);
                     auto data = message.data + sizeof(pactype);
                     switch (pactype) {
-                    case PACKET_TYPES::MOUSEEVENT:
+                    case PACKET_TYPES::ONMOUSEEVENT:
                         assert(length == sizeof(MouseEvent));
                         IServerDriver_->onReceive_Mouse(reinterpret_cast<const MouseEvent*>(data));
                         break;
-                    case PACKET_TYPES::KEYEVENT:
+                    case PACKET_TYPES::ONKEYEVENT:
                         assert(length == sizeof(KeyEvent));
                         IServerDriver_->onReceive_Key(reinterpret_cast<const KeyEvent*>(data));
                         break;
-                    case PACKET_TYPES::CLIPBOARDTEXTEVENT:
+                    case PACKET_TYPES::ONCLIPBOARDTEXTCHANGED:
                         IServerDriver_->onReceive_ClipboardText(data, length);
                         break;
                     default:
@@ -140,7 +140,7 @@ namespace SL {
                 if (Clients.empty()) return;
                 Rect r(Point(0, 0), Height(img), Width(img));
 
-                auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEIMAGE);
+                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEIMAGECHANGED);
                 auto finalsize = (Screen_Capture::RowStride(img) * Screen_Capture::Height(img)) + sizeof(p) + sizeof(r);
                 auto  buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto* p) { delete[] p; });
 
@@ -156,7 +156,7 @@ namespace SL {
             }
             void SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors) {
                 if (Clients.empty()) return;
-                auto p = static_cast<unsigned int>(PACKET_TYPES::MONITORINFO);
+                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
                 const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 
                 auto  buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
@@ -173,7 +173,7 @@ namespace SL {
             void SendMouse(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Point& pos)
             {
                 if (Clients.empty()) return;
-                auto p = static_cast<unsigned int>(PACKET_TYPES::MOUSEPOS);
+                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEEVENT);
                 const auto size = sizeof(pos) + sizeof(p);
 
                 auto  buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
@@ -185,7 +185,7 @@ namespace SL {
 
             void SendClipboardText(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const char* data, unsigned int len) {
                 if (Clients.empty()) return;
-                auto p = static_cast<unsigned int>(PACKET_TYPES::CLIPBOARDTEXTEVENT);
+                auto p = static_cast<unsigned int>(PACKET_TYPES::ONCLIPBOARDTEXTCHANGED);
                 auto size = len + sizeof(p);
 
                 auto  buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
@@ -206,7 +206,7 @@ namespace SL {
         }
         void ServerDriver::SendFrameChange(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor)
         {
-            ServerDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::SCREENIMAGEDIF);
+            ServerDriverImpl_->SendScreen(socket, img, monitor, PACKET_TYPES::ONFRAMECHANGED);
         }
         void ServerDriver::SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors)
         {

@@ -1,24 +1,30 @@
 #pragma once
 #include "INetworkHandlers.h"
-#include "Image.h"
+#include <string>
 
 namespace SL {
 	namespace Screen_Capture {
 		struct Monitor;
 	}
 	namespace RAT {
-
+        struct Image;
 		class Point;
-	
+        struct MouseEvent;
+        struct KeyEvent;
+
 		class IClientDriver : public INetworkHandlers {
 		public:
 
 			virtual ~IClientDriver() {}
-			virtual void onReceive_Monitors(const Screen_Capture::Monitor* monitors, int num_of_monitors) = 0;
-			virtual void onReceive_ImageDif(const Image& img, int monitor_id) = 0;
-			virtual void onReceive_MouseImage(const Image& img) = 0;
-			virtual void onReceive_MousePos(const Point* pos) = 0;
-			virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int length) = 0;
+            //events raised from the server
+			virtual void onMonitorsChanged(const Screen_Capture::Monitor monitors[], size_t num_of_monitors) = 0;
+            virtual void onFrameChanged(const Image& img, int monitor_id) = 0;
+            virtual void onNewFrame(const Image& img, int monitor_id) = 0;
+            virtual void onMouseImageChanged(const Image& img) = 0;
+
+			virtual void onKeyEvent(const KeyEvent& kevent) = 0;
+			virtual void onMouseEvent(const MouseEvent& mevent) = 0;
+			virtual void onClipboardChanged(const std::string& text) = 0;
 
 		};
 

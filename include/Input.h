@@ -24,25 +24,19 @@ namespace SL {
 			MIDDLE,
 			RIGHT,
 			SCROLL
-
 		};
+        struct KeyEvent {
+            Press PressData;
+            unsigned int Key;
+            Specials SpecialKey;
+        };
 
-		struct KeyEvent {
-			Press PressData;
-			unsigned int Key;
-			Specials SpecialKey;
-		};
-
-		void SimulateKeyboardEvent(KeyEvent ev);
-
-
-		struct MouseEvent {
-			Events EventData;
-			Point Pos;
-			int ScrollDelta;
-			Press PressData;
-		};
-		void SimulateMouseEvent(const MouseEvent& m);
+        struct MouseEvent {
+            Events EventData;
+            Point Pos;
+            int ScrollDelta;
+            Press PressData;
+        };
 
 	}
 }

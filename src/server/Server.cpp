@@ -17,7 +17,7 @@
 namespace SL {
 	namespace RAT {
 		struct NewClient {
-		    WS_LITE::WSocket s;
+		    WS_LITE::IWSocket s;
 			std::vector<int> mids;
 		};
 		class ServerImpl : public IServerDriver {

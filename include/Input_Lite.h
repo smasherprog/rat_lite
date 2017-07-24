@@ -164,7 +164,10 @@ namespace SL {
         void SendMouseScroll(int offset);
         struct Offset { int X = 0; int Y = 0; };
         void SendMousePosition(const Offset& offset);
-        struct Absolute { int X = 0; int Y = 0; };
-        void SendMousePosition(const Absolute& absolute);
+        struct AbsolutePos { int X = 0; int Y = 0; };
+        void SendMousePosition(const AbsolutePos& absolute);
+
+
+
     }
 }

@@ -1,4 +1,4 @@
-project(libClipboard_Lite)
+project(libclipboard_lite)
 
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
@@ -8,8 +8,8 @@ endif()
 
 if(WIN32)
     set(CLIPBOARD_LITE_PLATFORM_SRC     
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/Clipboard.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/Clipboard.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/Clipboard.h
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/Clipboard.cpp
     )
 
     set(CLIPBOARD_LITE_PLATFORM_INC     
@@ -18,15 +18,15 @@ if(WIN32)
     )
 
 elseif(APPLE)
-find_library(corefoundation_lib CoreFoundation)
-find_library(cocoa_lib Cocoa)
-set(CLIPBOARD_LITE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
+	find_library(corefoundation_lib CoreFoundation)
+	find_library(cocoa_lib Cocoa)
+	set(CLIPBOARD_LITE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
     set(CLIPBOARD_LITE_PLATFORM_SRC
-${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/Clipboard.h
-${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/Clipboard.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSClipboard.h
-${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSClipboard.m
+		${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/Clipboard.h
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/Clipboard.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSClipboard.h
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSClipboard.m
 )
 
     set(CLIPBOARD_LITE_PLATFORM_INC
@@ -34,10 +34,9 @@ ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSClipboard.m
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios
     )
 else()
-  set(CLIPBOARD_LITE_PLATFORM_SRC
-
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/Clipboard.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/Clipboard.cpp
+	set(CLIPBOARD_LITE_PLATFORM_SRC
+		${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/Clipboard.h
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/Clipboard.cpp
     )
   
 	find_package(X11 REQUIRED)

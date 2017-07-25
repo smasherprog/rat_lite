@@ -51,11 +51,10 @@ set(REMOTE_ACCESS_COMMON_SRC
 
 	../../include/IClientDriver.h
 	../../include/ClientDriver.h
-	../../include/Input.h
 	../../include/ServerDriver.h
 	../../include/IServerDriver.h
 
-	../../include/Image.h
+	../../include/NetworkStructs.h
 	../../include/Configs.h
 	../../include/INetworkHandlers.h
 	../../include/Logging.h

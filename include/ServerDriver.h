@@ -24,13 +24,12 @@ namespace SL {
 			ServerDriver(IServerDriver * r, std::shared_ptr<Server_Config> config);
 			~ServerDriver();
 
-			//frames are images
-			void SendFrameChange(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img, const SL::Screen_Capture::Monitor& monitor);
-			void SendMonitorInfo(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor> & monitors);
-
-			void SendMouse(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img);
-			void SendMouse(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const Point& pos);
-			void SendClipboardText(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const char* data, unsigned int len);
+            void SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors);
+            void SendFrameChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor);
+            void SendNewFrame(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor);
+            void SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image);
+            void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& mevent);
+            void SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::string& text);
 
 		};
 

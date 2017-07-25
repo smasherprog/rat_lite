@@ -19,9 +19,9 @@ namespace SL {
 
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host);
 
-            void onKeyEvent(const KeyEvent& kevent);
-            void onMouseEvent(const MouseEvent& mevent);
-            void onClipboardChanged(const std::string& text);
+            void SendKeyEvent(const KeyEvent& kevent);
+            void SendMouseEvent(const MouseEvent& mevent);
+            void SendClipboardChanged(const std::string& text);
 
 
 		};

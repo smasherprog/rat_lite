@@ -9,7 +9,6 @@ namespace SL {
     }
 	namespace RAT {
 
- 
 
         enum class PACKET_TYPES : unsigned int {
             INVALID,
@@ -18,6 +17,7 @@ namespace SL {
             ONFRAMECHANGED,
             ONNEWFRAME,
             ONMOUSEIMAGECHANGED,
+            ONMOUSEPOSITIONCHANGED,
             ONKEYEVENT,
             ONMOUSEEVENT,
             ONCLIPBOARDTEXTCHANGED,

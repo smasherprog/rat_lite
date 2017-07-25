@@ -11,9 +11,10 @@ namespace SL {
 		public:
 			virtual ~IServerDriver() {}
 
-			virtual void onReceive_Mouse(const MouseEvent* m) = 0;
-			virtual void onReceive_Key(const KeyEvent* m) = 0;
-			virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int len) = 0;
+            virtual void onKeyEvent(const KeyEvent& kevent) = 0;
+            virtual void onMouseEvent(const MouseEvent& mevent) = 0;
+            virtual void onClipboardChanged(const std::string& text) = 0;
+
 		};
 
 	}

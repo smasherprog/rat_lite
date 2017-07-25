@@ -7,7 +7,7 @@ namespace SL {
         //use already existing codes for special keys
         //https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode#Constants_for_keyCode_value
 
-        enum SpecialKeyCodes {
+        enum SpecialKeyCodes : int {
 
             ALTLEFT = 18,
             ALTRIGHT = 18,

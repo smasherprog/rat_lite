@@ -18,7 +18,8 @@ namespace SL {
             ONNEWFRAME,
             ONMOUSEIMAGECHANGED,
             ONMOUSEPOSITIONCHANGED,
-            ONKEYEVENT,
+            ONKEYUP,
+            ONKEYDOWN,
             ONMOUSEEVENT,
             ONCLIPBOARDTEXTCHANGED,
             //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library

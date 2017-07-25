@@ -26,9 +26,18 @@ namespace SL {
 
             WS_LITE::WSListener h;
 
-            void onKeyEvent(const unsigned char* data, size_t len) {
-                assert(len == sizeof(KeyEvent));
-                IServerDriver_->onKeyEvent(*reinterpret_cast<const KeyEvent*>(data));
+            void onKeyUp(const unsigned char* data, size_t len) {
+                switch (len) {
+                default:
+                    return;
+               }
+
+
+               // IServerDriver_->onKeyEvent(*reinterpret_cast<const KeyEvent*>(data));
+            }
+            void onKeyDown(const unsigned char* data, size_t len) {
+              //  assert(len == sizeof(KeyEvent));
+              //  IServerDriver_->onKeyEvent(*reinterpret_cast<const KeyEvent*>(data));
             }
             void onMouseEvent(const unsigned char* data, size_t len) {
                 assert(len == sizeof(MouseEvent));
@@ -74,8 +83,11 @@ namespace SL {
                     auto datasize = message.len - sizeof(p);
 
                     switch (p) {
-                    case PACKET_TYPES::ONKEYEVENT:
-                        onKeyEvent(datastart, datasize);
+                    case PACKET_TYPES::ONKEYDOWN:
+                        onKeyDown(datastart, datasize);
+                        break;
+                    case PACKET_TYPES::ONKEYUP:
+                        onKeyUp(datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSEEVENT:
                         onMouseEvent(datastart, datasize);

@@ -88,7 +88,7 @@ namespace SL {
                 }
                 Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
                 assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
-                
+
 
                 IClientDriver_->onFrameChanged(img, *monitor);
                 tjDestroy(jpegDecompressor);
@@ -210,16 +210,16 @@ namespace SL {
                 buf.data = ptr.get();
                 Socket_->send(buf, false);
             }
-            void SendKeyEvent(const KeyEvent & m) {
+            template<typename KEY> void SendKey_Impl(KEY key, PACKET_TYPES ptype)
+            {
                 if (!Socket_) {
                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
                     return;
                 }
-                auto ptype = PACKET_TYPES::ONKEYEVENT;
-                const auto size = sizeof(ptype) + sizeof(m);
+                const auto size = sizeof(ptype) + sizeof(key);
                 auto ptr(std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; }));
                 *reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
-                memcpy(ptr.get() + sizeof(ptype), &m, sizeof(m));
+                memcpy(ptr.get() + sizeof(ptype), &key, sizeof(key));
 
                 SL::WS_LITE::WSMessage buf;
                 buf.code = WS_LITE::OpCode::BINARY;
@@ -227,8 +227,8 @@ namespace SL {
                 buf.len = size;
                 buf.data = ptr.get();
                 Socket_->send(buf, false);
-
             }
+
             void SendClipboardChanged(const std::string& text) {
                 if (!Socket_) {
                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendClipboardText called on a socket that is not open yet");
@@ -251,30 +251,49 @@ namespace SL {
 
             }
         };
-        ClientDriver::ClientDriver(IClientDriver * r)
-            : ClientDriverImpl_(new ClientDriverImpl(r))
-        {
-
-        }
+        ClientDriver::ClientDriver(IClientDriver * r) : ClientDriverImpl_(new ClientDriverImpl(r))
+        {  }
 
         ClientDriver::~ClientDriver()
         {
             delete ClientDriverImpl_;
+        }
+        void ClientDriver::SendKeyUp(char key)
+        {
+            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYUP);
+        }
+        void ClientDriver::SendKeyUp(wchar_t key)
+        {
+            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYUP);
+        }
+        void ClientDriver::SendKeyUp(Input_Lite::SpecialKeyCodes key)
+        {
+            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYUP);
+        }
+
+        void ClientDriver::SendKeyDown(char key)
+        {
+            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYDOWN);
+        }
+        void ClientDriver::SendKeyDown(wchar_t key)
+        {
+            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYDOWN);
+        }
+        void ClientDriver::SendKeyDown(Input_Lite::SpecialKeyCodes key)
+        {
+            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYDOWN);
         }
 
         void ClientDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
         {
             ClientDriverImpl_->Connect(config, dst_host);
         }
-        void ClientDriver::SendKeyEvent(const KeyEvent & m)
-        {
-            ClientDriverImpl_->SendKeyEvent(m);
-        }
         void ClientDriver::SendMouseEvent(const MouseEvent& m)
         {
             ClientDriverImpl_->SendMouseEvent(m);
         }
-        void ClientDriver::SendClipboardChanged(const std::string& text) {
+        void ClientDriver::SendClipboardChanged(const std::string& text)
+        {
             return ClientDriverImpl_->SendClipboardChanged(text);
         }
     }

@@ -1,24 +1,16 @@
 #pragma once
 #include "Shapes.h"
+#include "Input_Lite.h"
 
 namespace SL {
 	namespace RAT {
-
-        enum Specials : unsigned int {
-            NO_SPECIAL_DATA,
-            ALT,
-            CTRL,
-            SHIFT
-        };
-
-        enum Press : unsigned int {
+        enum Press : int {
             NO_PRESS_DATA,
             UP,
-            DOWN,
-            DBLCLICK
+            DOWN
         };
 
-        enum Events : unsigned int {
+        enum Events : int {
             NO_EVENTDATA,
             LEFT,
             MIDDLE,
@@ -27,8 +19,8 @@ namespace SL {
         };
         struct KeyEvent {
             Press PressData;
-            unsigned int Key;
-            Specials SpecialKey;
+            int Key;
+            Input_Lite::SpecialKeyCodes SpecialKey;
         };
 
         struct MouseEvent {

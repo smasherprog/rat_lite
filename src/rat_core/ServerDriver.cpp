@@ -26,18 +26,35 @@ namespace SL {
 
             WS_LITE::WSListener h;
 
-            void onKeyUp(const unsigned char* data, size_t len) {
+            void onKeyUp(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
                 switch (len) {
+                case(sizeof(char)):
+                    IServerDriver_->onKeyUp(socket, *reinterpret_cast<const char*>(data));
+                    break;
+                case(sizeof(wchar_t)):
+                    IServerDriver_->onKeyUp(socket, *reinterpret_cast<const wchar_t*>(data));
+                    break;
+                case(sizeof(Input_Lite::SpecialKeyCodes)):
+                    IServerDriver_->onKeyUp(socket, *reinterpret_cast<const Input_Lite::SpecialKeyCodes*>(data));
+                    break;
                 default:
-                    return;
-               }
-
-
-               // IServerDriver_->onKeyEvent(*reinterpret_cast<const KeyEvent*>(data));
+                    return socket->close(1000, "Received invalid onKeyUp Event");
+                }
             }
-            void onKeyDown(const unsigned char* data, size_t len) {
-              //  assert(len == sizeof(KeyEvent));
-              //  IServerDriver_->onKeyEvent(*reinterpret_cast<const KeyEvent*>(data));
+            void onKeyDown(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                switch (len) {
+                case(sizeof(char)):
+                    IServerDriver_->onKeyDown(socket, *reinterpret_cast<const char*>(data));
+                    break;
+                case(sizeof(wchar_t)):
+                    IServerDriver_->onKeyDown(socket, *reinterpret_cast<const wchar_t*>(data));
+                    break;
+                case(sizeof(Input_Lite::SpecialKeyCodes)):
+                    IServerDriver_->onKeyDown(socket, *reinterpret_cast<const Input_Lite::SpecialKeyCodes*>(data));
+                    break;
+                default:
+                    return socket->close(1000, "Received invalid onKeyDown Event");
+                }
             }
             void onMouseEvent(const unsigned char* data, size_t len) {
                 assert(len == sizeof(MouseEvent));
@@ -48,7 +65,7 @@ namespace SL {
                 IServerDriver_->onClipboardChanged(str);
             }
             ServerDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) : Config_(config) {
-      
+
                 h = WS_LITE::CreateContext(WS_LITE::ThreadCount(1))
                     .CreateListener(config->WebSocketTLSLPort)
                     .onConnection([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::unordered_map<std::string, std::string>& header) {
@@ -63,7 +80,7 @@ namespace SL {
                         }
                         int t = counter++ % Config_->MaxWebSocketThreads;
                         SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
-       
+
                         IServerDriver_->onConnection(socket);
                     }
                 }).onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) {
@@ -74,20 +91,20 @@ namespace SL {
                     }
                     IServerDriver_->onDisconnection(socket, code, msg);
                 }).onMessage([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& message) {
-                
+
                     auto p = PACKET_TYPES::INVALID;
                     assert(message.len >= sizeof(p));
-                 
+
                     p = *reinterpret_cast<const PACKET_TYPES*>(message.data);
                     auto datastart = message.data + sizeof(p);
                     auto datasize = message.len - sizeof(p);
 
                     switch (p) {
                     case PACKET_TYPES::ONKEYDOWN:
-                        onKeyDown(datastart, datasize);
+                        onKeyDown(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONKEYUP:
-                        onKeyUp(datastart, datasize);
+                        onKeyUp(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSEEVENT:
                         onMouseEvent(datastart, datasize);
@@ -105,9 +122,9 @@ namespace SL {
 
             }
             void Send(const std::shared_ptr<WS_LITE::IWSocket>& socket, std::shared_ptr<unsigned char>& data, size_t len) {
-                    if (socket) {   
-                        auto msg = WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data };
-                        socket->send(msg, false);
+                if (socket) {
+                    auto msg = WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data };
+                    socket->send(msg, false);
                 }
                 else {
                     {
@@ -226,7 +243,7 @@ namespace SL {
         ServerDriver::~ServerDriver()
         {
 
-        } 
+        }
         void ServerDriver::SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors)
         {
             ServerDriverImpl_->SendMonitorsChanged(socket, monitors);

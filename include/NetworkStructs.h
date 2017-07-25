@@ -4,32 +4,6 @@
 
 namespace SL {
 	namespace RAT {
-        enum Press : int {
-            NO_PRESS_DATA,
-            UP,
-            DOWN
-        };
-
-        enum Events : int {
-            NO_EVENTDATA,
-            LEFT,
-            MIDDLE,
-            RIGHT,
-            SCROLL
-        };
-        struct KeyEvent {
-            Press PressData;
-            int Key;
-            Input_Lite::SpecialKeyCodes SpecialKey;
-        };
-
-        struct MouseEvent {
-            Events EventData;
-            Point Pos;
-            int ScrollDelta;
-            Press PressData;
-        };
-
 		const int PixelStride = 4;
 		struct Image {
 			Image() {}

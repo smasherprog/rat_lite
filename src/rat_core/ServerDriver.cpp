@@ -56,9 +56,19 @@ namespace SL {
                     return socket->close(1000, "Received invalid onKeyDown Event");
                 }
             }
-            void onMouseEvent(const unsigned char* data, size_t len) {
-                assert(len == sizeof(MouseEvent));
-                IServerDriver_->onMouseEvent(*reinterpret_cast<const MouseEvent*>(data));
+            void onMouseUp(const unsigned char* data, size_t len) {
+
+              
+            }
+
+            void onMouseDown(const unsigned char* data, size_t len) {
+
+
+            }
+
+            void onMouseScroll(const unsigned char* data, size_t len) {
+
+
             }
             void onClipboardChanged(const unsigned char* data, size_t len) {
                 std::string str(reinterpret_cast<const char*>(data), len);
@@ -106,8 +116,14 @@ namespace SL {
                     case PACKET_TYPES::ONKEYUP:
                         onKeyUp(socket, datastart, datasize);
                         break;
-                    case PACKET_TYPES::ONMOUSEEVENT:
-                        onMouseEvent(datastart, datasize);
+                    case PACKET_TYPES::ONMOUSEUP:
+                        onMouseUp(datastart, datasize);
+                        break;
+                    case PACKET_TYPES::ONMOUSEDOWN:
+                        onMouseDown(datastart, datasize);
+                        break;
+                    case PACKET_TYPES::ONMOUSESCROLL:
+                        onMouseScroll(datastart, datasize);
                         break;
                     case PACKET_TYPES::ONCLIPBOARDTEXTCHANGED:
                         onClipboardChanged(datastart, datasize);

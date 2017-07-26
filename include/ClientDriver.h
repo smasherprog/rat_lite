@@ -6,6 +6,7 @@
 namespace SL {
 	namespace RAT {
 
+        class Point;
 		class IClientDriver;
 		class ClientDriverImpl;
 		struct Client_Config;
@@ -30,8 +31,7 @@ namespace SL {
             void SendMouseDown(const Input_Lite::MouseButtons button);
            
             void SendMouseScroll(int offset); 
-            void SendMousePosition(const Input_Lite::Offset& offset);
-            void SendMousePosition(const Input_Lite::AbsolutePos& absolute);
+            void SendMousePosition(const Point& pos);
 
             void SendClipboardChanged(const std::string& text);
 		};

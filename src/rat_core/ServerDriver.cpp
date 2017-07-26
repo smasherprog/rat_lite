@@ -237,7 +237,7 @@ namespace SL {
             void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& pos)
             {
                 if (Clients.empty()) return;
-                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEABSOLUTEPOSITIONCHANGED);
+                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
                 const auto size = sizeof(pos) + sizeof(p);
 
                 auto  buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
@@ -272,26 +272,54 @@ namespace SL {
         {
             ServerDriverImpl_->SendMonitorsChanged(socket, monitors);
         }
+        void ServerDriver::SendMonitorsChanged(const std::vector<Screen_Capture::Monitor>& monitors)
+        {
+            std::shared_ptr<WS_LITE::IWSocket> socket;
+            ServerDriverImpl_->SendMonitorsChanged(socket, monitors);
+        }
         void ServerDriver::SendFrameChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor)
         {
+            ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONFRAMECHANGED);
+        }
+        void ServerDriver::SendFrameChanged( const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor)
+        {
+            std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONFRAMECHANGED);
         }
         void ServerDriver::SendNewFrame(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor)
         {
             ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONNEWFRAME);
         }
-
+        void ServerDriver::SendNewFrame(const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor)
+        {
+            std::shared_ptr<WS_LITE::IWSocket> socket;
+            ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONNEWFRAME);
+        }
         void ServerDriver::SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image)
         {
+            ServerDriverImpl_->SendMouseImageChanged(socket, image);
+        }
+        void ServerDriver::SendMouseImageChanged(const Screen_Capture::Image& image)
+        {
+            std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendMouseImageChanged(socket, image);
         }
         void ServerDriver::SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point & pos)
         {
             ServerDriverImpl_->SendMousePositionChanged(socket, pos);
         }
-
+        void ServerDriver::SendMousePositionChanged(const Point & pos)
+        {
+            std::shared_ptr<WS_LITE::IWSocket> socket;
+            ServerDriverImpl_->SendMousePositionChanged(socket, pos);
+        }
         void ServerDriver::SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::string& text)
         {
+            ServerDriverImpl_->SendClipboardChanged(socket, text);
+        }
+        void ServerDriver::SendClipboardChanged(const std::string& text)
+        {
+            std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendClipboardChanged(socket, text);
         }
     }

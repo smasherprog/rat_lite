@@ -181,7 +181,7 @@ namespace SL {
                     case PACKET_TYPES::ONMOUSEIMAGECHANGED:
                         onMouseImageChanged(socket, datastart, datasize);
                         break;
-                    case PACKET_TYPES::ONMOUSEABSOLUTEPOSITIONCHANGED:
+                    case PACKET_TYPES::ONMOUSEPOSITIONCHANGED:
                         onMousePositionChanged(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONCLIPBOARDTEXTCHANGED:
@@ -291,15 +291,10 @@ namespace SL {
         {
             ClientDriverImpl_->SendStruct_Impl(offset, PACKET_TYPES::ONMOUSESCROLL);
         }
-        void ClientDriver::SendMousePosition(const Input_Lite::Offset& offset)
+        void ClientDriver::SendMousePosition(const Point& pos)
         {
-            ClientDriverImpl_->SendStruct_Impl(offset, PACKET_TYPES::ONMOUSEOFFSETPOSITIONCHANGED);
+            ClientDriverImpl_->SendStruct_Impl(pos, PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
         }
-        void ClientDriver::SendMousePosition(const Input_Lite::AbsolutePos& absolute)
-        {
-            ClientDriverImpl_->SendStruct_Impl(absolute, PACKET_TYPES::ONMOUSEABSOLUTEPOSITIONCHANGED);
-        }
-
 
         void ClientDriver::SendClipboardChanged(const std::string& text)
         {

@@ -56,23 +56,31 @@ namespace SL {
                     return socket->close(1000, "Received invalid onKeyDown Event");
                 }
             }
-            void onMouseUp(const unsigned char* data, size_t len) {
-
-              
+            void onMouseUp(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len == sizeof(Input_Lite::MouseButtons)) {
+                    return IServerDriver_->onMouseUp(socket, *reinterpret_cast<const Input_Lite::MouseButtons*>(data));
+                }
+                socket->close(1000, "Received invalid onMouseUp Event");
             }
 
-            void onMouseDown(const unsigned char* data, size_t len) {
-
-
+            void onMouseDown(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len == sizeof(Input_Lite::MouseButtons)) {
+                    return IServerDriver_->onMouseDown(socket, *reinterpret_cast<const Input_Lite::MouseButtons*>(data));
+                }
+                socket->close(1000, "Received invalid onMouseDown Event");
             }
 
-            void onMouseScroll(const unsigned char* data, size_t len) {
-
-
+            void onMouseScroll(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len == sizeof(int)) {
+                    return IServerDriver_->onMouseScroll(socket, *reinterpret_cast<const int*>(data));
+                }
+                socket->close(1000, "Received invalid onMouseScroll Event");
             }
-            void onClipboardChanged(const unsigned char* data, size_t len) {
-                std::string str(reinterpret_cast<const char*>(data), len);
-                IServerDriver_->onClipboardChanged(str);
+            void onClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len < 1024 * 100) { //100K max
+                    std::string str(reinterpret_cast<const char*>(data), len);
+                    return IServerDriver_->onClipboardChanged(str);
+                }
             }
             ServerDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) : Config_(config) {
 
@@ -117,16 +125,16 @@ namespace SL {
                         onKeyUp(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSEUP:
-                        onMouseUp(datastart, datasize);
+                        onMouseUp(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSEDOWN:
-                        onMouseDown(datastart, datasize);
+                        onMouseDown(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSESCROLL:
-                        onMouseScroll(datastart, datasize);
+                        onMouseScroll(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONCLIPBOARDTEXTCHANGED:
-                        onClipboardChanged(datastart, datasize);
+                        onClipboardChanged(socket, datastart, datasize);
                         break;
                     default:
                         IServerDriver_->onMessage(socket, message);
@@ -229,7 +237,7 @@ namespace SL {
             void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& pos)
             {
                 if (Clients.empty()) return;
-                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEEVENT);
+                auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEABSOLUTEPOSITIONCHANGED);
                 const auto size = sizeof(pos) + sizeof(p);
 
                 auto  buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; });
@@ -286,7 +294,5 @@ namespace SL {
         {
             ServerDriverImpl_->SendClipboardChanged(socket, text);
         }
-
-
     }
 }

@@ -28,100 +28,114 @@ namespace SL {
             std::vector<unsigned char> outputbuffer;
             std::vector<Screen_Capture::Monitor> Monitors;
 
-            void onMouseImageChanged(const unsigned char* data, size_t len) {
-                assert(len >= sizeof(Rect));
-                Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
-                assert(len >= sizeof(Rect) + (img.Rect_.Width * img.Rect_.Height * PixelStride));
-                IClientDriver_->onMouseImageChanged(img);
+            void onMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len >= sizeof(Rect)) {
+                    Image img(*reinterpret_cast<const Rect*>(data), data + sizeof(Rect), len - sizeof(Rect));
+                    if (len >= sizeof(Rect) + (img.Rect_.Width * img.Rect_.Height * PixelStride)) {
+                        return IClientDriver_->onMouseImageChanged(img);
+                    }
+                }
+                socket->close(1000, "Received invalid lenght on onMouseImageChanged");
             }
-            void onMousePositionChanged(const unsigned char* data, size_t len) {
-                assert(len == sizeof(Point));
-                IClientDriver_->onMousePositionChanged(*reinterpret_cast<const Point*>(data));
+            void onMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len == sizeof(Rect)) {
+                    return  IClientDriver_->onMousePositionChanged(*reinterpret_cast<const Point*>(data));
+                }
+                socket->close(1000, "Received invalid lenght on onMousePositionChanged");
             }
 
-            void onMonitorsChanged(const unsigned char* data, size_t len) {
+            void onMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
                 auto num = len / sizeof(Screen_Capture::Monitor);
-                assert(num * sizeof(Screen_Capture::Monitor) == len);
-                if (num > 8) {
-                    return Socket_->close(1000, "Monitors Exceeded allowed number!");
-                }
-                else {
-                    Monitors.clear();
+                Monitors.clear();
+                if (len == num * sizeof(Screen_Capture::Monitor) && num < 8) {
                     for (decltype(num) i = 0; i < num; i++) {
                         Monitors.push_back(*(Screen_Capture::Monitor*)data);
                     }
-                    IClientDriver_->onMonitorsChanged(Monitors);
+                    return IClientDriver_->onMonitorsChanged(Monitors);
+                }
+                else if (len == 0) {
+                    //it is possible to have no monitors.. shouldnt disconnect in that case
+                    return IClientDriver_->onMonitorsChanged(Monitors);
+                }
+                socket->close(1000, "Invalid Monitor Count");
+
+            }
+            void onClipboardTextChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len < 1024 * 100) { //100K max
+                    std::string str(reinterpret_cast<const char*>(data), len);
+                    return IClientDriver_->onClipboardChanged(str);
+                }
+            }
+            void onFrameChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                int monitor_id = 0;
+                if (len < sizeof(Rect) + sizeof(monitor_id)) {
+                    return Socket_->close(1000, "Invalid length on onFrameChanged");
                 }
 
-            }
-            void onClipboardTextChanged(const unsigned char* data, size_t len) {
-                std::string str(reinterpret_cast<const char*>(data), len);
-                IClientDriver_->onClipboardChanged(str);
-            }
-            void onFrameChanged(const unsigned char* data, size_t len) {
-                assert(len >= sizeof(Rect));
-
                 auto jpegDecompressor = tjInitDecompress();
-
                 int jpegSubsamp(0), outwidth(0), outheight(0);
 
                 auto src = (unsigned char*)data;
-                auto monitor_id = 0;
                 memcpy(&monitor_id, src, sizeof(monitor_id));
                 src += sizeof(monitor_id);
-                auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto& m) { return m.Id == monitor_id; });
-                if (monitor == end(Monitors)) {
-                    return Socket_->close(1000, "Monitor Id doesnt exist!");
-                }
                 Rect rect;
                 memcpy(&rect, src, sizeof(rect));
                 src += sizeof(rect);
 
-                if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
+                auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto& m) { return m.Id == monitor_id; });
+                if (monitor == end(Monitors)) {
+                    return Socket_->close(1000, "Monitor Id doesnt exist!");
+                }
+                len -= sizeof(Rect) + sizeof(monitor_id);
+
+                if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len), &outwidth, &outheight, &jpegSubsamp) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 std::lock_guard<std::mutex> lock(outputbufferLock);
                 outputbuffer.reserve(outwidth* outheight * PixelStride);
 
-                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
+
                 assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
-
-
                 IClientDriver_->onFrameChanged(img, *monitor);
                 tjDestroy(jpegDecompressor);
             }
-            void onNewFrame(const unsigned char* data, size_t len) {
-                assert(len >= sizeof(Rect));
+            void onNewFrame(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                int monitor_id = 0;
+                if (len < sizeof(Rect) + sizeof(monitor_id)) {
+                    return Socket_->close(1000, "Invalid length on onFrameChanged");
+                }
 
                 auto jpegDecompressor = tjInitDecompress();
-
                 int jpegSubsamp(0), outwidth(0), outheight(0);
 
                 auto src = (unsigned char*)data;
-                auto monitor_id = 0;
                 memcpy(&monitor_id, src, sizeof(monitor_id));
                 src += sizeof(monitor_id);
-                auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto& m) { return m.Id == monitor_id; });
-                if (monitor == end(Monitors)) {
-                    return Socket_->close(1000, "Monitor Id doesnt exist!");
-                }
                 Rect rect;
                 memcpy(&rect, src, sizeof(rect));
                 src += sizeof(rect);
 
-                if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), &outwidth, &outheight, &jpegSubsamp) == -1) {
+                auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto& m) { return m.Id == monitor_id; });
+                if (monitor == end(Monitors)) {
+                    return Socket_->close(1000, "Monitor Id doesnt exist!");
+                }
+                len -= sizeof(Rect) + sizeof(monitor_id);
+
+                if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len), &outwidth, &outheight, &jpegSubsamp) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 std::lock_guard<std::mutex> lock(outputbufferLock);
                 outputbuffer.reserve(outwidth* outheight * PixelStride);
 
-                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len - sizeof(Rect)), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
+
                 assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
 
                 IClientDriver_->onNewFrame(img, *monitor);
@@ -156,22 +170,22 @@ namespace SL {
                     //SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
                     switch (p) {
                     case PACKET_TYPES::ONMONITORSCHANGED:
-                        onMonitorsChanged(datastart, datasize);
+                        onMonitorsChanged(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONFRAMECHANGED:
-                        onFrameChanged(datastart, datasize);
+                        onFrameChanged(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONNEWFRAME:
-                        onNewFrame(datastart, datasize);
+                        onNewFrame(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSEIMAGECHANGED:
-                        onMouseImageChanged(datastart, datasize);
+                        onMouseImageChanged(socket, datastart, datasize);
                         break;
-                    case PACKET_TYPES::ONMOUSEPOSITIONCHANGED:
-                        onMousePositionChanged(datastart, datasize);
+                    case PACKET_TYPES::ONMOUSEABSOLUTEPOSITIONCHANGED:
+                        onMousePositionChanged(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONCLIPBOARDTEXTCHANGED:
-                        onClipboardTextChanged(datastart, datasize);
+                        onClipboardTextChanged(socket, datastart, datasize);
                         break;
                     default:
                         IClientDriver_->onMessage(socket, message);//pass up the chain
@@ -186,31 +200,8 @@ namespace SL {
 
             }
 
-            void SendMouseEvent(const MouseEvent& m) {
-                if (!Socket_) {
-                    SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendMouse called on a socket that is not open yet");
-                    return;
-                }
-                if (Socket_->is_loopback()) return;//dont send mouse info to ourselfs as this will cause a loop
-                //do checks to prevent sending redundant mouse information about its position
-                if (m.EventData == NO_EVENTDATA && LastMousePosition_ == m.Pos && m.PressData == NO_PRESS_DATA && m.ScrollDelta == 0) {
-                    return;//already did this event
-                }
-                LastMousePosition_ = m.Pos;
-                auto ptype = PACKET_TYPES::ONMOUSEEVENT;
-                const auto size = sizeof(ptype) + sizeof(m);
-                auto ptr(std::shared_ptr<unsigned char>(new unsigned char[size], [](auto* p) { delete[] p; }));
-                *reinterpret_cast<PACKET_TYPES*>(ptr.get()) = ptype;
-                memcpy(ptr.get() + sizeof(ptype), &m, sizeof(m));
 
-                SL::WS_LITE::WSMessage buf;
-                buf.code = WS_LITE::OpCode::BINARY;
-                buf.Buffer = ptr;
-                buf.len = size;
-                buf.data = ptr.get();
-                Socket_->send(buf, false);
-            }
-            template<typename KEY> void SendKey_Impl(KEY key, PACKET_TYPES ptype)
+            template<typename STRUCT> void SendStruct_Impl(STRUCT key, PACKET_TYPES ptype)
             {
                 if (!Socket_) {
                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
@@ -227,8 +218,7 @@ namespace SL {
                 buf.len = size;
                 buf.data = ptr.get();
                 Socket_->send(buf, false);
-            }
-
+            }   
             void SendClipboardChanged(const std::string& text) {
                 if (!Socket_) {
                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendClipboardText called on a socket that is not open yet");
@@ -258,40 +248,59 @@ namespace SL {
         {
             delete ClientDriverImpl_;
         }
-        void ClientDriver::SendKeyUp(char key)
-        {
-            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYUP);
-        }
-        void ClientDriver::SendKeyUp(wchar_t key)
-        {
-            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYUP);
-        }
-        void ClientDriver::SendKeyUp(Input_Lite::SpecialKeyCodes key)
-        {
-            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYUP);
-        }
-
-        void ClientDriver::SendKeyDown(char key)
-        {
-            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYDOWN);
-        }
-        void ClientDriver::SendKeyDown(wchar_t key)
-        {
-            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYDOWN);
-        }
-        void ClientDriver::SendKeyDown(Input_Lite::SpecialKeyCodes key)
-        {
-            ClientDriverImpl_->SendKey_Impl(key, PACKET_TYPES::ONKEYDOWN);
-        }
-
         void ClientDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
         {
             ClientDriverImpl_->Connect(config, dst_host);
         }
-        void ClientDriver::SendMouseEvent(const MouseEvent& m)
+        void ClientDriver::SendKeyUp(char key)
         {
-            ClientDriverImpl_->SendMouseEvent(m);
+            ClientDriverImpl_->SendStruct_Impl(key, PACKET_TYPES::ONKEYUP);
         }
+        void ClientDriver::SendKeyUp(wchar_t key)
+        {
+            ClientDriverImpl_->SendStruct_Impl(key, PACKET_TYPES::ONKEYUP);
+        }
+        void ClientDriver::SendKeyUp(Input_Lite::SpecialKeyCodes key)
+        {
+            ClientDriverImpl_->SendStruct_Impl(key, PACKET_TYPES::ONKEYUP);
+        }
+
+        void ClientDriver::SendKeyDown(char key)
+        {
+            ClientDriverImpl_->SendStruct_Impl(key, PACKET_TYPES::ONKEYDOWN);
+        }
+        void ClientDriver::SendKeyDown(wchar_t key)
+        {
+            ClientDriverImpl_->SendStruct_Impl(key, PACKET_TYPES::ONKEYDOWN);
+        }
+        void ClientDriver::SendKeyDown(Input_Lite::SpecialKeyCodes key)
+        {
+            ClientDriverImpl_->SendStruct_Impl(key, PACKET_TYPES::ONKEYDOWN);
+        }
+
+        void ClientDriver::SendMouseUp(const Input_Lite::MouseButtons button)
+        {
+            ClientDriverImpl_->SendStruct_Impl(button, PACKET_TYPES::ONMOUSEUP);
+        }
+        void ClientDriver::SendMouseDown(const Input_Lite::MouseButtons button)
+        {
+            ClientDriverImpl_->SendStruct_Impl(button, PACKET_TYPES::ONMOUSEDOWN);
+        }
+
+        void ClientDriver::SendMouseScroll(int offset)
+        {
+            ClientDriverImpl_->SendStruct_Impl(offset, PACKET_TYPES::ONMOUSESCROLL);
+        }
+        void ClientDriver::SendMousePosition(const Input_Lite::Offset& offset)
+        {
+            ClientDriverImpl_->SendStruct_Impl(offset, PACKET_TYPES::ONMOUSEOFFSETPOSITIONCHANGED);
+        }
+        void ClientDriver::SendMousePosition(const Input_Lite::AbsolutePos& absolute)
+        {
+            ClientDriverImpl_->SendStruct_Impl(absolute, PACKET_TYPES::ONMOUSEABSOLUTEPOSITIONCHANGED);
+        }
+
+
         void ClientDriver::SendClipboardChanged(const std::string& text)
         {
             return ClientDriverImpl_->SendClipboardChanged(text);

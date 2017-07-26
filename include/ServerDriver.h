@@ -28,6 +28,7 @@ namespace SL {
             void SendFrameChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor);
             void SendNewFrame(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor);
             void SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image);
+
             void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& mevent);
             void SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::string& text);
 

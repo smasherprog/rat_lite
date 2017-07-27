@@ -89,49 +89,61 @@ namespace SL {
                 Clipboard_.destroy();//make sure to prevent race conditions
                 _Status = Server_Status::SERVER_STOPPED;
             }
-            virtual void onConnection(const WS_LITE::WSocket& socket) override {
+
+            virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket)override {
                 UNUSED(socket);
                 std::vector<int> ids;
                 auto p = Screen_Capture::GetMonitors();
                 for (auto& a : p) {
-                    ids.push_back(Screen_Capture::Id(*a));
+                    ids.push_back(Screen_Capture::Id(a));
                 }
-                ServerDriver_.SendMonitorInfo(&socket, p);
+                ServerDriver_.SendMonitorsChanged(socket, p);
 
                 std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                 ClientsThatNeedFullFrames.push_back({ socket, ids });
             }
-
-            virtual void onDisconnection(const WS_LITE::WSocket& socket, unsigned short code, const std::string& msg) override {
+            virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg) override {
+                UNUSED(socket);
+                UNUSED(msg);
+            }
+            virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override {
                 UNUSED(socket);
                 UNUSED(code);
                 UNUSED(msg);
             }
-
-            virtual void onMessage(const WS_LITE::WSocket& socket, const WS_LITE::WSMessage& msg)  override {
-                UNUSED(socket);
-                UNUSED(msg);
+            virtual void onKeyUp(const std::shared_ptr<WS_LITE::IWSocket>& socket, char key) override {
+                if (!Config_->IgnoreIncomingKeyboardEvents) Input_Lite::SendKeyUp(key);
+            }
+            virtual void onKeyUp(const std::shared_ptr<WS_LITE::IWSocket>& socket, wchar_t key) override {
+                if (!Config_->IgnoreIncomingKeyboardEvents) Input_Lite::SendKeyUp(key);
+            }
+            virtual void onKeyUp(const std::shared_ptr<WS_LITE::IWSocket>& socket, Input_Lite::SpecialKeyCodes key) override {
+                if (!Config_->IgnoreIncomingKeyboardEvents) Input_Lite::SendKeyUp(key);
             }
 
-            virtual void onReceive_ClipboardText(const unsigned char* data, unsigned int len) override {
-                SL_RAT_LOG(Logging_Levels::INFO_log_level, "OnReceiveClipboard_Text " << len);
-                Clipboard_->updateClipbard(reinterpret_cast<const char*>(data), static_cast<int>(len));
+            virtual void onKeyDown(const std::shared_ptr<WS_LITE::IWSocket>& socket, char key) override {
+                if (!Config_->IgnoreIncomingKeyboardEvents) Input_Lite::SendKeyDown(key);
+            }
+            virtual void onKeyDown(const std::shared_ptr<WS_LITE::IWSocket>& socket, wchar_t key) override {
+                if (!Config_->IgnoreIncomingKeyboardEvents) Input_Lite::SendKeyDown(key);
+            }
+            virtual void onKeyDown(const std::shared_ptr<WS_LITE::IWSocket>& socket, Input_Lite::SpecialKeyCodes key) override {
+                if (!Config_->IgnoreIncomingKeyboardEvents) Input_Lite::SendKeyDown(key);
             }
 
-
-            virtual void onReceive_Mouse(const MouseEvent* m) override {
-                if (!Config_->IgnoreIncomingMouseEvents) SimulateMouseEvent(*m);
+            virtual void onMouseUp(const std::shared_ptr<WS_LITE::IWSocket>& socket, Input_Lite::MouseButtons button) override {
+                if (!Config_->IgnoreIncomingMouseEvents) Input_Lite::SendMouseUp(button);
             }
-            virtual void onReceive_Key(const KeyEvent* m)override {
-                if (!Config_->IgnoreIncomingKeyboardEvents) SimulateKeyboardEvent(*m);
+            virtual void onMouseDown(const std::shared_ptr<WS_LITE::IWSocket>& socket, Input_Lite::MouseButtons button) override {
+                if (!Config_->IgnoreIncomingMouseEvents) Input_Lite::SendMouseDown(button);
             }
-
-
-            void OnMousePos(Point p) {
-                //ServerDriver_.SendMouse(nullptr, p);
+            virtual void onMouseScroll(const std::shared_ptr<WS_LITE::IWSocket>& socket, int offset) override {
+                if (!Config_->IgnoreIncomingMouseEvents) Input_Lite::SendMouseScroll(offset);
             }
-
-
+            virtual void onClipboardChanged(const std::string& text) override {
+                SL_RAT_LOG(Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
+                Clipboard_.copy(text);
+            }
         };
 
         Server::Server(std::shared_ptr<Server_Config> config)

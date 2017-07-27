@@ -87,7 +87,7 @@ namespace SL {
                     return IServerDriver_->onClipboardChanged(str);
                 }
             }
-            ServerDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) : Config_(config) {
+            ServerDriverImpl(IServerDriver * r, std::shared_ptr<Server_Config> config) : Config_(config), IServerDriver_(r) {
 
                 h = WS_LITE::CreateContext(WS_LITE::ThreadCount(1))
                     .CreateListener(config->WebSocketTLSLPort)
@@ -289,7 +289,7 @@ namespace SL {
         {
             ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONFRAMECHANGED);
         }
-        void ServerDriver::SendFrameChanged( const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor)
+        void ServerDriver::SendFrameChanged(const Screen_Capture::Image& image, const Screen_Capture::Monitor& monitor)
         {
             std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONFRAMECHANGED);

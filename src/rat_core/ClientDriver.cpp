@@ -149,7 +149,7 @@ namespace SL {
             }
             void Connect(std::shared_ptr<Client_Config> config, const char* dst_host) {
                 Config_ = config;
-                auto hc = std::string("ws://") + std::string(dst_host);
+                auto hc = std::string(dst_host);
                 h = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
                     .CreateClient()
                     .onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const std::unordered_map<std::string, std::string>& header) {

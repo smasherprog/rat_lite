@@ -31,8 +31,9 @@ add_definitions(
 	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/public.crt"
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
+find_package(Boost COMPONENTS program_options REQUIRED)
 
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} uWebSockets/src)
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} uWebSockets/src)
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

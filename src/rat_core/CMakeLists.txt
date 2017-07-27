@@ -46,7 +46,6 @@ endif()
 set(REMOTE_ACCESS_COMMON_SRC 	
 
 	ClientDriver.cpp
-	Input.cpp
 	ServerDriver.cpp
 
 	../../include/IClientDriver.h

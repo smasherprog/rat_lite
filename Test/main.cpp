@@ -19,8 +19,6 @@
 using namespace std::chrono_literals;
 
 std::vector<SL::Screen_Capture::Monitor> MonitorsToSend;
-SL::RAT::KeyEvent k = { SL::RAT::Press::DOWN, 'a', SL::RAT::Specials::SHIFT };
-SL::RAT::MouseEvent mouseevent = { SL::RAT::Events::MIDDLE, SL::RAT::Point(39, 678), 78, SL::RAT::Press::DOWN };
 SL::RAT::Point mpoint = { 67, 89 };
 std::string cliptext = "thisitheweasdsxzzxc436t456u7658u/asd.";
 
@@ -56,8 +54,11 @@ public:
             assert(MonitorsToSend[i].OffsetY == monitors[i].OffsetY);
             assert(MonitorsToSend[i].Width == monitors[i].Width);
         }
-
-        lowerlevel->SendKeyEvent(k);
+        //all asci characters
+        for (auto k = ' '; k <= '~'; k++) {
+            lowerlevel->SendKeyDown(k);
+            lowerlevel->SendKeyUp(k);
+        }
     }
     virtual void onFrameChanged(const SL::RAT::Image& img, const SL::Screen_Capture::Monitor& monitor) override
     {
@@ -76,7 +77,11 @@ public:
     virtual void onClipboardChanged(const std::string& text)override
     {
         assert(text == cliptext);
-        lowerlevel->SendMouseEvent(mouseevent);
+        lowerlevel->SendMousePosition(mpoint);
+        lowerlevel->SendMouseDown(SL::Input_Lite::MouseButtons::MIDDLE);
+        lowerlevel->SendMouseUp(SL::Input_Lite::MouseButtons::RIGHT);
+        lowerlevel->SendMouseScroll(46);
+        lowerlevel->SendClipboardChanged(cliptext);
     }
 
     virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) override
@@ -93,9 +98,9 @@ public:
 class TestServerDriver : public SL::RAT::IServerDriver {
     std::shared_ptr<SL::RAT::Server_Config> serverconfig;
     std::unique_ptr<SL::RAT::ServerDriver> lowerlevel;
+    char asciikeyreceived = 0;
 public:
     std::shared_ptr<SL::WS_LITE::IWSocket> Socket;
-    bool done = false;
 
     TestServerDriver() {
         serverconfig = std::make_shared<SL::RAT::Server_Config>();
@@ -133,26 +138,46 @@ public:
     }
     virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override
     {
-        done = true;
+
+    }
+    virtual void onKeyUp(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, char key) override {
+        assert(key == asciikeyreceived);
+        key++;
+        if (key >= '~') {
+            lowerlevel->SendClipboardChanged(cliptext);
+        }
+    }
+    virtual void onKeyUp(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, wchar_t key) override {
+
+    }
+    virtual void onKeyUp(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, SL::Input_Lite::SpecialKeyCodes key) override {
+
     }
 
-    virtual void onMouseEvent(const SL::RAT::MouseEvent& m) override
-    {
-        done = true;
+    virtual void onKeyDown(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, char key) override {
+        assert(key == asciikeyreceived);
+    }
+    virtual void onKeyDown(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, wchar_t key) override {
+  
+    }
+    virtual void onKeyDown(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, SL::Input_Lite::SpecialKeyCodes key) override {
+    
     }
 
-    virtual void onKeyEvent(const SL::RAT::KeyEvent& kevent) override
-    {
-        assert(k.Key == kevent.Key);
-        assert(k.PressData == kevent.PressData);
-        assert(k.SpecialKey == kevent.SpecialKey);
-        lowerlevel->SendMousePositionChanged(Socket, mpoint);
+    virtual void onMouseUp(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, SL::Input_Lite::MouseButtons button) override {
+        assert(SL::Input_Lite::MouseButtons::RIGHT == button);
     }
-
-    virtual void onClipboardChanged(const std::string& text) override
-    {
+    virtual void onMouseDown(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, SL::Input_Lite::MouseButtons button) override {
+        assert(SL::Input_Lite::MouseButtons::MIDDLE == button);
+    }
+    virtual void onMouseScroll(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, int offset) override {
+        assert(offset == 46);
+    }
+    virtual void onMousePosition(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const SL::RAT::Point& pos)override {
+        assert(pos == mpoint);
+    }
+    virtual void onClipboardChanged(const std::string& text) override {
         assert(text == cliptext);
-        lowerlevel->SendClipboardChanged(Socket, text);
     }
 
 };
@@ -165,9 +190,9 @@ int main(int argc, char* argv[]) {
     auto host = "localhost";
     testclient.lowerlevel->Connect(testclient.clientconfig, host);
 
-    while (!testserver.done) {
-        std::this_thread::sleep_for(1s);
-    }
+
+    std::this_thread::sleep_for(10s);
+
 
     return 0;
 }

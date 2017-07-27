@@ -69,7 +69,12 @@ namespace SL {
                 }
                 socket->close(1000, "Received invalid onMouseDown Event");
             }
-
+            void onMousePosition(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+                if (len == sizeof(Point)) {
+                    return IServerDriver_->onMousePosition(socket, *reinterpret_cast<const Point*>(data));
+                }
+                socket->close(1000, "Received invalid onMouseDown Event");
+            }
             void onMouseScroll(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
                 if (len == sizeof(int)) {
                     return IServerDriver_->onMouseScroll(socket, *reinterpret_cast<const int*>(data));
@@ -129,6 +134,9 @@ namespace SL {
                         break;
                     case PACKET_TYPES::ONMOUSEDOWN:
                         onMouseDown(socket, datastart, datasize);
+                        break;
+                    case PACKET_TYPES::ONMOUSEPOSITIONCHANGED:
+                        onMousePosition(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONMOUSESCROLL:
                         onMouseScroll(socket, datastart, datasize);

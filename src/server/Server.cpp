@@ -151,19 +151,16 @@ namespace SL {
         {
             ServerImpl_ = std::make_shared<ServerImpl>(config);
         }
-
         Server::~Server()
         {
 
         }
-
         void Server::Server::Run()
         {
             while (ServerImpl_->Status_ != Server_Status::SERVER_RUNNING) {
                 std::this_thread::sleep_for(50ms);
             }
         }
-
 
 #if __ANDROID__
         void Server::Server::OnImage(char* buf, int width, int height)

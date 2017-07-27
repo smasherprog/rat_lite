@@ -14,6 +14,7 @@
 #include "Logging.h"
 
 #include "WS_Lite.h"
+using namespace std::chrono_literals;
 
 namespace SL {
     namespace RAT {
@@ -29,7 +30,7 @@ namespace SL {
             ServerDriver ServerDriver_;
             Clipboard_Lite::Clipboard_Manager Clipboard_;
 
-            Server_Status _Status = Server_Status::SERVER_STOPPED;
+            Server_Status Status_ = Server_Status::SERVER_STOPPED;
             std::shared_ptr<Server_Config> Config_;
 
             std::mutex ClientsThatNeedFullFramesLock;
@@ -37,7 +38,7 @@ namespace SL {
 
             ServerImpl(std::shared_ptr<Server_Config> config) :ServerDriver_(this, config), Config_(config)
             {
-                _Status = Server_Status::SERVER_RUNNING;
+                Status_ = Server_Status::SERVER_RUNNING;
 
                 Clipboard_ = Clipboard_Lite::CreateClipboard().onText([&](const std::string& text) {
                     if (Config_->Share_Clipboard) {
@@ -87,7 +88,7 @@ namespace SL {
             virtual ~ServerImpl() {
                 ScreenCaptureManager_.destroy();
                 Clipboard_.destroy();//make sure to prevent race conditions
-                _Status = Server_Status::SERVER_STOPPED;
+                Status_ = Server_Status::SERVER_STOPPED;
             }
 
             virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket)override {
@@ -158,7 +159,9 @@ namespace SL {
 
         void Server::Server::Run()
         {
-
+            while (ServerImpl_->Status_ != Server_Status::SERVER_RUNNING) {
+                std::this_thread::sleep_for(50ms);
+            }
         }
 
 

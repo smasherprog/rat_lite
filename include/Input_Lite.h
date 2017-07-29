@@ -7,7 +7,7 @@ namespace SL {
         //use already existing codes for special keys
         //https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode#Constants_for_keyCode_value
 
-        enum SpecialKeyCodes {
+        enum SpecialKeyCodes : int {
 
             ALTLEFT = 18,
             ALTRIGHT = 18,
@@ -146,18 +146,18 @@ namespace SL {
         template <class T> void SendKeys(T) = delete;
 
 
-        enum MouseButtons {
+        enum MouseButtons:int {
             LEFT,
             MIDDLE,
             RIGHT
         };
-        void SendMouseUp(const MouseButtons& button);
-        void SendMouseDown(const MouseButtons& button);
-        inline void SendMouseClick(const MouseButtons& button) {
+        void SendMouseUp(const MouseButtons button);
+        void SendMouseDown(const MouseButtons button);
+        inline void SendMouseClick(const MouseButtons button) {
             SendMouseDown(button);
             SendMouseUp(button);
         }
-        inline void SendMouseDoubleClick(const MouseButtons& button) {
+        inline void SendMouseDoubleClick(const MouseButtons button) {
             SendMouseClick(button);
             SendMouseClick(button);
         }

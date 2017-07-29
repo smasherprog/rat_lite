@@ -80,5 +80,11 @@ namespace Input_Lite
     void SendMousePosition(const AbsolutePos& a)
     {
     }
+    void SendMouseUp(const MouseButtons button)
+    {
+    }
+    void SendMouseDown(const MouseButtons button)
+    {
+    }
 }
 }

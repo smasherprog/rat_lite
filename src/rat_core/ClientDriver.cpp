@@ -94,7 +94,7 @@ namespace SL {
                 std::lock_guard<std::mutex> lock(outputbufferLock);
                 outputbuffer.reserve(outwidth* outheight * PixelStride);
 
-                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, 2048 | TJFLAG_NOREALLOC) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
@@ -131,7 +131,7 @@ namespace SL {
                 std::lock_guard<std::mutex> lock(outputbufferLock);
                 outputbuffer.reserve(outwidth* outheight * PixelStride);
 
-                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, 2048 | TJFLAG_NOREALLOC) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);

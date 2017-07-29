@@ -195,7 +195,7 @@ namespace SL {
 #endif
                 auto outjpegsize = maxsize;
 
-                if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, Config_->ImageCompressionSetting, TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+                if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, Config_->ImageCompressionSetting, 2048 | TJFLAG_NOREALLOC) == -1) {
                     SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
                 }
                 //	std::cout << "Sending " << r << std::endl;

@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
     std::this_thread::sleep_for(4s);
 
-    for (auto c = ' '; c < 127; c++) {
+    for (auto c = ' '; c < '~'; c++) {
         SL::Input_Lite::SendKey(c);
     }
 
@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     SL::Input_Lite::SendKeys(L"ĦĒĻĻȎ");
     SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
     SL::Input_Lite::SendKeys(std::wstring(L"ĦĒĻĻȎ"));
+
     // SPECIAL KEYS
     SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
     SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::NUMPAD0);

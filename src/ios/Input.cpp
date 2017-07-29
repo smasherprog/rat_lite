@@ -1,4 +1,5 @@
 #include "Input_Lite.h"
+#include <ApplicationServices/ApplicationServices.h>
 
 namespace SL
 {
@@ -23,71 +24,58 @@ namespace SL
         void SendKeyDown(SpecialKeyCodes key) {
             
         }
-		
-        void SendMouseUp(const MouseButtons& button){
-		CGPoint new_pos;
-			new_pos.x = m.Pos.X;
-			new_pos.y = m.Pos.Y;
-
-			std::vector<CGEventRef> evnts;
-			switch (m.EventData) {
-			case Events::LEFT:
-				if (m.PressData == Press::UP) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp, new_pos, kCGMouseButtonLeft));
-				else if (m.PressData == Press::DOWN) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown, new_pos, kCGMouseButtonLeft));
-				else {//double click
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown, new_pos, kCGMouseButtonLeft));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp, new_pos, kCGMouseButtonLeft));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown, new_pos, kCGMouseButtonLeft));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp, new_pos, kCGMouseButtonLeft));
-				}
-				break;
-			case Events::MIDDLE:
-				if (m.PressData == Press::UP) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseUp, new_pos, kCGMouseButtonCenter));
-				else if (m.PressData == Press::DOWN) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseDown, new_pos, kCGMouseButtonCenter));
-				else {//double click
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseDown, new_pos, kCGMouseButtonCenter));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseUp, new_pos, kCGMouseButtonCenter));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseDown, new_pos, kCGMouseButtonCenter));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventOtherMouseUp, new_pos, kCGMouseButtonCenter));
-				}
-				break;
-			case Events::RIGHT:
-				if (m.PressData == Press::UP) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp, new_pos, kCGMouseButtonRight));
-				else if (m.PressData == Press::DOWN) evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, new_pos, kCGMouseButtonRight));
-				else {//double click
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, new_pos, kCGMouseButtonRight));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp, new_pos, kCGMouseButtonRight));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, new_pos, kCGMouseButtonRight));
-					evnts.push_back(CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp, new_pos, kCGMouseButtonRight));
-				}
-				break;
-			case Events::SCROLL:
-				evnts.push_back(CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine, 1, -m.ScrollDelta));
-				break;
-			default:
-				CGWarpMouseCursorPosition(new_pos);
-			}
-			for (auto& a : evnts) {
-				CGEventPost(kCGHIDEventTap, a);
-				CFRelease(a);
-			}
-
+        
+        void SendMouseScroll(int offset)
+        {
+            auto ev = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine, 1, -offset);
+            if(ev){
+                CGEventPost(kCGHIDEventTap, ev);
+                CFRelease(ev);
+            }
+        }
+        void SendMouse_Impl(const MouseButtons button, bool pressed)
+        {
+            auto msevent = CGEventCreate(NULL);
+            auto loc = CGEventGetLocation(msevent);
+            CFRelease(msevent);
+            
+            CGEventRef ev = nullptr;
+            switch(button) {
+                case MouseButtons::LEFT:
+                    ev = CGEventCreateMouseEvent(NULL, pressed ? kCGEventLeftMouseDown: kCGEventLeftMouseUp, loc, kCGMouseButtonLeft);
+                case MouseButtons::MIDDLE:
+                    ev = CGEventCreateMouseEvent(NULL, pressed ? kCGEventOtherMouseDown: kCGEventOtherMouseUp, loc, kCGMouseButtonCenter);
+                case MouseButtons::RIGHT:
+                    ev = CGEventCreateMouseEvent(NULL, pressed ? kCGEventRightMouseDown: kCGEventRightMouseUp, loc, kCGMouseButtonRight);
+                default:
+                    break;
+            }
+            if(ev){
+                CGEventPost(kCGHIDEventTap, ev);
+                CFRelease(ev);
+            }
+        }
+        void SendMouseUp(const MouseButtons button){
+            SendMouse_Impl(button, false);
 		}
-			
-		
-        void SendMouseDown(const MouseButtons& button){
-
+        void SendMouseDown(const MouseButtons button){
+            SendMouse_Impl(button, true);
 		}
-		void SendMouseScroll(int offset){
-			
-		}
+        
         void SendMousePosition(const Offset& offset){
-			
+            auto msevent = CGEventCreate(NULL);
+            auto loc = CGEventGetLocation(msevent);
+            CFRelease(msevent);
+            loc.x+=offset.X;
+            loc.y += offset.Y;
+			CGWarpMouseCursorPosition(loc);
 		}
         void SendMousePosition(const AbsolutePos& absolute){
-			
+            CGPoint p;
+            p.x = absolute.X;
+            p.y = absolute.Y;
+			CGWarpMouseCursorPosition(p);
+        
 		}
-
-   
     }
 }

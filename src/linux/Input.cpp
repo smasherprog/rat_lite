@@ -12,7 +12,7 @@ namespace Input_Lite
 
     void SendKey_Impl(char key, int pressed, Display* display)
     {
-        if(key >= ' ' && key <= '~') {
+        if((key >= '0' && key <= '9') || (key >= 'a' && key <= 'z')) {
             char bufkey[2];
             bufkey[0] = key;
             bufkey[1] = 0;
@@ -25,7 +25,7 @@ namespace Input_Lite
     }
     void SendKey_Impl(wchar_t key, int pressed, Display* display)
     {
-
+        return;
         if(key < 128) {
             SendKey_Impl(static_cast<char>(key), pressed, display);
         } else {
@@ -63,28 +63,58 @@ namespace Input_Lite
     void SendKeyDown(SpecialKeyCodes key)
     {
     }
-    void SendMouseUp(const MouseButtons& button)
-    {
-    }
-    void SendMouseDown(const MouseButtons& button)
-    {
-    }
 
     void SendMouseScroll(int offset)
     {
+        auto display = XOpenDisplay(NULL);
+        if(offset < 0) {
+            for(auto i = 0; i < abs(offset) && i < 5; i++) { /// cap at 5
+                XTestFakeButtonEvent(display, Button4, True, CurrentTime);
+                XTestFakeButtonEvent(display, Button4, False, CurrentTime);
+            }
+        } else if(offset> 0) {
+            for(auto i = 0; i < offset && i < 5; i++) { /// cap at 5
+                XTestFakeButtonEvent(display, Button5, True, CurrentTime);
+                XTestFakeButtonEvent(display, Button5, False, CurrentTime);
+            }
+        }
+        XCloseDisplay(display);
     }
 
     void SendMousePosition(const Offset& offset)
     {
+        auto display = XOpenDisplay(NULL);
+        XTestFakeRelativeMotionEvent(display, -1, offset.X, offset.Y);
+        XCloseDisplay(display);
     }
     void SendMousePosition(const AbsolutePos& a)
     {
+        auto display = XOpenDisplay(NULL);
+        XTestFakeMotionEvent(display, -1, a.X, a.Y, CurrentTime);
+        XCloseDisplay(display);
+    }
+    void SendMouse_Impl(const MouseButtons button, Bool pressed)
+    {
+        auto display = XOpenDisplay(NULL);
+        switch(button) {
+        case MouseButtons::LEFT:
+            XTestFakeButtonEvent(display, Button1, pressed, CurrentTime);
+        case MouseButtons::MIDDLE:
+            XTestFakeButtonEvent(display, Button2, pressed, CurrentTime);
+        case MouseButtons::RIGHT:
+            XTestFakeButtonEvent(display, Button3, pressed, CurrentTime);
+        default:
+            break;
+        }
+        XCloseDisplay(display);
     }
     void SendMouseUp(const MouseButtons button)
     {
+        SendMouse_Impl(button, False);
     }
     void SendMouseDown(const MouseButtons button)
     {
+        SendMouse_Impl(button, True);
     }
 }
 }

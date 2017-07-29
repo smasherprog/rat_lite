@@ -24,9 +24,7 @@ elseif(APPLE)
 
     set(CLIPBOARD_LITE_PLATFORM_SRC
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/Clipboard.h
-		${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/Clipboard.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSClipboard.h
-		${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSClipboard.m
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/Clipboard.mm
 )
 
     set(CLIPBOARD_LITE_PLATFORM_INC

@@ -4,14 +4,6 @@
 #include <thread>
 #include <atomic>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-#ifdef __cplusplus
-}
-#endif
-
 
 namespace SL {
     namespace Clipboard_Lite {
@@ -31,7 +23,7 @@ namespace SL {
 
             void run();
             void copy(const std::string& text);
-
+            void copy(const Image& img);
         };
     }
 }

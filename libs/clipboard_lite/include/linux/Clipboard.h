@@ -71,6 +71,7 @@ namespace Clipboard_Lite
         ~Clipboard_ManagerImpl();
         void run();
         void copy(const std::string& text);
+         void copy(const Image& image);
     };
 }
 }

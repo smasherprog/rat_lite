@@ -11,8 +11,8 @@ namespace SL {
         class Clipboard_ManagerImpl {
             std::thread BackGroundWorker;
             std::atomic<bool> Copying;
-
-
+            bool KeepRunning = false;
+            int ChangeCount =-1;
         public:
 
             std::function<void(const std::string& text)> onText;

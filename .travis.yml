@@ -21,15 +21,14 @@ before_install:
   # Install the newest `cmake`.
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
       brew update;
-      brew outdated boost || brew upgrade boost;
-      brew install fltk openssl libjpeg-turbo libuv;
+      brew install openssl libjpeg-turbo;
       brew upgrade cmake --devel || brew install cmake --devel;
       
     elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
       wget https://cmake.org/files/v3.8/cmake-3.8.0-Linux-x86_64.sh;
       chmod u+x cmake-3.8.0-Linux-x86_64.sh;
       sudo ./cmake-3.8.0-Linux-x86_64.sh --skip-license --prefix=/usr/local;
-      sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
+      sudo apt-get install -y libjpeg-turbo8-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
       export CC=clang-3.9;
       export CXX=clang++-3.9;
       ${CXX} --version;

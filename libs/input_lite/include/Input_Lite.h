@@ -153,7 +153,7 @@ namespace SL {
         };
         void SendMouseUp(const MouseButtons button);
         void SendMouseDown(const MouseButtons button);
-        inline void SendMouseClick(const MouseButtons&button) {
+        inline void SendMouseClick(const MouseButtons button) {
             SendMouseDown(button);
             SendMouseUp(button);
         }

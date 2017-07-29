@@ -92,8 +92,7 @@ namespace SL {
                 h = WS_LITE::CreateContext(WS_LITE::ThreadCount(1))
                     .CreateListener(config->WebSocketTLSLPort)
                     .onConnection([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::unordered_map<std::string, std::string>& header) {
-                    static int counter = 0;
-                    if (Clients.size() + 1 > Config_->MaxNumConnections) {
+                    if (Config_->MaxNumConnections > 0 && Clients.size() + 1 > static_cast<size_t>(Config_->MaxNumConnections)) {
                         socket->close(1000, "Closing due to max number of connections!");
                     }
                     else {
@@ -101,9 +100,6 @@ namespace SL {
                             std::unique_lock<std::shared_mutex> lock(mutex);
                             Clients.push_back(socket);
                         }
-                        int t = counter++ % Config_->MaxWebSocketThreads;
-                        SL_RAT_LOG(Logging_Levels::INFO_log_level, "Transfering connection to thread " << t);
-
                         IServerDriver_->onConnection(socket);
                     }
                 }).onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) {

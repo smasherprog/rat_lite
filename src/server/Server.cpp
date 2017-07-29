@@ -160,6 +160,7 @@ namespace SL {
         }
         void Server::Server::Run()
         {
+           // ServerImpl_->ServerDriver_
             while (ServerImpl_->Status_ != Server_Status::SERVER_RUNNING) {
                 std::this_thread::sleep_for(50ms);
             }

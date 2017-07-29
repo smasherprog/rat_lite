@@ -3,7 +3,11 @@ project(rat_client)
 
 if(WIN32)
     set(${PROJECT_NAME}_PLATFORM_SRC
+
 		windows/resource.h
+		windows/RAT_Client.h
+		windows/stdafx.h
+		windows/targetver.h
 		windows/RAT_Client.rc
 		../Desktop_Server.ico
 	)
@@ -26,17 +30,12 @@ add_definitions(
 	-DTEST_CERTIFICATE_PUBLIC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/public.crt"
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
-
 set(${PROJECT_NAME}_EXAMPLE_SRC 
+	${CMAKE_CURRENT_SOURCE_DIR}/../../include/cxxopts.hpp		
 	main.cpp
-	ConnectWindow.h
-	ViewerController.h
-	ImageControl.h
-	ConnectWindow.cpp
-	ViewerController.cpp
-	ImageControl.cpp
 )
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
+
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} )
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 

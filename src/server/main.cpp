@@ -3,15 +3,13 @@
 #include <string>
 #include <iostream>
 
+#include "cxxopts.hpp"
 #include "Server.h"
 #include "Configs.h"
 
 #if _WIN32
-//work around for now for boost on windows
-#define BOOST_PROGRAM_OPTIONS_DYN_LINK 
 #include "windows/resource.h"
 #endif
-#include <boost/program_options.hpp>
 
 template<typename T>
 void check_range(const std::string& name, T& value, const T& min, const T& max)
@@ -23,8 +21,6 @@ void check_range(const std::string& name, T& value, const T& min, const T& max)
 	}
 }
 
-
-
 int main(int argc, char* argv[]) {
 
 	auto config = std::make_shared<SL::RAT::Server_Config>();
@@ -33,52 +29,41 @@ int main(int argc, char* argv[]) {
 	config->HttpTLSPort = 8080;
 	config->Share_Clipboard = true;
 
-	std::string private_key_path, public_cert_path;
-
-
-	boost::program_options::options_description desc("Allowed options", 80, 40);
-	desc.add_options()
-		("help", "<Usage Options>")
-		("image_compression", boost::program_options::value<int>(&config->ImageCompressionSetting)->default_value(70)->notifier([](int v) { check_range("image_compression", v, 30, 100); }), "Jpeg Compression setting [30, 100]")
-		("https_port", boost::program_options::value<unsigned short>(&config->HttpTLSPort)->default_value(8080), "https listen port")
-		("websocket_port", boost::program_options::value<unsigned short>(&config->WebSocketTLSLPort)->default_value(6001), "websocket listen port")
-		("share_clipboard", boost::program_options::value<bool>(&config->Share_Clipboard)->default_value(true), "share this servers clipboard with clients")
-		("mouse_capture_rate", boost::program_options::value<int>(&config->MousePositionCaptureRate)->default_value(50), "mouse capture rate in ms")
-		("screen_capture_rate", boost::program_options::value<int>(&config->ScreenImageCaptureRate)->default_value(100), "screen capture rate in ms")
-		("images_as_grayscale", boost::program_options::value<bool>(&config->SendGrayScaleImages)->default_value(0), "send images as grayscale, this improves performance significantly")
-		("max_connections", boost::program_options::value<size_t>(&config->MaxNumConnections)->default_value(10)->notifier([](int v) { check_range("max_connections", v, -1, 100); }), "maximum number of concurrent connections -1 is unlimited")
-		("max_websocket_threads", boost::program_options::value<size_t>(&config->MaxWebSocketThreads)->default_value(2)->notifier([](int v) { check_range("max_websocket_threads", v, 1, 8); }), "maximum number of threads to handle web socket threads numbers between 1 and 8 are valid")
+    cxxopts::Options options("Remote Access Server", "<Usage Options>");
+    options.add_options()
+        ("help", "<Usage Options>")
+		("image_compression", "Jpeg Compression setting [30, 100]", cxxopts::value<int>(config->ImageCompressionSetting))
+		("https_port", "https listen port", cxxopts::value<unsigned short>(config->HttpTLSPort)->default_value("8080"))
+		("websocket_port", "websocket listen port", cxxopts::value<unsigned short>(config->WebSocketTLSLPort)->default_value("6001"))
+		("share_clipboard", "share this servers clipboard with clients", cxxopts::value<bool>(config->Share_Clipboard))
+		("mouse_capture_rate", "mouse capture rate in ms", cxxopts::value<int>(config->MousePositionCaptureRate)->default_value("50"))
+		("screen_capture_rate", "screen capture rate in ms", cxxopts::value<int>(config->ScreenImageCaptureRate)->default_value("100"))
+		("images_as_grayscale", "send images as grayscale, this improves performance significantly", cxxopts::value<bool>(config->SendGrayScaleImages))
+		("max_connections", "maximum number of concurrent connections -1 is unlimited", cxxopts::value<int>(config->MaxNumConnections)->default_value("10"))
+		("max_websocket_threads", "maximum number of threads to handle web socket threads numbers between 1 and 8 are valid", cxxopts::value<int>(config->MaxWebSocketThreads)->default_value("2"))
 #if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-		("private_key_path", boost::program_options::value<std::string>(&config->PathTo_Private_Key)->default_value(TEST_CERTIFICATE_PRIVATE_PATH), "path to the private key file")
-		("private_key_password", boost::program_options::value<std::string>(&config->PasswordToPrivateKey)->default_value(TEST_CERTIFICATE_PRIVATE_PASSWORD), "password to the private key file")
-		("public_cert_path", boost::program_options::value<std::string>(&config->PathTo_Public_Certficate)->default_value(TEST_CERTIFICATE_PUBLIC_PATH), "path to the public certificate file")
+		("private_key_path", "path to the private key file", cxxopts::value<std::string>(config->PathTo_Private_Key)->default_value(TEST_CERTIFICATE_PRIVATE_PATH))
+		("private_key_password", "password to the private key file", cxxopts::value<std::string>(config->PasswordToPrivateKey)->default_value(TEST_CERTIFICATE_PRIVATE_PASSWORD))
+		("public_cert_path", "path to the public certificate file", cxxopts::value<std::string>(config->PathTo_Public_Certficate)->default_value(TEST_CERTIFICATE_PUBLIC_PATH))
 #else 
-		("private_key_path", boost::program_options::value<std::string>(&config->PathTo_Private_Key)->required(), "path to the private key file")
-		("private_key_password", boost::program_options::value<std::string>(&config->PasswordToPrivateKey)->required(), "password to the private key file")
-		("public_cert_path", boost::program_options::value<std::string>(&config->PathTo_Public_Certficate)->required(), "path to the public certificate file")
+		("private_key_path", cxxopts::value<std::string>(config->PathTo_Private_Key), "path to the private key file")
+		("private_key_password", cxxopts::value<std::string>(config->PasswordToPrivateKey), "password to the private key file")
+		("public_cert_path", cxxopts::value<std::string>(config->PathTo_Public_Certficate), "path to the public certificate file")
 #endif
 		;
 
+    options.parse(argc, argv);
+    if (options.count("help"))
+    {
+        std::cout << options.help({ "", "Group" }) << std::endl;
+        exit(0);
+    }
 
-	boost::program_options::variables_map vm;
-	try {
-		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
-		boost::program_options::notify(vm);
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
-		std::cout << desc << "\n";
-		return 1;
-	}
-	if (vm.count("help")) {
-		std::cout << desc << "\n";
-		return 1;
-	}
+    check_range("image_compression", config->ImageCompressionSetting, 30, 100);
+    check_range("max_connections", config->MaxNumConnections, -1, 100);
+    check_range("max_websocket_threads", config->MaxWebSocketThreads, 1, 8);
 
 	SL::RAT::Server serv(config);
 	serv.Run();
-
-
 	return 0;
 }

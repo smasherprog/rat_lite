@@ -3,46 +3,39 @@ language : cpp
 matrix:
   include:
     - os: osx
-    - os: linux
-      env: VERSION=3.9 BUILD_TYPE=Release CC=clang-3.9 CXX=clang++-3.9
+      osx_image: xcode8
       compiler: clang
-      dist: trusty
-      sudo: required
-      addons: &clang39
+    - os: linux
+      env: CLANG_VERSION=5.0 BUILD_TYPE=Release
+      addons: &clang5
         apt:
           packages:
-            - clang-3.9
             - g++-6
-          sources: &sources
+            - clang-5.0
+            - libx11-dev
+            - libxfixes-dev 
+            - libxtst-dev
+            - libjpeg-turbo8-dev
+            - libxext-dev
+          sources: 
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.9
+            - llvm-toolchain-precise
       
 before_install:
-  # Install the newest `cmake`.
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
-      brew update;
-      brew install openssl libjpeg-turbo;
-      brew upgrade cmake --devel || brew install cmake --devel;
-      
-    elif [ "${TRAVIS_OS_NAME}" = "linux" ]; then
-      wget https://cmake.org/files/v3.8/cmake-3.8.0-Linux-x86_64.sh;
-      chmod u+x cmake-3.8.0-Linux-x86_64.sh;
-      sudo ./cmake-3.8.0-Linux-x86_64.sh --skip-license --prefix=/usr/local;
-      sudo apt-get install -y libjpeg-turbo8-dev libxext-dev libx11-dev libxfixes-dev libxtst-dev;
-      export CC=clang-3.9;
-      export CXX=clang++-3.9;
-      ${CXX} --version;
+  - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
+  - |
+    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+      CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.tar.gz"
+      mkdir -p ${TRAVIS_BUILD_DIR}/deps/cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C ${TRAVIS_BUILD_DIR}/deps/cmake
+      export PATH="${TRAVIS_BUILD_DIR}/deps/cmake/bin:${PATH}";
+    else
+      brew update && brew upgrade cmake || brew install cmake;
+      brew install gcc openssl libjpeg-turbo
     fi
-
-install:
-  - mkdir build
-  - cd build
-  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ ..
-  - cmake --build .
-
+    
 script:
-  - ctest -V
-  
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
+
 notifications:
   email: false
   

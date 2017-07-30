@@ -56,16 +56,26 @@ namespace SL {
         }
         template<class PARENTTYPE, class SOCKETTYPE>inline void startwrite(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
             if (!socket->SendMessageQueue.empty()) {
-                auto msg(socket->SendMessageQueue.front());
-                if (socket->SocketStatus_ == SocketStatus::CONNECTED) {
-                    //only send messages if the socket is in a connected state
-                    write(parent, socket, msg.msg);
-                    //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
-                    //make sure to do this after a call to write so the write process sends the close message, but no others
-                    if (msg.msg.code == OpCode::CLOSE) {
-                        socket->SocketStatus_ = SocketStatus::CLOSING;
+                if(socket->SocketStatus_ == SocketStatus::CONNECTED){
+                     auto msg(socket->SendMessageQueue.front());
+                      write(parent, socket, msg.msg);
+                } else if (socket->SocketStatus_ == SocketStatus::CLOSING){
+                    //find the close message and discard all others
+                    auto discardedcount=0;
+                    while(!socket->SendMessageQueue.empty()){
+                        auto msg(socket->SendMessageQueue.front());
+                        if(msg.msg.code == OpCode::CLOSE){
+                            socket->SendMessageQueue.clear();//remove any remaining messages
+                            write(parent, socket, msg.msg);
+                        } else {
+                            socket->SendMessageQueue.pop_front();
+                        }
+                        discardedcount+=1;
                     }
+                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "discardedcount " <<discardedcount<< "remianing "<<socket->SendMessageQueue.size());
+                    socket->SendMessageQueue.clear();//just in case
                 }
+                
             }
             else {
                 writeexpire_from_now(parent, socket, std::chrono::seconds(0));// make sure the write timer doesnt kick off
@@ -78,6 +88,11 @@ namespace SL {
 
             socket->strand.post([socket, msg, parent, compressmessage]() {
                 if (socket->SocketStatus_ == SocketStatus::CONNECTED) {
+                    //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
+                    //make sure to do this after a call to write so the write process sends the close message, but no others
+                    if (msg.code == OpCode::CLOSE) {
+                        socket->SocketStatus_ = SocketStatus::CLOSING;
+                    }
                     socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
                     if (socket->SendMessageQueue.size() == 1) {
                         SL::WS_LITE::startwrite(parent, socket);

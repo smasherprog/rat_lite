@@ -10,7 +10,7 @@
 #include "SCCommon.h"
 #include "WS_Lite.h"
 
-#include <shared_mutex>
+#include <mutex>
 
 namespace SL {
     namespace RAT {
@@ -21,7 +21,7 @@ namespace SL {
             std::shared_ptr<Server_Config> Config_;
             IServerDriver * IServerDriver_;
 
-            std::shared_mutex mutex;
+            std::mutex mutex;
             std::vector<std::shared_ptr<WS_LITE::IWSocket>> Clients;
 
             WS_LITE::WSListener h;
@@ -97,7 +97,7 @@ namespace SL {
                     }
                     else {
                         {
-                            std::unique_lock<std::shared_mutex> lock(mutex);
+                            std::lock_guard<std::mutex> lock(mutex);
                             Clients.push_back(socket);
                         }
                         IServerDriver_->onConnection(socket);
@@ -105,7 +105,7 @@ namespace SL {
                 }).onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) {
                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection  ");
                     {
-                        std::unique_lock<std::shared_mutex> lock(mutex);
+                        std::lock_guard<std::mutex> lock(mutex);
                         Clients.erase(std::remove_if(Clients.begin(), Clients.end(), [&](auto& s) { return s == socket;  }));
                     }
                     IServerDriver_->onDisconnection(socket, code, msg);
@@ -156,7 +156,7 @@ namespace SL {
                 }
                 else {
                     {
-                        std::shared_lock<std::shared_mutex> lock(mutex);
+                        std::lock_guard<std::mutex> lock(mutex);
                         for (auto& s : Clients) {
                             auto msg = WS_LITE::WSMessage{ data.get(), len, WS_LITE::OpCode::BINARY, data };
                             s->send(msg, false);

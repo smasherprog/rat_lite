@@ -197,17 +197,13 @@ public:
 
 };
 
-int main(int argc, char* argv[]) {
-
-
+int main(int argc, char* argv[]) { 
     TestServerDriver testserver;
     TestClientDriver testclient;
     auto host = "127.0.0.1";
     testclient.lowerlevel->Connect(testclient.clientconfig, host);
 
-
     std::this_thread::sleep_for(10s);
-
 
     return 0;
 }

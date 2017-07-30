@@ -96,11 +96,9 @@ namespace SL {
                         socket->close(1000, "Closing due to max number of connections!");
                     }
                     else {
-                        {
-                            std::lock_guard<std::mutex> lock(mutex);
-                            Clients.push_back(socket);
-                        }
                         IServerDriver_->onConnection(socket);
+                        std::lock_guard<std::mutex> lock(mutex);
+                        Clients.push_back(socket);
                     }
                 }).onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) {
                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection  ");
@@ -167,7 +165,7 @@ namespace SL {
 
             void SendScreen(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img, const Screen_Capture::Monitor& monitor, PACKET_TYPES p) {
 
-                if (Clients.empty()) return;
+                if (Clients.empty() && !socket) return;
                 Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
 
                 auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
@@ -205,7 +203,7 @@ namespace SL {
             }
             void SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img) {
 
-                if (Clients.empty()) return;
+                if (Clients.empty() && !socket) return;
                 Rect r(Point(0, 0), Height(img), Width(img));
 
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEIMAGECHANGED);
@@ -223,7 +221,7 @@ namespace SL {
 
             }
             void SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors) {
-                if (Clients.empty()) return;
+              if (Clients.empty() && !socket) return;
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
                 const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 
@@ -240,7 +238,7 @@ namespace SL {
             }
             void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& pos)
             {
-                if (Clients.empty()) return;
+               if (Clients.empty() && !socket) return;
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
                 const auto size = sizeof(pos) + sizeof(p);
 
@@ -252,7 +250,7 @@ namespace SL {
             }
 
             void SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::string& text) {
-                if (Clients.empty()) return;
+              if (Clients.empty() && !socket) return;
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONCLIPBOARDTEXTCHANGED);
                 auto size = text.size() + sizeof(p);
 

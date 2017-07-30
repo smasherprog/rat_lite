@@ -38,7 +38,7 @@ namespace SL {
                 socket->close(1000, "Received invalid lenght on onMouseImageChanged");
             }
             void onMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
-                if (len == sizeof(Rect)) {
+                if (len == sizeof(Point)) {
                     return  IClientDriver_->onMousePositionChanged(*reinterpret_cast<const Point*>(data));
                 }
                 socket->close(1000, "Received invalid lenght on onMousePositionChanged");
@@ -66,7 +66,7 @@ namespace SL {
                     return IClientDriver_->onClipboardChanged(str);
                 }
             }
-            void onFrameChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
+            template<typename CALLBACKTYPE> void onFrame(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len, CALLBACKTYPE&& cb) {
                 int monitor_id = 0;
                 if (len < sizeof(Rect) + sizeof(monitor_id)) {
                     return Socket_->close(1000, "Invalid length on onFrameChanged");
@@ -100,45 +100,7 @@ namespace SL {
                 Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
 
                 assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
-                IClientDriver_->onFrameChanged(img, *monitor);
-                tjDestroy(jpegDecompressor);
-            }
-            void onNewFrame(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
-                int monitor_id = 0;
-                if (len < sizeof(Rect) + sizeof(monitor_id)) {
-                    return Socket_->close(1000, "Invalid length on onFrameChanged");
-                }
-
-                auto jpegDecompressor = tjInitDecompress();
-                int jpegSubsamp(0), outwidth(0), outheight(0);
-
-                auto src = (unsigned char*)data;
-                memcpy(&monitor_id, src, sizeof(monitor_id));
-                src += sizeof(monitor_id);
-                Rect rect;
-                memcpy(&rect, src, sizeof(rect));
-                src += sizeof(rect);
-
-                auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto& m) { return m.Id == monitor_id; });
-                if (monitor == end(Monitors)) {
-                    return Socket_->close(1000, "Monitor Id doesnt exist!");
-                }
-                len -= sizeof(Rect) + sizeof(monitor_id);
-
-                if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len), &outwidth, &outheight, &jpegSubsamp) == -1) {
-                    SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
-                }
-                std::lock_guard<std::mutex> lock(outputbufferLock);
-                outputbuffer.reserve(outwidth* outheight * PixelStride);
-
-                if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char*)outputbuffer.data(), outwidth, 0, outheight, TJPF_RGBX, 2048 | TJFLAG_NOREALLOC) == -1) {
-                    SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
-                }
-                Image img(rect, outputbuffer.data(), outwidth* outheight * PixelStride);
-
-                assert(outwidth == img.Rect_.Width && outheight == img.Rect_.Height);
-
-                IClientDriver_->onNewFrame(img, *monitor);
+                cb(img, *monitor);
                 tjDestroy(jpegDecompressor);
             }
 
@@ -173,10 +135,10 @@ namespace SL {
                         onMonitorsChanged(socket, datastart, datasize);
                         break;
                     case PACKET_TYPES::ONFRAMECHANGED:
-                        onFrameChanged(socket, datastart, datasize);
+                        onFrame(socket, datastart, datasize, [&](const auto& img, const auto& monitor) { IClientDriver_->onFrameChanged(img, monitor); });
                         break;
                     case PACKET_TYPES::ONNEWFRAME:
-                        onNewFrame(socket, datastart, datasize);
+                        onFrame(socket, datastart, datasize, [&](const auto& img, const auto& monitor) { IClientDriver_->onNewFrame(img, monitor); });
                         break;
                     case PACKET_TYPES::ONMOUSEIMAGECHANGED:
                         onMouseImageChanged(socket, datastart, datasize);

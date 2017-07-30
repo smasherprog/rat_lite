@@ -46,9 +46,9 @@ int main(int argc, char* argv[]) {
 		("private_key_password", "password to the private key file", cxxopts::value<std::string>(config->PasswordToPrivateKey)->default_value(TEST_CERTIFICATE_PRIVATE_PASSWORD))
 		("public_cert_path", "path to the public certificate file", cxxopts::value<std::string>(config->PathTo_Public_Certficate)->default_value(TEST_CERTIFICATE_PUBLIC_PATH))
 #else 
-		("private_key_path", cxxopts::value<std::string>(config->PathTo_Private_Key), "path to the private key file")
-		("private_key_password", cxxopts::value<std::string>(config->PasswordToPrivateKey), "password to the private key file")
-		("public_cert_path", cxxopts::value<std::string>(config->PathTo_Public_Certficate), "path to the public certificate file")
+		("private_key_path","path to the private key file", cxxopts::value<std::string>(config->PathTo_Private_Key) )
+		("private_key_password","password to the private key file", cxxopts::value<std::string>(config->PasswordToPrivateKey))
+		("public_cert_path", "path to the public certificate file", cxxopts::value<std::string>(config->PathTo_Public_Certficate))
 #endif
 		;
 

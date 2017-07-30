@@ -130,7 +130,7 @@ namespace SL {
                     p = *reinterpret_cast<const PACKET_TYPES*>(message.data);
                     auto datastart = message.data + sizeof(p);
                     auto datasize = message.len - sizeof(p);
-                    //SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
+                    SL_RAT_LOG(Logging_Levels::INFO_log_level, "onMessage "<<(unsigned int)p);
                     switch (p) {
                     case PACKET_TYPES::ONMONITORSCHANGED:
                         onMonitorsChanged(socket, datastart, datasize);

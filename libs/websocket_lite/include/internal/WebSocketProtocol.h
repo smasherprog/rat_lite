@@ -60,6 +60,11 @@ namespace SL {
                 if (socket->SocketStatus_ == SocketStatus::CONNECTED) {
                     //only send messages if the socket is in a connected state
                     write(parent, socket, msg.msg);
+                    //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
+                    //make sure to do this after a call to write so the write process sends the close message, but no others
+                    if (msg.code == OpCode::CLOSE) {
+                        socket->SocketStatus_ = SocketStatus::CLOSING;
+                    }
                 }
             }
             else {
@@ -76,11 +81,6 @@ namespace SL {
                     socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
                     if (socket->SendMessageQueue.size() == 1) {
                         SL::WS_LITE::startwrite(parent, socket);
-                    }
-                    //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
-                    //make sure to do this after a call to startwrite so the write process sends the close message, but no others
-                    if (msg.code == OpCode::CLOSE) {
-                        socket->SocketStatus_ = SocketStatus::CLOSING;
                     }
                 }
             });

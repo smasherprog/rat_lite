@@ -3,15 +3,13 @@ project(rat_client)
 
 if(WIN32)
     set(${PROJECT_NAME}_PLATFORM_SRC
-		windows/RAT_Client.cpp
-		windows/RAT_Client.h
-		windows/resource.h
-		windows/RAT_Client.h
-		windows/stdafx.h
-		windows/targetver.h
+		windows/ClientWindow.cpp
+		ClientWindow.h
+		windows/resource.h   
 		windows/RAT_Client.rc
 		../Desktop_Server.ico
 	)
+	add_definitions(-DNOMINMAX)
 elseif(APPLE)
 
 
@@ -38,12 +36,6 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 
 include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} )
 
-if(WIN32)
-	add_executable(${PROJECT_NAME} WIN32 ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-else()
-    add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-
-endif()
-
+add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 
 target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS})

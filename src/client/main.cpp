@@ -2,10 +2,7 @@
 #include <iostream>
 #include "Configs.h"
 #include "cxxopts.hpp"
-
-#if _WIN32
-#include "windows/resource.h"
-#endif
+#include "ClientWindow.h"
 
 int main(int argc, char* argv[]) {
 
@@ -32,8 +29,8 @@ int main(int argc, char* argv[]) {
         std::cout << options.help({ "", "Group" }) << std::endl;
         exit(0);
     }
-
-	//SL::RAT::ConnectWindow c(config, host);
-
+ 
+	SL::RAT_Client::ClientWindow c(config, host);
+    c.Run();
 	return 0;
 }

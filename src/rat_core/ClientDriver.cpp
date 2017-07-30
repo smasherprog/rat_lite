@@ -84,7 +84,8 @@ namespace SL {
 
                 auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto& m) { return m.Id == monitor_id; });
                 if (monitor == end(Monitors)) {
-                    return Socket_->close(1000, "Monitor Id doesnt exist!");
+                    SL_RAT_LOG(Logging_Levels::INFO_log_level, "Monitor Id doesnt exist!");
+                    return;
                 }
                 len -= sizeof(Rect) + sizeof(monitor_id);
 

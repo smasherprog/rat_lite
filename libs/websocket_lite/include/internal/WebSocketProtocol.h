@@ -32,7 +32,7 @@ namespace SL {
             else if (secs.count() > 0) {
                 socket->read_deadline.async_wait([parent, socket](const std::error_code& ec) {
                     if (ec != asio::error::operation_aborted) {
-                        return closeImpl(parent, socket, 1001, "read timer expired on the socket ");
+                        return sendclosemessage(parent, socket, 1001, "read timer expired on the socket ");
                     }
                 });
             }
@@ -54,7 +54,7 @@ namespace SL {
             else if (secs.count() > 0) {
                 socket->write_deadline.async_wait([parent, socket](const std::error_code& ec) {
                     if (ec != asio::error::operation_aborted) {
-                        return closeImpl(parent, socket, 1001, "write timer expired on the socket ");
+                        return sendclosemessage(parent, socket, 1001, "write timer expired on the socket ");
                     }
                 });
             }
@@ -86,7 +86,7 @@ namespace SL {
                     socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
                     if (socket->SendMessageQueue.size() == 1) {
                         SL::WS_LITE::startwrite(parent, socket);
-                    }  
+                    }
                     //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
                     //make sure to do this after a call to startwrite so the write process sends the close message, but no others
                     if (msg.code == OpCode::CLOSE) {
@@ -95,7 +95,7 @@ namespace SL {
                 }
             });
         }
-        template<class PARENTTYPE, class SOCKETTYPE>void closeImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
+        template<class PARENTTYPE, class SOCKETTYPE>void sendclosemessage(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
             SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "closeImpl " << msg);
             WSMessage ws;
             ws.code = OpCode::CLOSE;
@@ -106,6 +106,9 @@ namespace SL {
             ws.data = ws.Buffer.get();
             sendImpl(parent, socket, ws, false);
         }
+
+     
+
 
 
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, const SENDBUFFERTYPE& msg) {
@@ -119,6 +122,16 @@ namespace SL {
             socket->Socket.lowest_layer().shutdown(asio::ip::tcp::socket::shutdown_both, ec);
             ec.clear();
             socket->Socket.lowest_layer().close(ec);
+        }   
+        
+        template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>void closeImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg, const SENDBUFFERTYPE& networkmsg) {
+            if (networkmsg.code == OpCode::CLOSE) {
+                //failed when sending a close message... get out and notify
+                handleclose(parent, socket, networkmsg);
+            }
+            else {
+                sendclosemessage(parent, socket, code, msg);
+            }
         }
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>inline void write_end(const PARENTTYPE& parent, const SOCKETTYPE& socket, const SENDBUFFERTYPE& msg) {
 
@@ -129,7 +142,7 @@ namespace SL {
                 UNUSED(bytes_transferred);
                 if (ec)
                 {
-                    return closeImpl(parent, socket, 1002, "write header failed " + ec.message());
+                    return closeImpl(parent, socket, 1002, "write header failed " + ec.message(), msg);
                 }
                 assert(msg.len == bytes_transferred);
                 if (msg.code == OpCode::CLOSE) {
@@ -161,7 +174,7 @@ namespace SL {
                     handleclose(parent, socket, msg);
                 }
                 else {
-                    return closeImpl(parent, socket, 1002, "write mask failed " + ec.message());
+                    return closeImpl(parent, socket, 1002, "write mask failed " + ec.message(), msg);
                 }
             }
             else {
@@ -212,7 +225,7 @@ namespace SL {
                 writeend(parent, socket, msg);
             }
             else {
-                return closeImpl(parent, socket, 1002, "write header failed   " + ec.message());
+                return closeImpl(parent, socket, 1002, "write header failed   " + ec.message(), msg);
             }
 
         }
@@ -237,26 +250,26 @@ namespace SL {
             if (!getFin(socket->ReceiveHeader)) {
                 if (socket->LastOpCode == OpCode::INVALID) {
                     if (opcode != OpCode::BINARY && opcode != OpCode::TEXT) {
-                        return closeImpl(parent, socket, 1002, "First Non Fin Frame must be binary or text");
+                        return sendclosemessage(parent, socket, 1002, "First Non Fin Frame must be binary or text");
                     }
                     socket->LastOpCode = opcode;
                 }
                 else if (opcode != OpCode::CONTINUATION) {
-                    return closeImpl(parent, socket, 1002, "Continuation Received without a previous frame");
+                    return sendclosemessage(parent, socket, 1002, "Continuation Received without a previous frame");
                 }
                 ReadHeaderNext(parent, socket);
             }
             else {
 
                 if (socket->LastOpCode != OpCode::INVALID && opcode != OpCode::CONTINUATION) {
-                    return closeImpl(parent, socket, 1002, "Continuation Received without a previous frame");
+                    return sendclosemessage(parent, socket, 1002, "Continuation Received without a previous frame");
                 }
                 else if (socket->LastOpCode == OpCode::INVALID && opcode == OpCode::CONTINUATION) {
-                    return closeImpl(parent, socket, 1002, "Continuation Received without a previous frame");
+                    return sendclosemessage(parent, socket, 1002, "Continuation Received without a previous frame");
                 }
                 else if (socket->LastOpCode == OpCode::TEXT || opcode == OpCode::TEXT) {
                     if (!isValidUtf8(socket->ReceiveBuffer, socket->ReceiveBufferSize)) {
-                        return closeImpl(parent, socket, 1007, "Frame not valid utf8");
+                        return sendclosemessage(parent, socket, 1007, "Frame not valid utf8");
                     }
                 }
                 if (parent->onMessage) {
@@ -280,26 +293,26 @@ namespace SL {
                 auto closecode = hton(*reinterpret_cast<unsigned short*>(buffer.get()));
                 if (size > 2) {
                     if (!isValidUtf8(buffer.get() + sizeof(closecode), size - sizeof(closecode))) {
-                        return closeImpl(parent, socket, 1007, "Frame not valid utf8");
+                        return sendclosemessage(parent, socket, 1007, "Frame not valid utf8");
                     }
                 }
 
                 if (((closecode >= 1000 && closecode <= 1011) || (closecode >= 3000 && closecode <= 4999)) && closecode != 1004 && closecode != 1005 && closecode != 1006) {
-                    return closeImpl(parent, socket, 1000, "");
+                    return sendclosemessage(parent, socket, 1000, "");
                 }
                 else
                 {
-                    return closeImpl(parent, socket, 1002, "");
+                    return sendclosemessage(parent, socket, 1002, "");
                 }
             }
             else if (size != 0) {
-                return closeImpl(parent, socket, 1002, "");
+                return sendclosemessage(parent, socket, 1002, "");
             }
-            return closeImpl(parent, socket, 1000, "");
+            return sendclosemessage(parent, socket, 1000, "");
         }
         template <class PARENTTYPE, class SOCKETTYPE>inline void ProcessControlMessage(const PARENTTYPE& parent, const SOCKETTYPE& socket, const std::shared_ptr<unsigned char>& buffer, size_t size) {
             if (!getFin(socket->ReceiveHeader)) {
-                return closeImpl(parent, socket, 1002, "Closing connection. Control Frames must be Fin");
+                return sendclosemessage(parent, socket, 1002, "Closing connection. Control Frames must be Fin");
             }
             auto opcode = getOpCode(socket->ReceiveHeader);
 
@@ -321,7 +334,7 @@ namespace SL {
                 return ProcessClose(parent, socket, buffer, size);
 
             default:
-                return closeImpl(parent, socket, 1002, "Closing connection. nonvalid op code");
+                return sendclosemessage(parent, socket, 1002, "Closing connection. nonvalid op code");
             }
             ReadHeaderNext(parent, socket);
 
@@ -329,11 +342,11 @@ namespace SL {
         template <class PARENTTYPE, class SOCKETTYPE>inline void ReadBody(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
 
             if (!DidPassMaskRequirement<PARENTTYPE>(socket->ReceiveHeader)) {//Close connection if it did not meet the mask requirement. 
-                return closeImpl(parent, socket, 1002, "Closing connection because mask requirement not met");
+                return sendclosemessage(parent, socket, 1002, "Closing connection because mask requirement not met");
             }
 
             if (getrsv2(socket->ReceiveHeader) || getrsv3(socket->ReceiveHeader) || (getrsv1(socket->ReceiveHeader) && !socket->CompressionEnabled)) {
-                return closeImpl(parent, socket, 1002, "Closing connection. rsv bit set");
+                return sendclosemessage(parent, socket, 1002, "Closing connection. rsv bit set");
             }
 
             auto opcode = getOpCode(socket->ReceiveHeader);
@@ -346,7 +359,7 @@ namespace SL {
             case 127:
                 size = static_cast<size_t>(ntoh(getpayloadLength8(socket->ReceiveHeader)));
                 if (size > std::numeric_limits<std::size_t>::max()) {
-                    return closeImpl(parent, socket, 1009, "Payload exceeded MaxPayload size");
+                    return sendclosemessage(parent, socket, 1009, "Payload exceeded MaxPayload size");
                 }
                 break;
             default:
@@ -356,7 +369,7 @@ namespace SL {
             size += AdditionalBodyBytesToRead<PARENTTYPE>();
             if (opcode == OpCode::PING || opcode == OpCode::PONG || opcode == OpCode::CLOSE) {
                 if (size - AdditionalBodyBytesToRead<PARENTTYPE>() > CONTROLBUFFERMAXSIZE) {
-                    return closeImpl(parent, socket, 1002, "Payload exceeded for control frames. Size requested " + std::to_string(size));
+                    return sendclosemessage(parent, socket, 1002, "Payload exceeded for control frames. Size requested " + std::to_string(size));
                 }
                 else if (size > 0) {
                     auto buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto p) { delete[] p; });
@@ -364,7 +377,7 @@ namespace SL {
 
                         if (!ec || bytes_transferred != size) {
                             if (size != bytes_transferred) {
-                                return closeImpl(parent, socket, 1002, "Did not receive all bytes ... ");
+                                return sendclosemessage(parent, socket, 1002, "Did not receive all bytes ... ");
                             }
                             UnMaskMessage(parent, size, buffer.get());
 
@@ -372,7 +385,7 @@ namespace SL {
                             ProcessControlMessage(parent, socket, buffer, tempsize);
                         }
                         else {
-                            return closeImpl(parent, socket, 1002, "ReadBody Error " + ec.message());
+                            return sendclosemessage(parent, socket, 1002, "ReadBody Error " + ec.message());
                         }
                     });
                 }
@@ -386,29 +399,29 @@ namespace SL {
                 auto addedsize = socket->ReceiveBufferSize + size;
                 if (addedsize > std::numeric_limits<std::size_t>::max()) {
                     SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, "payload exceeds memory on system!!! ");
-                    return closeImpl(parent, socket, 1009, "Payload exceeded MaxPayload size");
+                    return sendclosemessage(parent, socket, 1009, "Payload exceeded MaxPayload size");
                 }
                 socket->ReceiveBufferSize = addedsize;
 
                 if (socket->ReceiveBufferSize > parent->MaxPayload) {
-                    return closeImpl(parent, socket, 1009, "Payload exceeded MaxPayload size");
+                    return sendclosemessage(parent, socket, 1009, "Payload exceeded MaxPayload size");
                 }
                 if (socket->ReceiveBufferSize > std::numeric_limits<std::size_t>::max()) {
                     SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, "payload exceeds memory on system!!! ");
-                    return closeImpl(parent, socket, 1009, "Payload exceeded MaxPayload size");
+                    return sendclosemessage(parent, socket, 1009, "Payload exceeded MaxPayload size");
                 }
 
                 if (size > 0) {
                     socket->ReceiveBuffer = static_cast<unsigned char*>(realloc(socket->ReceiveBuffer, socket->ReceiveBufferSize));
                     if (!socket->ReceiveBuffer) {
                         SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, "MEMORY ALLOCATION ERROR!!! Tried to realloc " << socket->ReceiveBufferSize);
-                        return closeImpl(parent, socket, 1009, "Payload exceeded MaxPayload size");
+                        return sendclosemessage(parent, socket, 1009, "Payload exceeded MaxPayload size");
                     }
                     asio::async_read(socket->Socket, asio::buffer(socket->ReceiveBuffer + socket->ReceiveBufferSize - size, size), [parent, socket, size](const std::error_code& ec, size_t bytes_transferred) {
 
                         if (!ec || bytes_transferred != size) {
                             if (size != bytes_transferred) {
-                                return closeImpl(parent, socket, 1002, "Did not receive all bytes ... ");
+                                return sendclosemessage(parent, socket, 1002, "Did not receive all bytes ... ");
                             }
                             auto buffer = socket->ReceiveBuffer + socket->ReceiveBufferSize - size;
                             UnMaskMessage(parent, size, buffer);
@@ -416,7 +429,7 @@ namespace SL {
                             ProcessMessage(parent, socket);
                         }
                         else {
-                            return closeImpl(parent, socket, 1002, "ReadBody Error " + ec.message());
+                            return sendclosemessage(parent, socket, 1002, "ReadBody Error " + ec.message());
                         }
                     });
                 }
@@ -425,7 +438,7 @@ namespace SL {
                 }
             }
             else {
-                return closeImpl(parent, socket, 1002, "Closing connection. nonvalid op code");
+                return sendclosemessage(parent, socket, 1002, "Closing connection. nonvalid op code");
             }
 
         }
@@ -460,7 +473,7 @@ namespace SL {
                                 ReadBody(parent, socket);
                             }
                             else {
-                                return closeImpl(parent, socket, 1002, "readheader ExtendedPayloadlen " + ec.message());
+                                return sendclosemessage(parent, socket, 1002, "readheader ExtendedPayloadlen " + ec.message());
                             }
                         });
                     }
@@ -470,7 +483,7 @@ namespace SL {
 
                 }
                 else {
-                    return closeImpl(parent, socket, 1002, "WebSocket ReadHeader failed " + ec.message());
+                    return sendclosemessage(parent, socket, 1002, "WebSocket ReadHeader failed " + ec.message());
                 }
             });
         }

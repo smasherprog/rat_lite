@@ -156,7 +156,7 @@ namespace SL {
                 if (SocketStatus_ == SocketStatus::CONNECTED) {//only send a close to an open socket
                     auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>(shared_from_this()));
                     auto p(Parent);
-                    if (p) closeImpl(p, self, code, msg);
+                    if (p) sendclosemessage(p, self, code, msg);
                 }
             }
 

@@ -34,7 +34,7 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 	main.cpp
 )
 
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} )
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 

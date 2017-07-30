@@ -4,7 +4,7 @@
 #include <windows.h>
 #
 #include "resource.h"
-#include "../ClientWindow.h"
+#include "ClientWindow.h"
 #include "Configs.h"
 
 // Global Variables:
@@ -82,7 +82,7 @@ namespace SL {
                 wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_PROJECTICON));
 
                 RegisterClassExA(&wcex);
-                HWND hWnd = CreateWindowA(WindowClass, WindowTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, this);
+                hWnd = CreateWindowA(WindowClass, WindowTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, this);
                 if (hWnd)
                 {
                     ShowWindow(hWnd, SW_SHOW);

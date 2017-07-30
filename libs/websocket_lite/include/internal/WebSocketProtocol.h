@@ -62,7 +62,7 @@ namespace SL {
                     write(parent, socket, msg.msg);
                     //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
                     //make sure to do this after a call to write so the write process sends the close message, but no others
-                    if (msg.code == OpCode::CLOSE) {
+                    if (msg.msg.code == OpCode::CLOSE) {
                         socket->SocketStatus_ = SocketStatus::CLOSING;
                     }
                 }

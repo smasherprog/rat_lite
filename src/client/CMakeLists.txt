@@ -7,6 +7,7 @@ if(WIN32)
 		windows/resource.h   
 		windows/RAT_Client.rc
 		../Desktop_Server.ico
+		windows/targetver.h
 	)
 	add_definitions(-DNOMINMAX)
 elseif(APPLE)

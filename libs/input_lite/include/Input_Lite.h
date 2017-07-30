@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#undef DELETE
 
 namespace SL {
     namespace Input_Lite {

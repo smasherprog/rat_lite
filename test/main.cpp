@@ -43,7 +43,7 @@ public:
     virtual ~TestClientDriver() {}
     virtual void onMonitorsChanged(const std::vector<SL::Screen_Capture::Monitor>& monitors) override {
         SL_RAT_LOG(SL::RAT::Logging_Levels::INFO_log_level, "Received Monitors from Server " << monitors.size());
-        assert(monitors.size() == (int)MonitorsToSend.size());
+        assert(monitors.size() == MonitorsToSend.size());
 
         for (size_t i = 0; i < monitors.size(); i++) {
             assert(MonitorsToSend[i].Height == monitors[i].Height);

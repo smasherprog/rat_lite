@@ -36,15 +36,10 @@ namespace SL {
                     }
                 });
             }
-            else {
-                socket->read_deadline.async_wait([](const std::error_code& ec) {
-                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Dummy read timer called" << ec.message());
-                });
-            }
         }
         template<class PARENTTYPE, class SOCKETTYPE> void writeexpire_from_now(const PARENTTYPE& parent, const SOCKETTYPE& socket, std::chrono::seconds secs)
         {
-            SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Adding Write timer with " << secs.count());
+           
             std::error_code ec;
             if (secs.count() == 0) socket->write_deadline.cancel(ec);
             socket->write_deadline.expires_from_now(secs, ec);
@@ -56,11 +51,6 @@ namespace SL {
                     if (ec != asio::error::operation_aborted) {
                         return sendclosemessage(parent, socket, 1001, "write timer expired on the socket ");
                     }
-                });
-            }
-            else {
-                socket->write_deadline.async_wait([](const std::error_code& ec) {
-                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Dummy write timer called" << ec.message());
                 });
             }
         }

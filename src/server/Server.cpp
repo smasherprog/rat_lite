@@ -3,7 +3,6 @@
 #include <string.h>
 #include <assert.h>
 #include <mutex>
-#include <atomic>
 
 #include "ScreenCapture.h"
 #include "ServerDriver.h"
@@ -36,11 +35,9 @@ namespace SL {
 
             std::mutex ClientsThatNeedFullFramesLock;
             std::vector<NewClient> ClientsThatNeedFullFrames;
-            std::atomic<int> ClientCount;
-            
+
             ServerImpl(std::shared_ptr<Server_Config> config) :ServerDriver_(this, config), Config_(config)
             {
-                ClientCount=0;
                 Status_ = Server_Status::SERVER_RUNNING;
 
                 Clipboard_ = Clipboard_Lite::CreateClipboard().onText([&](const std::string& text) {
@@ -82,7 +79,7 @@ namespace SL {
                     }
                     ServerDriver_.SendMousePositionChanged(Point(x, y));
                 }).start_capturing();
-               
+
                 ScreenCaptureManager_.setMouseChangeInterval(std::chrono::milliseconds(Config_->MousePositionCaptureRate));
                 ScreenCaptureManager_.setFrameChangeInterval(std::chrono::milliseconds(Config_->ScreenImageCaptureRate));
                 ScreenCaptureManager_.pause();
@@ -106,17 +103,16 @@ namespace SL {
                 std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                 ClientsThatNeedFullFrames.push_back({ socket, ids });
                 ScreenCaptureManager_.resume();
-                ClientCount+=1;
+
             }
             virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg) override {
                 UNUSED(socket);
                 UNUSED(msg);
             }
             virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override {
-                ClientCount-=1;
-                if(ClientCount==0){
+                if (ServerDriver_.getClientCount() == 0) {
                     //make sure to stop capturing if isnt needed
-                     ScreenCaptureManager_.pause();
+                    ScreenCaptureManager_.pause();
                 }
                 UNUSED(socket);
                 UNUSED(code);
@@ -152,7 +148,7 @@ namespace SL {
                 if (!Config_->IgnoreIncomingMouseEvents) Input_Lite::SendMouseScroll(offset);
             }
             virtual void onMousePosition(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& pos) override {
- 
+
             }
             virtual void onClipboardChanged(const std::string& text) override {
                 SL_RAT_LOG(Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
@@ -170,7 +166,7 @@ namespace SL {
         }
         void Server::Server::Run()
         {
-           // ServerImpl_->ServerDriver_
+            // ServerImpl_->ServerDriver_
             while (ServerImpl_->Status_ == Server_Status::SERVER_RUNNING) {
                 std::this_thread::sleep_for(50ms);
             }

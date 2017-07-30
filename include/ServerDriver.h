@@ -42,6 +42,8 @@ namespace SL {
             void SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::string& text);
             void SendClipboardChanged(const std::string& text);
 
+            size_t getClientCount() const;
+
 		};
 
 

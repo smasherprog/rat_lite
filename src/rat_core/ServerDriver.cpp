@@ -324,5 +324,9 @@ namespace SL {
             std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendClipboardChanged(socket, text);
         }
+        size_t ServerDriver::getClientCount() const
+        {
+            return ServerDriverImpl_->Clients.size();
+        }
     }
 }

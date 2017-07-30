@@ -4,17 +4,20 @@ project(rat_client)
 if(WIN32)
     set(${PROJECT_NAME}_PLATFORM_SRC
 		windows/ClientWindow.cpp
-		ClientWindow.h
 		windows/resource.h   
 		windows/RAT_Client.rc
 		../Desktop_Server.ico
 	)
 	add_definitions(-DNOMINMAX)
 elseif(APPLE)
-
+    set(${PROJECT_NAME}_PLATFORM_SRC
+		ios/ClientWindow.cpp
+	)
 
 else()
-    
+	set(${PROJECT_NAME}_PLATFORM_SRC
+		linux/ClientWindow.cpp
+	)
 
 endif()
 
@@ -30,7 +33,8 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
 set(${PROJECT_NAME}_EXAMPLE_SRC 
-	${CMAKE_CURRENT_SOURCE_DIR}/../../include/cxxopts.hpp		
+	${CMAKE_CURRENT_SOURCE_DIR}/../../include/cxxopts.hpp	
+	ClientWindow.h	
 	main.cpp
 )
 

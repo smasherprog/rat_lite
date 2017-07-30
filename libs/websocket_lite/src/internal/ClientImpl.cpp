@@ -69,7 +69,7 @@ namespace SL {
                                 if (header.find(PERMESSAGEDEFLATE) != header.end()) {
                                     socket->CompressionEnabled = true;
                                 }
-
+                                socket->SocketStatus_ = SocketStatus::CONNECTED;
                                 if (self->onConnection) {
                                     self->onConnection(socket, header);
                                 }/*
@@ -79,6 +79,7 @@ namespace SL {
                                 ReadHeaderStart(self, socket);
                             }
                             else {
+                                socket->SocketStatus_ = SocketStatus::CLOSED;
                                 SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "WebSocket handshake failed  ");
                                 if (self->onDisconnection) {
                                     self->onDisconnection(socket, 1002, "WebSocket handshake failed  ");
@@ -86,8 +87,8 @@ namespace SL {
                             }
                         }
                         else {
+                            socket->SocketStatus_ = SocketStatus::CLOSED;
                             SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "async_read_until failed  " << ec.message());
-             
                             if (self->onDisconnection) {
                                 self->onDisconnection(socket, 1002, "async_read_until failed  " + ec.message());
                             }
@@ -95,6 +96,7 @@ namespace SL {
                     });
                 }
                 else {
+                    socket->SocketStatus_ = SocketStatus::CLOSED;
                     SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Failed sending handshake" << ec.message());
                     if (self->onDisconnection) {
                         self->onDisconnection(socket, 1002, "Failed sending handshake" + ec.message());
@@ -113,6 +115,7 @@ namespace SL {
                     ConnectHandshake(self, socket, host, endpoint, extraheaders);
                 }
                 else {
+                    socket->SocketStatus_ = SocketStatus::CLOSED;
                     SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Failed async_handshake " << ec.message());
                     if (self->onDisconnection) {
                         self->onDisconnection(socket, 1002, "Failed async_handshake " + ec.message());
@@ -123,6 +126,7 @@ namespace SL {
         template<class PARENTTYPE, typename SOCKETCREATOR>void Connect(PARENTTYPE self, const std::string& host, PortNumber port, bool no_delay, SOCKETCREATOR&& socketcreator, const std::string& endpoint, const std::unordered_map<std::string, std::string>& extraheaders) {
 
             auto socket = socketcreator(self);
+            socket->SocketStatus_ = SocketStatus::CONNECTING;
             std::error_code ec;
             asio::ip::tcp::resolver resolver(self->WSContextImpl_->io_service);
             auto portstr = std::to_string(port.value);
@@ -132,6 +136,7 @@ namespace SL {
 
             if (ec) {
                 SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "resolve error " << ec.message());
+                socket->SocketStatus_ = SocketStatus::CLOSED;
                 if (self->onDisconnection) {
                     self->onDisconnection(socket, 1002, "resolve error " + ec.message());
                 }
@@ -151,6 +156,7 @@ namespace SL {
                     }
                     else {
                         SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Failed async_connect " << ec.message());
+                        socket->SocketStatus_ = SocketStatus::CLOSED;
                         if (self->onDisconnection) {
                             self->onDisconnection(socket, 1002, "Failed async_connect " + ec.message());
                         }

@@ -197,7 +197,7 @@ namespace SL {
             }
 
             virtual ~ClientDriverImpl() {
-
+           
             }
 
 
@@ -241,12 +241,14 @@ namespace SL {
 
             }
         };
-        ClientDriver::ClientDriver(IClientDriver * r) : ClientDriverImpl_(new ClientDriverImpl(r))
-        {  }
+        ClientDriver::ClientDriver(IClientDriver * r) 
+        {  
+            ClientDriverImpl_ = std::make_shared<ClientDriverImpl>(r);
+        }
 
         ClientDriver::~ClientDriver()
         {
-            delete ClientDriverImpl_;
+
         }
         void ClientDriver::Connect(std::shared_ptr<Client_Config> config, const char* dst_host)
         {

@@ -23,51 +23,75 @@ namespace SL {
 
         template<class PARENTTYPE, class SOCKETTYPE> void readexpire_from_now(const PARENTTYPE& parent, const SOCKETTYPE& socket, std::chrono::seconds secs)
         {
-
             std::error_code ec;
-            if (secs.count() <= 0) socket->read_deadline.cancel(ec);
-            else   socket->read_deadline.expires_from_now(secs, ec);
+            if (secs.count() == 0) socket->read_deadline.cancel(ec);
+            socket->read_deadline.expires_from_now(secs, ec);
             if (ec) {
                 SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, ec.message());
             }
-            else if (secs.count() >= 0) {
+            else if (secs.count() > 0) {
                 socket->read_deadline.async_wait([parent, socket](const std::error_code& ec) {
                     if (ec != asio::error::operation_aborted) {
                         return closeImpl(parent, socket, 1001, "read timer expired on the socket ");
                     }
                 });
             }
+            else {
+                socket->read_deadline.async_wait([](const std::error_code& ec) {
+                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Dummy read timer called" << ec.message());
+                });
+            }
         }
         template<class PARENTTYPE, class SOCKETTYPE> void writeexpire_from_now(const PARENTTYPE& parent, const SOCKETTYPE& socket, std::chrono::seconds secs)
         {
+            SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Adding Write timer with " << secs.count());
             std::error_code ec;
-            if (secs.count() <= 0) socket->write_deadline.cancel(ec);
-            else socket->write_deadline.expires_from_now(secs, ec);
+            if (secs.count() == 0) socket->write_deadline.cancel(ec);
+            socket->write_deadline.expires_from_now(secs, ec);
             if (ec) {
                 SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, ec.message());
             }
-            else if (secs.count() >= 0) {
-                socket->write_deadline.async_wait([parent,  socket](const std::error_code& ec) {
+            else if (secs.count() > 0) {
+                socket->write_deadline.async_wait([parent, socket](const std::error_code& ec) {
                     if (ec != asio::error::operation_aborted) {
                         return closeImpl(parent, socket, 1001, "write timer expired on the socket ");
                     }
+                });
+            }
+            else {
+                socket->write_deadline.async_wait([](const std::error_code& ec) {
+                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Dummy write timer called" << ec.message());
                 });
             }
         }
         template<class PARENTTYPE, class SOCKETTYPE>inline void startwrite(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
             if (!socket->SendMessageQueue.empty()) {
                 auto msg(socket->SendMessageQueue.front());
-                write(parent, socket, msg.msg);
+                if (socket->SocketStatus_ == SocketStatus::CONNECTED) {
+                    //only send messages if the socket is in a connected state
+                    write(parent, socket, msg.msg);
+                }
+            }
+            else {
+                writeexpire_from_now(parent, socket, std::chrono::seconds(0));// make sure the write timer doesnt kick off
             }
         }
         template<class PARENTTYPE, class SOCKETTYPE>void sendImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, WSMessage& msg, bool compressmessage) {
             if (compressmessage) {
                 assert(msg.code == OpCode::BINARY || msg.code == OpCode::TEXT);
             }
+
             socket->strand.post([socket, msg, parent, compressmessage]() {
-                socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
-                if (socket->SendMessageQueue.size() == 1) {
-                    SL::WS_LITE::startwrite(parent, socket);
+                if (socket->SocketStatus_ == SocketStatus::CONNECTED) {
+                    socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
+                    if (socket->SendMessageQueue.size() == 1) {
+                        SL::WS_LITE::startwrite(parent, socket);
+                    }  
+                    //update the socket status to reflect it is closing to prevent other messages from being sent.. this is the last valid message
+                    //make sure to do this after a call to startwrite so the write process sends the close message, but no others
+                    if (msg.code == OpCode::CLOSE) {
+                        socket->SocketStatus_ = SocketStatus::CLOSING;
+                    }
                 }
             });
         }
@@ -86,9 +110,9 @@ namespace SL {
 
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, const SENDBUFFERTYPE& msg) {
             SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Closed: " << msg.code);
+            socket->SocketStatus_ = SocketStatus::CLOSED;
             if (parent->onDisconnection) {
                 parent->onDisconnection(socket, msg.code, "");
-
             }
             socket->canceltimers();
             std::error_code ec;
@@ -134,7 +158,7 @@ namespace SL {
             if (ec)
             {
                 if (msg.code == OpCode::CLOSE) {
-                    handleclose(parent,  socket, msg);
+                    handleclose(parent, socket, msg);
                 }
                 else {
                     return closeImpl(parent, socket, 1002, "write mask failed " + ec.message());
@@ -185,7 +209,7 @@ namespace SL {
             if (!ec)
             {
                 assert(sendsize == bytes_transferred);
-                writeend(parent,  socket, msg);
+                writeend(parent, socket, msg);
             }
             else {
                 return closeImpl(parent, socket, 1002, "write header failed   " + ec.message());
@@ -220,7 +244,7 @@ namespace SL {
                 else if (opcode != OpCode::CONTINUATION) {
                     return closeImpl(parent, socket, 1002, "Continuation Received without a previous frame");
                 }
-                ReadHeaderNext(parent,  socket);
+                ReadHeaderNext(parent, socket);
             }
             else {
 
@@ -291,7 +315,7 @@ namespace SL {
                 if (parent->onPong) {
                     parent->onPong(socket, buffer.get(), size);
                 }
-                
+
                 break;
             case OpCode::CLOSE:
                 return ProcessClose(parent, socket, buffer, size);
@@ -302,7 +326,7 @@ namespace SL {
             ReadHeaderNext(parent, socket);
 
         }
-        template <class PARENTTYPE, class SOCKETTYPE>inline void ReadBody(const PARENTTYPE& parent,const SOCKETTYPE& socket) {
+        template <class PARENTTYPE, class SOCKETTYPE>inline void ReadBody(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
 
             if (!DidPassMaskRequirement<PARENTTYPE>(socket->ReceiveHeader)) {//Close connection if it did not meet the mask requirement. 
                 return closeImpl(parent, socket, 1002, "Closing connection because mask requirement not met");
@@ -354,7 +378,7 @@ namespace SL {
                 }
                 else {
                     std::shared_ptr<unsigned char> ptr;
-                    ProcessControlMessage(parent,  socket, ptr, 0);
+                    ProcessControlMessage(parent, socket, ptr, 0);
                 }
             }
 
@@ -377,7 +401,7 @@ namespace SL {
                 if (size > 0) {
                     socket->ReceiveBuffer = static_cast<unsigned char*>(realloc(socket->ReceiveBuffer, socket->ReceiveBufferSize));
                     if (!socket->ReceiveBuffer) {
-                        SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, "MEMORY ALLOCATION ERROR!!! Tried to realloc "<< socket->ReceiveBufferSize);
+                        SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, "MEMORY ALLOCATION ERROR!!! Tried to realloc " << socket->ReceiveBufferSize);
                         return closeImpl(parent, socket, 1009, "Payload exceeded MaxPayload size");
                     }
                     asio::async_read(socket->Socket, asio::buffer(socket->ReceiveBuffer + socket->ReceiveBufferSize - size, size), [parent, socket, size](const std::error_code& ec, size_t bytes_transferred) {
@@ -389,7 +413,7 @@ namespace SL {
                             auto buffer = socket->ReceiveBuffer + socket->ReceiveBufferSize - size;
                             UnMaskMessage(parent, size, buffer);
                             socket->ReceiveBufferSize -= AdditionalBodyBytesToRead<PARENTTYPE>();
-                            ProcessMessage(parent,  socket);
+                            ProcessMessage(parent, socket);
                         }
                         else {
                             return closeImpl(parent, socket, 1002, "ReadBody Error " + ec.message());
@@ -416,7 +440,7 @@ namespace SL {
             readexpire_from_now(parent, socket, parent->ReadTimeout);
             asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader, 2), [parent, socket](const std::error_code& ec, size_t bytes_transferred) {
                 UNUSED(bytes_transferred);
-                if (!ec || bytes_transferred!=2) {
+                if (!ec || bytes_transferred != 2) {
                     size_t readbytes = getpayloadLength1(socket->ReceiveHeader);
                     switch (readbytes) {
                     case 126:
@@ -433,7 +457,7 @@ namespace SL {
                     if (readbytes > 1) {
                         asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + 2, readbytes), [parent, socket](const std::error_code& ec, size_t) {
                             if (!ec) {
-                                ReadBody(parent,  socket);
+                                ReadBody(parent, socket);
                             }
                             else {
                                 return closeImpl(parent, socket, 1002, "readheader ExtendedPayloadlen " + ec.message());

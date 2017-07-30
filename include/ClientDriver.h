@@ -11,11 +11,11 @@ namespace SL {
 		class ClientDriverImpl;
 		struct Client_Config;
 		class ClientDriver {
-			ClientDriverImpl* ClientDriverImpl_;
+			std::shared_ptr<ClientDriverImpl> ClientDriverImpl_;
 
 		public:
 			ClientDriver(IClientDriver* r );
-			virtual ~ClientDriver();
+			~ClientDriver();
 
 			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host);
 

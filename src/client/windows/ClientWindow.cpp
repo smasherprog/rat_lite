@@ -185,17 +185,22 @@ namespace SL {
                 //make sure to show the window
                 ShowWindow(hWnd, SW_SHOW);
                 UpdateWindow(hWnd);
+                std::cout <<"onConnection" << std::endl;
             }
             virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg) override {
-
+                std::cout << "onMessage" << std::endl;
             }
             virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override {
-
+                PostMessage(hWnd, WM_COMMAND, IDD_CONNECTTODIALOG, 0);
+                ShowWindow(hWnd, SW_HIDE);
+                UpdateWindow(hWnd);
+                std::cout << msg << std::endl;
             }
             virtual void onMonitorsChanged(const std::vector<Screen_Capture::Monitor>& monitors) override {
-
+                std::cout << "onMonitorsChanged" << std::endl;
             }
             virtual void onFrameChanged(const RAT::Image& img, const SL::Screen_Capture::Monitor& monitor) override {
+                std::cout << "onFrameChanged" << std::endl;
                 HDC hdc = GetDC(hWnd);
 
                 BITMAPINFO info;
@@ -211,6 +216,7 @@ namespace SL {
                 ReleaseDC(hWnd, hdc);
             }
             virtual void onNewFrame(const RAT::Image& img, const SL::Screen_Capture::Monitor& monitor) override {
+                std::cout << "onNewFrame" << std::endl;
                 HDC hdc = GetDC(hWnd);
 
                 BITMAPINFO info;
@@ -226,13 +232,13 @@ namespace SL {
                 ReleaseDC(hWnd, hdc);
             }
             virtual void onMouseImageChanged(const RAT::Image& img) override {
-
+                std::cout << "onMouseImageChanged" << std::endl;
             }
             virtual void onMousePositionChanged(const RAT::Point& mevent) override {
-
+                std::cout << "onMousePositionChanged" << std::endl;
             }
             virtual void onClipboardChanged(const std::string& text) override {
-
+                std::cout << "onClipboardChanged" << std::endl;
             }
 
         };

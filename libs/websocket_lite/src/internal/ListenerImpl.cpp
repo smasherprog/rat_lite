@@ -15,15 +15,11 @@ namespace SL {
                     std::istream headerdata(&handshakecontainer->Read);
 
                     if (!Parse_ClientHandshake(headerdata, handshakecontainer->Header)) {
+                        socket->SocketStatus_ = SocketStatus::CLOSED;
                         SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Parse Handshake failed ");
                         return;
                     }
-               /*     if (handshakecontainer->Read.size() > 0) {
-
-                        SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "READ MORE DATA " << handshakecontainer->Read.size());
-                        return;
-                    }*/
-
+        
                     std::ostream handshake(&handshakecontainer->Write);
                     if (Generate_Handshake(handshakecontainer->Header, handshake)) {
                         if (handshakecontainer->Header.find(PERMESSAGEDEFLATE) != handshakecontainer->Header.end()) {
@@ -34,21 +30,25 @@ namespace SL {
                             UNUSED(bytes_transferred);
                             if (!ec) {
                                 SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Connected: Sent Handshake bytes " << bytes_transferred);
+                                socket->SocketStatus_ = SocketStatus::CONNECTED;
                                 if (listener->onConnection) {
                                     listener->onConnection(socket, handshakecontainer->Header);
                                 }
                                 ReadHeaderStart(listener, socket);
                             }
                             else {
+                                socket->SocketStatus_ = SocketStatus::CLOSED;
                                 SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "WebSocket receivehandshake failed " + ec.message());
                             }
                         });
                     }
                     else {
+                        socket->SocketStatus_ = SocketStatus::CLOSED;
                         SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "WebSocket Generate_Handshake failed ");
                     }
                 }
                 else {
+                    socket->SocketStatus_ = SocketStatus::CLOSED;
                     SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Read Handshake failed " + ec.message());
                 }
             });
@@ -63,6 +63,7 @@ namespace SL {
                     read_handshake(listener, socket);
                 }
                 else {
+                    socket->SocketStatus_ = SocketStatus::CLOSED;
                     SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "async_handshake failed " << ec.message());
                 }
             });
@@ -72,6 +73,7 @@ namespace SL {
         template<class PARENTTYPE, typename SOCKETCREATOR>void Listen(PARENTTYPE& listener, SOCKETCREATOR&& socketcreator, bool no_delay, bool reuse_address) {
 
             auto socket = socketcreator(listener);
+            socket->SocketStatus_ = SocketStatus::CONNECTING;
             listener->acceptor.async_accept(socket->Socket.lowest_layer(), [listener, socket, socketcreator, no_delay, reuse_address](const std::error_code& ec)
             {   
                 std::error_code e;
@@ -88,6 +90,9 @@ namespace SL {
                 if (!ec)
                 {
                     async_handshake(listener, socket);
+                }
+                else {
+                    socket->SocketStatus_ = SocketStatus::CLOSED;
                 }
                 Listen(listener, socketcreator, no_delay, reuse_address);
             });

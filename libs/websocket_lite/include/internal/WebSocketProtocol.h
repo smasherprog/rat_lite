@@ -623,11 +623,15 @@ namespace SL {
             ReadHeaderNext(parent, socket);
         }
         template <class PARENTTYPE, class SOCKETTYPE>inline void ReadHeaderStart(const PARENTTYPE& parent, const SOCKETTYPE& socket, const std::shared_ptr<asio::streambuf>& extradata) {
+            free(socket->ReceiveBuffer);
+            socket->ReceiveBuffer = nullptr;
+            socket->ReceiveBufferSize = 0;
+            socket->LastOpCode = OpCode::INVALID;
             if (extradata->size() == 0) {
-                ReadHeaderStart(parent, socket);
+                ReadHeaderNext(parent, socket);
             }
             else {
-                ReadHeaderStart(parent, socket, extradata);
+                ReadHeaderNext(parent, socket, extradata);
             }
         }
 

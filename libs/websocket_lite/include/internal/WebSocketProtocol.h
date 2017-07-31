@@ -112,10 +112,6 @@ namespace SL {
             sendImpl(parent, socket, ws, false);
         }
 
-     
-
-
-
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, const SENDBUFFERTYPE& msg) {
             SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Closed: " << msg.code);
             socket->SocketStatus_ = SocketStatus::CLOSED;

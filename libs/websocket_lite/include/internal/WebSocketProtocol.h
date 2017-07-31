@@ -55,16 +55,17 @@ namespace SL {
             }
         }
         template<class PARENTTYPE, class SOCKETTYPE>inline void startwrite(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
-            if (!socket->SendMessageQueue.empty() && !socket->Writing){
+            if(!socket->Writing){
+                if (!socket->SendMessageQueue.empty()){
                     socket->Writing = true;
                     auto msg(socket->SendMessageQueue.front());
                     socket->SendMessageQueue.pop_front();
                     write(parent, socket, msg.msg);
-                
+                } else {
+                    writeexpire_from_now(parent, socket, std::chrono::seconds(0));// make sure the write timer doesnt kick off
+                }
             }
-            else {
-                writeexpire_from_now(parent, socket, std::chrono::seconds(0));// make sure the write timer doesnt kick off
-            }
+            
         }
         template<class PARENTTYPE, class SOCKETTYPE>void sendImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, WSMessage& msg, bool compressmessage) {
             if (compressmessage) {

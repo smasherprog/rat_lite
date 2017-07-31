@@ -39,7 +39,7 @@ namespace SL {
         }
         template<class PARENTTYPE, class SOCKETTYPE> void writeexpire_from_now(const PARENTTYPE& parent, const SOCKETTYPE& socket, std::chrono::seconds secs)
         {
-           
+
             std::error_code ec;
             if (secs.count() == 0) socket->write_deadline.cancel(ec);
             socket->write_deadline.expires_from_now(secs, ec);
@@ -57,26 +57,8 @@ namespace SL {
         template<class PARENTTYPE, class SOCKETTYPE>inline void startwrite(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
             if (!socket->SendMessageQueue.empty()) {
                 socket->Writing = true;
-                if(socket->SocketStatus_ == SocketStatus::CONNECTED){
-                     auto msg(socket->SendMessageQueue.front());
-                      write(parent, socket, msg.msg);
-                } else if (socket->SocketStatus_ == SocketStatus::CLOSING){
-                    //find the close message and discard all others
-                    auto discardedcount=0;
-                    while(!socket->SendMessageQueue.empty()){
-                        auto msg(socket->SendMessageQueue.front());
-                        if(msg.msg.code == OpCode::CLOSE){
-                            socket->SendMessageQueue.clear();//remove any remaining messages
-                            write(parent, socket, msg.msg);
-                        } else {
-                            socket->SendMessageQueue.pop_front();
-                            discardedcount+=1;
-                        }
-                    }
-                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Sent Close message and discarded " <<discardedcount<< " other messages. Remaining messages "<<socket->SendMessageQueue.size());
-                    socket->SendMessageQueue.clear();//just in case
-                }
-                
+                auto msg(socket->SendMessageQueue.front());
+                write(parent, socket, msg.msg);
             }
             else {
                 socket->Writing = false;
@@ -120,15 +102,16 @@ namespace SL {
             if (parent->onDisconnection) {
                 parent->onDisconnection(socket, msg.code, "");
             }
+            socket->SendMessageQueue.clear();//clear all outbound messages
             socket->canceltimers();
             std::error_code ec;
             socket->Socket.lowest_layer().shutdown(asio::ip::tcp::socket::shutdown_both, ec);
             ec.clear();
             socket->Socket.lowest_layer().close(ec);
-        }   
-        
+        }
+
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>void closeImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg, const SENDBUFFERTYPE& networkmsg) {
-             socket->Writing = false;
+            socket->Writing = false;
             if (networkmsg.code == OpCode::CLOSE) {
                 //failed when sending a close message... get out and notify
                 handleclose(parent, socket, networkmsg);

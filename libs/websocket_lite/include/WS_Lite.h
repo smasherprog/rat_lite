@@ -54,8 +54,8 @@ namespace SL {
         enum SocketStatus :int {
             CONNECTING,
             CONNECTED,
-            CLOSED,
-            CLOSING
+            CLOSING,
+            CLOSED
         };
         enum ExtensionOptions : unsigned char {
             NO_OPTIONS = 0,

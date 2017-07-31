@@ -223,7 +223,7 @@ namespace SL {
             }
             void SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors) {
               if (Clients.empty() && !socket) return;
-                     SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendMonitorsChanged  ");
+                SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendMonitorsChanged  ");
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
                 const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 

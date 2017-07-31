@@ -55,13 +55,14 @@ namespace SL {
             }
         }
         template<class PARENTTYPE, class SOCKETTYPE>inline void startwrite(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
-            if (!socket->SendMessageQueue.empty()) {
-                socket->Writing = true;
-                auto msg(socket->SendMessageQueue.front());
-                write(parent, socket, msg.msg);
+            if (!socket->SendMessageQueue.empty() && !socket->Writing){
+                    socket->Writing = true;
+                    auto msg(socket->SendMessageQueue.front());
+                    socket->SendMessageQueue.pop_front();
+                    write(parent, socket, msg.msg);
+                
             }
             else {
-                socket->Writing = false;
                 writeexpire_from_now(parent, socket, std::chrono::seconds(0));// make sure the write timer doesnt kick off
             }
         }
@@ -78,9 +79,8 @@ namespace SL {
                         socket->SocketStatus_ = SocketStatus::CLOSING;
                     }
                     socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
-                    if (!socket->Writing) {
-                        SL::WS_LITE::startwrite(parent, socket);
-                    }
+                    SL::WS_LITE::startwrite(parent, socket);
+                    
                 }
             });
         }
@@ -96,12 +96,14 @@ namespace SL {
             sendImpl(parent, socket, ws, false);
         }
 
-        template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, const SENDBUFFERTYPE& msg) {
-            SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Closed: " << msg.code);
+        template<class PARENTTYPE, class SOCKETTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
+            SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Closed: " << code);
             socket->SocketStatus_ = SocketStatus::CLOSED;
+            socket->Writing=false;
             if (parent->onDisconnection) {
-                parent->onDisconnection(socket, msg.code, "");
+                parent->onDisconnection(socket, code, msg);
             }
+        
             socket->SendMessageQueue.clear();//clear all outbound messages
             socket->canceltimers();
             std::error_code ec;
@@ -109,35 +111,23 @@ namespace SL {
             ec.clear();
             socket->Socket.lowest_layer().close(ec);
         }
-
-        template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>void closeImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg, const SENDBUFFERTYPE& networkmsg) {
-            socket->Writing = false;
-            if (networkmsg.code == OpCode::CLOSE) {
-                //failed when sending a close message... get out and notify
-                handleclose(parent, socket, networkmsg);
-            }
-            else {
-                sendclosemessage(parent, socket, code, msg);
-            }
-        }
+        
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>inline void write_end(const PARENTTYPE& parent, const SOCKETTYPE& socket, const SENDBUFFERTYPE& msg) {
 
             asio::async_write(socket->Socket, asio::buffer(msg.data, msg.len), socket->strand.wrap([parent, socket, msg](const std::error_code& ec, size_t bytes_transferred) {
-                if (!socket->SendMessageQueue.empty()) {
-                    socket->SendMessageQueue.pop_front();
+                socket->Writing = false;
+                UNUSED(bytes_transferred);  
+                if (msg.code == OpCode::CLOSE) {
+                    //final close.. get out and dont come back mm kay?
+                    return handleclose(parent, socket, 1000, "");
                 }
-                UNUSED(bytes_transferred);
                 if (ec)
                 {
-                    return closeImpl(parent, socket, 1002, "write header failed " + ec.message(), msg);
+                    return handleclose(parent, socket, 1002, "write header failed " + ec.message());
                 }
                 assert(msg.len == bytes_transferred);
-                if (msg.code == OpCode::CLOSE) {
-                    handleclose(parent, socket, msg);
-                }
-                else {
-                    startwrite(parent, socket);
-                }
+                startwrite(parent, socket);
+                
             }));
         }
 
@@ -158,10 +148,10 @@ namespace SL {
             if (ec)
             {
                 if (msg.code == OpCode::CLOSE) {
-                    handleclose(parent, socket, msg);
+                    return handleclose(parent, socket, msg.code, "");
                 }
                 else {
-                    return closeImpl(parent, socket, 1002, "write mask failed " + ec.message(), msg);
+                    return handleclose(parent, socket, 1002, "write mask failed " + ec.message());
                 }
             }
             else {
@@ -212,7 +202,7 @@ namespace SL {
                 writeend(parent, socket, msg);
             }
             else {
-                return closeImpl(parent, socket, 1002, "write header failed   " + ec.message(), msg);
+                handleclose(parent, socket, 1002, "write header failed " + ec.message());
             }
 
         }

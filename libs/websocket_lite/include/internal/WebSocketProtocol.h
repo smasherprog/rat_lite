@@ -98,7 +98,7 @@ namespace SL {
             sendImpl(parent, socket, ws, false);
         }
 
-        template<class PARENTTYPE, class SOCKETTYPE>inline void handlewriteclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
+        template<class PARENTTYPE, class SOCKETTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
             SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Closed: " << code);
             socket->SocketStatus_ = SocketStatus::CLOSED;
             socket->Writing = false;
@@ -121,11 +121,11 @@ namespace SL {
                 UNUSED(bytes_transferred);
                 if (msg.code == OpCode::CLOSE) {
                     //final close.. get out and dont come back mm kay?
-                    return handlewriteclose(parent, socket, 1000, "");
+                    return handleclose(parent, socket, 1000, "");
                 }
                 if (ec)
                 {
-                    return handlewriteclose(parent, socket, 1002, "write header failed " + ec.message());
+                    return handleclose(parent, socket, 1002, "write header failed " + ec.message());
                 }
                 assert(msg.len == bytes_transferred);
                 startwrite(parent, socket);
@@ -150,10 +150,10 @@ namespace SL {
             if (ec)
             {
                 if (msg.code == OpCode::CLOSE) {
-                    return handlewriteclose(parent, socket, msg.code, "");
+                    return handleclose(parent, socket, msg.code, "");
                 }
                 else {
-                    return handlewriteclose(parent, socket, 1002, "write mask failed " + ec.message());
+                    return handleclose(parent, socket, 1002, "write mask failed " + ec.message());
                 }
             }
             else {
@@ -204,7 +204,7 @@ namespace SL {
                 writeend(parent, socket, msg);
             }
             else {
-                handlewriteclose(parent, socket, 1002, "write header failed " + ec.message());
+                handleclose(parent, socket, 1002, "write header failed " + ec.message());
             }
 
         }
@@ -518,14 +518,15 @@ namespace SL {
                         dataconsumed = extradata->size();
                     }
                     bytestoread -= dataconsumed;
-                    memcpy(buffer->get(), extradata->data(), dataconsumed);
+                    std::copy_n(asio::buffers_begin(*extradata),  dataconsumed, buffer.get());
+                   // memcpy(buffer.get(), extradata->data(), dataconsumed);
                     extradata->consume(dataconsumed);
 
                     asio::async_read(socket->Socket, asio::buffer(buffer.get() + dataconsumed, bytestoread), [size, extradata, parent, socket, buffer](const std::error_code& ec, size_t) {
                         if (!ec) {
                             UnMaskMessage(parent, size, buffer.get());
                             auto tempsize = size - AdditionalBodyBytesToRead<PARENTTYPE>();
-                            if (extradata.size() == 0) {
+                            if (extradata->size() == 0) {
                                 return ProcessControlMessage(parent, socket, buffer, tempsize);
                             }
                             else {
@@ -539,7 +540,7 @@ namespace SL {
                 }
                 else {
                     std::shared_ptr<unsigned char> ptr;
-                    if (extradata.size() == 0) {
+                    if (extradata->size() == 0) {
                         return ProcessControlMessage(parent, socket, ptr, 0);
                     }
                     else {
@@ -579,7 +580,8 @@ namespace SL {
                         dataconsumed = extradata->size();
                     }
                     bytestoread -= dataconsumed;
-                    memcpy(socket->ReceiveBuffer + socket->ReceiveBufferSize - size, extradata->data(), dataconsumed);
+                    std::copy_n(asio::buffers_begin(*extradata),  dataconsumed, socket->ReceiveBuffer + socket->ReceiveBufferSize - size);
+                    //memcpy(socket->ReceiveBuffer + socket->ReceiveBufferSize - size, extradata->data(), dataconsumed);
                     extradata->consume(dataconsumed);
 
                     asio::async_read(socket->Socket, asio::buffer(socket->ReceiveBuffer + socket->ReceiveBufferSize - size + dataconsumed, bytestoread), [size, extradata, parent, socket](const std::error_code& ec, size_t) {
@@ -587,7 +589,7 @@ namespace SL {
                             auto buffer = socket->ReceiveBuffer + socket->ReceiveBufferSize - size;
                             UnMaskMessage(parent, size, buffer);
                             socket->ReceiveBufferSize -= AdditionalBodyBytesToRead<PARENTTYPE>();
-                            if (extradata.size() == 0) {
+                            if (extradata->size() == 0) {
                                 return ProcessMessage(parent, socket);
                             }
                             else {
@@ -600,7 +602,7 @@ namespace SL {
                     });
                 }
                 else {
-                    if (extradata.size() == 0) {
+                    if (extradata->size() == 0) {
                         return ProcessMessage(parent, socket);
                     }
                     else {
@@ -641,7 +643,7 @@ namespace SL {
             }
             //zero is not possible 
             bytestoread -= dataconsumed;
-            memcpy(socket->ReceiveHeader, extradata->data(), dataconsumed);
+            std::copy_n(asio::buffers_begin(*extradata),  dataconsumed, socket->ReceiveHeader);
             extradata->consume(dataconsumed);
 
             asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t bytes_transferred) {
@@ -670,10 +672,11 @@ namespace SL {
                             dataconsumed = 0;
                         }
                         bytestoread -= dataconsumed;
-                        memcpy(socket->ReceiveHeader, extradata->data(), dataconsumed);
+                        std::copy_n(asio::buffers_begin(*extradata), dataconsumed, socket->ReceiveHeader + 2);
+                        //memcpy(socket->ReceiveHeader, extradata->data(), dataconsumed);
                         extradata->consume(dataconsumed);
 
-                        asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t) {
+                        asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + 2 + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t) {
                             if (!ec) {
                                 if (extradata->size() > 0) {
                                     ReadBody(parent, socket, extradata);

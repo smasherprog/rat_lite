@@ -647,7 +647,7 @@ namespace SL {
             memcpy(socket->ReceiveHeader, asio::buffer_cast<const void*>(extradata->data()), dataconsumed);
             extradata->consume(dataconsumed);
 
-            asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t bytes_transferred) {
+            asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t) {
                 if (!ec) {
                     size_t readbytes = getpayloadLength1(socket->ReceiveHeader);
                     switch (readbytes) {

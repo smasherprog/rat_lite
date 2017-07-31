@@ -171,6 +171,7 @@ namespace SL {
             unsigned char ReceiveHeader[14] = {};
             bool CompressionEnabled = false;
             SocketStatus SocketStatus_ = SocketStatus::CLOSED;
+            bool Writing=false;
             OpCode LastOpCode = OpCode::INVALID;
             std::shared_ptr<PARENTTYPE> Parent;
             SOCKETTYPE Socket;

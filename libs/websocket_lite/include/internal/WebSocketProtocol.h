@@ -56,6 +56,7 @@ namespace SL {
         }
         template<class PARENTTYPE, class SOCKETTYPE>inline void startwrite(const PARENTTYPE& parent, const SOCKETTYPE& socket) {
             if (!socket->SendMessageQueue.empty()) {
+                socket->Writing = true;
                 if(socket->SocketStatus_ == SocketStatus::CONNECTED){
                      auto msg(socket->SendMessageQueue.front());
                       write(parent, socket, msg.msg);
@@ -69,15 +70,16 @@ namespace SL {
                             write(parent, socket, msg.msg);
                         } else {
                             socket->SendMessageQueue.pop_front();
+                            discardedcount+=1;
                         }
-                        discardedcount+=1;
                     }
-                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "discardedcount " <<discardedcount<< "remianing "<<socket->SendMessageQueue.size());
+                    SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Sent Close message and discarded " <<discardedcount<< " other messages. Remaining messages "<<socket->SendMessageQueue.size());
                     socket->SendMessageQueue.clear();//just in case
                 }
                 
             }
             else {
+                socket->Writing = false;
                 writeexpire_from_now(parent, socket, std::chrono::seconds(0));// make sure the write timer doesnt kick off
             }
         }
@@ -94,7 +96,7 @@ namespace SL {
                         socket->SocketStatus_ = SocketStatus::CLOSING;
                     }
                     socket->SendMessageQueue.emplace_back(SendQueueItem{ msg, compressmessage });
-                    if (socket->SendMessageQueue.size() == 1) {
+                    if (!socket->Writing) {
                         SL::WS_LITE::startwrite(parent, socket);
                     }
                 }
@@ -126,6 +128,7 @@ namespace SL {
         }   
         
         template<class PARENTTYPE, class SOCKETTYPE, class SENDBUFFERTYPE>void closeImpl(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg, const SENDBUFFERTYPE& networkmsg) {
+             socket->Writing = false;
             if (networkmsg.code == OpCode::CLOSE) {
                 //failed when sending a close message... get out and notify
                 handleclose(parent, socket, networkmsg);

@@ -64,7 +64,6 @@ namespace SL {
                             std::unordered_map<std::string, std::string> header;
                             if (Parse_ServerHandshake(stream, header) && Base64decode(header[HTTP_SECWEBSOCKETACCEPT]) == accept_sha1) {
 
-
                                 SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Connected ");
                         
                                 if (header.find(PERMESSAGEDEFLATE) != header.end()) {
@@ -74,7 +73,7 @@ namespace SL {
                                 if (self->onConnection) {
                                     self->onConnection(socket, header);
                                 }
-                                ReadHeaderStart(self, socket);
+                                ReadHeaderStart(self, socket, read_buffer);
                             }
                             else {
                                 socket->SocketStatus_ = SocketStatus::CLOSED;

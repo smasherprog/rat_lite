@@ -517,9 +517,8 @@ namespace SL {
                     else {
                         dataconsumed = extradata->size();
                     }
-                    bytestoread -= dataconsumed;
-                    std::copy_n(asio::buffers_begin(*extradata),  dataconsumed, buffer.get());
-                   // memcpy(buffer.get(), extradata->data(), dataconsumed);
+                    bytestoread -= dataconsumed; 
+                    memcpy(buffer.get(), asio::buffer_cast<const void*>(extradata->data()), dataconsumed);
                     extradata->consume(dataconsumed);
 
                     asio::async_read(socket->Socket, asio::buffer(buffer.get() + dataconsumed, bytestoread), [size, extradata, parent, socket, buffer](const std::error_code& ec, size_t) {
@@ -580,10 +579,8 @@ namespace SL {
                         dataconsumed = extradata->size();
                     }
                     bytestoread -= dataconsumed;
-                    std::copy_n(asio::buffers_begin(*extradata),  dataconsumed, socket->ReceiveBuffer + socket->ReceiveBufferSize - size);
-                    //memcpy(socket->ReceiveBuffer + socket->ReceiveBufferSize - size, extradata->data(), dataconsumed);
+                    memcpy(socket->ReceiveBuffer + socket->ReceiveBufferSize - size, asio::buffer_cast<const void*>(extradata->data()), dataconsumed);
                     extradata->consume(dataconsumed);
-
                     asio::async_read(socket->Socket, asio::buffer(socket->ReceiveBuffer + socket->ReceiveBufferSize - size + dataconsumed, bytestoread), [size, extradata, parent, socket](const std::error_code& ec, size_t) {
                         if (!ec) {
                             auto buffer = socket->ReceiveBuffer + socket->ReceiveBufferSize - size;
@@ -647,7 +644,7 @@ namespace SL {
             }
             //zero is not possible 
             bytestoread -= dataconsumed;
-            std::copy_n(asio::buffers_begin(*extradata),  dataconsumed, socket->ReceiveHeader);
+            memcpy(socket->ReceiveHeader, asio::buffer_cast<const void*>(extradata->data()), dataconsumed);
             extradata->consume(dataconsumed);
 
             asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t bytes_transferred) {
@@ -676,8 +673,7 @@ namespace SL {
                             dataconsumed = 0;
                         }
                         bytestoread -= dataconsumed;
-                        std::copy_n(asio::buffers_begin(*extradata), dataconsumed, socket->ReceiveHeader + 2);
-                        //memcpy(socket->ReceiveHeader, extradata->data(), dataconsumed);
+                        memcpy(socket->ReceiveHeader +2, asio::buffer_cast<const void*>(extradata->data()), dataconsumed);
                         extradata->consume(dataconsumed);
 
                         asio::async_read(socket->Socket, asio::buffer(socket->ReceiveHeader + 2 + dataconsumed, bytestoread), [parent, socket, extradata](const std::error_code& ec, size_t) {

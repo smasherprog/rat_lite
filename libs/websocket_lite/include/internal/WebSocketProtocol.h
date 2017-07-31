@@ -98,7 +98,7 @@ namespace SL {
             sendImpl(parent, socket, ws, false);
         }
 
-        template<class PARENTTYPE, class SOCKETTYPE>inline void handleclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
+        template<class PARENTTYPE, class SOCKETTYPE>inline void handlewriteclose(const PARENTTYPE& parent, const SOCKETTYPE& socket, unsigned short code, const std::string& msg) {
             SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Closed: " << code);
             socket->SocketStatus_ = SocketStatus::CLOSED;
             socket->Writing = false;
@@ -121,11 +121,11 @@ namespace SL {
                 UNUSED(bytes_transferred);
                 if (msg.code == OpCode::CLOSE) {
                     //final close.. get out and dont come back mm kay?
-                    return handleclose(parent, socket, 1000, "");
+                    return handlewriteclose(parent, socket, 1000, "");
                 }
                 if (ec)
                 {
-                    return handleclose(parent, socket, 1002, "write header failed " + ec.message());
+                    return handlewriteclose(parent, socket, 1002, "write header failed " + ec.message());
                 }
                 assert(msg.len == bytes_transferred);
                 startwrite(parent, socket);
@@ -150,10 +150,10 @@ namespace SL {
             if (ec)
             {
                 if (msg.code == OpCode::CLOSE) {
-                    return handleclose(parent, socket, msg.code, "");
+                    return handlewriteclose(parent, socket, msg.code, "");
                 }
                 else {
-                    return handleclose(parent, socket, 1002, "write mask failed " + ec.message());
+                    return handlewriteclose(parent, socket, 1002, "write mask failed " + ec.message());
                 }
             }
             else {
@@ -204,7 +204,7 @@ namespace SL {
                 writeend(parent, socket, msg);
             }
             else {
-                handleclose(parent, socket, 1002, "write header failed " + ec.message());
+                handlewriteclose(parent, socket, 1002, "write header failed " + ec.message());
             }
 
         }

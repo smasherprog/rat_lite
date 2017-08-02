@@ -37,6 +37,30 @@ namespace SL {
                 });
             }
         }
+        template<class PARENTTYPE, class SOCKETTYPE> void start_ping(const PARENTTYPE& parent, const SOCKETTYPE& socket, std::chrono::seconds secs)
+        {
+            std::error_code ec;
+            if (secs.count() == 0) socket->ping_deadline.cancel(ec);
+            socket->ping_deadline.expires_from_now(secs, ec);
+            if (ec) {
+                SL_WS_LITE_LOG(Logging_Levels::ERROR_log_level, ec.message());
+            }
+            else if (secs.count() > 0) {
+                socket->ping_deadline.async_wait([parent, socket, secs](const std::error_code& ec) {
+                    if (ec != asio::error::operation_aborted) {
+                            WSMessage msg;
+                            char p[] = "ping";
+                            msg.Buffer = std::shared_ptr<unsigned char>(new unsigned char[sizeof(p)],[] (unsigned char* ptr) { delete[] ptr; });
+                            memcpy(msg.Buffer.get(), p, sizeof(p));
+                            msg.len = sizeof(p);
+                            msg.code = OpCode::PING;
+                            msg.data = msg.Buffer.get();
+                            sendImpl(parent, socket, msg, false);
+                            start_ping(parent, socket, secs);
+                    }
+                });
+            }
+        }
         template<class PARENTTYPE, class SOCKETTYPE> void writeexpire_from_now(const PARENTTYPE& parent, const SOCKETTYPE& socket, std::chrono::seconds secs)
         {
 

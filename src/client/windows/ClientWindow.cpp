@@ -207,7 +207,7 @@ namespace SL {
                 ZeroMemory(&info, sizeof(BITMAPINFO));
                 info.bmiHeader.biBitCount = 32;
                 info.bmiHeader.biWidth = img.Rect_.Width;
-                info.bmiHeader.biHeight = img.Rect_.Height;
+                info.bmiHeader.biHeight = -img.Rect_.Height;
                 info.bmiHeader.biPlanes = 1;
                 info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
                 info.bmiHeader.biSizeImage = img.Length;
@@ -223,7 +223,7 @@ namespace SL {
                 ZeroMemory(&info, sizeof(BITMAPINFO));
                 info.bmiHeader.biBitCount = 32;
                 info.bmiHeader.biWidth = img.Rect_.Width;
-                info.bmiHeader.biHeight = img.Rect_.Height;
+                info.bmiHeader.biHeight = -img.Rect_.Height;
                 info.bmiHeader.biPlanes = 1;
                 info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
                 info.bmiHeader.biSizeImage = img.Length;

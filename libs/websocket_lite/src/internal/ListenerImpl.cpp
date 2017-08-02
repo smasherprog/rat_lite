@@ -31,6 +31,7 @@ namespace SL {
                             if (!ec) {
                                 SL_WS_LITE_LOG(Logging_Levels::INFO_log_level, "Connected: Sent Handshake bytes " << bytes_transferred);
                                 socket->SocketStatus_ = SocketStatus::CONNECTED;
+                                start_ping(listener, socket, std::chrono::seconds(5));
                                 if (listener->onConnection) {
                                     listener->onConnection(socket, handshakecontainer->Header);
                                 }

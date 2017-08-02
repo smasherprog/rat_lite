@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <string>
+#include <chrono>
 
 namespace SL {
     namespace WS_LITE {
@@ -70,6 +71,7 @@ namespace SL {
                                     socket->CompressionEnabled = true;
                                 }
                                 socket->SocketStatus_ = SocketStatus::CONNECTED;
+                                start_ping(self, socket, std::chrono::seconds(5));
                                 if (self->onConnection) {
                                     self->onConnection(socket, header);
                                 }

@@ -110,12 +110,14 @@ namespace SL {
             WSocket(std::shared_ptr<PARENTTYPE>& s, asio::ssl::context& sslcontext) :
                 Parent(s),
                 Socket(s->WSContextImpl_->io_service, sslcontext),
+                ping_deadline(s->WSContextImpl_->io_service),
                 read_deadline(s->WSContextImpl_->io_service),
                 write_deadline(s->WSContextImpl_->io_service),
                 strand(s->WSContextImpl_->io_service) {}
             WSocket(std::shared_ptr<PARENTTYPE>& s) :
                 Parent(s),
                 Socket(s->WSContextImpl_->io_service),
+                ping_deadline(s->WSContextImpl_->io_service),
                 read_deadline(s->WSContextImpl_->io_service),
                 write_deadline(s->WSContextImpl_->io_service),
                 strand(s->WSContextImpl_->io_service) {}
@@ -165,6 +167,8 @@ namespace SL {
                 read_deadline.cancel(ec);
                 ec.clear();
                 write_deadline.cancel(ec);
+                ec.clear();
+                ping_deadline.cancel(ec);
             }
             unsigned char* ReceiveBuffer = nullptr;
             size_t ReceiveBufferSize = 0;
@@ -176,6 +180,7 @@ namespace SL {
             std::shared_ptr<PARENTTYPE> Parent;
             SOCKETTYPE Socket;
 
+            asio::basic_waitable_timer<std::chrono::steady_clock> ping_deadline;
             asio::basic_waitable_timer<std::chrono::steady_clock> read_deadline;
             asio::basic_waitable_timer<std::chrono::steady_clock> write_deadline;
             asio::strand strand;

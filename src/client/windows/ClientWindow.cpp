@@ -273,7 +273,9 @@ namespace SL {
                 info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
                 info.bmiHeader.biSizeImage = img.Length;
                 info.bmiHeader.biCompression = BI_RGB;
-
+                if (Bitmap) {
+                    DeleteObject(Bitmap);
+                }
                 Bitmap = CreateDIBitmap(hdc, &info.bmiHeader, CBM_INIT, (void*)img.Data, &info, DIB_RGB_COLORS);
                 StretchDIBits(hdc, img.Rect_.left(), img.Rect_.top(), img.Rect_.Width, img.Rect_.Height, 0, 0, img.Rect_.Width, img.Rect_.Height, img.Data, &info, DIB_RGB_COLORS, SRCCOPY);
                 ReleaseDC(hWnd, hdc);

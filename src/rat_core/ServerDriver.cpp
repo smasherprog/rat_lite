@@ -187,11 +187,8 @@ namespace SL {
                 Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img)*Height(img));
                 auto srcbuf = (unsigned char*)srcbuffer.get();
 
-#if __ANDROID__
+
                 auto colorencoding = TJPF_RGBX;
-#else 
-                auto colorencoding = TJPF_BGRX;
-#endif
                 auto outjpegsize = maxsize;
 
                 if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, Config_->ImageCompressionSetting, 2048 | TJFLAG_NOREALLOC) == -1) {

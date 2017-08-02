@@ -10,6 +10,7 @@
 #include "IClientDriver.h"
 #include "NetworkStructs.h"
 #include "Clipboard_Lite.h"
+#include "ScreenCapture.h"
 
 const char WindowClass[] = "RAT_PROJECT";
 
@@ -18,7 +19,8 @@ namespace SL {
         class ClientWindowImpl : public RAT::IClientDriver {
             RAT::ClientDriver ClientDriver_;
             Clipboard_Lite::Clipboard_Manager Clipboard_Manager_;
-
+            std::vector<Screen_Capture::Monitor> Monitors;
+            HBITMAP Bitmap = nullptr;
             std::shared_ptr<SL::WS_LITE::IWSocket> Socket_;
 
             HWND hWnd = nullptr;
@@ -78,7 +80,7 @@ namespace SL {
                         break;
                     case ID_TRYCONNTECTCLOSING:
                         ConnecthWnd = nullptr;
-                        if (IsWindowVisible(hwnd) ==FALSE) {
+                        if (IsWindowVisible(hwnd) == FALSE) {
                             PostQuitMessage(0);
                             break;
                         }
@@ -89,7 +91,17 @@ namespace SL {
                 {
                     PAINTSTRUCT ps;
                     HDC hdc = BeginPaint(hwnd, &ps);
-                    // TODO: Add any drawing code that uses hdc here...
+                    if (Bitmap) {
+                        auto hdcMem = CreateCompatibleDC(hdc);
+                        auto oldBitmap = SelectObject(hdcMem, Bitmap);
+                        BITMAP          bitmap;
+
+                        GetObject(Bitmap, sizeof(bitmap), &bitmap);
+                        BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
+
+                        SelectObject(hdcMem, oldBitmap);
+                        DeleteDC(hdcMem);
+                    }
                     EndPaint(hwnd, &ps);
                 }
                 break;
@@ -144,7 +156,7 @@ namespace SL {
                 if (hWnd)
                 {
                     if (host.empty() || host.size() < 2) {
-                        PostMessage(hWnd, WM_COMMAND ,IDD_CONNECTTODIALOG, 0);
+                        PostMessage(hWnd, WM_COMMAND, IDD_CONNECTTODIALOG, 0);
                     }
                     else {
                         TryConnect(host.c_str());
@@ -178,6 +190,10 @@ namespace SL {
                 }
             }
             void TryConnect(const char* hostname) {
+                if (Bitmap) {
+                    DeleteObject(Bitmap);
+                }
+                Bitmap = nullptr;
                 ClientDriver_.Connect(Config, hostname);
             }
             virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket) override {
@@ -185,7 +201,7 @@ namespace SL {
                 //make sure to show the window
                 ShowWindow(hWnd, SW_SHOW);
                 UpdateWindow(hWnd);
-                std::cout <<"onConnection" << std::endl;
+                std::cout << "onConnection" << std::endl;
             }
             virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg) override {
                 std::cout << "onMessage" << std::endl;
@@ -197,6 +213,7 @@ namespace SL {
                 std::cout << msg << std::endl;
             }
             virtual void onMonitorsChanged(const std::vector<Screen_Capture::Monitor>& monitors) override {
+                Monitors = monitors;
                 std::cout << "onMonitorsChanged" << std::endl;
             }
             virtual void onFrameChanged(const RAT::Image& img, const SL::Screen_Capture::Monitor& monitor) override {
@@ -212,7 +229,35 @@ namespace SL {
                 info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
                 info.bmiHeader.biSizeImage = img.Length;
                 info.bmiHeader.biCompression = BI_RGB;
-                StretchDIBits(hdc, img.Rect_.left(), img.Rect_.top(), img.Rect_.Width, img.Rect_.Height, 0, 0, img.Rect_.Width, img.Rect_.Height, img.Data, &info, DIB_RGB_COLORS, SRCCOPY);
+
+                if (Bitmap) {
+
+                    auto bitmaptodraw = CreateDIBitmap(hdc, &info.bmiHeader, CBM_INIT, (void*)img.Data, &info, DIB_RGB_COLORS);
+
+                    auto srcmem = CreateCompatibleDC(hdc);
+                    auto srcbitmap = SelectObject(srcmem, bitmaptodraw);
+
+                    auto hdcMem = CreateCompatibleDC(hdc);
+                    auto oldBitmap = SelectObject(hdcMem, Bitmap);
+
+                    BitBlt(hdcMem, img.Rect_.left(), img.Rect_.top(), img.Rect_.Width, img.Rect_.Height, srcmem, 0, 0, SRCCOPY);
+
+                    SelectObject(srcmem, srcbitmap);
+                    DeleteObject(bitmaptodraw);
+
+                    SelectObject(hdcMem, oldBitmap);
+                    DeleteDC(hdcMem);
+                    RECT RECT_ImageUpdate_Window;
+                    RECT_ImageUpdate_Window.left = img.Rect_.left();
+                    RECT_ImageUpdate_Window.top = img.Rect_.top();
+                    RECT_ImageUpdate_Window.bottom = img.Rect_.bottom();
+                    RECT_ImageUpdate_Window.right = img.Rect_.right();
+
+                    InvalidateRect(hWnd, &RECT_ImageUpdate_Window, FALSE);
+                    UpdateWindow(hWnd);
+                }
+
+                // StretchDIBits(hdc, img.Rect_.left(), img.Rect_.top(), img.Rect_.Width, img.Rect_.Height, 0, 0, img.Rect_.Width, img.Rect_.Height, img.Data, &info, DIB_RGB_COLORS, SRCCOPY);
                 ReleaseDC(hWnd, hdc);
             }
             virtual void onNewFrame(const RAT::Image& img, const SL::Screen_Capture::Monitor& monitor) override {
@@ -228,6 +273,8 @@ namespace SL {
                 info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
                 info.bmiHeader.biSizeImage = img.Length;
                 info.bmiHeader.biCompression = BI_RGB;
+
+                Bitmap = CreateDIBitmap(hdc, &info.bmiHeader, CBM_INIT, (void*)img.Data, &info, DIB_RGB_COLORS);
                 StretchDIBits(hdc, img.Rect_.left(), img.Rect_.top(), img.Rect_.Width, img.Rect_.Height, 0, 0, img.Rect_.Width, img.Rect_.Height, img.Data, &info, DIB_RGB_COLORS, SRCCOPY);
                 ReleaseDC(hWnd, hdc);
             }

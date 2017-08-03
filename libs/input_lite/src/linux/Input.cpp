@@ -80,8 +80,7 @@ namespace Input_Lite
             }
         }
         XCloseDisplay(display);
-    }
-
+    } 
     void SendMousePosition(const Offset& offset)
     {
         auto display = XOpenDisplay(NULL);
@@ -96,7 +95,6 @@ namespace Input_Lite
     }
     void SendMouse_Impl(const MouseButtons button, Bool pressed)
     {
-        std::cout<<button<<"  "<<pressed<<std::endl;
         auto display = XOpenDisplay(NULL);
         switch(button) {
         case MouseButtons::LEFT:

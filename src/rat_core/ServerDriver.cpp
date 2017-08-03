@@ -166,7 +166,6 @@ namespace SL {
             void SendScreen(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image & img, const Screen_Capture::Monitor& monitor, PACKET_TYPES p) {
 
                 if (Clients.empty() && !socket) return;
-                 SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendScreen  ");
                 Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
 
                 auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
@@ -220,7 +219,6 @@ namespace SL {
             }
             void SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::vector<Screen_Capture::Monitor>& monitors) {
               if (Clients.empty() && !socket) return;
-                SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendMonitorsChanged  ");
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
                 const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 

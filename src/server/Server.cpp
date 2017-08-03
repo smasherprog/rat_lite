@@ -148,7 +148,7 @@ namespace SL {
                 if (!Config_->IgnoreIncomingMouseEvents) Input_Lite::SendMouseScroll(offset);
             }
             virtual void onMousePosition(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& pos) override {
-
+                if (!Config_->IgnoreIncomingMouseEvents) Input_Lite::SendMousePosition(Input_Lite::AbsolutePos{ pos.X, pos.Y });
             }
             virtual void onClipboardChanged(const std::string& text) override {
                 SL_RAT_LOG(Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());

@@ -5,6 +5,7 @@
 #include <X11/extensions/XTest.h>
 #include <X11/keysym.h>
 
+#include <iostream>
 namespace SL
 {
 namespace Input_Lite
@@ -69,13 +70,13 @@ namespace Input_Lite
         auto display = XOpenDisplay(NULL);
         if(offset < 0) {
             for(auto i = 0; i < abs(offset) && i < 5; i++) { /// cap at 5
-                XTestFakeButtonEvent(display, Button4, True, CurrentTime);
-                XTestFakeButtonEvent(display, Button4, False, CurrentTime);
+                XTestFakeButtonEvent(display, Button5, True, CurrentTime);
+                XTestFakeButtonEvent(display, Button5, False, CurrentTime);
             }
         } else if(offset> 0) {
             for(auto i = 0; i < offset && i < 5; i++) { /// cap at 5
-                XTestFakeButtonEvent(display, Button5, True, CurrentTime);
-                XTestFakeButtonEvent(display, Button5, False, CurrentTime);
+                XTestFakeButtonEvent(display, Button4, True, CurrentTime);
+                XTestFakeButtonEvent(display, Button4, False, CurrentTime);
             }
         }
         XCloseDisplay(display);
@@ -95,14 +96,18 @@ namespace Input_Lite
     }
     void SendMouse_Impl(const MouseButtons button, Bool pressed)
     {
+        std::cout<<button<<"  "<<pressed<<std::endl;
         auto display = XOpenDisplay(NULL);
         switch(button) {
         case MouseButtons::LEFT:
             XTestFakeButtonEvent(display, Button1, pressed, CurrentTime);
+            break;
         case MouseButtons::MIDDLE:
             XTestFakeButtonEvent(display, Button2, pressed, CurrentTime);
+             break;
         case MouseButtons::RIGHT:
             XTestFakeButtonEvent(display, Button3, pressed, CurrentTime);
+             break;
         default:
             break;
         }

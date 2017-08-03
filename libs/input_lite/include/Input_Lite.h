@@ -22,6 +22,7 @@ namespace SL {
             ENTER = 13,
             SPACE = 32,
             TAB = 9,
+            BACKSPACE =8,
             DELETE = 46,
             END = 35,
             HOME = 36,

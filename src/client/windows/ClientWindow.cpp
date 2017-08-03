@@ -65,7 +65,81 @@ namespace SL {
                 }
                 return FALSE;
             }
+            void SpecialKeyImpl(WPARAM wParam, bool pressed) {
+                Input_Lite::SpecialKeyCodes k;
+                switch (wParam)
+                {
+                case VK_BACK:
+                    k = Input_Lite::SpecialKeyCodes::BACKSPACE;
+                    break;
+                case VK_TAB:
+                    k = Input_Lite::SpecialKeyCodes::TAB;
+                    break;
+                case VK_RETURN:
+                    k = Input_Lite::SpecialKeyCodes::ENTER;
+                    break;
+                case VK_SHIFT:
+                    k = Input_Lite::SpecialKeyCodes::SHIFTLEFT;
+                    break;
+                case VK_CONTROL:
+                    k = Input_Lite::SpecialKeyCodes::CONTROLLEFT;
+                    break;
+                case VK_CAPITAL:
+                    k = Input_Lite::SpecialKeyCodes::CAPSLOCK;
+                    break;
+                case VK_ESCAPE:
+                    k = Input_Lite::SpecialKeyCodes::ESCAPE;
+                    break;
+                case VK_SPACE:
+                    k = Input_Lite::SpecialKeyCodes::SPACE;
+                    break;
+                case VK_PRIOR:
+                    k = Input_Lite::SpecialKeyCodes::PAGEUP;
+                    break;
+                case VK_NEXT:
+                    k = Input_Lite::SpecialKeyCodes::PAGEDOWN;
+                    break;
 
+                case VK_END:
+                    k = Input_Lite::SpecialKeyCodes::END;
+                    break;
+                case VK_HOME:
+                    k = Input_Lite::SpecialKeyCodes::HOME;
+                    break;
+                case VK_LEFT:
+                    k = Input_Lite::SpecialKeyCodes::ARROWLEFT;
+                    break;
+                case VK_UP:
+                    k = Input_Lite::SpecialKeyCodes::ARROWUP;
+                    break;
+
+                case VK_RIGHT:
+                    k = Input_Lite::SpecialKeyCodes::ARROWRIGHT;
+                    break;
+                case VK_DOWN:
+                    k = Input_Lite::SpecialKeyCodes::ARROWDOWN;
+                    break;
+                case VK_SNAPSHOT:
+                    k = Input_Lite::SpecialKeyCodes::PRINTSCREEN;
+                    break;
+                case VK_INSERT:
+                    k = Input_Lite::SpecialKeyCodes::INSERT;
+                    break;
+                case VK_DELETE:
+                    k = Input_Lite::SpecialKeyCodes::DELETE;
+                    break;
+           
+                default:
+                    return;
+                }
+
+                if (pressed) {
+                    ClientDriver_.SendKeyDown(k);
+                }
+                else {
+                    ClientDriver_.SendKeyUp(k);
+                }
+            }
             LRESULT WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
                 switch (uMsg)
@@ -114,7 +188,15 @@ namespace SL {
                     ClientDriver_.SendMouseUp(Input_Lite::MouseButtons::MIDDLE);
                     break;
                 case WM_MOUSEWHEEL:
-                    ClientDriver_.SendMouseScroll(GET_WHEEL_DELTA_WPARAM(wParam)/120);
+                    ClientDriver_.SendMouseScroll(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
+                    break;
+
+                case WM_CHAR:
+                    ClientDriver_.SendKeyDown(static_cast<char>(wParam));
+                    ClientDriver_.SendKeyUp(static_cast<char>(wParam));
+                    break;
+                case WM_KEYUP:
+                    SpecialKeyImpl(wParam, false);
                     break;
 
                 case WM_PAINT:

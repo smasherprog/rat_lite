@@ -9,31 +9,32 @@ namespace SL {
         //https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode#Constants_for_keyCode_value
 
         enum SpecialKeyCodes : long long {
-
-            ALTLEFT = 18,
-            ALTRIGHT = 18,
-            CAPSLOCK = 20,
-            CONTROLLEFT = 17,
-            CONTROLRIGHT = 17,
-            OSLEFT = 91,
-            OSRIGHT = 92,
+            TAB = 9,
+            BACKSPACE = 8,
+            ENTER = 13,
+    
             SHIFTLEFT = 16,
             SHIFTRIGHT = 16,
-            ENTER = 13,
+            CONTROLLEFT = 17,
+            CONTROLRIGHT = 17,        
+
+            ALTLEFT = 18,    
+            ALTRIGHT = 18,   
+            CAPSLOCK = 20,
+  
+            ESCAPE = 27,
             SPACE = 32,
-            TAB = 9,
-            BACKSPACE =8,
-            DELETE = 46,
+            PAGEUP = 33,
+            PAGEDOWN = 34,
             END = 35,
             HOME = 36,
-            INSERT = 45,
-            PAGEDOWN = 34,
-            PAGEUP = 33,
-            ARROWDOWN = 40,
+        
             ARROWLEFT = 37,
-            ARROWRIGHT = 39,
             ARROWUP = 38,
-            ESCAPE = 27,
+            ARROWRIGHT = 39,  
+            ARROWDOWN = 40,
+            INSERT = 45,
+            DELETE = 46,
 #ifdef WIN32
             PRINTSCREEN = 44,
 #elif __APPLE__
@@ -51,6 +52,9 @@ namespace SL {
 #else 
             PAUSE = 126,
 #endif 
+
+            OSLEFT = 91,
+            OSRIGHT = 92,
             F1 = 112,
             F2 = 113,
             F3 = 114,
@@ -148,7 +152,7 @@ namespace SL {
         template <class T> void SendKeys(T) = delete;
 
 
-        enum MouseButtons:int {
+        enum MouseButtons :int {
             LEFT,
             MIDDLE,
             RIGHT

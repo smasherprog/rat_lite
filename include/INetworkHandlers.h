@@ -8,16 +8,21 @@ namespace SL {
         struct WSMessage;
     }
 	namespace RAT {
+
+
         enum class PACKET_TYPES : unsigned int {
             INVALID,
             HTTP_MSG,
             ONMONITORSCHANGED,
-            ONNEWFRAME,
             ONFRAMECHANGED,
+            ONNEWFRAME,
             ONMOUSEIMAGECHANGED,
             ONMOUSEPOSITIONCHANGED,
-            ONKEYCHANGED,
-            ONMOUSECHANGED,
+            ONKEYUP,
+            ONKEYDOWN,
+            ONMOUSEUP,
+            ONMOUSEDOWN,
+            ONMOUSESCROLL,
             ONCLIPBOARDTEXTCHANGED,
             //use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
             LAST_PACKET_TYPE

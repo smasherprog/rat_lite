@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
     std::this_thread::sleep_for(4s);
 
-    for (auto c = ' '; c < 127; c++) {
+    for (auto c = ' '; c < '~'; c++) {
         SL::Input_Lite::SendKey(c);
     }
 
@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     SL::Input_Lite::SendKeys(L"ĦĒĻĻȎ");
     SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
     SL::Input_Lite::SendKeys(std::wstring(L"ĦĒĻĻȎ"));
+
     // SPECIAL KEYS
     SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
     SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::NUMPAD0);
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
 
 
     std::cout << "Starting Mouse move tests by Offset" << std::endl;
-    SL::Input_Lite::SendMousePosition(SL::Input_Lite::Absolute{ 100, 100 });
+    SL::Input_Lite::SendMousePosition(SL::Input_Lite::AbsolutePos{ 100, 100 });
     for (auto x = 0; x < 500; x++) {
         SL::Input_Lite::SendMousePosition(SL::Input_Lite::Offset{ 1, 0 });
         std::this_thread::sleep_for(10ms);
@@ -54,11 +55,11 @@ int main(int argc, char* argv[])
     }
     std::cout << "Starting Mouse move tests by Absolute" << std::endl;
     for (auto x = 0; x < 500; x++) {
-        SL::Input_Lite::SendMousePosition(SL::Input_Lite::Absolute{ x, 300 });
+        SL::Input_Lite::SendMousePosition(SL::Input_Lite::AbsolutePos{ x, 300 });
         std::this_thread::sleep_for(10ms);
     }
     for (auto y = 0; y < 500; y++) {
-        SL::Input_Lite::SendMousePosition(SL::Input_Lite::Absolute{ 500, y });
+        SL::Input_Lite::SendMousePosition(SL::Input_Lite::AbsolutePos{ 500, y });
         std::this_thread::sleep_for(10ms);
     }
     std::cout << "Starting Mouse Click tests " << std::endl;

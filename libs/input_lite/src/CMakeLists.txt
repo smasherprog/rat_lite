@@ -22,7 +22,7 @@ elseif(APPLE)
 	set(INPUT_LITE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
     set(INPUT_LITE_PLATFORM_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/Input.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/Input.cpp
     )
     set(INPUT_LITE_PLATFORM_INC
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios

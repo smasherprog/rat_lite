@@ -210,7 +210,7 @@ namespace SL {
             SendKey_Impl(key, 0);
         }
 
-        void SendMouseUp(const MouseButtons& button) {
+        void SendMouseUp(const MouseButtons button) {
 
             INPUT inp = { 0 };
             inp.type = INPUT_MOUSE;
@@ -230,7 +230,7 @@ namespace SL {
             SendInput(1, &inp, sizeof(INPUT));
         }
 
-        void SendMouseDown(const MouseButtons& button) {
+        void SendMouseDown(const MouseButtons button) {
 
             INPUT inp = { 0 };
             inp.type = INPUT_MOUSE;
@@ -261,7 +261,7 @@ namespace SL {
         void SendMousePosition(const Offset& offset) {
             SendMousePosition_Impl(offset.X, offset.Y, 0);
         }
-        void SendMousePosition(const Absolute& absolute) {
+        void SendMousePosition(const AbsolutePos& absolute) {
             SendMousePosition_Impl(
                 (absolute.X * 65536) / GetSystemMetrics(SM_CXSCREEN),
                 (absolute.Y * 65536) / GetSystemMetrics(SM_CYSCREEN),

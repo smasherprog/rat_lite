@@ -4,14 +4,6 @@
 #include <thread>
 #include <atomic>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-#ifdef __cplusplus
-}
-#endif
-
 
 namespace SL {
     namespace Clipboard_Lite {
@@ -19,8 +11,8 @@ namespace SL {
         class Clipboard_ManagerImpl {
             std::thread BackGroundWorker;
             std::atomic<bool> Copying;
-
-
+            bool KeepRunning = false;
+            int ChangeCount =-1;
         public:
 
             std::function<void(const std::string& text)> onText;
@@ -31,7 +23,7 @@ namespace SL {
 
             void run();
             void copy(const std::string& text);
-
+            void copy(const Image& img);
         };
     }
 }

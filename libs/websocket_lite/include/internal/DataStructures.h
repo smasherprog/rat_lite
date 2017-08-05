@@ -62,7 +62,12 @@ namespace SL {
                 for (auto& t : Threads) {
                     inflateEnd(&t.inflationStream);
                     if (t.Thread.joinable()) {
-                        t.Thread.join();
+                        if (std::this_thread::get_id() == t.Thread.get_id()) {
+                            t.Thread.detach();// I am destroying myself.. detach
+                        }
+                        else {
+                            t.Thread.join();
+                        }
                     }
                 }
                 Threads.clear();
@@ -74,10 +79,10 @@ namespace SL {
 
         };
 
-        class WSInternal : public std::enable_shared_from_this<WSInternal> {
+        class WSInternal {
         public:
             WSInternal(std::shared_ptr<WSContextImpl>& p) :WSContextImpl_(p), sslcontext(asio::ssl::context::tlsv11) {}
-            virtual ~WSInternal() {}
+
             std::shared_ptr<WSContextImpl> WSContextImpl_;
             asio::ssl::context sslcontext;
             std::chrono::seconds ReadTimeout = std::chrono::seconds(30);
@@ -105,23 +110,26 @@ namespace SL {
             WSocket(std::shared_ptr<PARENTTYPE>& s, asio::ssl::context& sslcontext) :
                 Parent(s),
                 Socket(s->WSContextImpl_->io_service, sslcontext),
+                ping_deadline(s->WSContextImpl_->io_service),
                 read_deadline(s->WSContextImpl_->io_service),
                 write_deadline(s->WSContextImpl_->io_service),
                 strand(s->WSContextImpl_->io_service) {}
             WSocket(std::shared_ptr<PARENTTYPE>& s) :
                 Parent(s),
                 Socket(s->WSContextImpl_->io_service),
+                ping_deadline(s->WSContextImpl_->io_service),
                 read_deadline(s->WSContextImpl_->io_service),
                 write_deadline(s->WSContextImpl_->io_service),
                 strand(s->WSContextImpl_->io_service) {}
             virtual ~WSocket() {
+                SocketStatus_ = SocketStatus::CLOSED;
                 canceltimers();
                 if (ReceiveBuffer) {
                     free(ReceiveBuffer);
                 }
             }
-            virtual bool is_open() const {
-                return true;
+            virtual SocketStatus is_open() const {
+                return SocketStatus_;
             }
             virtual std::string get_address() const {
                 return SL::WS_LITE::get_address(Socket);
@@ -139,30 +147,40 @@ namespace SL {
                 return SL::WS_LITE::is_loopback(Socket);
             }
             virtual void send(WSMessage& msg, bool compressmessage) {
-                auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>( shared_from_this()));
-                auto p(Parent.lock());
-                if(p) sendImpl(p, self, msg, compressmessage);
+                if (SocketStatus_ == SocketStatus::CONNECTED) {//onlky send a close to an open socket
+                    auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>(shared_from_this()));
+                    auto p(Parent);
+                    if (p) sendImpl(p, self, msg, compressmessage);
+                }
             }
             //send a close message and close the socket
             virtual void close(unsigned short code, const std::string& msg) {
-                auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>(shared_from_this()));
-                auto p(Parent.lock());
-                if(p) closeImpl(p, self, code, msg);
+                if (SocketStatus_ == SocketStatus::CONNECTED) {//only send a close to an open socket
+                    auto self(std::static_pointer_cast<WSocket<SOCKETTYPE, PARENTTYPE>>(shared_from_this()));
+                    auto p(Parent);
+                    if (p) sendclosemessage(p, self, code, msg);
+                }
             }
 
             void canceltimers() {
-                read_deadline.cancel();
-                write_deadline.cancel();
+                std::error_code ec;
+                read_deadline.cancel(ec);
+                ec.clear();
+                write_deadline.cancel(ec);
+                ec.clear();
+                ping_deadline.cancel(ec);
             }
             unsigned char* ReceiveBuffer = nullptr;
             size_t ReceiveBufferSize = 0;
             unsigned char ReceiveHeader[14] = {};
             bool CompressionEnabled = false;
-
+            SocketStatus SocketStatus_ = SocketStatus::CLOSED;
+            bool Writing=false;
             OpCode LastOpCode = OpCode::INVALID;
-            std::weak_ptr<PARENTTYPE> Parent;
+            std::shared_ptr<PARENTTYPE> Parent;
             SOCKETTYPE Socket;
 
+            asio::basic_waitable_timer<std::chrono::steady_clock> ping_deadline;
             asio::basic_waitable_timer<std::chrono::steady_clock> read_deadline;
             asio::basic_waitable_timer<std::chrono::steady_clock> write_deadline;
             asio::strand strand;
@@ -204,7 +222,9 @@ namespace SL {
             WSClientImpl(std::shared_ptr<WSContextImpl>& p) :WSInternal(p)
             {
             }
-            virtual ~WSClientImpl() {}
+            ~WSClientImpl() {
+
+            }
         };
 
         class WSListenerImpl : public WSInternal {
@@ -261,7 +281,7 @@ namespace SL {
 
             }
 
-            virtual ~WSListenerImpl() {
+            ~WSListenerImpl() {
                 std::error_code ec;
                 acceptor.close(ec);
             }

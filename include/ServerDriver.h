@@ -7,6 +7,7 @@ namespace SL {
 	namespace Screen_Capture {
 		struct Image;
 		struct Monitor;
+        struct Point;
 	}
     namespace WS_LITE{
         class IWSocket;
@@ -36,8 +37,8 @@ namespace SL {
             void SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Screen_Capture::Image& image);
             void SendMouseImageChanged( const Screen_Capture::Image& image);
 
-            void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& mevent);
-            void SendMousePositionChanged(const Point& mevent);
+            void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const SL::Screen_Capture::Point& mevent);
+            void SendMousePositionChanged(const SL::Screen_Capture::Point& mevent);
 
             void SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const std::string& text);
             void SendClipboardChanged(const std::string& text);

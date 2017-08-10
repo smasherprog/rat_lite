@@ -38,8 +38,8 @@ namespace SL {
                 socket->close(1000, "Received invalid lenght on onMouseImageChanged");
             }
             void onMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const unsigned char* data, size_t len) {
-                if (len == sizeof(Point)) {
-                    return  IClientDriver_->onMousePositionChanged(*reinterpret_cast<const Point*>(data));
+                if (len == sizeof(SL::Screen_Capture::Point)) {
+                    return  IClientDriver_->onMousePositionChanged(*reinterpret_cast<const RAT::Point*>(data));
                 }
                 socket->close(1000, "Received invalid lenght on onMousePositionChanged");
             }

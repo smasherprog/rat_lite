@@ -25,7 +25,7 @@ namespace SL {
         class ServerImpl : public IServerDriver {
         public:
 
-            Screen_Capture::ScreenCaptureManager ScreenCaptureManager_;
+            std::shared_ptr<Screen_Capture::IScreenCaptureManager> ScreenCaptureManager_;
 
             ServerDriver ServerDriver_;
             Clipboard_Lite::Clipboard_Manager Clipboard_;
@@ -46,7 +46,7 @@ namespace SL {
                     }
 
                 }).run();
-                ScreenCaptureManager_ = Screen_Capture::CreateScreeCapture([&]() {
+                ScreenCaptureManager_ = Screen_Capture::CreateCaptureConfiguration([&]() {
                     auto p = Screen_Capture::GetMonitors();
 
                     ServerDriver_.SendMonitorsChanged(p);
@@ -62,7 +62,7 @@ namespace SL {
                     }
                     ClientsThatNeedFullFrames = newclients;
                     return p;
-                }).onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+                })->onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
                     if (!ClientsThatNeedFullFrames.empty()) {
                         std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                         for (auto& a : ClientsThatNeedFullFrames) {
@@ -71,22 +71,22 @@ namespace SL {
                         }
                         ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames), [&](const auto i) {  return i.mids.empty(); }), end(ClientsThatNeedFullFrames));
                     }
-                }).onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+                })->onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
                     ServerDriver_.SendFrameChanged(img, monitor);
-                }).onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
+                })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::Point& point) {
                     if (img) {
                         ServerDriver_.SendMouseImageChanged(*img);
                     }
-                    ServerDriver_.SendMousePositionChanged(Point(x, y));
-                }).start_capturing();
+                    ServerDriver_.SendMousePositionChanged(point);
+                })->start_capturing();
 
-                ScreenCaptureManager_.setMouseChangeInterval(std::chrono::milliseconds(Config_->MousePositionCaptureRate));
-                ScreenCaptureManager_.setFrameChangeInterval(std::chrono::milliseconds(Config_->ScreenImageCaptureRate));
-                ScreenCaptureManager_.pause();
+                ScreenCaptureManager_->setMouseChangeInterval(std::chrono::milliseconds(Config_->MousePositionCaptureRate));
+                ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(Config_->ScreenImageCaptureRate));
+                ScreenCaptureManager_->pause();
             }
 
             virtual ~ServerImpl() {
-                ScreenCaptureManager_.destroy();
+                ScreenCaptureManager_.reset();
                 Clipboard_.destroy();//make sure to prevent race conditions
                 Status_ = Server_Status::SERVER_STOPPED;
             }
@@ -102,7 +102,7 @@ namespace SL {
 
                 std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                 ClientsThatNeedFullFrames.push_back({ socket, ids });
-                ScreenCaptureManager_.resume();
+                ScreenCaptureManager_->resume();
 
             }
             virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, const WS_LITE::WSMessage& msg) override {
@@ -112,7 +112,7 @@ namespace SL {
             virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket>& socket, unsigned short code, const std::string& msg) override {
                 if (ServerDriver_.getClientCount() == 0) {
                     //make sure to stop capturing if isnt needed
-                    ScreenCaptureManager_.pause();
+                    ScreenCaptureManager_->pause();
                 }
                 UNUSED(socket);
                 UNUSED(code);

@@ -233,7 +233,7 @@ namespace SL {
                 Send(socket, buffer, size);
 
             }
-            void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point& pos)
+            void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const SL::Screen_Capture::Point& pos)
             {
                if (Clients.empty() && !socket) return;
                 auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
@@ -303,11 +303,11 @@ namespace SL {
             std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendMouseImageChanged(socket, image);
         }
-        void ServerDriver::SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const Point & pos)
+        void ServerDriver::SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket>& socket, const SL::Screen_Capture::Point & pos)
         {
             ServerDriverImpl_->SendMousePositionChanged(socket, pos);
         }
-        void ServerDriver::SendMousePositionChanged(const Point & pos)
+        void ServerDriver::SendMousePositionChanged(const SL::Screen_Capture::Point & pos)
         {
             std::shared_ptr<WS_LITE::IWSocket> socket;
             ServerDriverImpl_->SendMousePositionChanged(socket, pos);

@@ -7,7 +7,7 @@
 <p>This library is intended to be a VNC-like application, but with a few design goals:
 <ul>
 <li>
-Cross-platform:Windows desktop, windows phone, Linux, Modern Web Browsers, Andriod, Mac desktop, iphone
+Cross-platform:Windows, Linux, Modern Web Browsers, Andriod, Mac
 </li>
 <li>
 Performance 

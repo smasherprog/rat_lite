@@ -56,7 +56,10 @@ else()
 endif()
 
 set(INPUT_LITE_COMMON_SRC 
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/InputManager.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/InputManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../include/Input_Lite.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/Input_Lite.cpp
 )
 set(INPUT_LITE_LIBS
 	${PROJECT_NAME}
@@ -66,8 +69,8 @@ set(INPUT_LITE_LIBS
 set(INPUT_LITE_INCLUDE_DIRS 
 	${CMAKE_CURRENT_SOURCE_DIR}/../include
 	${CMAKE_CURRENT_SOURCE_DIR}/../src
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Internal
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/Internal
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal
 	${INPUT_LITE_PLATFORM_INC}
 	CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
  )

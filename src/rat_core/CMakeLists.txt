@@ -13,6 +13,8 @@ if(WIN32)
         ../src/windows
 		
     )
+	
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
 
 elseif(APPLE)
 

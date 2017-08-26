@@ -7,6 +7,10 @@ if(WIN32)
 		${CMAKE_CURRENT_SOURCE_DIR}/windows/RAT_Server.rc
 		${CMAKE_CURRENT_SOURCE_DIR}/../Desktop_Server.ico
 	)
+	
+
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
+
 elseif(APPLE)
 
 

@@ -18,9 +18,6 @@ add_subdirectory(libs/clipboard_lite/src)
 add_subdirectory(libs/input_lite/src)
 add_subdirectory(src/rat_core)
 
-if(WIN32)
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(src/client)

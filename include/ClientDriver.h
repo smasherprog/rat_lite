@@ -1,40 +1,35 @@
 #pragma once
+#include "Input_Lite.h"
 #include <memory>
 #include <string>
-#include "Input_Lite.h"
 
 namespace SL {
-	namespace RAT {
+namespace RAT {
 
-        class Point;
-		class IClientDriver;
-		class ClientDriverImpl;
-		struct Client_Config;
-		class ClientDriver {
-			std::shared_ptr<ClientDriverImpl> ClientDriverImpl_;
+    class Point;
+    class IClientDriver;
+    class ClientDriverImpl;
+    struct Client_Config;
+    class ClientDriver {
+        std::shared_ptr<ClientDriverImpl> ClientDriverImpl_;
 
-		public:
-			ClientDriver(IClientDriver* r );
-			~ClientDriver();
+      public:
+        ClientDriver(IClientDriver *r);
+        ~ClientDriver();
 
-			void Connect(std::shared_ptr<Client_Config> config, const char* dst_host);
+        void Connect(std::shared_ptr<Client_Config> config, const char *dst_host);
 
-            void SendKeyUp(char key);
-            void SendKeyUp(wchar_t key);
-            void SendKeyUp(Input_Lite::SpecialKeyCodes key);
+        void SendKeyUp(SL::Input_Lite::KeyCodes key);
+        void SendKeyDown(SL::Input_Lite::KeyCodes key);
 
-            void SendKeyDown(char key);
-            void SendKeyDown(wchar_t key);
-            void SendKeyDown(Input_Lite::SpecialKeyCodes key);
+        void SendMouseUp(const Input_Lite::MouseButtons button);
+        void SendMouseDown(const Input_Lite::MouseButtons button);
 
-            void SendMouseUp(const Input_Lite::MouseButtons button);
-            void SendMouseDown(const Input_Lite::MouseButtons button);
-           
-            void SendMouseScroll(int offset); 
-            void SendMousePosition(const Point& pos);
+        void SendMouseScroll(int offset);
+        void SendMousePosition(const Point &pos);
 
-            void SendClipboardChanged(const std::string& text);
-		};
-	}
+        void SendClipboardChanged(const std::string &text);
+    };
+} // namespace RAT
 
-}
+} // namespace SL

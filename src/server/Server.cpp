@@ -27,7 +27,7 @@ namespace RAT {
         std::shared_ptr<Screen_Capture::ScreenCaptureManager> ScreenCaptureManager_;
 
         ServerDriver ServerDriver_;
-        Clipboard_Lite::Clipboard_Manager Clipboard_;
+        std::shared_ptr<Clipboard_Lite::Clipboard_Manager> Clipboard_;
 
         Server_Status Status_ = Server_Status::SERVER_STOPPED;
         std::shared_ptr<Server_Config> Config_;
@@ -40,13 +40,13 @@ namespace RAT {
             Status_ = Server_Status::SERVER_RUNNING;
 
             Clipboard_ = Clipboard_Lite::CreateClipboard()
-                             .onText([&](const std::string &text) {
+                             ->onText([&](const std::string &text) {
                                  if (Config_->Share_Clipboard) {
                                      ServerDriver_.SendClipboardChanged(text);
                                  }
 
                              })
-                             .run();
+                             ->run();
             ScreenCaptureManager_ =
                 Screen_Capture::CreateCaptureConfiguration([&]() {
                     auto p = Screen_Capture::GetMonitors();
@@ -98,7 +98,7 @@ namespace RAT {
         virtual ~ServerImpl()
         {
             ScreenCaptureManager_.reset();
-            Clipboard_.destroy(); // make sure to prevent race conditions
+            Clipboard_.reset(); // make sure to prevent race conditions
             Status_ = Server_Status::SERVER_STOPPED;
         }
 
@@ -189,7 +189,7 @@ namespace RAT {
         virtual void onClipboardChanged(const std::string &text) override
         {
             SL_RAT_LOG(Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
-            Clipboard_.copy(text);
+            Clipboard_->copy(text);
         }
     };
 

@@ -24,7 +24,7 @@ namespace RAT_Client {
     };
     class ClientWindowImpl : public RAT::IClientDriver {
         RAT::ClientDriver ClientDriver_;
-        Clipboard_Lite::Clipboard_Manager Clipboard_Manager_;
+        std::shared_ptr<Clipboard_Lite::Clipboard_Manager> Clipboard_Manager_;
         std::vector<MonitorInfo> Monitors;
 
         std::shared_ptr<SL::WS_LITE::IWSocket> Socket_;
@@ -193,16 +193,9 @@ namespace RAT_Client {
                     TryConnect(host.c_str());
                 }
             }
-            Clipboard_Manager_ = Clipboard_Lite::CreateClipboard()
-                                     .onText([&](const std::string &text) {
-
-                                     })
-                                     .run();
+            Clipboard_Manager_ = Clipboard_Lite::CreateClipboard()->onText([&](const std::string &text) {})->run();
         }
-        virtual ~ClientWindowImpl()
-        {
-            Clipboard_Manager_.destroy(); // make sure no race conditions occur
-        }
+        virtual ~ClientWindowImpl() { Clipboard_Manager_.reset(); }
         void Run()
         {
 

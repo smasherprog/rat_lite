@@ -122,7 +122,7 @@ class TestServerDriver : public SL::RAT::IServerDriver {
     virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) override
     {
         Socket = socket;
-        lowerlevel->SendMonitorsChanged(socket, MonitorsToSend);
+        // lowerlevel->SendMonitorsChanged(socket, MonitorsToSend);
     }
     virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const SL::WS_LITE::WSMessage &msg) override {}
     virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) override {}
@@ -130,7 +130,7 @@ class TestServerDriver : public SL::RAT::IServerDriver {
     {
         asciikeyreceived++;
         if (key >= '~') {
-            lowerlevel->SendClipboardChanged(cliptext);
+            // lowerlevel->SendClipboardChanged(cliptext);
         }
     }
     virtual void onKeyDown(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, SL::Input_Lite::KeyCodes key) override

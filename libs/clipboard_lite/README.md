@@ -16,13 +16,13 @@ see the Test folder for a demo https://github.com/smasherprog/clipboard_lite/blo
 ```c++
 
   auto clipboard = SL::Clipboard_Lite::CreateClipboard()
-    .onText([](const std::string& text) {
+    ->onText([](const std::string& text) {
       std::cout << text << std::endl;
-    }).onImage([&](const SL::Clipboard_Lite::Image& image) {
+    })->onImage([&](const SL::Clipboard_Lite::Image& image) {
         std::cout << "onImage Height=" << image.Height << " Width=" << image.Width << std::endl;
-    }).run();
+    })->run();
         
     std::string txt = "pasted text";
-    clipboard.copy(txt);
+    clipboard->copy(txt);
 
 ```

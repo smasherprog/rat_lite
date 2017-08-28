@@ -53,6 +53,7 @@ namespace RAT {
             if (len == num * sizeof(Screen_Capture::Monitor) && num < 8) {
                 for (decltype(num) i = 0; i < num; i++) {
                     Monitors.push_back(*(Screen_Capture::Monitor *)data);
+                    data += sizeof(Screen_Capture::Monitor);
                 }
                 return IClientDriver_->onMonitorsChanged(Monitors);
             }

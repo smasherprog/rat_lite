@@ -232,10 +232,10 @@ namespace RAT_Client {
         }
         virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) override
         {
-
             ShowWindow(hWnd, SW_HIDE);
             UpdateWindow(hWnd);
-            std::cout << msg << std::endl;
+            PostMessage(hWnd, WM_COMMAND, IDD_CONNECTTODIALOG, 0);
+            std::cout << "Client disconnected, reason: " << msg << std::endl;
         }
         virtual void onMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors) override
         {
@@ -280,10 +280,10 @@ namespace RAT_Client {
                 SelectObject(hdcMem, oldBitmap);
                 DeleteDC(hdcMem);
                 RECT RECT_ImageUpdate_Window;
-                RECT_ImageUpdate_Window.left = img.Rect_.left();
-                RECT_ImageUpdate_Window.top = img.Rect_.top();
-                RECT_ImageUpdate_Window.bottom = img.Rect_.bottom();
-                RECT_ImageUpdate_Window.right = img.Rect_.right();
+                RECT_ImageUpdate_Window.left = img.Rect_.left() + mon->Monitor.OffsetX;
+                RECT_ImageUpdate_Window.top = img.Rect_.top() + mon->Monitor.OffsetY;
+                RECT_ImageUpdate_Window.bottom = img.Rect_.bottom() + mon->Monitor.OffsetY;
+                RECT_ImageUpdate_Window.right = img.Rect_.right() + mon->Monitor.OffsetX;
 
                 InvalidateRect(hWnd, &RECT_ImageUpdate_Window, FALSE);
                 UpdateWindow(hWnd);
@@ -312,10 +312,10 @@ namespace RAT_Client {
                 mon->Bitmap = std::shared_ptr<HBITMAP__>(CreateDIBitmap(hdc, &info.bmiHeader, CBM_INIT, (void *)img.Data, &info, DIB_RGB_COLORS),
                                                          [](HBITMAP__ *p) { DeleteObject(p); });
                 RECT RECT_ImageUpdate_Window;
-                RECT_ImageUpdate_Window.left = img.Rect_.left();
-                RECT_ImageUpdate_Window.top = img.Rect_.top();
-                RECT_ImageUpdate_Window.bottom = img.Rect_.bottom();
-                RECT_ImageUpdate_Window.right = img.Rect_.right();
+                RECT_ImageUpdate_Window.left = img.Rect_.left() + mon->Monitor.OffsetX;
+                RECT_ImageUpdate_Window.top = img.Rect_.top() + mon->Monitor.OffsetY;
+                RECT_ImageUpdate_Window.bottom = img.Rect_.bottom() + mon->Monitor.OffsetY;
+                RECT_ImageUpdate_Window.right = img.Rect_.right() + mon->Monitor.OffsetX;
                 InvalidateRect(hWnd, &RECT_ImageUpdate_Window, FALSE);
                 UpdateWindow(hWnd);
             }

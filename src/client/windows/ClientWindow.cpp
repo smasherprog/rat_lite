@@ -232,10 +232,10 @@ namespace RAT_Client {
         }
         virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) override
         {
-
             ShowWindow(hWnd, SW_HIDE);
             UpdateWindow(hWnd);
-            std::cout << msg << std::endl;
+            PostMessage(hWnd, WM_COMMAND, IDD_CONNECTTODIALOG, 0);
+            std::cout << "Client disconnected, reason: " << msg << std::endl;
         }
         virtual void onMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors) override
         {

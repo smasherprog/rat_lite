@@ -312,10 +312,10 @@ namespace RAT_Client {
                 mon->Bitmap = std::shared_ptr<HBITMAP__>(CreateDIBitmap(hdc, &info.bmiHeader, CBM_INIT, (void *)img.Data, &info, DIB_RGB_COLORS),
                                                          [](HBITMAP__ *p) { DeleteObject(p); });
                 RECT RECT_ImageUpdate_Window;
-                RECT_ImageUpdate_Window.left = img.Rect_.left();
-                RECT_ImageUpdate_Window.top = img.Rect_.top();
-                RECT_ImageUpdate_Window.bottom = img.Rect_.bottom();
-                RECT_ImageUpdate_Window.right = img.Rect_.right();
+                RECT_ImageUpdate_Window.left = img.Rect_.left() + mon->Monitor.OffsetX;
+                RECT_ImageUpdate_Window.top = img.Rect_.top() + mon->Monitor.OffsetY;
+                RECT_ImageUpdate_Window.bottom = img.Rect_.bottom() + mon->Monitor.OffsetY;
+                RECT_ImageUpdate_Window.right = img.Rect_.right() + mon->Monitor.OffsetX;
                 InvalidateRect(hWnd, &RECT_ImageUpdate_Window, FALSE);
                 UpdateWindow(hWnd);
             }

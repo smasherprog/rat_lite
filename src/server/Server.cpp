@@ -61,7 +61,7 @@ namespace RAT {
                             ids.push_back(Screen_Capture::Id(a));
                         }
                         newclients.push_back({old.s, ids});
-                    }
+                    } 
                     ClientsThatNeedFullFrames = newclients;
                     return p;
                 })
@@ -74,6 +74,7 @@ namespace RAT {
                                     end(a.mids));
                                 ServerDriver_.SendNewFrame(a.s, img, monitor);
                             }
+                            //remove client if there are no more monitors to send
                             ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames),
                                                                            [&](const auto i) { return i.mids.empty(); }),
                                                             end(ClientsThatNeedFullFrames));

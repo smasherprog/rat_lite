@@ -248,7 +248,7 @@ namespace RAT_Client {
         }
         virtual void onFrameChanged(const RAT::Image &img, const SL::Screen_Capture::Monitor &monitor) override
         {
-            std::cout << "onFrameChanged" << std::endl;
+            // std::cout << "onFrameChanged" << std::endl;
             HDC hdc = GetDC(hWnd);
 
             BITMAPINFO info;

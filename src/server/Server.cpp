@@ -32,6 +32,9 @@ namespace RAT {
         Server_Status Status_ = Server_Status::SERVER_STOPPED;
         std::shared_ptr<Server_Config> Config_;
 
+        std::mutex ClientsLock;
+        std::vector<std::shared_ptr<WS_LITE::IWSocket>> Clients;
+
         std::mutex ClientsThatNeedFullFramesLock;
         std::vector<NewClient> ClientsThatNeedFullFrames;
 
@@ -42,37 +45,46 @@ namespace RAT {
             Clipboard_ = Clipboard_Lite::CreateClipboard()
                              ->onText([&](const std::string &text) {
                                  if (Config_->Share_Clipboard) {
-                                     ServerDriver_.SendClipboardChanged(text);
+                                     SendtoAll(ServerDriver_.PrepareClipboardChanged(text));
                                  }
-
                              })
                              ->run();
             ScreenCaptureManager_ =
                 Screen_Capture::CreateCaptureConfiguration([&]() {
-                    auto p = Screen_Capture::GetMonitors();
+                           auto monitors = Screen_Capture::GetMonitors();
+                        SendtoAll(ServerDriver_.PrepareMonitorsChanged(monitors));
+                    // add everyone to the list!
 
-                    ServerDriver_.SendMonitorsChanged(p);
-                    // rebuild any ids
-                    std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                     std::vector<NewClient> newclients;
-                    for (auto &old : ClientsThatNeedFullFrames) {
-                        std::vector<int> ids;
-                        for (auto &a : p) {
-                            ids.push_back(Screen_Capture::Id(a));
+                    {
+                        std::lock_guard<std::mutex> lock(ClientsLock);
+                        for (const auto &a : Clients) {
+                            std::vector<int> ids;
+                            for (auto &monitor : monitors) {
+                                ids.push_back(Screen_Capture::Id(monitor));
+                            }
+                            newclients.push_back({a, ids});
                         }
-                        newclients.push_back({old.s, ids});
-                    } 
-                    ClientsThatNeedFullFrames = newclients;
-                    return p;
+                    }
+                    {
+                        std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
+                        ClientsThatNeedFullFrames = newclients;
+                    }
+
+                    return monitors;
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!ClientsThatNeedFullFrames.empty()) {
+                            auto msg = ServerDriver_.PrepareNewFrame(img, monitor);
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             for (auto &a : ClientsThatNeedFullFrames) {
-                                a.mids.erase(
-                                    std::remove_if(begin(a.mids), end(a.mids), [&](const auto i) { return i == Screen_Capture::Id(monitor); }),
-                                    end(a.mids));
-                                ServerDriver_.SendNewFrame(a.s, img, monitor);
+                                auto itr = std::find_if(std::begin(a.mids), std::end(a.mids),
+                                                        [&](const auto i) { return i == Screen_Capture::Id(monitor); });
+                                if (itr != std::end(a.mids)) {
+                                    // send and erase the montor from the list
+                                    a.s->send(msg, false);
+                                    a.mids.erase(itr);
+                                }
                             }
                             //remove client if there are no more monitors to send
                             ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames),
@@ -81,13 +93,13 @@ namespace RAT {
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                        ServerDriver_.SendFrameChanged(img, monitor);
+                        SendtoAll(ServerDriver_.PrepareFrameChanged(img, monitor));
                     })
                     ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
                         if (img) {
-                            ServerDriver_.SendMouseImageChanged(*img);
+                            SendtoAll(ServerDriver_.PrepareMouseImageChanged(*img));
                         }
-                        ServerDriver_.SendMousePositionChanged(point);
+                        SendtoAll(ServerDriver_.PrepareMousePositionChanged(point));
                     })
                     ->start_capturing();
 
@@ -102,19 +114,30 @@ namespace RAT {
             Clipboard_.reset(); // make sure to prevent race conditions
             Status_ = Server_Status::SERVER_STOPPED;
         }
+        void SendtoAll(const WS_LITE::WSMessage &msg)
+        {
+            std::lock_guard<std::mutex> lock(ClientsLock);
+            for (const auto &a : Clients) {
+                a->send(msg, false);
+            }
+        }
 
         virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) override
         {
-            UNUSED(socket);
+            {
+                std::lock_guard<std::mutex> lock(ClientsLock);
+                Clients.push_back(socket);
+            }
             std::vector<int> ids;
             auto p = Screen_Capture::GetMonitors();
             for (auto &a : p) {
                 ids.push_back(Screen_Capture::Id(a));
             }
-            ServerDriver_.SendMonitorsChanged(socket, p);
-
-            std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
-            ClientsThatNeedFullFrames.push_back({socket, ids});
+            socket->send(ServerDriver_.PrepareMonitorsChanged(p), false);
+            {
+                std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
+                ClientsThatNeedFullFrames.push_back({socket, ids});
+            }
             ScreenCaptureManager_->resume();
         }
         virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage &msg) override
@@ -124,11 +147,20 @@ namespace RAT {
         }
         virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) override
         {
-            if (ServerDriver_.getClientCount() == 0) {
-                // make sure to stop capturing if isnt needed
-                ScreenCaptureManager_->pause();
+            {
+                std::lock_guard<std::mutex> lock(ClientsLock);
+                Clients.erase(std::remove_if(std::begin(Clients), std::end(Clients), [&](auto &s) { return s == socket; }), std::end(Clients));
+                if (Clients.empty()) {
+                    // make sure to stop capturing if isnt needed
+                    ScreenCaptureManager_->pause();
+                }
             }
-            UNUSED(socket);
+            { // make sure to remove any clients here too
+                std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
+                ClientsThatNeedFullFrames.erase(std::remove_if(std::begin(ClientsThatNeedFullFrames), std::end(ClientsThatNeedFullFrames),
+                                                               [&](auto &s) { return s.s.get() == socket.get(); }),
+                                                std::end(ClientsThatNeedFullFrames));
+            }
             UNUSED(code);
             UNUSED(msg);
         }
@@ -192,7 +224,7 @@ namespace RAT {
             SL_RAT_LOG(Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
             Clipboard_->copy(text);
         }
-    };
+    }; // namespace RAT
 
     Server::Server(std::shared_ptr<Server_Config> config) { ServerImpl_ = std::make_shared<ServerImpl>(config); }
     Server::~Server() {}

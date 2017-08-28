@@ -10,7 +10,7 @@
 #include "SCCommon.h"
 #include "WS_Lite.h"
 
-#include <mutex>
+#include <atomic>
 
 namespace SL {
 namespace RAT {
@@ -20,10 +20,7 @@ namespace RAT {
       public:
         std::shared_ptr<Server_Config> Config_;
         IServerDriver *IServerDriver_;
-
-        std::mutex mutex;
-        std::vector<std::shared_ptr<WS_LITE::IWSocket>> Clients;
-
+        std::atomic<int> ClientCount;
         WS_LITE::WSListener h;
 
         void onKeyUp(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
@@ -83,25 +80,21 @@ namespace RAT {
         }
         ServerDriverImpl(IServerDriver *r, std::shared_ptr<Server_Config> config) : Config_(config), IServerDriver_(r)
         {
-
+            ClientCount = 0;
             h = WS_LITE::CreateContext(WS_LITE::ThreadCount(1))
                     .CreateListener(config->WebSocketTLSLPort)
                     .onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
-                        if (Config_->MaxNumConnections > 0 && Clients.size() + 1 > static_cast<size_t>(Config_->MaxNumConnections)) {
+                        if (Config_->MaxNumConnections > 0 && ClientCount + 1 > static_cast<size_t>(Config_->MaxNumConnections)) {
                             socket->close(1000, "Closing due to max number of connections!");
                         }
                         else {
                             IServerDriver_->onConnection(socket);
-                            std::lock_guard<std::mutex> lock(mutex);
-                            Clients.push_back(socket);
+                            ClientCount += 1;
                         }
                     })
                     .onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
                         SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection  ");
-                        {
-                            std::lock_guard<std::mutex> lock(mutex);
-                            Clients.erase(std::remove_if(Clients.begin(), Clients.end(), [&](auto &s) { return s == socket; }));
-                        }
+                        ClientCount -= 1;
                         IServerDriver_->onDisconnection(socket, code, msg);
                     })
                     .onMessage([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage &message) {
@@ -143,37 +136,30 @@ namespace RAT {
                     .listen(true, true);
         }
         ~ServerDriverImpl() {}
-        void Send(const std::shared_ptr<WS_LITE::IWSocket> &socket, std::shared_ptr<unsigned char> &data, size_t len)
+
+        WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors)
         {
-            if (socket) {
-                auto msg = WS_LITE::WSMessage{data.get(), len, WS_LITE::OpCode::BINARY, data};
-                socket->send(msg, false);
+            auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
+            const auto finalsize = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
+
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
+            auto buf = buffer.get();
+            memcpy(buf, &p, sizeof(p));
+            buf += sizeof(p);
+            for (auto &a : monitors) {
+                memcpy(buf, &a, sizeof(a));
+                buf += sizeof(Screen_Capture::Monitor);
             }
-            else {
-                {
-                    std::lock_guard<std::mutex> lock(mutex);
-                    for (auto &s : Clients) {
-                        auto msg = WS_LITE::WSMessage{data.get(), len, WS_LITE::OpCode::BINARY, data};
-                        s->send(msg, false);
-                    }
-                }
-            }
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
         }
 
-        void SendScreen(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Screen_Capture::Image &img, const Screen_Capture::Monitor &monitor,
-                        PACKET_TYPES p)
+        WS_LITE::WSMessage PrepareImage(const Screen_Capture::Image &img, const Screen_Capture::Monitor &monitor, PACKET_TYPES p)
         {
-
-            if (Clients.empty() && !socket)
-                return;
             Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
-
             auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
             auto maxsize = tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
-
             auto jpegCompressor = tjInitCompress();
             auto buffer = std::shared_ptr<unsigned char>(new unsigned char[maxsize], [](auto *p) { delete[] p; });
-
             auto dst = (unsigned char *)buffer.get();
             memcpy(dst, &p, sizeof(p));
             dst += sizeof(p);
@@ -181,11 +167,9 @@ namespace RAT {
             dst += sizeof(monitor.Id);
             memcpy(dst, &r, sizeof(r));
             dst += sizeof(r);
-
             auto srcbuffer = std::make_unique<unsigned char[]>(RowStride(img) * Height(img));
             Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img) * Height(img));
             auto srcbuf = (unsigned char *)srcbuffer.get();
-
             auto colorencoding = TJPF_RGBX;
             auto outjpegsize = maxsize;
 
@@ -196,71 +180,40 @@ namespace RAT {
             //	std::cout << "Sending " << r << std::endl;
             auto finalsize = sizeof(p) + sizeof(r) + sizeof(monitor.Id) + outjpegsize; // adjust the correct size
             tjDestroy(jpegCompressor);
-            Send(socket, buffer, finalsize);
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
         }
-        void SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Screen_Capture::Image &img)
+
+        WS_LITE::WSMessage PrepareMouseImageChanged(const Screen_Capture::Image &img)
         {
-
-            if (Clients.empty() && !socket)
-                return;
             Rect r(Point(0, 0), Height(img), Width(img));
-
             auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEIMAGECHANGED);
             auto finalsize = (Screen_Capture::RowStride(img) * Screen_Capture::Height(img)) + sizeof(p) + sizeof(r);
             auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
-
             auto dst = buffer.get();
             memcpy(dst, &p, sizeof(p));
             dst += sizeof(p);
             memcpy(dst, &r, sizeof(r));
             dst += sizeof(r);
             Screen_Capture::Extract(img, (unsigned char *)dst, Screen_Capture::RowStride(img) * Screen_Capture::Height(img));
-
-            Send(socket, buffer, finalsize);
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
         }
-        void SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::vector<Screen_Capture::Monitor> &monitors)
+        WS_LITE::WSMessage PrepareMousePositionChanged(const SL::Screen_Capture::Point &pos)
         {
-            if (Clients.empty() && !socket)
-                return;
-            auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
-            const auto size = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
-
-            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto *p) { delete[] p; });
-            auto buf = buffer.get();
-            memcpy(buf, &p, sizeof(p));
-            buf += sizeof(p);
-            for (auto &a : monitors) {
-                memcpy(buf, &a, sizeof(a));
-                buf += sizeof(Screen_Capture::Monitor);
-            }
-            Send(socket, buffer, size);
-        }
-        void SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const SL::Screen_Capture::Point &pos)
-        {
-            if (Clients.empty() && !socket)
-                return;
             auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
-            const auto size = sizeof(pos) + sizeof(p);
-
-            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto *p) { delete[] p; });
+            const auto finalsize = sizeof(pos) + sizeof(p);
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
             memcpy(buffer.get(), &p, sizeof(p));
             memcpy(buffer.get() + sizeof(p), &pos, sizeof(pos));
-
-            Send(socket, buffer, size);
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
         }
-
-        void SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::string &text)
+        WS_LITE::WSMessage PrepareClipboardChanged(const std::string &text)
         {
-            if (Clients.empty() && !socket)
-                return;
             auto p = static_cast<unsigned int>(PACKET_TYPES::ONCLIPBOARDTEXTCHANGED);
-            auto size = text.size() + sizeof(p);
-
-            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[size], [](auto *p) { delete[] p; });
+            auto finalsize = text.size() + sizeof(p);
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
             memcpy(buffer.get(), &p, sizeof(p));
             memcpy(buffer.get() + sizeof(p), text.data(), text.size());
-
-            Send(socket, buffer, size);
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
         }
     };
     ServerDriver::ServerDriver(IServerDriver *r, std::shared_ptr<Server_Config> config)
@@ -268,62 +221,28 @@ namespace RAT {
         ServerDriverImpl_ = std::make_unique<ServerDriverImpl>(r, config);
     }
     ServerDriver::~ServerDriver() {}
-    void ServerDriver::SendMonitorsChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::vector<Screen_Capture::Monitor> &monitors)
+
+    WS_LITE::WSMessage ServerDriver::PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors)
     {
-        ServerDriverImpl_->SendMonitorsChanged(socket, monitors);
+        return ServerDriverImpl_->PrepareMonitorsChanged(monitors);
     }
-    void ServerDriver::SendMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors)
+    WS_LITE::WSMessage ServerDriver::PrepareFrameChanged(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor)
     {
-        std::shared_ptr<WS_LITE::IWSocket> socket;
-        ServerDriverImpl_->SendMonitorsChanged(socket, monitors);
+        return ServerDriverImpl_->PrepareImage(image, monitor, PACKET_TYPES::ONFRAMECHANGED);
     }
-    void ServerDriver::SendFrameChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Screen_Capture::Image &image,
-                                        const Screen_Capture::Monitor &monitor)
+    WS_LITE::WSMessage ServerDriver::PrepareNewFrame(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor)
     {
-        ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONFRAMECHANGED);
+        return ServerDriverImpl_->PrepareImage(image, monitor, PACKET_TYPES::ONNEWFRAME);
     }
-    void ServerDriver::SendFrameChanged(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor)
+    WS_LITE::WSMessage ServerDriver::PrepareMouseImageChanged(const Screen_Capture::Image &image)
     {
-        std::shared_ptr<WS_LITE::IWSocket> socket;
-        ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONFRAMECHANGED);
+        return ServerDriverImpl_->PrepareMouseImageChanged(image);
     }
-    void ServerDriver::SendNewFrame(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Screen_Capture::Image &image,
-                                    const Screen_Capture::Monitor &monitor)
+    WS_LITE::WSMessage ServerDriver::PrepareMousePositionChanged(const SL::Screen_Capture::Point &mevent)
     {
-        ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONNEWFRAME);
+        return ServerDriverImpl_->PrepareMousePositionChanged(mevent);
     }
-    void ServerDriver::SendNewFrame(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor)
-    {
-        std::shared_ptr<WS_LITE::IWSocket> socket;
-        ServerDriverImpl_->SendScreen(socket, image, monitor, PACKET_TYPES::ONNEWFRAME);
-    }
-    void ServerDriver::SendMouseImageChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Screen_Capture::Image &image)
-    {
-        ServerDriverImpl_->SendMouseImageChanged(socket, image);
-    }
-    void ServerDriver::SendMouseImageChanged(const Screen_Capture::Image &image)
-    {
-        std::shared_ptr<WS_LITE::IWSocket> socket;
-        ServerDriverImpl_->SendMouseImageChanged(socket, image);
-    }
-    void ServerDriver::SendMousePositionChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const SL::Screen_Capture::Point &pos)
-    {
-        ServerDriverImpl_->SendMousePositionChanged(socket, pos);
-    }
-    void ServerDriver::SendMousePositionChanged(const SL::Screen_Capture::Point &pos)
-    {
-        std::shared_ptr<WS_LITE::IWSocket> socket;
-        ServerDriverImpl_->SendMousePositionChanged(socket, pos);
-    }
-    void ServerDriver::SendClipboardChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::string &text)
-    {
-        ServerDriverImpl_->SendClipboardChanged(socket, text);
-    }
-    void ServerDriver::SendClipboardChanged(const std::string &text)
-    {
-        std::shared_ptr<WS_LITE::IWSocket> socket;
-        ServerDriverImpl_->SendClipboardChanged(socket, text);
-    }
-    size_t ServerDriver::getClientCount() const { return ServerDriverImpl_->Clients.size(); }
+    WS_LITE::WSMessage ServerDriver::PrepareClipboardChanged(const std::string &text) { return ServerDriverImpl_->PrepareClipboardChanged(text); }
+
 } // namespace RAT
 } // namespace SL

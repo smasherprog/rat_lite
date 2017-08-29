@@ -7,7 +7,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #elif __APPLE__
-
+#include <CoreGraphics/CGRemoteOperation.h>
 #elif __linux__
 #include <X11/Xlib.h>
 #else
@@ -147,8 +147,8 @@ namespace Input_Lite
     DWORD ConvertToNative(Input_Lite::KeyCodes key);
     Input_Lite::KeyCodes ConvertToKeyCode(DWORD key);
 #elif __APPLE__
-    int ConvertToNative(KeyCodes key);
-    KeyCodes ConvertToKeyCode(int key);
+    CGKeyCode ConvertToNative(KeyCodes key);
+    KeyCodes ConvertToKeyCode(CGKeyCode key);
 #elif __linux__ 
     KeyCode ConvertToNative(Input_Lite::KeyCodes key);
     Input_Lite::KeyCodes ConvertToKeyCode(KeyCode key);

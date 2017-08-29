@@ -84,7 +84,7 @@ namespace RAT {
             h = WS_LITE::CreateContext(WS_LITE::ThreadCount(1))
                     .CreateListener(config->WebSocketTLSLPort)
                     .onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
-                        if (Config_->MaxNumConnections > 0 && ClientCount + 1 > static_cast<size_t>(Config_->MaxNumConnections)) {
+                        if (Config_->MaxNumConnections > 0 && ClientCount + 1 > Config_->MaxNumConnections) {
                             socket->close(1000, "Closing due to max number of connections!");
                         }
                         else {

@@ -17,6 +17,7 @@ matrix:
             - libxtst-dev
             - libjpeg-turbo8-dev
             - libxext-dev
+            - libxinerama-dev
           sources: 
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise

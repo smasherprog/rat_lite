@@ -22,10 +22,13 @@ namespace Input_Lite {
         switch (e.Button) {
         case MouseButtons::LEFT:
             ev = CGEventCreateMouseEvent(NULL, e.Pressed ? kCGEventLeftMouseDown : kCGEventLeftMouseUp, loc, kCGMouseButtonLeft);
+                break;
         case MouseButtons::MIDDLE:
             ev = CGEventCreateMouseEvent(NULL, e.Pressed ? kCGEventOtherMouseDown : kCGEventOtherMouseUp, loc, kCGMouseButtonCenter);
+                  break;
         case MouseButtons::RIGHT:
             ev = CGEventCreateMouseEvent(NULL, e.Pressed ? kCGEventRightMouseDown : kCGEventRightMouseUp, loc, kCGMouseButtonRight);
+                break;
         default:
             break;
         }

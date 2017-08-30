@@ -321,9 +321,9 @@ namespace RAT_Client {
             }
             ReleaseDC(hWnd, hdc);
         }
-        virtual void onMouseImageChanged(const RAT::Image &img) override { std::cout << "onMouseImageChanged" << std::endl; }
-        virtual void onMousePositionChanged(const RAT::Point &mevent) override { std::cout << "onMousePositionChanged" << std::endl; }
-        virtual void onClipboardChanged(const std::string &text) override { std::cout << "onClipboardChanged" << std::endl; }
+        virtual void onMouseImageChanged(const RAT::Image &img) override {}
+        virtual void onMousePositionChanged(const RAT::Point &mevent) override {}
+        virtual void onClipboardChanged(const std::string &text) override {}
     };
 
     ClientWindow::ClientWindow(std::shared_ptr<SL::RAT::Client_Config> &config, const std::string &host)

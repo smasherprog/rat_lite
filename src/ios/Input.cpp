@@ -6,7 +6,7 @@ namespace SL {
 namespace Input_Lite {
     void SendInput(const KeyEvent &e)
     {
-        auto ev = CGEventCreateKeyboardEvent(NULL, (CGKeyCode)56, e.Pressed);
+        auto ev = CGEventCreateKeyboardEvent(NULL, ConvertToNative(e.Key), e.Pressed);
         if (ev) {
             CGEventPost(kCGHIDEventTap, ev);
             CFRelease(ev);

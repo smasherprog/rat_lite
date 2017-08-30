@@ -842,7 +842,10 @@ int main(int argc, char *argv[])
 #error "Unknown Operating System!"
 #endif
 
-    return 0;
+    std::cout << "Simulating the A key on keyboard is being pressed. " << std::endl;
+    SL::Input_Lite::SendInput(SL::Input_Lite::KeyEvent{true, SL::Input_Lite::KeyCodes::KEY_A});
+    SL::Input_Lite::SendInput(SL::Input_Lite::KeyEvent{false, SL::Input_Lite::KeyCodes::KEY_A});
+
     std::cout << "Starting Mouse move tests by Offset" << std::endl;
     SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionAbsoluteEvent{100, 100});
     for (auto x = 0; x < 500; x++) {

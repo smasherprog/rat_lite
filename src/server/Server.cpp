@@ -51,8 +51,8 @@ namespace RAT {
                              ->run();
             ScreenCaptureManager_ =
                 Screen_Capture::CreateCaptureConfiguration([&]() {
-                           auto monitors = Screen_Capture::GetMonitors();
-                        SendtoAll(ServerDriver_.PrepareMonitorsChanged(monitors));
+                    auto monitors = Screen_Capture::GetMonitors();
+                    SendtoAll(ServerDriver_.PrepareMonitorsChanged(monitors));
                     // add everyone to the list!
 
                     std::vector<NewClient> newclients;
@@ -65,6 +65,7 @@ namespace RAT {
                             }
                             newclients.push_back({a, ids});
                         }
+
                     }
                     {
                         std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
@@ -86,7 +87,6 @@ namespace RAT {
                                     a.mids.erase(itr);
                                 }
                             }
-                            //remove client if there are no more monitors to send
                             ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames),
                                                                            [&](const auto i) { return i.mids.empty(); }),
                                                             end(ClientsThatNeedFullFrames));

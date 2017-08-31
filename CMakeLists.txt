@@ -15,7 +15,8 @@ endif(NOT CMAKE_BUILD_TYPE)
 add_subdirectory(libs/screen_capture_lite/src)
 add_subdirectory(libs/websocket_lite/src)
 add_subdirectory(libs/clipboard_lite/src)
-add_subdirectory(libs/input_lite/src)
+add_subdirectory(libs/input_lite/src) 
+add_subdirectory(libs/zlib)
 add_subdirectory(src/rat_core)
 
 

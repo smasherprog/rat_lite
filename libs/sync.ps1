@@ -12,4 +12,7 @@ git subtree push --prefix=libs/screen_capture_lite https://github.com/smasherpro
 git subtree pull --prefix=libs/websocket_lite https://github.com/smasherprog/websocket_lite master --squash
 git subtree push --prefix=libs/websocket_lite https://github.com/smasherprog/websocket_lite master --squash
 
+git subtree pull --prefix=libs/zlib https://github.com/madler/zlib master v1.2.11 --squash
+git subtree pull --prefix=libs/zlib https://github.com/madler/zlib master v1.2.11 --squash
+
 cd libs 

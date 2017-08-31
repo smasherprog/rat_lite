@@ -16,10 +16,17 @@ elseif(APPLE)
 	)
 
 else()
+	FIND_PACKAGE(PkgConfig REQUIRED)
+	PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0) 
 	set(${PROJECT_NAME}_PLATFORM_SRC
 		linux/ClientWindow.cpp
 	)
-
+	set(${PROJECT_NAME}_PLATFORM_INCLUDE_DIRS
+		${GTK3_INCLUDE_DIRS}
+	)
+	set(${PROJECT_NAME}_PLATFORM_LIBS
+		${GTK3_LIBRARIES} 
+	)
 endif()
 
 if(MSVC)
@@ -37,10 +44,9 @@ set(${PROJECT_NAME}_EXAMPLE_SRC
 	${CMAKE_CURRENT_SOURCE_DIR}/../../include/cxxopts.hpp	
 	ClientWindow.h	
 	main.cpp
-)
-
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+) 
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${${PROJECT_NAME}_PLATFORM_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
 
-target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS})
+target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${${PROJECT_NAME}_PLATFORM_LIBS})

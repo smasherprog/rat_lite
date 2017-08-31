@@ -16,16 +16,8 @@ elseif(APPLE)
 	)
 
 else()
-	FIND_PACKAGE(PkgConfig REQUIRED)
-	PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0) 
 	set(${PROJECT_NAME}_PLATFORM_SRC
 		linux/ClientWindow.cpp
-	)
-	set(${PROJECT_NAME}_PLATFORM_INCLUDE_DIRS
-		${GTK3_INCLUDE_DIRS}
-	)
-	set(${PROJECT_NAME}_PLATFORM_LIBS
-		${GTK3_LIBRARIES} 
 	)
 endif()
 

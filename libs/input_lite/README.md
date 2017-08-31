@@ -7,67 +7,45 @@
 https://github.com/smasherprog/input_lite/blob/master/Test/main.cpp
 
 ```c++
-    for (auto c = ' '; c < 127; c++) {
-        SL::Input_Lite::SendKey(c);
-    }
 
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
-    // UNICODE SUPPORT!
-    SL::Input_Lite::SendKeyDown((wchar_t)294); // the letter Ħ
-    SL::Input_Lite::SendKeyDown((wchar_t)274); // the letter Ē
-    SL::Input_Lite::SendKeyDown((wchar_t)315); // the letter Ļ
-    SL::Input_Lite::SendKeyDown((wchar_t)315); // the letter Ļ
-    SL::Input_Lite::SendKeyDown((wchar_t)526); // the letter Ȏ
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::TAB);
-    SL::Input_Lite::SendKeys(std::string("this is a std::string"));
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
-    // unicode
-    SL::Input_Lite::SendKeys(L"ĦĒĻĻȎ");
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
-    SL::Input_Lite::SendKeys(std::wstring(L"ĦĒĻĻȎ"));
-    // SPECIAL KEYS
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ENTER);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::NUMPAD0);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::CAPSLOCK);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::TAB);
+    std::cout << "Simulating the A key on keyboard is being pressed " << std::endl;
+    SL::Input_Lite::SendInput(SL::Input_Lite::KeyEvent{true, SL::Input_Lite::KeyCodes::KEY_A});
+    SL::Input_Lite::SendInput(SL::Input_Lite::KeyEvent{false, SL::Input_Lite::KeyCodes::KEY_A});
 
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ARROWLEFT);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ARROWLEFT);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ARROWLEFT);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ARROWLEFT);
-    SL::Input_Lite::SendKey(SL::Input_Lite::SpecialKeyCodes::ARROWLEFT);
-
-
-    std::cout << "Starting Mouse move tests by Offset" << std::endl;
-    SL::Input_Lite::SendMousePosition(SL::Input_Lite::Absolute{ 100, 100 });
+	std::cout << "Starting Mouse move tests by Offset" << std::endl;
+    SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionAbsoluteEvent{100, 100});
     for (auto x = 0; x < 500; x++) {
-        SL::Input_Lite::SendMousePosition(SL::Input_Lite::Offset{ 1, 0 });
+        SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionOffsetEvent{1, 0});
         std::this_thread::sleep_for(10ms);
     }
     for (auto y = 0; y < 500; y++) {
-        SL::Input_Lite::SendMousePosition(SL::Input_Lite::Offset{ 0, 1 });
+        SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionOffsetEvent{0, 1});
         std::this_thread::sleep_for(10ms);
     }
     std::cout << "Starting Mouse move tests by Absolute" << std::endl;
     for (auto x = 0; x < 500; x++) {
-        SL::Input_Lite::SendMousePosition(SL::Input_Lite::Absolute{ x, 300 });
+        SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionAbsoluteEvent{x, 300});
         std::this_thread::sleep_for(10ms);
     }
     for (auto y = 0; y < 500; y++) {
-        SL::Input_Lite::SendMousePosition(SL::Input_Lite::Absolute{ 500, y });
+        SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionAbsoluteEvent{500, y});
         std::this_thread::sleep_for(10ms);
     }
-    std::cout << "Starting Mouse Click tests " << std::endl;
-    SL::Input_Lite::SendMouseClick(SL::Input_Lite::MouseButtons::RIGHT);
-    SL::Input_Lite::SendMouseClick(SL::Input_Lite::MouseButtons::LEFT);
+    std::cout << "Starting Mouse Click tests right down up" << std::endl;
+    SL::Input_Lite::SendInput(SL::Input_Lite::MouseButtonEvent{true, SL::Input_Lite::MouseButtons::RIGHT});
+    SL::Input_Lite::SendInput(SL::Input_Lite::MouseButtonEvent{false, SL::Input_Lite::MouseButtons::RIGHT});
+
+    std::cout << "Starting Mouse Click tests left down up" << std::endl;
+    SL::Input_Lite::SendInput(SL::Input_Lite::MouseButtonEvent{true, SL::Input_Lite::MouseButtons::LEFT});
+    SL::Input_Lite::SendInput(SL::Input_Lite::MouseButtonEvent{false, SL::Input_Lite::MouseButtons::LEFT});
+
     std::cout << "Starting Mouse wheel tests " << std::endl;
     for (auto y = 0; y < 500; y++) {
-        SL::Input_Lite::SendMouseScroll(1);
+        SL::Input_Lite::SendInput(SL::Input_Lite::MouseScrollEvent{1});
         std::this_thread::sleep_for(10ms);
     }
     for (auto y = 0; y < 500; y++) {
-        SL::Input_Lite::SendMouseScroll(-1);
+        SL::Input_Lite::SendInput(SL::Input_Lite::MouseScrollEvent{-1});
         std::this_thread::sleep_for(10ms);
     }
 

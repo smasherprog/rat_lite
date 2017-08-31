@@ -12,6 +12,10 @@
 
 #include <atomic>
 
+#ifdef __APPLE__
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 namespace SL {
 namespace RAT {
 
@@ -60,7 +64,42 @@ namespace RAT {
         void onMousePosition(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
         {
             if (len == sizeof(Point)) {
-                return IServerDriver_->onMousePosition(socket, *reinterpret_cast<const Point *>(data));
+                auto p =*reinterpret_cast<const Point *>(data);
+                
+#ifdef __APPLE__
+                
+                CGDisplayCount count=0;
+                CGGetActiveDisplayList(0, 0, &count);
+                std::vector<CGDirectDisplayID> displays;
+                displays.resize(count);
+                CGGetActiveDisplayList(count, displays.data(), &count);
+
+                for(auto  i = 0; i < count; i++) {
+                    //only include non-mirrored displays
+                    if(CGDisplayMirrorsDisplay(displays[i]) == kCGNullDirectDisplay){
+                        
+                        auto dismode =CGDisplayCopyDisplayMode(displays[i]);
+                        auto scaledsize = CGDisplayBounds(displays[i]);
+                        
+                        auto pixelwidth = CGDisplayModeGetPixelWidth(dismode);
+                        auto pixelheight = CGDisplayModeGetPixelHeight(dismode);
+                        
+                        CGDisplayModeRelease(dismode);
+                        
+                        if(scaledsize.size.width !=pixelwidth){//scaling going on!
+                            p.X = static_cast<float>(p.X) * static_cast<float>(scaledsize.size.width)/static_cast<float>(pixelwidth);
+                        }
+                        if(scaledsize.size.height !=pixelheight){//scaling going on!
+                            p.Y = static_cast<float>(p.Y) * static_cast<float>(scaledsize.size.height)/static_cast<float>(pixelheight);
+                        }
+                        break;
+                    }
+                }
+
+#endif
+                
+                
+                return IServerDriver_->onMousePosition(socket, p);
             }
             socket->close(1000, "Received invalid onMouseDown Event");
         }
@@ -84,7 +123,7 @@ namespace RAT {
             h = WS_LITE::CreateContext(WS_LITE::ThreadCount(1))
                     .CreateListener(config->WebSocketTLSLPort)
                     .onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
-                        if (Config_->MaxNumConnections > 0 && ClientCount + 1 > static_cast<size_t>(Config_->MaxNumConnections)) {
+                        if (Config_->MaxNumConnections > 0 && ClientCount + 1 > Config_->MaxNumConnections) {
                             socket->close(1000, "Closing due to max number of connections!");
                         }
                         else {

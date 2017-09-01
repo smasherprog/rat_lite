@@ -16,9 +16,8 @@ add_subdirectory(libs/screen_capture_lite/src)
 add_subdirectory(libs/websocket_lite/src)
 add_subdirectory(libs/clipboard_lite/src)
 add_subdirectory(libs/input_lite/src) 
-add_subdirectory(libs/zlib)
-add_subdirectory(src/rat_core)
-
+add_subdirectory(src/rat_core) 
+add_subdirectory(libs/libjpeg-turbo)
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(src/client)

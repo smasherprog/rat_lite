@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_definitions(-DBOOST_REGEX_NO_LIB -DBOOST_DATE_TIME_NO_LIB -DASIO_STANDALONE -DBOOST_NO_EXCEPTIONS)
 
 add_subdirectory(src)
+add_subdirectory(zlib)
 
 enable_testing() 
 add_subdirectory(Test)

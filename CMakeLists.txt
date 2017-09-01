@@ -17,6 +17,10 @@ add_subdirectory(libs/websocket_lite/src)
 add_subdirectory(libs/clipboard_lite/src)
 add_subdirectory(libs/input_lite/src) 
 add_subdirectory(src/rat_core) 
+add_subdirectory(libs/websocket_lite/zlib)
+
+set(ENABLE_SHARED FALSE) 
+set(WITH_JAVA FALSE) 
 add_subdirectory(libs/libjpeg-turbo)
 
 if(BUILD_EXAMPLE)

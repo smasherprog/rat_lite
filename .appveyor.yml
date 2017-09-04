@@ -9,13 +9,13 @@ clone_script:
 - cmd: git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
 - cmd: git checkout -qf %APPVEYOR_REPO_COMMIT%
 
-cache:		
-  - c:\projects\build\vcpkg -> appveyor.yml		
- 
 platform:
 - x86
 
 install:  
+  - curl -L -o nasminst.exe http://www.nasm.us/pub/nasm/releasebuilds/2.13.01/win64/nasm-2.13.01-installer-x64.exe
+  - start /wait nasminst.exe /S
+  - ps: $env:path="C:\Program Files\nasm;$($env:path)"
   - ps: wget https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi -outfile "VCForPython27.msi"
   - start /wait msiexec /i c:\projects\proj\VCForPython27.msi /quiet /qn /norestart
   - pip install autobahntestsuite

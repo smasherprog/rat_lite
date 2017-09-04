@@ -14,18 +14,13 @@ if(WIN32)
     set(WEBSOCKET_LITE_PLATFORM_INC     
    
     )
-	set(WEBSOCKET_LITE_PLATFORM_LIBS
-		Crypt32
-    )
-
+	
 elseif(APPLE)
     set(WEBSOCKET_LITE_PLATFORM_SRC
     )
     set(WEBSOCKET_LITE_PLATFORM_INC
     )
-	set(WEBSOCKET_LITE_PLATFORM_LIBS
 
-    )
 else()
 	find_package(Threads REQUIRED)
 
@@ -33,51 +28,28 @@ else()
     )
     set(WEBSOCKET_LITE_PLATFORM_INC
     )
-	set(WEBSOCKET_LITE_PLATFORM_LIBS
-		${CMAKE_THREAD_LIBS_INIT}
-    )
 	
 endif()
 
 set(WEBSOCKET_LITE_COMMON_SRC 
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/WebSocketProtocol.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/Utils.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/Utils.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/Logging.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/WS_Lite.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/ListenerImpl.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/ClientImpl.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/../include/internal/DataStructures.h
-	${CMAKE_CURRENT_SOURCE_DIR}/../src/internal/WSContext.cpp
+	${CMAKE_SOURCE_DIR}/include/internal/WebSocketProtocol.h
+	${CMAKE_SOURCE_DIR}/include/internal/Utils.h
+	${CMAKE_SOURCE_DIR}/src/internal/Utils.cpp
+	${CMAKE_SOURCE_DIR}/include/Logging.h
+	${CMAKE_SOURCE_DIR}/include/WS_Lite.h
+	${CMAKE_SOURCE_DIR}/src/internal/ListenerImpl.cpp
+	${CMAKE_SOURCE_DIR}/src/internal/ClientImpl.cpp
+	${CMAKE_SOURCE_DIR}/include/internal/DataStructures.h
+	${CMAKE_SOURCE_DIR}/src/internal/WSContext.cpp
 )
 
-set(WEBSOCKET_LITE_INCLUDE_DIRS 
-	${CMAKE_CURRENT_SOURCE_DIR}/../asio
-	${CMAKE_CURRENT_SOURCE_DIR}/../zlib
-	${CMAKE_CURRENT_SOURCE_DIR}/../libressl/include
-	${CMAKE_CURRENT_SOURCE_DIR}/../include
-	${CMAKE_CURRENT_SOURCE_DIR}/../src
-	${WEBSOCKET_LITE_PLATFORM_INC}
-	CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
- )
-
-set(WEBSOCKET_LITE_LIBS
-	${PROJECT_NAME}
-	ssl
-	tls
-	crypto
-	zlibstatic
-	${WEBSOCKET_LITE_PLATFORM_LIBS}
-	CACHE INTERNAL "${PROJECT_NAME}: Include Libraries" FORCE
+set(WEBSOCKET_LITE_INCLUDE_DIRS  
+	${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/src
+	${WEBSOCKET_LITE_PLATFORM_INC} 
 )
-add_definitions()
- 
-
 
 add_definitions(-DBOOST_REGEX_NO_LIB -DBOOST_DATE_TIME_NO_LIB -DASIO_STANDALONE -DBOOST_NO_EXCEPTIONS)
 include_directories(${WEBSOCKET_LITE_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} ${WEBSOCKET_LITE_COMMON_SRC} ${WEBSOCKET_LITE_PLATFORM_SRC})
-
-target_link_libraries(${PROJECT_NAME} ${WEBSOCKET_LITE_PLATFORM_LIBS})
-
 

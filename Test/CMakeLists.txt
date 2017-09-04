@@ -1,6 +1,5 @@
 project(WEBSOCKET_LITE_Test)
 
-
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4100")
 else()
@@ -18,10 +17,18 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 	-DTEST_FUZZING_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/fuzzingclient.json"
 )
-
-include_directories(${WEBSOCKET_LITE_INCLUDE_DIRS})
-
+include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-target_link_libraries(${PROJECT_NAME} ${WEBSOCKET_LITE_LIBS} )
+
+if(WIN32) 
+	target_link_libraries(${PROJECT_NAME} libwebsocket_lite ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} Crypt32)
+	
+elseif(APPLE) 
+	find_package(Threads REQUIRED)
+	target_link_libraries(${PROJECT_NAME} libwebsocket_lite ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+else()
+	find_package(Threads REQUIRED)
+	target_link_libraries(${PROJECT_NAME} libwebsocket_lite ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} dl)
+endif()
 
 add_test (NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

@@ -22,6 +22,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Bb]uild/
+libs/
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -250,4 +251,4 @@ paket-files/
 
 # JetBrains Rider
 .idea/
-*.sln.iml
+*.sln.iml 

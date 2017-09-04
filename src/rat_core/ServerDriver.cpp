@@ -64,41 +64,40 @@ namespace RAT {
         void onMousePosition(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
         {
             if (len == sizeof(Point)) {
-                auto p =*reinterpret_cast<const Point *>(data);
-                
+                auto p = *reinterpret_cast<const Point *>(data);
+
 #ifdef __APPLE__
-                
-                CGDisplayCount count=0;
+
+                CGDisplayCount count = 0;
                 CGGetActiveDisplayList(0, 0, &count);
                 std::vector<CGDirectDisplayID> displays;
                 displays.resize(count);
                 CGGetActiveDisplayList(count, displays.data(), &count);
 
-                for(auto  i = 0; i < count; i++) {
-                    //only include non-mirrored displays
-                    if(CGDisplayMirrorsDisplay(displays[i]) == kCGNullDirectDisplay){
-                        
-                        auto dismode =CGDisplayCopyDisplayMode(displays[i]);
+                for (auto i = 0; i < count; i++) {
+                    // only include non-mirrored displays
+                    if (CGDisplayMirrorsDisplay(displays[i]) == kCGNullDirectDisplay) {
+
+                        auto dismode = CGDisplayCopyDisplayMode(displays[i]);
                         auto scaledsize = CGDisplayBounds(displays[i]);
-                        
+
                         auto pixelwidth = CGDisplayModeGetPixelWidth(dismode);
                         auto pixelheight = CGDisplayModeGetPixelHeight(dismode);
-                        
+
                         CGDisplayModeRelease(dismode);
-                        
-                        if(scaledsize.size.width !=pixelwidth){//scaling going on!
-                            p.X = static_cast<float>(p.X) * static_cast<float>(scaledsize.size.width)/static_cast<float>(pixelwidth);
+
+                        if (scaledsize.size.width != pixelwidth) { // scaling going on!
+                            p.X = static_cast<float>(p.X) * static_cast<float>(scaledsize.size.width) / static_cast<float>(pixelwidth);
                         }
-                        if(scaledsize.size.height !=pixelheight){//scaling going on!
-                            p.Y = static_cast<float>(p.Y) * static_cast<float>(scaledsize.size.height)/static_cast<float>(pixelheight);
+                        if (scaledsize.size.height != pixelheight) { // scaling going on!
+                            p.Y = static_cast<float>(p.Y) * static_cast<float>(scaledsize.size.height) / static_cast<float>(pixelheight);
                         }
                         break;
                     }
                 }
 
 #endif
-                
-                
+
                 return IServerDriver_->onMousePosition(socket, p);
             }
             socket->close(1000, "Received invalid onMouseDown Event");
@@ -196,7 +195,8 @@ namespace RAT {
         {
             Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
             auto set = Config_->SendGrayScaleImages ? TJSAMP_GRAY : TJSAMP_420;
-            auto maxsize = tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
+            unsigned long maxsize =
+                tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
             auto jpegCompressor = tjInitCompress();
             auto buffer = std::shared_ptr<unsigned char>(new unsigned char[maxsize], [](auto *p) { delete[] p; });
             auto dst = (unsigned char *)buffer.get();
@@ -213,7 +213,7 @@ namespace RAT {
             auto outjpegsize = maxsize;
 
             if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, Config_->ImageCompressionSetting,
-                            2048 | TJFLAG_NOREALLOC) == -1) {
+                            TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
                 SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
             }
             //	std::cout << "Sending " << r << std::endl;

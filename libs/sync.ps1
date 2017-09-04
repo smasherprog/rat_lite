@@ -12,6 +12,4 @@ git subtree push --prefix=libs/screen_capture_lite https://github.com/smasherpro
 git subtree pull --prefix=libs/websocket_lite https://github.com/smasherprog/websocket_lite master --squash
 git subtree push --prefix=libs/websocket_lite https://github.com/smasherprog/websocket_lite master --squash
 
-git subtree pull --prefix=libs/libjpeg-turbo https://github.com/libjpeg-turbo/libjpeg-turbo 1.5.2 --squash
-
 cd libs 

@@ -1,0 +1,100 @@
+include(ExternalProject)
+
+ExternalProject_Add(
+  zlib
+
+  GIT_REPOSITORY "https://github.com/madler/zlib.git"
+  GIT_TAG "v1.2.11"
+  
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/zlib"
+  CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${GLOBAL_OUTPUT_PATH}/zlib
+  
+  TEST_COMMAND ""
+)
+
+set(ZLIB_INCLUDE_DIRS "${GLOBAL_OUTPUT_PATH}/zlib/include")
+link_directories(${GLOBAL_OUTPUT_PATH}/zlib/lib)
+
+if(UNIX)
+	set(ZLIB_LIBRARIES ${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+	set(ZLIB_LIBRARIES optimized ${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}
+             debug ${CMAKE_STATIC_LIBRARY_PREFIX}zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+
+	 
+include_directories(${ZLIB_INCLUDE_DIRS})
+ExternalProject_Add(
+  asio
+
+  GIT_REPOSITORY "https://github.com/chriskohlhoff/asio.git"
+  GIT_TAG "asio-1-10-branch"
+  
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/asio"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/libs/asio ${GLOBAL_OUTPUT_PATH}/asio
+  TEST_COMMAND ""
+)
+
+set(ASIO_INCLUDE_DIRS "${GLOBAL_OUTPUT_PATH}/asio/asio/include") 
+include_directories(${ASIO_INCLUDE_DIRS})
+
+set(OPENSSLBUILDOPTIONS no-ssl2 no-ssl3 no-shared no-weak-ssl-ciphers)
+if(WIN32) 
+
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		# 64 bits
+		set(PERLCONFIGURECOMMAND VC-WIN64A)
+		set(PERLBUILDCOMMAND do_win64a)
+	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+		# 32 bits
+		set(PERLCONFIGURECOMMAND VC-WIN32)
+		set(PERLBUILDCOMMAND do_nasm)
+	endif()
+	ExternalProject_Add(
+		openssl
+		URL https://github.com/openssl/openssl/archive/OpenSSL_1_0_2l.tar.gz
+		CONFIGURE_COMMAND perl Configure ${OPENSSLBUILDOPTIONS} ${PERLCONFIGURECOMMAND} "--prefix=${GLOBAL_OUTPUT_PATH}/openssl"
+		BUILD_COMMAND "ms\\${PERLBUILDCOMMAND}.bat"
+		COMMAND nmake -f "ms\\ntdll.mak"
+		BUILD_IN_SOURCE 1
+		INSTALL_COMMAND nmake -f "ms\\ntdll.mak" install
+	)
+	set(OPENSSL_LIBRARIES 
+		${CMAKE_STATIC_LIBRARY_PREFIX}libeay32${CMAKE_STATIC_LIBRARY_SUFFIX} 
+		${CMAKE_STATIC_LIBRARY_PREFIX}ssleay32${CMAKE_STATIC_LIBRARY_SUFFIX}
+	)
+
+	else()
+	if(APPLE) 
+		set(CONFIGURECOMMAND ./Configure darwin64-x86_64-cc)
+	else()	
+		set(CONFIGURECOMMAND ./config)
+	endif()
+
+	
+	ExternalProject_Add(
+		openssl
+		URL https://github.com/openssl/openssl/archive/OpenSSL_1_0_2l.tar.gz
+		CONFIGURE_COMMAND ${CONFIGURECOMMAND} ${OPENSSLBUILDOPTIONS} ${PERLCONFIGURECOMMAND} "--prefix=${GLOBAL_OUTPUT_PATH}/openssl"
+		BUILD_COMMAND make 
+		BUILD_IN_SOURCE 1
+		INSTALL_COMMAND make install
+	)
+	set(OPENSSL_LIBRARIES 
+		${CMAKE_STATIC_LIBRARY_PREFIX}ssl${CMAKE_STATIC_LIBRARY_SUFFIX}
+		${CMAKE_STATIC_LIBRARY_PREFIX}crypto${CMAKE_STATIC_LIBRARY_SUFFIX} 
+	)
+endif()
+
+set(OPENSSL_INCLUDE_DIRS "${GLOBAL_OUTPUT_PATH}/openssl/include")
+link_directories(${GLOBAL_OUTPUT_PATH}/openssl/lib)
+include_directories(${OPENSSL_INCLUDE_DIRS})
+

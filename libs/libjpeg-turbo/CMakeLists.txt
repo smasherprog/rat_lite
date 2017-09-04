@@ -61,6 +61,7 @@ option(WITH_TURBOJPEG "Include the TurboJPEG wrapper library and associated test
 option(WITH_JAVA "Build Java wrapper for the TurboJPEG library" FALSE)
 option(WITH_12BIT "Encode/decode JPEG images with 12-bit samples (implies WITH_SIMD=0 WITH_TURBOJPEG=0 WITH_ARITH_ENC=0 WITH_ARITH_DEC=0)" FALSE)
 option(ENABLE_STATIC "Build static libraries" TRUE)
+option(ENABLE_SHARED "Build shared libraries" FALSE)
 
 if(WITH_12BIT)
   set(WITH_SIMD FALSE)
@@ -278,6 +279,14 @@ if(WITH_TURBOJPEG)
     target_link_libraries(turbojpeg jpeg-static)
     set_target_properties(turbojpeg PROPERTIES LINK_INTERFACE_LIBRARIES "")
 
+    add_executable(tjunittest tjunittest.c tjutil.c)
+    target_link_libraries(tjunittest turbojpeg)
+
+    add_executable(tjbench tjbench.c bmp.c tjutil.c rdbmp.c rdppm.c wrbmp.c
+      wrppm.c)
+    target_link_libraries(tjbench turbojpeg jpeg-static)
+    set_property(TARGET tjbench PROPERTY COMPILE_FLAGS
+      "-DBMP_SUPPORTED -DPPM_SUPPORTED")
   endif()
 
   if(ENABLE_STATIC)
@@ -305,6 +314,7 @@ endif()
 #
 # Tests
 #
+
 
 if(MSVC_IDE)
   set(OBJDIR "\${CTEST_CONFIGURATION_TYPE}/")
@@ -509,11 +519,6 @@ configure_file(release/libjpeg-turbo.nsi.in libjpeg-turbo.nsi @ONLY)
 if(WITH_JAVA)
   set(JAVA_DEPEND java)
 endif()
-add_custom_target(installer
-  makensis -nocd ${INST_DEFS} libjpeg-turbo.nsi
-  DEPENDS jpeg jpeg-static turbojpeg turbojpeg-static rdjpgcom wrjpgcom
-    cjpeg djpeg jpegtran tjbench ${JAVA_DEPEND}
-  SOURCES libjpeg-turbo.nsi)
 
 if(WITH_TURBOJPEG)
   if(ENABLE_SHARED)
@@ -524,33 +529,12 @@ if(WITH_TURBOJPEG)
   endif()
   if(ENABLE_STATIC)
     install(TARGETS turbojpeg-static ARCHIVE DESTINATION lib)
-    if(NOT ENABLE_SHARED)
-      install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/tjbench-static.exe
-        DESTINATION bin RENAME tjbench.exe)
-    endif()
   endif()
   install(FILES ${CMAKE_SOURCE_DIR}/turbojpeg.h DESTINATION include)
 endif()
 
-if(ENABLE_STATIC)
-  install(TARGETS jpeg-static ARCHIVE DESTINATION lib)
-  if(NOT ENABLE_SHARED)
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cjpeg-static.exe
-      DESTINATION bin RENAME cjpeg.exe)
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/djpeg-static.exe
-      DESTINATION bin RENAME djpeg.exe)
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/jpegtran-static.exe
-      DESTINATION bin RENAME jpegtran.exe)
-  endif()
-endif()
-
-
-install(FILES ${CMAKE_SOURCE_DIR}/README.ijg ${CMAKE_SOURCE_DIR}/README.md
-  ${CMAKE_SOURCE_DIR}/example.c ${CMAKE_SOURCE_DIR}/libjpeg.txt
-  ${CMAKE_SOURCE_DIR}/structure.txt ${CMAKE_SOURCE_DIR}/usage.txt
-  ${CMAKE_SOURCE_DIR}/wizard.txt
-  DESTINATION doc)
 
 install(FILES ${CMAKE_BINARY_DIR}/jconfig.h ${CMAKE_SOURCE_DIR}/jerror.h
   ${CMAKE_SOURCE_DIR}/jmorecfg.h ${CMAKE_SOURCE_DIR}/jpeglib.h
   DESTINATION include)
+

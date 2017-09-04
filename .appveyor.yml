@@ -21,16 +21,10 @@ install:
   - pip install autobahntestsuite
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects
-  - IF NOT EXIST c:\projects\build mkdir build
-  - cd build
-  - IF NOT EXIST c:\projects\build\vcpkg git clone https://github.com/Microsoft/vcpkg
-  - cd vcpkg
-  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows powershell -exec bypass scripts\bootstrap.ps1
-  - IF NOT EXIST c:\projects\build\vcpkg\installed\x86-windows .\vcpkg install zlib openssl
   - cd c:\projects\proj
   - mkdir build
   - cd build
-  - cmake "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
+  - cmake .. 
   
 build_script:
   - cmake --build .

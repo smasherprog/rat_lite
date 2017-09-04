@@ -21,6 +21,7 @@ add_subdirectory(libs/websocket_lite/zlib)
 
 set(ENABLE_SHARED OFF) 
 set(WITH_JAVA OFF) 
+set(NASM ${CMAKE_CURRENT_SOURCE_DIR}/libs/nasm.exe)  
 add_subdirectory(libs/libjpeg-turbo)
 
 if(BUILD_EXAMPLE)

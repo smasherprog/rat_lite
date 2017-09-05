@@ -1,0 +1,81 @@
+include(ExternalProject)
+
+ExternalProject_Add(
+  libjpeg-turbo
+
+  GIT_REPOSITORY "https://github.com/libjpeg-turbo/libjpeg-turbo.git"
+  GIT_TAG "dev"
+  
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/libjpeg-turbo"
+  CMAKE_ARGS -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${GLOBAL_OUTPUT_PATH}/libjpeg-turbo
+  
+  TEST_COMMAND ""
+)
+
+set(LIBJPEG_TURBO_INCLUDE_DIRS "${GLOBAL_OUTPUT_PATH}/libjpeg-turbo/include")
+link_directories(${GLOBAL_OUTPUT_PATH}/libjpeg-turbo/lib)
+set(LIBJPEG_TURBO_LIBRARIES 
+	${CMAKE_STATIC_LIBRARY_PREFIX}jpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX}
+	${CMAKE_STATIC_LIBRARY_PREFIX}turbojpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX}
+)
+include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
+
+
+
+ExternalProject_Add(
+  screen_capture_lite
+
+  GIT_REPOSITORY "https://github.com/smasherprog/screen_capture_lite.git"
+  GIT_TAG "master"
+  
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/screen_capture_lite"
+  CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${GLOBAL_OUTPUT_PATH}/screen_capture_lite
+  
+  TEST_COMMAND ""
+)
+
+set(SCREEN_CAPTURE_LITE_INCLUDE_DIRS "${GLOBAL_OUTPUT_PATH}/screen_capture_lite/include")
+link_directories(${GLOBAL_OUTPUT_PATH}/screen_capture_lite/lib)
+set(SCREEN_CAPTURE_LITE_LIBRARIES 
+	${CMAKE_STATIC_LIBRARY_PREFIX}screen_capture_lite${CMAKE_STATIC_LIBRARY_SUFFIX}
+)
+if(WIN32)
+	set(SCREEN_CAPTURE_LITE_LIBRARIES 
+		${SCREEN_CAPTURE_LITE_LIBRARIES}
+		Dwmapi
+	)
+elseif(APPLE)
+	find_library(corefoundation_lib CoreFoundation)
+	find_library(cocoa_lib Cocoa)
+	set(SCREEN_CAPTURE_LITE_LIBRARIES 
+		${SCREEN_CAPTURE_LITE_LIBRARIES}
+		 ${corefoundation_lib} 
+		 ${cocoa_lib}
+	)
+else()
+	find_package(X11 REQUIRED)
+	if(!X11_XTest_FOUND)
+ 		message(FATAL_ERROR "X11 extensions are required, but not found!")
+	endif()
+	if(!X11_Xfixes_LIB)
+ 		message(FATAL_ERROR "X11 fixes extension is required, but not found!")
+	endif()
+	find_package(Threads REQUIRED)
+	set(SCREEN_CAPTURE_LITE_LIBRARIES 
+		${SCREEN_CAPTURE_LITE_LIBRARIES}
+		${X11_LIBRARIES}
+		${X11_Xfixes_LIB}
+		${X11_XTest_LIB}
+		${X11_Xinerama_LIB}
+		${CMAKE_THREAD_LIBS_INIT}
+	) 
+endif()
+
+include_directories(${SCREEN_CAPTURE_LITE_INCLUDE_DIRS})
+

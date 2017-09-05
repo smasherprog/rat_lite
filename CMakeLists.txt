@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
-project(RAT)
+project(remote_access_tool)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(BUILD_SHARED_LIBS OFF)
 set(BUILD_EXAMPLE ON)
-
-if(NOT CMAKE_BUILD_TYPE) 
-    set(CMAKE_BUILD_TYPE Debug)
-endif(NOT CMAKE_BUILD_TYPE)
 
 set(GLOBAL_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
@@ -27,23 +22,67 @@ foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
 endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
 
-include(libs/CMakeLists-ExternalProjects.txt)
+include(CMakeLists-ExternalProjects.txt)
 
-add_subdirectory(libs/screen_capture_lite/src)
-add_subdirectory(libs/websocket_lite/src)
-add_subdirectory(libs/clipboard_lite/src)
-add_subdirectory(libs/input_lite/src) 
-add_subdirectory(src/rat_core) 
-add_subdirectory(libs/websocket_lite/zlib)
-add_subdirectory(libs/websocket_lite/libressl)
+if(WIN32)
+	set(REMOTE_ACCESS_PLATFORM_INC     
+        include/windows
+        src/windows
+    )
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
+elseif(APPLE)
+    set(REMOTE_ACCESS_PLATFORM_INC
+        include/ios
+		src/ios
+    )
+else() 
+	set(REMOTE_ACCESS_PLATFORM_INC
+		include/linux
+        src/linux
+    )
+endif()
 
-add_subdirectory(libs/libjpeg-turbo)
+if(MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
+endif()
+
+add_definitions(-DBOOST_REGEX_NO_LIB -DBOOST_DATE_TIME_NO_LIB -DASIO_STANDALONE -DBOOST_NO_EXCEPTIONS)
+include_directories(include src)
+
+add_library(${PROJECT_NAME} 	
+	src/ClientDriver.cpp
+	src/ServerDriver.cpp
+)
+
+if(BUILD_SHARED_LIBS)
+	install (TARGETS ${PROJECT_NAME}  
+		LIBRARY DESTINATION bin
+	)
+else()
+	install (TARGETS ${PROJECT_NAME} 
+		ARCHIVE DESTINATION lib
+	)
+endif()
+
+install (FILES 
+	include/IClientDriver.h
+	include/ClientDriver.h
+	include/ServerDriver.h
+	include/IServerDriver.h
+	include/NetworkStructs.h
+	include/Configs.h
+	include/INetworkHandlers.h
+	include/Logging.h	
+	include/Shapes.h
+	DESTINATION include
+)
 
 if(BUILD_EXAMPLE)
 	add_subdirectory(src/client)
 	add_subdirectory(src/server)
 endif()
-
 
 enable_testing() 
 add_subdirectory(test)

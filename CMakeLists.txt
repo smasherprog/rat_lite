@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
-project(remote_access_tool)
+project(rat)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(BUILD_EXAMPLE ON)
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 
 set(GLOBAL_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
@@ -27,18 +28,15 @@ include(CMakeLists-ExternalProjects.txt)
 if(WIN32)
 	set(REMOTE_ACCESS_PLATFORM_INC     
         include/windows
-        src/windows
     )
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
 elseif(APPLE)
     set(REMOTE_ACCESS_PLATFORM_INC
         include/ios
-		src/ios
     )
 else() 
 	set(REMOTE_ACCESS_PLATFORM_INC
 		include/linux
-        src/linux
     )
 endif()
 
@@ -49,22 +47,40 @@ else()
 endif()
 
 add_definitions(-DBOOST_REGEX_NO_LIB -DBOOST_DATE_TIME_NO_LIB -DASIO_STANDALONE -DBOOST_NO_EXCEPTIONS)
-include_directories(include src)
+include_directories(include)
 
 add_library(${PROJECT_NAME} 	
 	src/ClientDriver.cpp
 	src/ServerDriver.cpp
 )
 
+set(COMMON_LIBRARIES 
+	${LIBJPEG_TURBO_LIBRARIES} 
+	${WEBSOCKET_LITE_LIBRARIES} 
+	${INPUT_LITE_LIBRARIES}
+	${CLIPBOARD_LITE_LIBRARIES}	
+	${SCREEN_CAPTURE_LITE_LIBRARIES}
+)
+
 if(BUILD_SHARED_LIBS)
-	install (TARGETS ${PROJECT_NAME}  
-		LIBRARY DESTINATION bin
-	)
-else()
-	install (TARGETS ${PROJECT_NAME} 
-		ARCHIVE DESTINATION lib
-	)
+	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL RAT_LITE_DLL)
+	if(WIN32) 
+		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} Crypt32)
+	elseif(APPLE) 
+		find_package(Threads REQUIRED)
+		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+	else()
+		find_package(Threads REQUIRED)
+		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} dl)
+	endif()
 endif()
+
+
+add_dependencies(${PROJECT_NAME} libjpeg-turbo websocket_lite input_lite clipboard_lite screen_capture_lite)
+install (TARGETS ${PROJECT_NAME}  
+	ARCHIVE DESTINATION lib
+	LIBRARY DESTINATION lib
+)
 
 install (FILES 
 	include/IClientDriver.h

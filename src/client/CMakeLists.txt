@@ -27,7 +27,7 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
 
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${${PROJECT_NAME}_PLATFORM_INCLUDE_DIRS})
+include_directories(${REMOTE_ACCESS_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} )
 
 add_executable(${PROJECT_NAME} 
 	ClientWindow.h	
@@ -35,4 +35,4 @@ add_executable(${PROJECT_NAME}
 	${${PROJECT_NAME}_PLATFORM_SRC}
 )
 
-target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${${PROJECT_NAME}_PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} )

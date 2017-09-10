@@ -27,4 +27,4 @@ add_executable(${PROJECT_NAME}
 	Server.cpp
 	${${PROJECT_NAME}_PLATFORM_SRC}
 )
-target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS})
+target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})

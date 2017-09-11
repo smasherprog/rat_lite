@@ -73,7 +73,7 @@ else()
 endif()
 
 if(CUSTOM_OPENSSL)
-	find_package(OPENSSL REQUIRED) 
+	find_package(OpenSSL REQUIRED) 
 else()
 	if(BUILD_SHARED_LIBS)
 		set(OPENSSLBUILDOPTIONS no-ssl2 no-ssl3 shared no-weak-ssl-ciphers)

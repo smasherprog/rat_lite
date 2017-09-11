@@ -6,7 +6,6 @@
 
 #include "Configs.h"
 #include "Logging.h"
-#include "SCCommon.h"
 
 #include "WS_Lite.h"
 

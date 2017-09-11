@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(BUILD_EXAMPLE ON)
 option(BUILD_SHARED_LIBS "Build the shared library" OFF)
+option(CUSTOM_OPENSSL "Build the library using a custom openssl version" OFF)
+option(CUSTOM_ZLIB "Build the library using a custom zlib version" OFF)
 
 set(GLOBAL_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
@@ -47,8 +49,18 @@ else()
 endif()
 
 add_definitions(-DBOOST_REGEX_NO_LIB -DBOOST_DATE_TIME_NO_LIB -DASIO_STANDALONE -DBOOST_NO_EXCEPTIONS)
-include_directories(include)
 
+
+include_directories(
+	include
+	${ZLIB_INCLUDE_DIRS} 
+	${OPENSSL_INCLUDE_DIRS}
+	${LIBJPEG_TURBO_INCLUDE_DIRS}
+	${INPUT_LITE_INCLUDE_DIRS}
+	${CLIPBOARD_LITE_INCLUDE_DIRS} 
+	${SCREEN_CAPTURE_LITE_INCLUDE_DIRS}
+	${WEBSOCKET_LITE_INCLUDE_DIRS}
+)
 add_library(${PROJECT_NAME} 	
 	src/ClientDriver.cpp
 	src/ServerDriver.cpp
@@ -60,6 +72,8 @@ set(COMMON_LIBRARIES
 	${INPUT_LITE_LIBRARIES}
 	${CLIPBOARD_LITE_LIBRARIES}	
 	${SCREEN_CAPTURE_LITE_LIBRARIES}
+	${OPENSSL_LIBRARIES} 
+	${ZLIB_LIBRARIES} 
 )
 
 if(BUILD_SHARED_LIBS)
@@ -75,8 +89,14 @@ if(BUILD_SHARED_LIBS)
 	endif()
 endif()
 
-
+if(NOT CUSTOM_OPENSSL)
+	add_dependencies(${PROJECT_NAME} openssl)
+endif()
+if(NOT CUSTOM_ZLIB)
+	add_dependencies(${PROJECT_NAME} zlib)
+endif()
 add_dependencies(${PROJECT_NAME} libjpeg-turbo websocket_lite input_lite clipboard_lite screen_capture_lite)
+
 install (TARGETS ${PROJECT_NAME}  
 	ARCHIVE DESTINATION lib
 	LIBRARY DESTINATION lib

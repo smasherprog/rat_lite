@@ -17,6 +17,7 @@ x64/
 x86/
 build/
 bld/
+libs/
 [Bb]in/
 [Oo]bj/
 .workspace/

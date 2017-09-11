@@ -20,7 +20,7 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
 
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
+include_directories(${COMMON_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} 	
 	main.cpp

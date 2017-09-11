@@ -170,8 +170,6 @@ else()
 	)
 endif()
 
-add_dependencies(websocket_lite libjpeg-turbo openssl zlib)
-
 ExternalProject_Add(
   input_lite
 

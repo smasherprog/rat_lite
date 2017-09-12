@@ -140,7 +140,7 @@ else()
 			)
 		endif() 
 	endif() 
-	set(OPENSSL_INCLUDE_DIRS "${GLOBAL_OUTPUT_PATH}/openssl/include") 
+	set(OPENSSL_INCLUDE_DIR "${GLOBAL_OUTPUT_PATH}/openssl/include") 
 endif()
 
 

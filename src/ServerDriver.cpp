@@ -7,7 +7,7 @@
 #include "Shapes.h"
 #include "turbojpeg.h"
 
-#include "SCCommon.h"
+#include "ScreenCapture.h"
 #include "WS_Lite.h"
 
 #include <atomic>
@@ -25,7 +25,7 @@ namespace RAT {
         std::shared_ptr<Server_Config> Config_;
         IServerDriver *IServerDriver_;
         std::atomic<int> ClientCount;
-        WS_LITE::WSListener h;
+        std::shared_ptr<WS_LITE::WSListener> h;
 
         void onKeyUp(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
         {

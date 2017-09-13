@@ -6,7 +6,7 @@
 
 #include "Configs.h"
 #include "Logging.h"
-
+#include "ScreenCapture.h"
 #include "WS_Lite.h"
 
 #include <assert.h>
@@ -19,7 +19,7 @@ namespace RAT {
 
         IClientDriver *IClientDriver_;
         std::shared_ptr<Client_Config> Config_;
-        WS_LITE::WSClient h;
+        std::shared_ptr<WS_LITE::WSClient> h;
         Point LastMousePosition_;
         std::shared_ptr<WS_LITE::IWSocket> Socket_;
         std::thread Runner;

@@ -5,9 +5,24 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(BUILD_EXAMPLE ON)
-option(BUILD_SHARED_LIBS "Build the shared library" OFF)
-option(CUSTOM_OPENSSL "Build the library using a custom openssl version" OFF)
-option(CUSTOM_ZLIB "Build the library using a custom zlib version" OFF)
+option(BUILD_SHARED_LIBS "Build the shared library" OFF) 
+
+# Global settings
+set(GLOBAL_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
+
+# Sets global output directory for single configuration (GCC)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${GLOBAL_OUTPUT_PATH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${GLOBAL_OUTPUT_PATH})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${GLOBAL_OUTPUT_PATH})
+
+# Sets global output directory for sub-configurations (msvc, mingw)
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
+endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
 
 include(CMakeLists-ExternalProjects.txt)
 
@@ -32,23 +47,18 @@ else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 endif()
 
-add_definitions(-DBOOST_REGEX_NO_LIB -DBOOST_DATE_TIME_NO_LIB -DASIO_STANDALONE -DBOOST_NO_EXCEPTIONS)
-
+find_package(ZLIB REQUIRED) 
+find_package(OpenSSL REQUIRED) 
 set(COMMON_INCLUDE_DIRS
 	include
-	${ZLIB_INCLUDE_DIRS} 
-	${OPENSSL_INCLUDE_DIRS}
-	${LIBJPEG_TURBO_INCLUDE_DIRS}
-	${INPUT_LITE_INCLUDE_DIRS}
-	${CLIPBOARD_LITE_INCLUDE_DIRS} 
-	${SCREEN_CAPTURE_LITE_INCLUDE_DIRS}
-	${WEBSOCKET_LITE_INCLUDE_DIRS}	
-	${CMAKE_INSTALL_PREFIX}/include
+	${GLOBAL_OUTPUT_PATH}/include
+	${OPENSSL_INCLUDE_DIR}
+	${ZLIB_INCLUDE_DIRs} 
 )
 include_directories(
 	${COMMON_INCLUDE_DIRS}
 )
-link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+
 add_library(${PROJECT_NAME} 	
 	src/ClientDriver.cpp
 	src/ServerDriver.cpp
@@ -77,12 +87,6 @@ if(BUILD_SHARED_LIBS)
 	endif()
 endif()
 
-if(NOT CUSTOM_OPENSSL)
-	add_dependencies(${PROJECT_NAME} openssl)
-endif()
-if(NOT CUSTOM_ZLIB)
-	add_dependencies(${PROJECT_NAME} zlib)
-endif()
 add_dependencies(${PROJECT_NAME} libjpeg-turbo websocket_lite input_lite clipboard_lite screen_capture_lite)
 
 install (TARGETS ${PROJECT_NAME}  

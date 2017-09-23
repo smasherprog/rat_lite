@@ -4,9 +4,8 @@
 #include "IClientDriver.h"
 #include "IServerDriver.h"
 #include "NetworkStructs.h"
-#include "SCCommon.h"
+#include "ScreenCapture.h"
 #include "ServerDriver.h"
-
 #include "WS_Lite.h"
 
 #include <assert.h>
@@ -114,7 +113,7 @@ class TestServerDriver : public SL::RAT::IServerDriver {
 
         lowerlevel = std::make_unique<SL::RAT::ServerDriver>(this, serverconfig);
 
-        MonitorsToSend.push_back(SL::Screen_Capture::CreateMonitor(2, 4, 1028, 2046, -1, -3, std::string("firstmonitor")));
+        //  MonitorsToSend.push_back(SL::Screen_Capture::CreateMonitor(2, 4, 1028, 2046, -1, -3, std::string("firstmonitor")));
     }
 
     virtual ~TestServerDriver() {}

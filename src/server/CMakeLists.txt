@@ -20,11 +20,24 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
 
-include_directories(${COMMON_INCLUDE_DIRS})
-
+include_directories(${COMMON_INCLUDE_DIRS}) 
 add_executable(${PROJECT_NAME} 	
 	main.cpp
 	Server.cpp
 	${${PROJECT_NAME}_PLATFORM_SRC}
 )
-target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES})
+if(${BUILD_SHARED_LIBS})
+	if(WIN32) 
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
+					   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+					   $<TARGET_FILE:rat>              
+					   $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+				   
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
+					   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+					   $<TARGET_FILE:${COMMON_LIBRARIES}>              
+					   $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	endif()
+endif()
+
+target_link_libraries(${PROJECT_NAME} rat ${COMMON_LIBRARIES})

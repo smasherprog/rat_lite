@@ -5,25 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(BUILD_EXAMPLE ON)
-option(BUILD_SHARED_LIBS "Build the shared library" OFF) 
-
-# Global settings
-set(GLOBAL_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/install)
-
-# Sets global output directory for single configuration (GCC)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${GLOBAL_OUTPUT_PATH})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${GLOBAL_OUTPUT_PATH})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${GLOBAL_OUTPUT_PATH})
-
-# Sets global output directory for sub-configurations (msvc, mingw)
-foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${GLOBAL_OUTPUT_PATH})
-endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
-
+option(BUILD_SHARED_LIBS "Build the shared library" ON) 
+ 
 include(CMakeLists-ExternalProjects.txt)
 
 if(WIN32)
@@ -51,15 +34,16 @@ find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED) 
 set(COMMON_INCLUDE_DIRS
 	include
-	${GLOBAL_OUTPUT_PATH}/include
+	${PROJECT_BINARY_DIR}/bin/include
 	${OPENSSL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRs} 
 )
 include_directories(
 	${COMMON_INCLUDE_DIRS}
 )
-
+link_directories(${PROJECT_BINARY_DIR}/bin/lib)
 add_library(${PROJECT_NAME} 	
+	include/RAT.h
 	src/ClientDriver.cpp
 	src/ServerDriver.cpp
 )
@@ -90,14 +74,13 @@ endif()
 add_dependencies(${PROJECT_NAME} libjpeg-turbo websocket_lite input_lite clipboard_lite screen_capture_lite)
 
 install (TARGETS ${PROJECT_NAME}  
+	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
 	LIBRARY DESTINATION lib
 )
 
 install (FILES 
-	include/IClientDriver.h
-	include/ClientDriver.h
-	include/ServerDriver.h
+	include/IClientDriver.h 
 	include/IServerDriver.h
 	include/NetworkStructs.h
 	include/Configs.h

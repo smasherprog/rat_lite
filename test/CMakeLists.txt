@@ -8,9 +8,6 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 endif()
 
-set(${PROJECT_NAME}_EXAMPLE_SRC 
-	main.cpp
-)
 
 add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../Test/private.key"
@@ -18,9 +15,9 @@ add_definitions(
 	-DTEST_CERTIFICATE_PRIVATE_PASSWORD="Test pass"
 )
 
-include_directories(${REMOTE_ACCESS_INCLUDE_DIRS})
+include_directories(${COMMON_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_EXAMPLE_SRC} ${${PROJECT_NAME}_PLATFORM_SRC})
-target_link_libraries(${PROJECT_NAME} ${REMOTE_ACCESS_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+add_executable(${PROJECT_NAME} main.cpp)
+target_link_libraries(${PROJECT_NAME} rat ${COMMON_LIBRARIES})
 
 add_test (NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

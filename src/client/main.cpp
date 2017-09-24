@@ -1,36 +1,37 @@
-#include <memory>
-#include <iostream>
-#include "Configs.h"
-#include "cxxopts.hpp"
 #include "ClientWindow.h"
+#include "cxxopts.hpp"
+#include <iostream>
+#include <memory>
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
 
-	auto config = std::make_shared<SL::RAT::Client_Config>();
+    std::string host, pathtocert;
+    unsigned short httpport = 8080;
+    unsigned short tlsport = 6001;
+    bool shareclipboard = false;
 
-	std::string host;
     cxxopts::Options options("Remote Access Client", "<Usage Options>");
-    options.add_options()
-		("help", "<Usage Options>")
-        ("https_port", "https listen port", cxxopts::value<unsigned short>(config->HttpTLSPort)->default_value("8080"))
-        ("websocket_port", "websocket listen port", cxxopts::value<unsigned short>(config->WebSocketTLSLPort)->default_value("6001"))
-        ("share_clipboard", "share this servers clipboard with clients", cxxopts::value<bool>(config->Share_Clipboard))
-		("host", "enter a host or ip address to initite a connection", cxxopts::value<std::string>(host))
-#if defined(DEBUG)  || defined(_DEBUG) || !defined(NDEBUG)
-		("public_cert_path", "path to the public certificate file", cxxopts::value<std::string>(config->PathTo_Public_Certficate)->default_value(TEST_CERTIFICATE_PUBLIC_PATH))
-#else 
-		("public_cert_path", "path to the public certificate file", cxxopts::value<std::string>(config->PathTo_Public_Certficate))
+    options.add_options()("help", "<Usage Options>")("https_port", "https listen port",
+                                                     cxxopts::value<unsigned short>(httpport)->default_value("8080"))(
+        "websocket_port", "websocket listen port", cxxopts::value<unsigned short>(tlsport)->default_value("6001"))(
+        "share_clipboard", "share this servers clipboard with clients",
+        cxxopts::value<bool>(shareclipboard))("host", "enter a host or ip address to initite a connection", cxxopts::value<std::string>(host))
+#if defined(DEBUG) || defined(_DEBUG) || !defined(NDEBUG)
+        ("public_cert_path", "path to the public certificate file",
+         cxxopts::value<std::string>(pathtocert)->default_value(TEST_CERTIFICATE_PUBLIC_PATH))
+#else
+        ("public_cert_path", "path to the public certificate file", cxxopts::value<std::string>(pathtocert))
 #endif
-		;
+        ;
 
     options.parse(argc, argv);
-    if (options.count("help"))
-    {
-        std::cout << options.help({ "", "Group" }) << std::endl;
+    if (options.count("help")) {
+        std::cout << options.help({"", "Group"}) << std::endl;
         exit(0);
     }
- 
-	SL::RAT_Client::ClientWindow c(config, host);
+    SL::RAT_Client::ClientWindow c(host, tlsport);
+    c.ShareClipboard(shareclipboard);
     c.Run();
-	return 0;
+    return 0;
 }

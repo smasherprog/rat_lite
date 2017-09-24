@@ -243,6 +243,17 @@ namespace cxxopts
 
 namespace cxxopts
 {
+  namespace
+  {
+#ifdef _WIN32
+    const std::string LQUOTE("\'");
+    const std::string RQUOTE("\'");
+#else
+    const std::string LQUOTE("‘");
+    const std::string RQUOTE("’");
+#endif
+  }
+
   class Value : public std::enable_shared_from_this<Value>
   {
     public:
@@ -319,7 +330,7 @@ namespace cxxopts
   {
     public:
     option_exists_error(const std::string& option)
-    : OptionSpecException(u8"Option ‘" + option + u8"’ already exists")
+    : OptionSpecException(u8"Option " + LQUOTE + option + RQUOTE + u8" already exists")
     {
     }
   };
@@ -328,7 +339,7 @@ namespace cxxopts
   {
     public:
     invalid_option_format_error(const std::string& format)
-    : OptionSpecException(u8"Invalid option format ‘" + format + u8"’")
+    : OptionSpecException(u8"Invalid option format " + LQUOTE + format + RQUOTE)
     {
     }
   };
@@ -337,7 +348,7 @@ namespace cxxopts
   {
     public:
     option_not_exists_exception(const std::string& option)
-    : OptionParseException(u8"Option ‘" + option + u8"’ does not exist")
+    : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" does not exist")
     {
     }
   };
@@ -346,7 +357,9 @@ namespace cxxopts
   {
     public:
     missing_argument_exception(const std::string& option)
-    : OptionParseException(u8"Option ‘" + option + u8"’ is missing an argument")
+    : OptionParseException(
+        u8"Option " + LQUOTE + option + RQUOTE + u8" is missing an argument"
+      )
     {
     }
   };
@@ -355,7 +368,9 @@ namespace cxxopts
   {
     public:
     option_requires_argument_exception(const std::string& option)
-    : OptionParseException(u8"Option ‘" + option + u8"’ requires an argument")
+    : OptionParseException(
+        u8"Option " + LQUOTE + option + RQUOTE + u8" requires an argument"
+      )
     {
     }
   };
@@ -369,8 +384,10 @@ namespace cxxopts
       const std::string& arg
     )
     : OptionParseException(
-        u8"Option ‘" + option + u8"’ does not take an argument, but argument‘"
-        + arg + "’ given")
+        u8"Option " + LQUOTE + option + RQUOTE +
+        u8" does not take an argument, but argument" +
+        LQUOTE + arg + RQUOTE + " given"
+      )
     {
     }
   };
@@ -379,7 +396,7 @@ namespace cxxopts
   {
     public:
     option_not_present_exception(const std::string& option)
-    : OptionParseException(u8"Option ‘" + option + u8"’ not present")
+    : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" not present")
     {
     }
   };
@@ -392,8 +409,8 @@ namespace cxxopts
       const std::string& arg
     )
     : OptionParseException(
-      u8"Argument ‘" + arg + u8"’ failed to parse"
-    )
+        u8"Argument " + LQUOTE + arg + RQUOTE + u8" failed to parse"
+      )
     {
     }
   };
@@ -402,9 +419,8 @@ namespace cxxopts
   {
     public:
     option_required_exception(const std::string& option)
-    : OptionParseException
-      (
-        u8"Option ‘" + option + u8"’ is required but not present"
+    : OptionParseException(
+        u8"Option " + LQUOTE + option + RQUOTE + u8" is required but not present"
       )
     {
     }
@@ -412,8 +428,11 @@ namespace cxxopts
 
   namespace values
   {
-    std::basic_regex<char> integer_pattern
-      ("(-)?(0x)?([1-9a-zA-Z][0-9a-zA-Z]*)|(0)");
+    namespace
+    {
+      std::basic_regex<char> integer_pattern
+        ("(-)?(0x)?([1-9a-zA-Z][0-9a-zA-Z]*)|(0)");
+    }
 
     namespace detail
     {
@@ -429,14 +448,14 @@ namespace cxxopts
         {
           if (negative)
           {
-            if (u > U(-std::numeric_limits<T>::min()))
+            if (u > static_cast<U>(-std::numeric_limits<T>::min()))
             {
               throw argument_incorrect_type(text);
             }
           }
           else
           {
-            if (u > std::numeric_limits<T>::max())
+            if (u > static_cast<U>(std::numeric_limits<T>::max()))
             {
               throw argument_incorrect_type(text);
             }
@@ -458,6 +477,23 @@ namespace cxxopts
       {
         SignedCheck<T, std::numeric_limits<T>::is_signed>()(negative, value, text);
       }
+    }
+
+    template <typename R, typename T>
+    R
+    checked_negate(T&& t, const std::string&, std::true_type)
+    {
+      // if we got to here, then `t` is a positive number that fits into
+      // `R`. So to avoid MSVC C4146, we first cast it to `R`.
+      // See https://github.com/jarro2783/cxxopts/issues/62 for more details.
+      return -static_cast<R>(t);
+    }
+
+    template <typename R, typename T>
+    T
+    checked_negate(T&&, const std::string& text, std::false_type)
+    {
+      throw argument_incorrect_type(text);
     }
 
     template <typename T>
@@ -518,11 +554,14 @@ namespace cxxopts
 
       if (negative)
       {
-        if (!is_signed)
-        {
-          throw argument_incorrect_type(text);
-        }
-        value = -result;
+        value = checked_negate<T>(result,
+          text,
+          std::integral_constant<bool, is_signed>());
+        //if (!is_signed)
+        //{
+        //  throw argument_incorrect_type(text);
+        //}
+        //value = -result;
       }
       else
       {
@@ -530,48 +569,66 @@ namespace cxxopts
       }
     }
 
+    template <typename T>
+    void stringstream_parser(const std::string& text, T& value)
+    {
+      std::stringstream in(text);
+      in >> value;
+      if (!in) {
+        throw argument_incorrect_type(text);
+      }
+    }
+
+    inline
     void
     parse_value(const std::string& text, uint8_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, int8_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, uint16_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, int16_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, uint32_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, int32_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, uint64_t& value)
     {
       integer_parser(text, value);
     }
 
+    inline
     void
     parse_value(const std::string& text, int64_t& value)
     {
@@ -592,6 +649,15 @@ namespace cxxopts
     parse_value(const std::string& text, std::string& value)
     {
       value = text;
+    }
+
+    // The fallback parser. It uses the stringstream parser to parse all types
+    // that have not been overloaded explicitly.  It has to be placed in the
+    // source code before all other more specialized templates.
+    template <typename T>
+    void
+    parse_value(const std::string& text, T& value) {
+      stringstream_parser(text, value);
     }
 
     template <typename T>

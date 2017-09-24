@@ -1,22 +1,22 @@
 #pragma once
-#include <memory>
 #include <string>
 
 namespace SL {
-    namespace RAT {
-        struct Client_Config;
-    }
-    namespace RAT_Client {
-        const char WindowTitle[] = "Remote Access Tool";
-        class ClientWindowImpl;
+namespace RAT_Client {
 
-        class ClientWindow {
-            ClientWindowImpl* ClientWindowImpl_ = nullptr;
-        public:
-            ClientWindow(std::shared_ptr<SL::RAT::Client_Config>& config, const std::string& host);
-            ~ClientWindow();
-            void Run();
-        };
+    const char WindowTitle[] = "Remote Access Tool";
+    class ClientWindowImpl;
 
-    }
-}
+    class ClientWindow {
+        ClientWindowImpl *ClientWindowImpl_ = nullptr;
+
+      public:
+        ClientWindow(std::string host, unsigned short port = 6001, std::string pathtocertificate = "");
+        void ShareClipboard(bool share);
+        bool ShareClipboard() const;
+        ~ClientWindow();
+        void Run();
+    };
+
+} // namespace RAT_Client
+} // namespace SL

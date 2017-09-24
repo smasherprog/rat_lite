@@ -5,29 +5,35 @@ configuration:
   
 clone_folder: c:\projects\proj
 
-cache:		
-  - c:\projects\build1\vcpkg\scripts -> appveyor.yml		
-  - c:\projects\build1\vcpkg\installed -> appveyor.yml
- 
 platform:
 - x86
 
 install:  
+  - curl -L -o nasminst.exe http://www.nasm.us/pub/nasm/releasebuilds/2.13.01/win64/nasm-2.13.01-installer-x64.exe
+  - start /wait nasminst.exe /S
+  - ps: $env:path="C:\Program Files\nasm;$($env:path)"
+  - ps: wget https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi -outfile "VCForPython27.msi"
+  - start /wait msiexec /i c:\projects\proj\VCForPython27.msi /quiet /qn /norestart
+  - pip install autobahntestsuite
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects
-  - IF NOT EXIST c:\projects\build1 mkdir build1
-  - cd build1
-  - IF NOT EXIST c:\projects\build1\vcpkg git clone https://github.com/Microsoft/vcpkg
+  - mkdir build
+  - cd build
+  - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
-  - IF NOT EXIST c:\projects\build1\vcpkg\installed\x86-windows powershell -exec bypass scripts\bootstrap.ps1
-  - IF NOT EXIST c:\projects\build1\vcpkg\installed\x86-windows .\vcpkg install libjpeg-turbo zlib openssl
+  - powershell -exec bypass scripts\bootstrap.ps1
+  - .\vcpkg integrate install
+  - .\vcpkg install zlib:x86-windows-static openssl:x86-windows-static zlib openssl
+  
+build_script:
   - cd c:\projects\proj
   - mkdir build
   - cd build
-  - cmake "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build1\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
-  
-build_script:
+  - cmake -DBUILD_SHARED_LIBS=OFF -DVCPKG_TARGET_TRIPLET=x86-windows-static "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
   - cmake --build .
-  
-test_script:
-  - ctest -V -C Debug 
+  - ctest -V -C Debug
+  - cmake -DBUILD_SHARED_LIBS=ON "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
+  - cmake --build .
+  - cmake --build .
+  - ctest -V -C Debug
+

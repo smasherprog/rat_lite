@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <math.h>
 
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(RAT_LITE_DLL)

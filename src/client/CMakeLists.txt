@@ -70,10 +70,15 @@ target_link_libraries(${PROJECT_NAME}
 
 if(${BUILD_SHARED_LIBS}) 
 	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL RAT_LITE_DLL)  
+	set(sharedjpegname jpeg62)
+	if(APPLE)
+		set(sharedjpegname jpeg.62)
+	endif()
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		${CMAKE_BINARY_DIR}/bin/bin/${CMAKE_SHARED_LIBRARY_PREFIX}jpeg62${CMAKE_SHARED_LIBRARY_SUFFIX}              
+		${CMAKE_BINARY_DIR}/bin/bin/${CMAKE_SHARED_LIBRARY_PREFIX}${sharedjpegname}${CMAKE_SHARED_LIBRARY_SUFFIX}              
 		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
+		
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		${CMAKE_BINARY_DIR}/bin/bin/${CMAKE_SHARED_LIBRARY_PREFIX}turbojpeg${CMAKE_SHARED_LIBRARY_SUFFIX}           

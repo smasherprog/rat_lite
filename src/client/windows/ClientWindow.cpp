@@ -22,7 +22,7 @@ namespace RAT_Client {
     };
     class ClientWindowImpl {
       public:
-        std::shared_ptr<Clipboard_Lite::Clipboard_Manager> Clipboard_Manager_;
+        std::shared_ptr<Clipboard_Lite::IClipboard_Manager> Clipboard_Manager_;
         std::vector<MonitorInfo> Monitors;
 
         std::shared_ptr<RAT::IClientDriver> ClientDriver_;

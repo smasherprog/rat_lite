@@ -22,7 +22,7 @@ namespace RAT {
     class ServerImpl {
       public:
         std::shared_ptr<Screen_Capture::ScreenCaptureManager> ScreenCaptureManager_;
-        std::shared_ptr<Clipboard_Lite::Clipboard_Manager> Clipboard_;
+        std::shared_ptr<Clipboard_Lite::IClipboard_Manager> Clipboard_;
         std::shared_ptr<RAT::IServerDriver> IServerDriver_;
 
         Server_Status Status_ = Server_Status::SERVER_STOPPED;

@@ -65,17 +65,24 @@ endif()
 if(${BUILD_SHARED_LIBS})
 	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL RAT_LITE_DLL)
 endif()
-if(${BUILD_SHARED_LIBS})
-	if(WIN32)
-	target_link_libraries(${PROJECT_NAME}  
-		${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}jpeg.lib
-		${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}turbojpeg.lib
-		${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}websocket_lite.lib
-		${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}input_lite.lib
-		${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clipboard_lite.lib
-		${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}screen_capture_lite.lib
-	)
+if(WIN32)
+	set(LIBEXTENSION .lib)
+else()
+	if(${BUILD_SHARED_LIBS})
+		set(LIBEXTENSION ${CMAKE_SHARED_LIBRARY_SUFFIX})
+	else()
+		set(LIBEXTENSION ${CMAKE_STATIC_LIBRARY_SUFFIX})
 	endif()
+endif() 
+if(${BUILD_SHARED_LIBS})
+	target_link_libraries(${PROJECT_NAME}  
+			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}jpeg${LIBEXTENSION} 
+			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}turbojpeg${LIBEXTENSION} 
+			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}websocket_lite${LIBEXTENSION} 
+			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}input_lite${LIBEXTENSION} 
+			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clipboard_lite${LIBEXTENSION} 
+			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}screen_capture_lite${LIBEXTENSION} 
+		)
 endif()
 
 install (TARGETS ${PROJECT_NAME}  

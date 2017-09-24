@@ -12,7 +12,7 @@
 #endif
 
 namespace SL {
-namespace RAT {
+namespace RAT_Lite {
 
     class ServerDriver : public IServerDriver {
 
@@ -162,7 +162,7 @@ namespace RAT {
                     }
                 })
                 ->onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
-                    SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection  ");
+                    SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onDisconnection  ");
                     ClientCount -= 1;
                     if (onDisconnection)
                         onDisconnection(socket, code, msg);
@@ -230,7 +230,7 @@ namespace RAT {
 
         if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, imagecompression,
                         TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-            SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
+            SL_RAT_LOG(RAT_Lite::Logging_Levels::ERROR_log_level, tjGetErrorStr());
         }
         //	std::cout << "Sending " << r << std::endl;
         auto finalsize = sizeof(p) + sizeof(r) + sizeof(monitor.Id) + outjpegsize; // adjust the correct size
@@ -302,7 +302,7 @@ namespace RAT {
         std::shared_ptr<ServerDriver> ServerDriver_;
 
       public:
-        ServerDriverConfiguration(const std::shared_ptr<SL::RAT::ServerDriver> &c) : ServerDriver_(c) {}
+        ServerDriverConfiguration(const std::shared_ptr<SL::RAT_Lite::ServerDriver> &c) : ServerDriver_(c) {}
         virtual ~ServerDriverConfiguration() {}
         virtual std::shared_ptr<IServerDriverConfiguration>
         onKeyUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
@@ -386,5 +386,5 @@ namespace RAT {
         return std::make_shared<ServerDriverConfiguration>(std::make_shared<ServerDriver>());
     }
 
-} // namespace RAT
+} // namespace RAT_Lite
 } // namespace SL

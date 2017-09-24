@@ -12,7 +12,7 @@
 using namespace std::chrono_literals;
 
 std::vector<SL::Screen_Capture::Monitor> MonitorsToSend;
-SL::RAT::Point mpoint = {67, 89};
+SL::RAT_Lite::Point mpoint = {67, 89};
 std::string cliptext = "thisitheweasdsxzzxc436t456u7658u/asd.";
 //
 // class TestClientDriver : public SL::RAT::IClientDriver {

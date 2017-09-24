@@ -14,7 +14,7 @@
 using namespace std::chrono_literals;
 
 namespace SL {
-namespace RAT {
+namespace RAT_Server {
     struct NewClient {
         std::shared_ptr<WS_LITE::IWSocket> s;
         std::vector<int> mids;
@@ -23,7 +23,7 @@ namespace RAT {
       public:
         std::shared_ptr<Screen_Capture::ScreenCaptureManager> ScreenCaptureManager_;
         std::shared_ptr<Clipboard_Lite::IClipboard_Manager> Clipboard_;
-        std::shared_ptr<RAT::IServerDriver> IServerDriver_;
+        std::shared_ptr<RAT_Lite::IServerDriver> IServerDriver_;
 
         Server_Status Status_ = Server_Status::SERVER_STOPPED;
         std::mutex ClientsLock;
@@ -39,6 +39,7 @@ namespace RAT {
         int ScreenImageCaptureRate = 10;
         bool IgnoreIncomingKeyboardEvents = false;
         bool IgnoreIncomingMouseEvents = false;
+        bool EncodeImagesAsGrayScale = false;
 
         ServerImpl()
         {
@@ -47,7 +48,7 @@ namespace RAT {
             Clipboard_ = Clipboard_Lite::CreateClipboard()
                              ->onText([&](const std::string &text) {
                                  if (ShareClip) {
-                                     SendtoAll(RAT::IServerDriver::PrepareClipboardChanged(text));
+                                     SendtoAll(RAT_Lite::IServerDriver::PrepareClipboardChanged(text));
                                  }
                              })
                              ->run();
@@ -55,7 +56,7 @@ namespace RAT {
             ScreenCaptureManager_ =
                 Screen_Capture::CreateCaptureConfiguration([&]() {
                     auto monitors = Screen_Capture::GetMonitors();
-                    SendtoAll(RAT::IServerDriver::PrepareMonitorsChanged(monitors));
+                    SendtoAll(RAT_Lite::IServerDriver::PrepareMonitorsChanged(monitors));
                     // add everyone to the list!
 
                     std::vector<NewClient> newclients;
@@ -78,7 +79,7 @@ namespace RAT {
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!ClientsThatNeedFullFrames.empty()) {
-                            auto msg = RAT::IServerDriver::PrepareNewFrame(img, monitor);
+                            auto msg = RAT_Lite::IServerDriver::PrepareNewFrame(img, monitor);
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             for (auto &a : ClientsThatNeedFullFrames) {
                                 auto itr = std::find_if(std::begin(a.mids), std::end(a.mids),
@@ -95,13 +96,13 @@ namespace RAT {
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                        SendtoAll(RAT::IServerDriver::PrepareFrameChanged(img, monitor));
+                        SendtoAll(RAT_Lite::IServerDriver::PrepareFrameChanged(img, monitor));
                     })
                     ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
                         if (img) {
-                            SendtoAll(RAT::IServerDriver::PrepareMouseImageChanged(*img));
+                            SendtoAll(RAT_Lite::IServerDriver::PrepareMouseImageChanged(*img));
                         }
-                        SendtoAll(RAT::IServerDriver::PrepareMousePositionChanged(point));
+                        SendtoAll(RAT_Lite::IServerDriver::PrepareMousePositionChanged(point));
                     })
                     ->start_capturing();
 
@@ -127,7 +128,7 @@ namespace RAT {
         {
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))->NoTLS()->CreateListener(port);
             IServerDriver_ =
-                RAT::CreateServerDriverConfiguration()
+                RAT_Lite::CreateServerDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
                         {
                             std::lock_guard<std::mutex> lock(ClientsLock);
@@ -138,7 +139,7 @@ namespace RAT {
                         for (auto &a : p) {
                             ids.push_back(Screen_Capture::Id(a));
                         }
-                        socket->send(RAT::IServerDriver::PrepareMonitorsChanged(p), false);
+                        socket->send(RAT_Lite::IServerDriver::PrepareMonitorsChanged(p), false);
                         {
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             ClientsThatNeedFullFrames.push_back({socket, ids});
@@ -207,7 +208,7 @@ namespace RAT {
                             Input_Lite::SendInput(mbevent);
                         }
                     })
-                    ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos) {
+                    ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos) {
                         if (!IgnoreIncomingMouseEvents) {
                             Input_Lite::MousePositionAbsoluteEvent mbevent;
                             mbevent.X = pos.X;
@@ -216,7 +217,7 @@ namespace RAT {
                         }
                     })
                     ->onClipboardChanged([&](const std::string &text) {
-                        SL_RAT_LOG(Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
+                        SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
                         Clipboard_->copy(text);
                     })
                     ->Build(clientctx);
@@ -235,6 +236,8 @@ namespace RAT {
     int Server::MouseChangeInterval() const { return ServerImpl_->MouseCaptureRate; }
     void Server::ImageCompressionSetting(int compression) { ServerImpl_->ImageCompressionSetting = compression; }
     int Server::ImageCompressionSetting() const { return ServerImpl_->ImageCompressionSetting; }
+    void Server::EncodeImagesAsGrayScale(bool usegrayscale) { ServerImpl_->EncodeImagesAsGrayScale = usegrayscale; }
+    bool Server::EncodeImagesAsGrayScale() const { return ServerImpl_->EncodeImagesAsGrayScale; }
 
     void Server::Server::Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key,
                              std::string PathTo_Public_Certficate)
@@ -251,5 +254,5 @@ namespace RAT {
     }
 #endif
 
-} // namespace RAT
+} // namespace RAT_Server
 } // namespace SL

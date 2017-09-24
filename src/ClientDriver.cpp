@@ -9,7 +9,7 @@
 #include <mutex>
 
 namespace SL {
-namespace RAT {
+namespace RAT_Lite {
 
     class ClientDriver : public IClientDriver {
 
@@ -37,7 +37,7 @@ namespace RAT {
             if (!onMousePositionChanged)
                 return;
             if (len == sizeof(SL::Screen_Capture::Point)) {
-                return onMousePositionChanged(*reinterpret_cast<const RAT::Point *>(data));
+                return onMousePositionChanged(*reinterpret_cast<const RAT_Lite::Point *>(data));
             }
             socket->close(1000, "Received invalid lenght on onMousePositionChanged");
         }
@@ -89,20 +89,20 @@ namespace RAT {
 
             auto monitor = std::find_if(begin(Monitors), end(Monitors), [monitor_id](const auto &m) { return m.Id == monitor_id; });
             if (monitor == end(Monitors)) {
-                SL_RAT_LOG(Logging_Levels::INFO_log_level, "Monitor Id doesnt exist!");
+                SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "Monitor Id doesnt exist!");
                 return;
             }
             len -= sizeof(Rect) + sizeof(monitor_id);
 
             if (tjDecompressHeader2(jpegDecompressor, src, static_cast<unsigned long>(len), &outwidth, &outheight, &jpegSubsamp) == -1) {
-                SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
+                SL_RAT_LOG(RAT_Lite::Logging_Levels::ERROR_log_level, tjGetErrorStr());
             }
             std::lock_guard<std::mutex> lock(outputbufferLock);
             outputbuffer.reserve(outwidth * outheight * PixelStride);
 
             if (tjDecompress2(jpegDecompressor, src, static_cast<unsigned long>(len), (unsigned char *)outputbuffer.data(), outwidth, 0, outheight,
                               TJPF_RGBX, 2048 | TJFLAG_NOREALLOC) == -1) {
-                SL_RAT_LOG(Logging_Levels::ERROR_log_level, tjGetErrorStr());
+                SL_RAT_LOG(RAT_Lite::Logging_Levels::ERROR_log_level, tjGetErrorStr());
             }
             Image img(rect, outputbuffer.data(), outwidth * outheight * PixelStride);
 
@@ -130,13 +130,13 @@ namespace RAT {
 
             wsclientconfig
                 ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
-                    SL_RAT_LOG(Logging_Levels::INFO_log_level, "onConnection ");
+                    SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onConnection ");
                     Socket_ = socket;
                     if (onConnection)
                         onConnection(socket);
                 })
                 ->onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
-                    SL_RAT_LOG(Logging_Levels::INFO_log_level, "onDisconnection ");
+                    SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onDisconnection ");
                     Socket_.reset();
                     if (onDisconnection)
                         onDisconnection(socket, code, msg);
@@ -184,7 +184,7 @@ namespace RAT {
         template <typename STRUCT> void SendStruct_Impl(STRUCT key, PACKET_TYPES ptype)
         {
             if (!Socket_) {
-                SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
+                SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "SendKey called on a socket that is not open yet");
                 return;
             }
             const auto size = sizeof(ptype) + sizeof(key);
@@ -202,7 +202,7 @@ namespace RAT {
         virtual void SendClipboardChanged(const std::string &text) override
         {
             if (!Socket_) {
-                SL_RAT_LOG(Logging_Levels::INFO_log_level, "SendClipboardText called on a socket that is not open yet");
+                SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "SendClipboardText called on a socket that is not open yet");
                 return;
             }
             if (Socket_->is_loopback())
@@ -233,7 +233,7 @@ namespace RAT {
         std::shared_ptr<ClientDriver> ClientDriverImpl;
 
       public:
-        ClientDriverConfiguration(const std::shared_ptr<SL::RAT::ClientDriver> &c) : ClientDriverImpl(c) {}
+        ClientDriverConfiguration(const std::shared_ptr<SL::RAT_Lite::ClientDriver> &c) : ClientDriverImpl(c) {}
         virtual ~ClientDriverConfiguration() {}
         virtual std::shared_ptr<IClientDriverConfiguration>
         onMonitorsChanged(const std::function<void(const std::vector<Screen_Capture::Monitor> &)> &callback) override
@@ -309,5 +309,5 @@ namespace RAT {
         return std::make_shared<ClientDriverConfiguration>(std::make_shared<ClientDriver>());
     }
 
-} // namespace RAT
+} // namespace RAT_Lite
 } // namespace SL

@@ -48,7 +48,7 @@ else()
 endif() 
 
 target_link_libraries(${PROJECT_NAME} 
-	rat
+	rat_lite
 	${OPENSSL_LIBRARIES}
 	${ZLIB_LIBRARIES}
 	${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}jpeg${LIBEXTENSION}    

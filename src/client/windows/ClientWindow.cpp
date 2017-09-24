@@ -25,7 +25,7 @@ namespace RAT_Client {
         std::shared_ptr<Clipboard_Lite::IClipboard_Manager> Clipboard_Manager_;
         std::vector<MonitorInfo> Monitors;
 
-        std::shared_ptr<RAT::IClientDriver> ClientDriver_;
+        std::shared_ptr<RAT_Lite::IClientDriver> ClientDriver_;
         std::shared_ptr<SL::WS_LITE::IWSHub> IWSHub_;
         std::shared_ptr<SL::WS_LITE::IWSocket> Socket_;
 
@@ -91,7 +91,7 @@ namespace RAT_Client {
                 }
                 break;
             case WM_MOUSEMOVE:
-                ClientDriver_->SendMousePosition(RAT::Point(LOWORD(lParam), HIWORD(lParam)));
+                ClientDriver_->SendMousePosition(RAT_Lite::Point(LOWORD(lParam), HIWORD(lParam)));
                 break;
             case WM_LBUTTONDOWN:
                 ClientDriver_->SendMouseDown(Input_Lite::MouseButtons::LEFT);
@@ -229,7 +229,7 @@ namespace RAT_Client {
             CleanUp();
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))->NoTLS()->CreateClient();
             ClientDriver_ =
-                RAT::CreateClientDriverConfiguration()
+                RAT_Lite::CreateClientDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
                         Socket_ = socket;
                         // make sure to show the window
@@ -256,7 +256,7 @@ namespace RAT_Client {
                         }
                         std::cout << "onMonitorsChanged" << std::endl;
                     })
-                    ->onFrameChanged([&](const RAT::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                    ->onFrameChanged([&](const RAT_Lite::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         // std::cout << "onFrameChanged" << std::endl;
                         HDC hdc = GetDC(hWnd);
 
@@ -302,7 +302,7 @@ namespace RAT_Client {
                         // img.Rect_.Height, img.Data, &info, DIB_RGB_COLORS, SRCCOPY);
                         ReleaseDC(hWnd, hdc);
                     })
-                    ->onNewFrame([&](const RAT::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                    ->onNewFrame([&](const RAT_Lite::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         std::cout << "onNewFrame" << std::endl;
                         HDC hdc = GetDC(hWnd);
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rat)
+project(rat_lite)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -100,6 +100,7 @@ install (FILES
 if(BUILD_EXAMPLE)
 	add_subdirectory(src/client)
 	add_subdirectory(src/server)
+	add_subdirectory(src/html)
 endif()
 
 enable_testing() 

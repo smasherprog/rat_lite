@@ -3,10 +3,10 @@
 #include "ScreenCapture.h"
 #include "WS_Lite.h"
 #include <algorithm>
+#include <math.h>
 #include <memory>
 #include <string>
 #include <vector>
-#include <math.h>
 
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(RAT_LITE_DLL)
@@ -22,7 +22,7 @@
 #endif
 
 namespace SL {
-namespace RAT {
+namespace RAT_Lite {
 
     const int PixelStride = 4;
     struct Point {
@@ -202,5 +202,5 @@ namespace RAT {
     std::shared_ptr<IClientDriverConfiguration> RAT_LITE_EXTERN CreateClientDriverConfiguration();
     std::shared_ptr<IServerDriverConfiguration> RAT_LITE_EXTERN CreateServerDriverConfiguration();
 
-} // namespace RAT
+} // namespace RAT_Lite
 } // namespace SL

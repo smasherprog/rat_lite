@@ -18,9 +18,7 @@ template <typename T> void check_range(const std::string &name, T &value, const 
 
 int main(int argc, char *argv[])
 {
-
     std::string PasswordToPrivateKey, PathTo_Private_Key, PathTo_Public_Certficate;
-    unsigned short httpport = 8080;
     unsigned short tlsport = 6001;
     bool shareclipboard = false;
     int ImageCompressionSetting = 70;
@@ -33,7 +31,6 @@ int main(int argc, char *argv[])
     cxxopts::Options options("Remote Access Server", "<Usage Options>");
     options.add_options()("help", "<Usage Options>")("image_compression", "Jpeg Compression setting [30, 100]",
                                                      cxxopts::value<int>(ImageCompressionSetting))(
-        "https_port", "https listen port", cxxopts::value<unsigned short>(httpport)->default_value("8080"))(
         "websocket_port", "websocket listen port", cxxopts::value<unsigned short>(tlsport)->default_value("6001"))(
         "share_clipboard", "share this servers clipboard with clients", cxxopts::value<bool>(shareclipboard))(
         "mouse_capture_rate", "mouse capture rate in ms", cxxopts::value<int>(MouseCaptureRate)->default_value("50"))(
@@ -62,12 +59,13 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    SL::RAT::Server serv;
+    SL::RAT_Server::Server serv;
     serv.ShareClipboard(shareclipboard);
-    serv.MaxConnections(MaxNumConnections);
+    serv.ImageCompressionSetting(ImageCompressionSetting);
     serv.FrameChangeInterval(ScreenImageCaptureRate);
     serv.MouseChangeInterval(MouseCaptureRate);
-    serv.ImageCompressionSetting(ImageCompressionSetting);
+    serv.MaxConnections(MaxNumConnections);
+    serv.EncodeImagesAsGrayScale(SendGrayScaleImages);
 
     serv.Run(tlsport, PasswordToPrivateKey, PathTo_Private_Key, PathTo_Public_Certficate);
     return 0;

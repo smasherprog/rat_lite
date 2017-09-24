@@ -1,5 +1,4 @@
 #include "ClientWindow.h"
-#include "Configs.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
@@ -14,7 +13,6 @@ namespace RAT_Client
 {
     class ClientWindowImpl
     {
-        std::shared_ptr<SL::RAT::Client_Config> Config;
 
         /* here are our X variables */
         Display* dis;
@@ -23,8 +21,7 @@ namespace RAT_Client
         GC gc;
 
     public:
-        ClientWindowImpl(std::shared_ptr<SL::RAT::Client_Config>& config, const std::string& host)
-            : Config(config)
+        ClientWindowImpl(const std::string& host)
         {
         }
         void init_x()
@@ -97,15 +94,21 @@ namespace RAT_Client
         }
     };
 
-    ClientWindow::ClientWindow(std::shared_ptr<SL::RAT::Client_Config>& config, const std::string& host)
+    ClientWindow::ClientWindow(std::string host, unsigned short port, std::string pathtocertificate)
     {
-        ClientWindowImpl_ = new ClientWindowImpl(config, host);
+        ClientWindowImpl_ = new ClientWindowImpl(host);
     }
     ClientWindow::~ClientWindow()
     {
         delete ClientWindowImpl_;
     }
-
+    void ClientWindow::ShareClipboard(bool share)
+    {
+    }
+    bool ClientWindow::ShareClipboard() const
+    {
+        return false;
+    }
     void ClientWindow::Run()
     {
         ClientWindowImpl_->Run();

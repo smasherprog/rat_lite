@@ -299,85 +299,85 @@ namespace RAT {
     }
 
     class ServerDriverConfiguration : public IServerDriverConfiguration {
-        std::shared_ptr<ServerDriver> ServerDriver;
+        std::shared_ptr<ServerDriver> ServerDriver_;
 
       public:
-        ServerDriverConfiguration(const std::shared_ptr<SL::RAT::ServerDriver> &c) : ServerDriver(c) {}
+        ServerDriverConfiguration(const std::shared_ptr<SL::RAT::ServerDriver> &c) : ServerDriver_(c) {}
         virtual ~ServerDriverConfiguration() {}
         virtual std::shared_ptr<IServerDriverConfiguration>
         onKeyUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
         {
-            assert(!ServerDriver->onKeyUp);
-            ServerDriver->onKeyUp = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onKeyUp);
+            ServerDriver_->onKeyUp = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onKeyDown(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
         {
-            assert(!ServerDriver->onKeyDown);
-            ServerDriver->onKeyDown = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onKeyDown);
+            ServerDriver_->onKeyDown = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onMouseUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> &callback) override
         {
-            assert(!ServerDriver->onMouseUp);
-            ServerDriver->onMouseUp = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onMouseUp);
+            ServerDriver_->onMouseUp = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onMouseDown(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> &callback) override
         {
-            assert(!ServerDriver->onMouseDown);
-            ServerDriver->onMouseDown = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onMouseDown);
+            ServerDriver_->onMouseDown = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onMouseScroll(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset)> &callback) override
         {
-            assert(!ServerDriver->onMouseScroll);
-            ServerDriver->onMouseScroll = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onMouseScroll);
+            ServerDriver_->onMouseScroll = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onMousePosition(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos)> &callback) override
         {
-            assert(!ServerDriver->onMousePosition);
-            ServerDriver->onMousePosition = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onMousePosition);
+            ServerDriver_->onMousePosition = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration> onClipboardChanged(const std::function<void(const std::string &text)> &callback) override
         {
-            assert(!ServerDriver->onClipboardChanged);
-            ServerDriver->onClipboardChanged = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onClipboardChanged);
+            ServerDriver_->onClipboardChanged = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onConnection(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket>)> &callback) override
         {
-            assert(!ServerDriver->onConnection);
-            ServerDriver->onConnection = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onConnection);
+            ServerDriver_->onConnection = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
         onMessage(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage)> &callback) override
         {
-            assert(!ServerDriver->onMessage);
-            ServerDriver->onMessage = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onMessage);
+            ServerDriver_->onMessage = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration> onDisconnection(
             const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string)> &callback)
             override
         {
-            assert(!ServerDriver->onDisconnection);
-            ServerDriver->onDisconnection = callback;
-            return std::make_shared<ServerDriverConfiguration>(ServerDriver);
+            assert(!ServerDriver_->onDisconnection);
+            ServerDriver_->onDisconnection = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriver> Build(const std::shared_ptr<SL::WS_LITE::IWSListener_Configuration> &wslistenerconfig) override
         {
-            ServerDriver->Build(wslistenerconfig);
-            return ServerDriver;
+            ServerDriver_->Build(wslistenerconfig);
+            return ServerDriver_;
         }
     };
 

@@ -17,6 +17,7 @@ matrix:
             - libxtst-dev
             - libxext-dev
             - libxinerama-dev
+            - nasm
           sources: 
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise

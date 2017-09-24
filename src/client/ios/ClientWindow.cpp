@@ -1,13 +1,12 @@
 #include "ClientWindow.h"
-#include "Configs.h"
+
 
 namespace SL {
     namespace RAT_Client {
         class ClientWindowImpl {
-            std::shared_ptr<SL::RAT::Client_Config> Config;
         public:
 
-            ClientWindowImpl(std::shared_ptr<SL::RAT::Client_Config>& config, const std::string& host) :Config(config) {
+            ClientWindowImpl(const std::string& host) 
               
             }
             void Run() {
@@ -18,15 +17,24 @@ namespace SL {
         };
 
 
-        ClientWindow::ClientWindow(std::shared_ptr<SL::RAT::Client_Config>& config, const std::string& host) {
-            ClientWindowImpl_ = new ClientWindowImpl(config, host);
-        }
-        ClientWindow::~ClientWindow() {
-            delete ClientWindowImpl_;
-        }
-
-        void ClientWindow::Run() {
-            ClientWindowImpl_->Run();
-        }
+        ClientWindow::ClientWindow(std::string host, unsigned short port, std::string pathtocertificate)
+    {
+        ClientWindowImpl_ = new ClientWindowImpl(host);
+    }
+    ClientWindow::~ClientWindow()
+    {
+        delete ClientWindowImpl_;
+    }
+    void ClientWindow::ShareClipboard(bool share)
+    {
+    }
+    bool ClientWindow::ShareClipboard() const
+    {
+        return false;
+    }
+    void ClientWindow::Run()
+    {
+        ClientWindowImpl_->Run();
+    }
     }
 }

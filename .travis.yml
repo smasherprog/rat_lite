@@ -31,7 +31,7 @@ before_install:
       export PATH="${TRAVIS_BUILD_DIR}/deps/cmake/bin:${PATH}";
     else
       brew update && brew upgrade cmake || brew install cmake;
-      brew install gcc openssl
+      brew install gcc openssl nasm
     fi
     
 script:

@@ -15,7 +15,6 @@ matrix:
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev
-            - libjpeg-turbo8-dev
             - libxext-dev
             - libxinerama-dev
           sources: 
@@ -31,7 +30,7 @@ before_install:
       export PATH="${TRAVIS_BUILD_DIR}/deps/cmake/bin:${PATH}";
     else
       brew update && brew upgrade cmake || brew install cmake;
-      brew install gcc openssl libjpeg-turbo
+      brew install gcc openssl
     fi
     
 script:

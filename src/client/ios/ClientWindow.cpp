@@ -6,7 +6,7 @@ namespace SL {
         class ClientWindowImpl {
         public:
 
-            ClientWindowImpl(const std::string& host) 
+            ClientWindowImpl(const std::string& host) {
               
             }
             void Run() {

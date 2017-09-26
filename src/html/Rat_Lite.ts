@@ -16,11 +16,6 @@ export class Rect {
     Height: number;
     Width: number;
 };
-export class Image {
-    Rect: Rect;
-    Data = [];
-    Length: number;
-};
 export class Monitor {
     Id: number;
     Index: number;
@@ -51,7 +46,7 @@ enum PACKET_TYPES {
 };
 
 export class IClientDriver {
-    private ShareClipboard = false;
+    protected ShareClip = false;
     protected Monitors: Array<Monitor>;
     protected WebSocket_: WebSocket;
 
@@ -59,15 +54,15 @@ export class IClientDriver {
     protected onMessage_: (ws: WebSocket, message: WSMessage) => void;
     protected onDisconnection_: (ws: WebSocket, code: number, message: string) => void;
     protected onMonitorsChanged_: (monitors: Monitor[]) => void;
-    protected onFrameChanged_: (image: Image, monitor: Monitor) => void;
-    protected onNewFrame_: (image: Image, monitor: Monitor) => void;
-    protected onMouseImageChanged_: (image: Image) => void;
+    protected onFrameChanged_: (image: HTMLImageElement, monitor: Monitor) => void;
+    protected onNewFrame_: (image: HTMLImageElement, monitor: Monitor) => void;
+    protected onMouseImageChanged_: (image: ImageData) => void;
     protected onMousePositionChanged_: (point: Point) => void;
     protected onClipboardChanged_: (clipstring: string) => void;
 
 
-    setShareClipboard(share: boolean): void { this.ShareClipboard = share; }
-    getShareClipboard(): boolean { return this.ShareClipboard; }
+    setShareClipboard(share: boolean): void { this.ShareClip = share; }
+    getShareClipboard(): boolean { return this.ShareClip; }
     SendKeyUp(key: KeyEvent): void { }
     SendKeyDown(key: KeyCodes): void { }
     SendMouseUp(button: MouseButtons): void { }
@@ -95,15 +90,15 @@ export class IClientDriverConfiguration extends IClientDriver {
         this.onMonitorsChanged_ = callback;
         return this;
     }
-    onFrameChanged(callback: (image: Image, monitor: Monitor) => void): IClientDriverConfiguration {
+    onFrameChanged(callback: (image: HTMLImageElement, monitor: Monitor) => void): IClientDriverConfiguration {
         this.onFrameChanged_ = callback;
         return this;
     }
-    onNewFrame(callback: (image: Image, monitor: Monitor) => void): IClientDriverConfiguration {
+    onNewFrame(callback: (image: HTMLImageElement, monitor: Monitor) => void): IClientDriverConfiguration {
         this.onNewFrame_ = callback;
         return this;
     }
-    onMouseImageChanged(callback: (image: Image) => void): IClientDriverConfiguration {
+    onMouseImageChanged(callback: (image: ImageData) => void): IClientDriverConfiguration {
         this.onMouseImageChanged_ = callback;
         return this;
     }
@@ -115,7 +110,13 @@ export class IClientDriverConfiguration extends IClientDriver {
         this.onClipboardChanged_ = callback;
         return this;
     }
-
+    private _arrayBufferToBase64(buffer: DataView, offset: number): string {
+        var binary = ''; 
+        for (var i = offset; i < buffer.byteLength; i++) {
+            binary += String.fromCharCode(buffer[i]);
+        }
+        return window.btoa(binary);
+    }
     private MonitorsChanged(ws: WebSocket, dataview: DataView) {
         if (!this.onMonitorsChanged_)
             return;
@@ -126,7 +127,7 @@ export class IClientDriverConfiguration extends IClientDriver {
             for (var i = 0; i < num; i++) {
                 var name = '';
                 for (var i = 0, strLen = 128; i < strLen; i++) {
-                    name += String.fromCharCode.apply(dataview.getUint8(20 +i));
+                    name += String.fromCharCode.apply(dataview.getUint8(20 + i));
                 }
                 this.Monitors.push({
                     Id: dataview.getInt32(0),
@@ -140,7 +141,7 @@ export class IClientDriverConfiguration extends IClientDriver {
             }
             return this.onMonitorsChanged_(this.Monitors);
         }
-        else if (dataview.byteLength  == 0) {
+        else if (dataview.byteLength == 0) {
             // it is possible to have no monitors.. shouldnt disconnect in that case
             return this.onMonitorsChanged_(this.Monitors);
         }
@@ -149,17 +150,63 @@ export class IClientDriverConfiguration extends IClientDriver {
         }
         ws.close(1000, "Invalid Monitor Count");
     }
-    private Frame(ws: WebSocket, dataview: DataView) {
-
+    private Frame(ws: WebSocket, dataview: DataView, callback: (image: HTMLImageElement, monitor: Monitor) => void) {
+        if (dataview.byteLength >= 4 * 4 + 4) {
+            var monitorid = dataview.getInt32(0);
+            var rect = {
+                Origin: {
+                    X: dataview.getInt32(4),
+                    Y: dataview.getInt32(8)
+                },
+                Height: dataview.getInt32(12),
+                Width: dataview.getInt32(16)
+            };
+            var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
+            if (foundmonitor.length > 0) {
+                var i = new Image();
+                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(dataview, 16);
+                if (dataview.byteLength >= 4 * 4 + (rect.Width * rect.Height * 4)) {
+                    return callback(i, foundmonitor[0]);
+                }
+            }
+        }
+        if (this.onDisconnection_) {
+            this.onDisconnection_(ws, 1000, "Received invalid lenght on onMouseImageChanged");
+        }
+        ws.close(1000, "Received invalid lenght on onMouseImageChanged");
     }
-    private MouseImageChanged(ws: WebSocket, dataview: DataView) {
 
+    private MouseImageChanged(ws: WebSocket, dataview: DataView) {
+        if (!this.onMouseImageChanged_)
+            return;
+        if (dataview.byteLength >= 4 * 4) {
+            var rect = {
+                Origin: {
+                    X: dataview.getInt32(0),
+                    Y: dataview.getInt32(4)
+                },
+                Height: dataview.getInt32(8),
+                Width: dataview.getInt32(12)
+            };
+            var canvas = document.createElement('canvas');
+            var imageData = canvas.getContext('2d').createImageData(rect.Width, rect.Height);
+            for (var i = 16; i < dataview.byteLength; i++) {
+                imageData.data[i] = dataview[i];
+            }
+            if (dataview.byteLength >= 4 * 4 + (rect.Width * rect.Height * 4)) {
+                return this.onMouseImageChanged_(imageData);
+            }
+        }
+        if (this.onDisconnection_) {
+            this.onDisconnection_(ws, 1000, "Received invalid lenght on onMouseImageChanged");
+        }
+        ws.close(1000, "Received invalid lenght on onMouseImageChanged");
     }
     private MousePositionChanged(ws: WebSocket, dataview: DataView) {
         if (!this.onMousePositionChanged_)
             return;
         if (dataview.byteLength == 8) {
-            var p ={
+            var p = {
                 X: dataview.getInt32(0),
                 Y: dataview.getInt32(4)
             };
@@ -168,10 +215,18 @@ export class IClientDriverConfiguration extends IClientDriver {
         if (this.onDisconnection_) {
             this.onDisconnection_(ws, 1000, "Received invalid lenght on onMousePositionChanged");
         }
-        ws.close(1000, "Received invalid lenght on onMousePositionChanged"); 
+        ws.close(1000, "Received invalid lenght on onMousePositionChanged");
     }
     private ClipboardTextChanged(dataview: DataView) {
-
+        if (!this.ShareClip || !this.onClipboardChanged_)
+            return;
+        if (dataview.byteLength < 1024 * 100) { // 100K max
+            var text = '';
+            for (var i = 0, strLen = 128; i < strLen; i++) {
+                text += String.fromCharCode.apply(dataview.getUint8(20 + i));
+            }
+            this.onClipboardChanged_(text);
+        }
     }
     Build(ws: WebSocket): IClientDriver {
         var self = this;
@@ -200,12 +255,12 @@ export class IClientDriverConfiguration extends IClientDriver {
                     break;
                 case PACKET_TYPES.ONFRAMECHANGED:
                     if (this.onFrameChanged_) {
-                        this.Frame(ws, new DataView(ev.data, 4));
+                        this.Frame(ws, new DataView(ev.data, 4), this.onFrameChanged_);
                     }
                     break;
                 case PACKET_TYPES.ONNEWFRAME:
                     if (this.onNewFrame_) {
-                        this.Frame(ws, new DataView(ev.data, 4));
+                        this.Frame(ws, new DataView(ev.data, 4), this.onNewFrame_);
                     }
                     break;
                 case PACKET_TYPES.ONMOUSEIMAGECHANGED:

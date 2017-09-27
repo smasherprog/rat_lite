@@ -1,6 +1,7 @@
 #include "RAT.h"
 #include "turbojpeg.h"
 
+#include "Input_Lite.h"
 #include "Logging.h"
 #include "ScreenCapture.h"
 #include "WS_Lite.h"

@@ -63,13 +63,56 @@ export class IClientDriver {
 
     setShareClipboard(share: boolean): void { this.ShareClip = share; }
     getShareClipboard(): boolean { return this.ShareClip; }
-    SendKeyUp(key: KeyEvent): void { }
-    SendKeyDown(key: KeyCodes): void { }
-    SendMouseUp(button: MouseButtons): void { }
-    SendMouseDown(button: MouseButtons): void { }
-    SendMouseScroll(offset: number): void { }
-    SendMousePosition(pos: Point): void { }
-    SendClipboardChanged(text: string): void { }
+    SendKeyUp(key: KeyCodes): void {
+        var data = new Uint8Array(4 + 1);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONKEYUP);
+        dataview.setUint8(4, key);
+        this.WebSocket_.send(data);
+    }
+    SendKeyDown(key: KeyCodes): void {
+        var data = new Uint8Array(4 + 1);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONKEYDOWN);
+        dataview.setUint8(4, key);
+        this.WebSocket_.send(data);
+    }
+    SendMouseUp(button: MouseButtons): void {
+        var data = new Uint8Array(4 + 1);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSEUP);
+        dataview.setUint8(4, button);
+        this.WebSocket_.send(data);
+    }
+    SendMouseDown(button: MouseButtons): void {
+        var data = new Uint8Array(4 + 1);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSEDOWN);
+        dataview.setUint8(4, button);
+        this.WebSocket_.send(data);
+    }
+    SendMouseScroll(offset: number): void {
+        var data = new Uint8Array(4 + 4);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
+        dataview.setUint32(4, offset);
+        this.WebSocket_.send(data);
+    }
+    SendMousePosition(pos: Point): void {
+        var data = new Uint8Array(4 + 8);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSEPOSITIONCHANGED);
+        dataview.setInt32(4, pos.X);
+        dataview.setInt32(8, pos.X);
+        this.WebSocket_.send(data);
+    }
+    SendClipboardChanged(text: string): void {
+        var data = new Uint8Array(4 + 4);
+        var dataview = new DataView(data);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
+        dataview.setUint32(4, offset);
+        this.WebSocket_.send(data);
+    }
 
 };
 
@@ -111,7 +154,7 @@ export class IClientDriverConfiguration extends IClientDriver {
         return this;
     }
     private _arrayBufferToBase64(buffer: DataView, offset: number): string {
-        var binary = ''; 
+        var binary = '';
         for (var i = offset; i < buffer.byteLength; i++) {
             binary += String.fromCharCode(buffer[i]);
         }
@@ -288,11 +331,6 @@ export class IClientDriverConfiguration extends IClientDriver {
             var t1 = performance.now();
             // comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
             console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
-
-
-
-
-
         };
         return this;
     }

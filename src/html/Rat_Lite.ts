@@ -50,7 +50,7 @@ export class IClientDriver {
     protected Monitors: Array<Monitor>;
     protected WebSocket_: WebSocket;
 
-    protected onConnection_: (ws: WebSocket) => void;
+    protected onConnection_: (ws: WebSocket, ev: Event) => void;
     protected onMessage_: (ws: WebSocket, message: WSMessage) => void;
     protected onDisconnection_: (ws: WebSocket, code: number, message: string) => void;
     protected onMonitorsChanged_: (monitors: Monitor[]) => void;
@@ -107,17 +107,19 @@ export class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendClipboardChanged(text: string): void {
-        var data = new Uint8Array(4 + 4);
+        var data = new Uint8Array(4 + text.length);
         var dataview = new DataView(data);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
-        dataview.setUint32(4, offset);
+        for (var i = 0; i < text.length; i++) {
+            data[4 + i] = text.charCodeAt(0);
+        }
         this.WebSocket_.send(data);
     }
 
 };
 
 export class IClientDriverConfiguration extends IClientDriver {
-    onConnection(callback: (ws: WebSocket) => void): IClientDriverConfiguration {
+    onConnection(callback: (ws: WebSocket, ev: Event) => void): IClientDriverConfiguration {
         this.onConnection_ = callback;
         return this;
     }
@@ -274,10 +276,10 @@ export class IClientDriverConfiguration extends IClientDriver {
     Build(ws: WebSocket): IClientDriver {
         var self = this;
         ws.binaryType = 'arraybuffer';
-        ws.onopen = () => {
+        ws.onopen = (ev: Event) => {
             console.log('onopen');
             if (self.onConnection_) {
-                self.onConnection_(ws);
+                self.onConnection_(ws, ev);
             }
         };
         ws.onclose = (ev: CloseEvent) => {

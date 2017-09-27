@@ -1,6 +1,6 @@
 ﻿{
   "compilerOptions": {
-    "module": "es2015",
+    "module": "amd",
     "moduleResolution": "node",
     "target": "es5",
     "removeComments": true,
@@ -8,6 +8,7 @@
     "outFile": "./build/build.js",
     "sourceRoot": "./src/",
     "rootDir": ".",
-    "sourceMap": true
-  }
+    "inlineSourceMap": true
+  },
+  "exclude": ["Core.ts"]
 }

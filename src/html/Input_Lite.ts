@@ -122,6 +122,11 @@ export enum KeyCodes {
     INVALID = 255
 };
 
+export function ConvertToKeyCode(key: KeyboardEvent): KeyCodes{
+
+
+}
+
 export enum MouseButtons { LEFT, MIDDLE, RIGHT };
 
 export class KeyEvent {

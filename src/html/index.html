@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
     <title>rat_lite html viewer</title>
-    <script src="Core.js"></script>
+    <script src="build.js"></script>
 </head>
-<body>
+<body id="ratarea">
+
     <script>
-        var SL_Client;
 		   function getURLParameter(name) {
                 return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [, ""])[1].replace(/\+/g, '%20')) || null;
             }
         document.addEventListener("DOMContentLoaded", function (event) {
             if ("WebSocket" in window) {
-                var clientdriver = new SL.Remote_Access_Library.Network.ClientDriver(window.location.hostname, "6001");
-				clientdriver.ScaleView(getURLParameter('ScaleImage') === 'true');
-                clientdriver.Start();
+                var clientdriver = new ClientWindow(window.document.getElementById("ratarea"));
+                clientdriver.connect(window.location.hostname, "6001");
+				//clientdriver.ScaleView(getURLParameter('ScaleImage') === 'true');
             }
             else {
                 // The browser doesn't support WebSocket

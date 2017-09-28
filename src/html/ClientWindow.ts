@@ -19,15 +19,14 @@ export class ClientWindow {
     constructor(private dst_host_: string, private dst_port_: string) {
 
         //window.addEventListener("resize", this.onresize);
-        //window.addEventListener("mousedown", this.onmousedown); // event not needed
-        //window.addEventListener("mouseup", this.onmouseup);
-        //window.addEventListener("mousemove", this.onmove);
-        //window.addEventListener("wheel", this.onwheel);
 
+        window.addEventListener("mousedown", this.onmousedown); 
+        window.addEventListener("mouseup", this.onmouseup);
+        window.addEventListener("mousemove", this.onmove);
+        window.addEventListener("wheel", this.onwheel); 
         window.addEventListener("keydown", this.onkeydown);
         window.addEventListener("keyup", this.onkeyup);
-
-        //window.addEventListener("dblclick", this.ondblclick);
+         
         //window.addEventListener("touchend", this.ontouchend);
         //window.addEventListener("touchstart", this.ontouchstart);
         //window.addEventListener("touchmove", this.ontouchmove);
@@ -65,18 +64,30 @@ export class ClientWindow {
         this.Socket_ = new WebSocket(connectstring);
         this.Socket_.binaryType = 'arraybuffer';
         this.ClientDriver_ = CreateClientDriverConfiguration()
-            .onConnection((ws: WebSocket, ev: Event) =>{
-               
+            .onConnection((ws: WebSocket, ev: Event) => {
+
             }).onMessage((ws: WebSocket, message: WSMessage) => {
 
             }).onDisconnection((ws: WebSocket, code: number, message: string) => {
 
-            }) .Build(this.Socket_);
+            }).Build(this.Socket_);
     }
     private onkeydown(ev: KeyboardEvent): void {
         this.ClientDriver_.SendKeyDown(ConvertToKeyCode(ev));
     }
-    private onkeyup = (ev: KeyboardEvent): void => {
+    private onkeyup(ev: KeyboardEvent): void {
         this.ClientDriver_.SendKeyUp(ConvertToKeyCode(ev));
+    }
+    private onwheel(ev: WheelEvent): void {
+        this.ClientDriver_.SendMouseScroll(ev.deltaY);
+    }
+    private onmove(ev: MouseEvent): void {
+        this.ClientDriver_.SendMousePosition({ Y:ev.pageY, X: ev.pageX });
+    }
+    private onmouseup(ev: MouseEvent): void {
+        this.ClientDriver_.SendMouseUp(ev.button);
+    }
+    private onmousedown(ev: MouseEvent): void {
+        this.ClientDriver_.SendMouseUp(ev.button);
     }
 }

@@ -242,5 +242,3 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-/build/libs
-/build/libs

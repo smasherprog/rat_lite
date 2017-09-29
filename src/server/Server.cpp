@@ -1,5 +1,6 @@
 #include "Server.h"
 #include <assert.h>
+#include <chrono>
 #include <mutex>
 #include <string.h>
 #include <thread>
@@ -33,7 +34,6 @@ namespace RAT_Server {
         std::vector<NewClient> ClientsThatNeedFullFrames;
 
         bool ShareClip = false;
-        int MaxNumConnections = 10;
         int ImageCompressionSetting = 70;
         int MouseCaptureRate = 50;
         int ScreenImageCaptureRate = 10;
@@ -43,8 +43,7 @@ namespace RAT_Server {
 
         ServerImpl()
         {
-            Status_ = Server_Status::SERVER_RUNNING;
-
+            Status_ = Server_Status::SERVER_STOPPED;
             Clipboard_ = Clipboard_Lite::CreateClipboard()
                              ->onText([&](const std::string &text) {
                                  if (ShareClip) {
@@ -126,6 +125,8 @@ namespace RAT_Server {
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
         {
+            Status_ = Server_Status::SERVER_RUNNING;
+
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))->NoTLS()->CreateListener(port);
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
@@ -228,11 +229,34 @@ namespace RAT_Server {
     Server::~Server() { delete ServerImpl_; }
     void Server::ShareClipboard(bool share) { ServerImpl_->ShareClip = share; }
     bool Server::ShareClipboard() const { return ServerImpl_->ShareClip; }
-    void Server::MaxConnections(int maxconnections) { ServerImpl_->MaxNumConnections = maxconnections; }
-    int Server::MaxConnections() const { return ServerImpl_->MaxNumConnections; }
-    void Server::FrameChangeInterval(int delay_in_ms) { ServerImpl_->ScreenImageCaptureRate = delay_in_ms; }
+    void Server::MaxConnections(int maxconnections)
+    {
+        if (ServerImpl_->IServerDriver_) {
+            ServerImpl_->IServerDriver_->MaxConnections(maxconnections);
+        }
+    }
+    int Server::MaxConnections() const
+    {
+        if (ServerImpl_->IServerDriver_) {
+            return ServerImpl_->IServerDriver_->MaxConnections();
+        }
+        return 0;
+    }
+    void Server::FrameChangeInterval(int delay_in_ms)
+    {
+        ServerImpl_->ScreenImageCaptureRate = delay_in_ms;
+        if (ServerImpl_->IServerDriver_) {
+            ServerImpl_->ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(delay_in_ms));
+        }
+    }
     int Server::FrameChangeInterval() const { return ServerImpl_->ScreenImageCaptureRate; }
-    void Server::MouseChangeInterval(int delay_in_ms) { ServerImpl_->MouseCaptureRate = delay_in_ms; }
+    void Server::MouseChangeInterval(int delay_in_ms)
+    {
+        ServerImpl_->ScreenImageCaptureRate = delay_in_ms;
+        if (ServerImpl_->IServerDriver_) {
+            ServerImpl_->ScreenCaptureManager_->setMouseChangeInterval(std::chrono::milliseconds(delay_in_ms));
+        }
+    }
     int Server::MouseChangeInterval() const { return ServerImpl_->MouseCaptureRate; }
     void Server::ImageCompressionSetting(int compression) { ServerImpl_->ImageCompressionSetting = compression; }
     int Server::ImageCompressionSetting() const { return ServerImpl_->ImageCompressionSetting; }
@@ -242,6 +266,7 @@ namespace RAT_Server {
     void Server::Server::Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key,
                              std::string PathTo_Public_Certficate)
     {
+        ServerImpl_->Run(port, PasswordToPrivateKey, PathTo_Private_Key, PathTo_Public_Certficate);
         while (ServerImpl_->Status_ == Server_Status::SERVER_RUNNING) {
             std::this_thread::sleep_for(50ms);
         }

@@ -24,6 +24,7 @@ libs/
 .gradle/
 [Jj]ni[Ll]ibs/
 .vs/
+*.js
 .codelite/
 .build-*/
 *.tlog

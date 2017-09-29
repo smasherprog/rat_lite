@@ -104,6 +104,6 @@ if(${BUILD_SHARED_LIBS})
 		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		$<TARGET_FILE:rat>              
+		$<TARGET_FILE:rat_lite>              
 		 $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif() 

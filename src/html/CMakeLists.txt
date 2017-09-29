@@ -8,3 +8,10 @@ add_library(${PROJECT_NAME}
 	index.html
 	tsconfig.json
 )
+
+add_custom_command(
+	TARGET rat_html
+	POST_BUILD
+	WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    COMMAND tsc
+)

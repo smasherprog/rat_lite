@@ -78,7 +78,7 @@ namespace RAT_Server {
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!ClientsThatNeedFullFrames.empty()) {
-                            auto msg = RAT_Lite::IServerDriver::PrepareNewFrame(img, monitor);
+                            auto msg = RAT_Lite::IServerDriver::PrepareNewFrame(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale);
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             for (auto &a : ClientsThatNeedFullFrames) {
                                 auto itr = std::find_if(std::begin(a.mids), std::end(a.mids),
@@ -95,7 +95,7 @@ namespace RAT_Server {
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                        SendtoAll(RAT_Lite::IServerDriver::PrepareFrameChanged(img, monitor));
+                        SendtoAll(RAT_Lite::IServerDriver::PrepareFrameChanged(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale));
                     })
                     ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
                         if (img) {

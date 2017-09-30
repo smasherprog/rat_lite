@@ -1,14 +1,11 @@
 ﻿{
-  "compilerOptions": {
-    "module": "amd",
+  "compileOnSave": false,
+  "compilerOptions": { 
+    "inlineSourceMap": true,
+    "declaration": false,
     "moduleResolution": "node",
-    "target": "es5",
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "outFile": "./build.js",
-    "sourceRoot": "./src/",
-    "rootDir": ".",
-    "inlineSourceMap": true
-  },
-  "exclude": ["Core.ts"]
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es5"
+  }
 }

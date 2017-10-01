@@ -1,11 +1,8 @@
 ﻿{
-  "compileOnSave": false,
+  "compileOnSave": true,
   "compilerOptions": { 
     "inlineSourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "es5"
+    "target": "es2015"
   }
 }

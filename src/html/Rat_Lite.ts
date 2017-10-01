@@ -696,74 +696,28 @@ class ClientWindow {
     Socket_: WebSocket;
 
     OriginalImage_: HTMLImageElement;
-    HTMLDivRoot_: HTMLDivElement;
     HTMLCanvasScreenImage_: HTMLCanvasElement;
     HTMLCanvasMouseImage_: HTMLCanvasElement;
+
+    HostName: HTMLInputElement;
+    ConnectButton: HTMLButtonElement;
 
     ConnectedToSelf_ = false;
     ScaleImage = false;
 
-    private dst_host_: string;
-    private dst_port_: string;
     private AttachedRoot_: HTMLElement;
 
-    constructor(rootnode: HTMLElement) {
-        this.AttachedRoot_ = rootnode;
-
-        //window.addEventListener("resize", this.onresize);
-        window.addEventListener("mousedown", this.onmousedown);
-        window.addEventListener("mouseup", this.onmouseup);
-        window.addEventListener("mousemove", this.onmove);
-        window.addEventListener("wheel", this.onwheel);
-        window.addEventListener("keydown", this.onkeydown);
-        window.addEventListener("keyup", this.onkeyup);
-
-        //window.addEventListener("touchend", this.ontouchend);
-        //window.addEventListener("touchstart", this.ontouchstart);
-        //window.addEventListener("touchmove", this.ontouchmove);
-
-        this.HTMLDivRoot_ = document.createElement('div');
-        this.HTMLDivRoot_.style.position = 'relative';
-        this.HTMLCanvasScreenImage_ = document.createElement('canvas');
-        this.HTMLCanvasScreenImage_.style.position = 'absolute';
-        this.HTMLCanvasScreenImage_.style.left = this.HTMLCanvasScreenImage_.style.top = this.HTMLCanvasScreenImage_.style.zIndex = '0';
-
-        this.HTMLCanvasMouseImage_ = document.createElement('canvas');
-        this.HTMLCanvasMouseImage_.style.position = 'absolute';
-        this.HTMLCanvasMouseImage_.style.left = this.HTMLCanvasMouseImage_.style.top = '0';
-        this.HTMLCanvasMouseImage_.style.zIndex = '1';
-
-        this.HTMLDivRoot_.appendChild(this.HTMLCanvasScreenImage_);
-        this.HTMLDivRoot_.appendChild(this.HTMLCanvasMouseImage_);
-
-        rootnode.appendChild(this.HTMLDivRoot_); // add to the dom
+    constructor(private HTMLRoot_: HTMLElement) {
+        this.HostName = document.createElement('input');
+        this.HostName.value = "localhost";
+        this.ConnectButton = document.createElement('button');
+        this.ConnectButton.innerText = "Connect";
+    
+        this.ConnectButton.onclick = () => { this.Connect(); };
+        this.HTMLRoot_.appendChild(this.HostName);
+        this.HTMLRoot_.appendChild(this.ConnectButton);
     }
-    public destroy() {
-        if (this.Socket_) {
-            this.Socket_.close();
-        }
-        this.Socket_ = null;
-        window.removeEventListener("mousedown", this.onmousedown);
-        window.removeEventListener("mouseup", this.onmouseup);
-        window.removeEventListener("mousemove", this.onmove);
-        window.removeEventListener("wheel", this.onwheel);
-        window.removeEventListener("keydown", this.onkeydown);
-        window.removeEventListener("keyup", this.onkeyup);
-        if (this.AttachedRoot_ && this.HTMLDivRoot_) {
-            this.AttachedRoot_.removeChild(this.HTMLDivRoot_);
-        }
-
-        this.Cursor_ = null;
-        this.ScaleImage_ = false;
-        this.Monitors_ = null;
-        this.ClientDriver_ = null;
-        this.Socket_ = null;
-        this.OriginalImage_ = null;
-        this.HTMLDivRoot_ = this.AttachedRoot_ = this.HTMLDivRoot_ = this.HTMLCanvasScreenImage_ = this.HTMLCanvasMouseImage_ = null;
-    }
-    public connect(dst_host: string, dst_port: string): void {
-        this.dst_host_ = dst_host;
-        this.dst_port_ = dst_port;
+    private Connect(): void {
 
         var connectstring = "";
         if (window.location.protocol != "https:") {
@@ -772,18 +726,62 @@ class ClientWindow {
         else {
             connectstring += "wss://";
         }
-
-        this.ConnectedToSelf_ = (this.dst_host_ == '127.0.0.1') || (this.dst_host_ == 'localhost') || (this.dst_host_ == '::1');
-        connectstring += this.dst_host_ + ":" + this.dst_port_;
+       
+        this.ConnectedToSelf_ = (this.HostName.value == '127.0.0.1') || (this.HostName.value == 'localhost') || (this.HostName.value == '::1');
+        connectstring += this.HostName.value + ":6001";
         this.Socket_ = new WebSocket(connectstring);
         this.Socket_.binaryType = 'arraybuffer';
         this.ClientDriver_ = CreateClientDriverConfiguration()
             .onConnection((ws: WebSocket, ev: Event) => {
+                console.log('onConnection');
+                //window.addEventListener("resize", this.onresize);
+                window.addEventListener("mousedown", this.onmousedown);
+                window.addEventListener("mouseup", this.onmouseup);
+                window.addEventListener("mousemove", this.onmove);
+                window.addEventListener("wheel", this.onwheel);
+                window.addEventListener("keydown", this.onkeydown);
+                window.addEventListener("keyup", this.onkeyup);
 
+                //window.addEventListener("touchend", this.ontouchend);
+                //window.addEventListener("touchstart", this.ontouchstart);
+                //window.addEventListener("touchmove", this.ontouchmove);
+                
+                this.HTMLRoot_.style.position = 'relative';
+                this.HTMLCanvasScreenImage_ = document.createElement('canvas');
+                this.HTMLCanvasScreenImage_.style.position = 'absolute';
+                this.HTMLCanvasScreenImage_.style.left = this.HTMLCanvasScreenImage_.style.top = this.HTMLCanvasScreenImage_.style.zIndex = '0';
+
+                this.HTMLCanvasMouseImage_ = document.createElement('canvas');
+                this.HTMLCanvasMouseImage_.style.position = 'absolute';
+                this.HTMLCanvasMouseImage_.style.left = this.HTMLCanvasMouseImage_.style.top = '0';
+                this.HTMLCanvasMouseImage_.style.zIndex = '1';
+
+                this.HTMLRoot_.appendChild(this.HTMLCanvasScreenImage_);
+                this.HTMLRoot_.appendChild(this.HTMLCanvasMouseImage_);
+                
             }).onMessage((ws: WebSocket, message: WSMessage) => {
 
             }).onDisconnection((ws: WebSocket, code: number, message: string) => {
-
+                console.log('onDisconnection');
+                window.removeEventListener("mousedown", this.onmousedown);
+                window.removeEventListener("mouseup", this.onmouseup);
+                window.removeEventListener("mousemove", this.onmove);
+                window.removeEventListener("wheel", this.onwheel);
+                window.removeEventListener("keydown", this.onkeydown);
+                window.removeEventListener("keyup", this.onkeyup);
+                if (this.HTMLRoot_ && this.HTMLCanvasMouseImage_) {
+                    this.HTMLRoot_.removeChild(this.HTMLCanvasMouseImage_);
+                }
+                if (this.HTMLRoot_ && this.HTMLCanvasScreenImage_) {
+                    this.HTMLRoot_.removeChild(this.HTMLCanvasScreenImage_);
+                }
+                this.Cursor_ = null;
+                this.ScaleImage_ = false;
+                this.Monitors_ = null;
+                this.ClientDriver_ = null;
+                this.Socket_ = null;
+                this.OriginalImage_ = null;
+                this.HTMLCanvasScreenImage_ = this.HTMLCanvasMouseImage_ = null;
             }).onClipboardChanged((clipstring: string) => {
 
             }).onFrameChanged((image: HTMLImageElement, monitor: Monitor) => {

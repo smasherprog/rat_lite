@@ -4,17 +4,13 @@
     <title>rat_lite html viewer</title>
     <script src="Rat_Lite.js"></script>
 </head>
-<body id="ratarea">
-
+<body style="padding:0;margin:0;" id="ratarea">
     <script>
-		   function getURLParameter(name) {
-                return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [, ""])[1].replace(/\+/g, '%20')) || null;
-            }
         document.addEventListener("DOMContentLoaded", function (event) {
             if ("WebSocket" in window) {
+                
                 var clientdriver = new ClientWindow(window.document.getElementById("ratarea"));
-                clientdriver.connect(window.location.hostname, "6001");
-				//clientdriver.ScaleView(getURLParameter('ScaleImage') === 'true');
+                //clientdriver.ScaleView(getURLParameter('ScaleImage') === 'true');
             }
             else {
                 // The browser doesn't support WebSocket

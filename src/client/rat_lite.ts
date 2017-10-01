@@ -159,15 +159,15 @@ class IClientDriverConfiguration extends IClientDriver {
         this.onClipboardChanged_ = callback;
         return this;
     }
-    private _arrayBufferToBase64(buffer: DataView, offset: number): string {
+    private _arrayBufferToBase64(buffer: Uint8Array): string {
         var binary = '';
-        for (var i = offset; i < buffer.byteLength; i++) {
+        for (var i = 0; i < buffer.byteLength; i++) {
             binary += String.fromCharCode(buffer[i]);
         }
         return window.btoa(binary);
     }
     private MonitorsChanged(ws: WebSocket, dataview: DataView) {
-        debugger;
+
         if (!this.onMonitorsChanged_)
             return;
         let sizeofmonitor = 6 * 4 + 128;
@@ -201,6 +201,7 @@ class IClientDriverConfiguration extends IClientDriver {
         ws.close(1000, "Invalid Monitor Count");
     }
     private Frame(ws: WebSocket, dataview: DataView, callback: (image: HTMLImageElement, monitor: Monitor) => void) {
+
         if (dataview.byteLength >= 4 * 4 + 4) {
             var monitorid = dataview.getInt32(0, true);
             var rect = {
@@ -211,14 +212,15 @@ class IClientDriverConfiguration extends IClientDriver {
                 Height: dataview.getInt32(12, true),
                 Width: dataview.getInt32(16, true)
             };
-           
+
             var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
             if (foundmonitor.length > 0) {
                 var i = new Image();
-                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(dataview, 16);
-                if (dataview.byteLength >= 4 * 4 + (rect.Width * rect.Height * 4)) {
-                    return callback(i, foundmonitor[0]);
-                }
+                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 16));
+              
+                i.onload = ()=> {
+                    callback(i, foundmonitor[0]);
+                };
             }
             return;
         }
@@ -303,7 +305,7 @@ class IClientDriverConfiguration extends IClientDriver {
             var t0 = performance.now();
             var data = new DataView(ev.data);
             var packettype = <PACKET_TYPES>data.getInt32(0, true);
-            console.log('received: ' + packettype);
+            //  console.log('received: ' + packettype);
             switch (packettype) {
                 case PACKET_TYPES.ONMONITORSCHANGED:
                     this.MonitorsChanged(ws, new DataView(ev.data, 4));
@@ -342,7 +344,7 @@ class IClientDriverConfiguration extends IClientDriver {
             }
             var t1 = performance.now();
             // comment this line out to see performance issues... My machine takes 0 to 6 ms to complete each receive
-           // console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
+            // console.log("took " + (t1 - t0) + " milliseconds to process the receive loop");
         };
         return this;
     }

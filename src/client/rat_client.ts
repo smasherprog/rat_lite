@@ -137,6 +137,7 @@
             }).onNewFrame((image: HTMLImageElement, monitor: Monitor) => {
                 debugger;
                 if (this.ScaleImage) {
+                  
                     var scale = this.getScalingFactor();
                     this.HTMLCanvasScreenImage_.width = image.width * scale;
                     this.HTMLCanvasScreenImage_.height = image.height * scale;
@@ -145,7 +146,7 @@
                     this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, 0, 0, this.HTMLCanvasScreenImage_.width, this.HTMLCanvasScreenImage_.height);
                 }
                 else {
-                   
+                  
                     this.HTMLCanvasScreenImage_.width = image.width;
                     this.HTMLCanvasScreenImage_.height = image.height;
                     this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';

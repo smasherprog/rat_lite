@@ -388,7 +388,7 @@ enum PACKET_TYPES {
 
 class IClientDriver {
     protected ShareClip = false;
-    protected Monitors: Array<Monitor>;
+    protected Monitors = new Array<Monitor>();
     protected WebSocket_: WebSocket;
 
     protected onConnection_: (ws: WebSocket, ev: Event) => void;
@@ -701,6 +701,8 @@ class ClientWindow {
 
     HostName: HTMLInputElement;
     ConnectButton: HTMLButtonElement;
+    Protocol: HTMLSelectElement;
+    Port: HTMLInputElement;
 
     ConnectedToSelf_ = false;
     ScaleImage = false;
@@ -710,23 +712,37 @@ class ClientWindow {
         this.HostName.value = "localhost";
         this.ConnectButton = document.createElement('button');
         this.ConnectButton.innerText = "Connect";
-    
+        this.Protocol = document.createElement('select');
+        var ws = document.createElement('option');
+        ws.text = "ws";
+        ws.value = "ws";
+        this.Protocol.options.add(ws);
+        var wss = document.createElement('option');
+        wss.text = "wss";
+        wss.value = "wss";
+        this.Protocol.options.add(wss);
+
+        if (window.location.protocol == "https:") {
+            this.Protocol.value = "wss";
+            ws.disabled = true;
+        }
+        this.Port = document.createElement('input');
+        this.Port.value = '6001';
+
         this.ConnectButton.onclick = () => { this.Connect(); };
+
+        this.HTMLRoot_.appendChild(this.Protocol);
         this.HTMLRoot_.appendChild(this.HostName);
+
+        this.HTMLRoot_.appendChild(this.Port);
+
         this.HTMLRoot_.appendChild(this.ConnectButton);
     }
     private Connect(): void {
 
         this.ConnectedToSelf_ = (this.HostName.value == '127.0.0.1') || (this.HostName.value == 'localhost') || (this.HostName.value == '::1');
 
-        if (window.location.protocol != "https:") {
-            this.Socket_ = new WebSocket("wss://" + this.HostName.value + ":6001");
-        }
-        else {
-            this.Socket_ = new WebSocket("wss://" + this.HostName.value + ":6001");
-        }
-
-     
+        this.Socket_ = new WebSocket(this.Protocol.value + "://" + this.HostName.value + ":" + this.Port.value);
         this.Socket_.binaryType = 'arraybuffer';
         this.ClientDriver_ = CreateClientDriverConfiguration()
             .onConnection((ws: WebSocket, ev: Event) => {

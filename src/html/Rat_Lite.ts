@@ -440,11 +440,13 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendMousePosition(pos: Point): void {
+        
         var data = new Uint8Array(4 + 8);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEPOSITIONCHANGED);
         dataview.setInt32(4, pos.X);
         dataview.setInt32(8, pos.X);
+       
         this.WebSocket_.send(data);
     }
     SendClipboardChanged(text: string): void {
@@ -568,12 +570,13 @@ class IClientDriverConfiguration extends IClientDriver {
         if (dataview.byteLength >= 4 * 4) {
             var rect = {
                 Origin: {
-                    X: dataview.getInt32(0),
-                    Y: dataview.getInt32(4)
+                    X: dataview.getInt32(0, true),
+                    Y: dataview.getInt32(4, true)
                 },
-                Height: dataview.getInt32(8),
-                Width: dataview.getInt32(12)
+                Height: dataview.getInt32(8, true),
+                Width: dataview.getInt32(12, true)
             };
+           
             var canvas = document.createElement('canvas');
             var imageData = canvas.getContext('2d').createImageData(rect.Width, rect.Height);
             for (var i = 16; i < dataview.byteLength; i++) {
@@ -630,33 +633,33 @@ class IClientDriverConfiguration extends IClientDriver {
             }
         };
         ws.onmessage = (ev: MessageEvent) => {
-            console.log('onmessage');
+        
             var t0 = performance.now();
             var data = new DataView(ev.data);
             var packettype = <PACKET_TYPES>data.getInt32(0, true);
-
+           
             switch (packettype) {
                 case PACKET_TYPES.ONMONITORSCHANGED:
                     this.MonitorsChanged(ws, new DataView(ev.data, 4));
                     break;
                 case PACKET_TYPES.ONFRAMECHANGED:
                     if (this.onFrameChanged_) {
-                        this.Frame(ws, new DataView(ev.data, 4), this.onFrameChanged_);
+                       // this.Frame(ws, new DataView(ev.data, 4), this.onFrameChanged_);
                     }
                     break;
                 case PACKET_TYPES.ONNEWFRAME:
                     if (this.onNewFrame_) {
-                        this.Frame(ws, new DataView(ev.data, 4), this.onNewFrame_);
+                      //  this.Frame(ws, new DataView(ev.data, 4), this.onNewFrame_);
                     }
                     break;
                 case PACKET_TYPES.ONMOUSEIMAGECHANGED:
                     this.MouseImageChanged(ws, new DataView(ev.data, 4));
                     break;
                 case PACKET_TYPES.ONMOUSEPOSITIONCHANGED:
-                    this.MousePositionChanged(ws, new DataView(ev.data, 4));
+                  //  this.MousePositionChanged(ws, new DataView(ev.data, 4));
                     break;
                 case PACKET_TYPES.ONCLIPBOARDTEXTCHANGED:
-                    this.ClipboardTextChanged(new DataView(ev.data, 4));
+                  //  this.ClipboardTextChanged(new DataView(ev.data, 4));
                     break;
                 default:
                     if (this.onMessage_) {
@@ -704,6 +707,8 @@ class ClientWindow {
     Protocol: HTMLSelectElement;
     Port: HTMLInputElement;
 
+    InfoDiv: HTMLDivElement;
+
     ConnectedToSelf_ = false;
     ScaleImage = false;
     
@@ -730,16 +735,18 @@ class ClientWindow {
         this.Port.value = '6001';
 
         this.ConnectButton.onclick = () => { this.Connect(); };
+        this.InfoDiv = document.createElement('div');
 
-        this.HTMLRoot_.appendChild(this.Protocol);
-        this.HTMLRoot_.appendChild(this.HostName);
+        this.HTMLRoot_.appendChild(this.InfoDiv);
 
-        this.HTMLRoot_.appendChild(this.Port);
-
-        this.HTMLRoot_.appendChild(this.ConnectButton);
+        this.InfoDiv.appendChild(this.Protocol);
+        this.InfoDiv.appendChild(this.HostName);
+        this.InfoDiv.appendChild(this.Port);
+        this.InfoDiv.appendChild(this.ConnectButton);
     }
     private Connect(): void {
-
+        if (this.ConnectButton.disabled) return;
+        this.ConnectButton.disabled = true;
         this.ConnectedToSelf_ = (this.HostName.value == '127.0.0.1') || (this.HostName.value == 'localhost') || (this.HostName.value == '::1');
 
         this.Socket_ = new WebSocket(this.Protocol.value + "://" + this.HostName.value + ":" + this.Port.value);
@@ -748,12 +755,12 @@ class ClientWindow {
             .onConnection((ws: WebSocket, ev: Event) => {
                 console.log('onConnection');
                 //window.addEventListener("resize", this.onresize);
-                window.addEventListener("mousedown", this.onmousedown);
-                window.addEventListener("mouseup", this.onmouseup);
-                window.addEventListener("mousemove", this.onmove);
-                window.addEventListener("wheel", this.onwheel);
-                window.addEventListener("keydown", this.onkeydown);
-                window.addEventListener("keyup", this.onkeyup);
+                window.addEventListener("mousedown", (ev: MouseEvent) => { this.onmousedown(ev); });
+                window.addEventListener("mouseup", (ev: MouseEvent) => { this.onmouseup(ev); });
+                window.addEventListener("mousemove", (ev: MouseEvent) => { this.onmove(ev); });
+                window.addEventListener("wheel", (ev: MouseWheelEvent) => { this.onwheel(ev); });
+                window.addEventListener("keydown", (ev: KeyboardEvent) => { this.onkeydown(ev); });
+                window.addEventListener("keyup", (ev: KeyboardEvent) => { this.onkeyup(ev);});
 
                 //window.addEventListener("touchend", this.ontouchend);
                 //window.addEventListener("touchstart", this.ontouchstart);
@@ -768,10 +775,10 @@ class ClientWindow {
                 this.HTMLCanvasMouseImage_.style.position = 'absolute';
                 this.HTMLCanvasMouseImage_.style.left = this.HTMLCanvasMouseImage_.style.top = '0';
                 this.HTMLCanvasMouseImage_.style.zIndex = '1';
-
+                this.HTMLRoot_.removeChild(this.InfoDiv);
                 this.HTMLRoot_.appendChild(this.HTMLCanvasScreenImage_);
                 this.HTMLRoot_.appendChild(this.HTMLCanvasMouseImage_);
-                
+              
             }).onMessage((ws: WebSocket, message: WSMessage) => {
 
             }).onDisconnection((ws: WebSocket, code: number, message: string) => {
@@ -795,6 +802,8 @@ class ClientWindow {
                 this.Socket_ = null;
                 this.OriginalImage_ = null;
                 this.HTMLCanvasScreenImage_ = this.HTMLCanvasMouseImage_ = null;
+                this.HTMLRoot_.appendChild(this.InfoDiv);
+                this.ConnectButton.disabled = false;
             }).onClipboardChanged((clipstring: string) => {
 
             }).onFrameChanged((image: HTMLImageElement, monitor: Monitor) => {
@@ -808,6 +817,7 @@ class ClientWindow {
             }).onMonitorsChanged((monitors: Monitor[]) => {
 
             }).onMouseImageChanged((image: ImageData) => {
+                this.Cursor_ = image;
                 this.HTMLCanvasMouseImage_.getContext("2d").putImageData(this.Cursor_, 0, 0);
             }).onMousePositionChanged((pos: Point) => {
                 if (this.ScaleImage) {

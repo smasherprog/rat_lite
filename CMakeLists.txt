@@ -98,9 +98,8 @@ install (FILES
 )
 
 if(BUILD_EXAMPLE)
-	add_subdirectory(src/client)
 	add_subdirectory(src/server)
-	add_subdirectory(src/html)
+	add_subdirectory(src/client)
 endif()
 
 enable_testing() 

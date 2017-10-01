@@ -23,6 +23,8 @@ Latest standards: c++ 17
 <ul>
 <li><a href="http://www.nasm.us/">NASM Assembler</a></li>
 <li><a href="https://cmake.org/download/">Cmake (Latest!)</a></li>
+<li><a href="https://nodejs.org/en/download/">Node.js</a></li>
+<li>TypeScript install: npm install typescript -g</li>
 </ul>
 <p>The library is not yet stable and in development . . . </p>
 

@@ -704,9 +704,7 @@ class ClientWindow {
 
     ConnectedToSelf_ = false;
     ScaleImage = false;
-
-    private AttachedRoot_: HTMLElement;
-
+    
     constructor(private HTMLRoot_: HTMLElement) {
         this.HostName = document.createElement('input');
         this.HostName.value = "localhost";
@@ -811,15 +809,15 @@ class ClientWindow {
                     var scale = this.getScalingFactor();
                     this.HTMLCanvasScreenImage_.width = image.width * scale;
                     this.HTMLCanvasScreenImage_.height = image.height * scale;
-                    this.HTMLDivRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
-                    this.HTMLDivRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
+                    this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
+                    this.HTMLRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
                     this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, 0, 0, this.HTMLCanvasScreenImage_.width, this.HTMLCanvasScreenImage_.height);
                 }
                 else {
                     this.HTMLCanvasScreenImage_.width = image.width;
                     this.HTMLCanvasScreenImage_.height = image.height;
-                    this.HTMLDivRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
-                    this.HTMLDivRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
+                    this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
+                    this.HTMLRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
                     this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, 0, 0);
                 }
                 this.OriginalImage_ = image;

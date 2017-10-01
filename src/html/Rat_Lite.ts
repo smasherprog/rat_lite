@@ -401,10 +401,11 @@ class IClientDriver {
     protected onMousePositionChanged_: (point: Point) => void;
     protected onClipboardChanged_: (clipstring: string) => void;
 
-
+    public ConnectedToSelf_ = false;
     setShareClipboard(share: boolean): void { this.ShareClip = share; }
     getShareClipboard(): boolean { return this.ShareClip; }
     SendKeyUp(key: KeyCodes): void {
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONKEYUP);
@@ -412,6 +413,7 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendKeyDown(key: KeyCodes): void {
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONKEYDOWN);
@@ -419,6 +421,7 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendMouseUp(button: MouseButtons): void {
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEUP);
@@ -426,6 +429,7 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendMouseDown(button: MouseButtons): void {
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEDOWN);
@@ -433,6 +437,7 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendMouseScroll(offset: number): void {
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + 4);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
@@ -440,7 +445,7 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendMousePosition(pos: Point): void {
-        
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + 8);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEPOSITIONCHANGED);
@@ -450,6 +455,7 @@ class IClientDriver {
         this.WebSocket_.send(data);
     }
     SendClipboardChanged(text: string): void {
+        if (this.ConnectedToSelf_) return;
         var data = new Uint8Array(4 + text.length);
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
@@ -620,6 +626,8 @@ class IClientDriverConfiguration extends IClientDriver {
     Build(ws: WebSocket): IClientDriver {
         var self = this;
         ws.binaryType = 'arraybuffer';
+        this.ConnectedToSelf_ = ws.url.toLowerCase().indexOf('127.0.0.1') != -1 || ws.url.toLowerCase().indexOf('localhost') != -1 || ws.url.toLowerCase().indexOf('::1') != -1;
+
         ws.onopen = (ev: Event) => {
             console.log('onopen');
             if (self.onConnection_) {
@@ -709,7 +717,6 @@ class ClientWindow {
 
     InfoDiv: HTMLDivElement;
 
-    ConnectedToSelf_ = false;
     ScaleImage = false;
     
     constructor(private HTMLRoot_: HTMLElement) {
@@ -747,8 +754,7 @@ class ClientWindow {
     private Connect(): void {
         if (this.ConnectButton.disabled) return;
         this.ConnectButton.disabled = true;
-        this.ConnectedToSelf_ = (this.HostName.value == '127.0.0.1') || (this.HostName.value == 'localhost') || (this.HostName.value == '::1');
-
+      
         this.Socket_ = new WebSocket(this.Protocol.value + "://" + this.HostName.value + ":" + this.Port.value);
         this.Socket_.binaryType = 'arraybuffer';
         this.ClientDriver_ = CreateClientDriverConfiguration()

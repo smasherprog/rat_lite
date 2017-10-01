@@ -127,7 +127,38 @@ namespace RAT_Server {
         {
             Status_ = Server_Status::SERVER_RUNNING;
 
-            auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))->NoTLS()->CreateListener(port);
+            auto clientctx =
+                SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
+                    ->UseTLS(
+                        [&](SL::WS_LITE::ITLSContext *context) {
+                            context->set_options(SL::WS_LITE::options::default_workarounds | SL::WS_LITE::options::no_sslv2 |
+                                                 SL::WS_LITE::options::no_sslv3 | SL::WS_LITE::options::single_dh_use);
+                            std::error_code ec;
+
+                            context->set_password_callback(
+                                [PasswordToPrivateKey](std::size_t s, SL::WS_LITE::password_purpose p) { return PasswordToPrivateKey; }, ec);
+                            if (ec) {
+                                std::cout << "set_password_callback failed: " << ec.message();
+                                ec.clear();
+                            }
+                            context->use_certificate_chain_file(PathTo_Public_Certficate, ec);
+                            if (ec) {
+                                std::cout << "use_certificate_chain_file failed: " << ec.message();
+                                ec.clear();
+                            }
+                            context->set_default_verify_paths(ec);
+                            if (ec) {
+                                std::cout << "set_default_verify_paths failed: " << ec.message();
+                                ec.clear();
+                            }
+                            context->use_private_key_file(std::string(PathTo_Private_Key), SL::WS_LITE::file_format::pem, ec);
+                            if (ec) {
+                                std::cout << "use_private_key_file failed: " << ec.message();
+                                ec.clear();
+                            }
+                        },
+                        SL::WS_LITE::method::tlsv11)
+                    ->CreateListener(port);
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {

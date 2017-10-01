@@ -717,17 +717,16 @@ class ClientWindow {
     }
     private Connect(): void {
 
-        var connectstring = "";
+        this.ConnectedToSelf_ = (this.HostName.value == '127.0.0.1') || (this.HostName.value == 'localhost') || (this.HostName.value == '::1');
+
         if (window.location.protocol != "https:") {
-            connectstring += "ws://";
+            this.Socket_ = new WebSocket("wss://" + this.HostName.value + ":6001");
         }
         else {
-            connectstring += "wss://";
+            this.Socket_ = new WebSocket("wss://" + this.HostName.value + ":6001");
         }
-       
-        this.ConnectedToSelf_ = (this.HostName.value == '127.0.0.1') || (this.HostName.value == 'localhost') || (this.HostName.value == '::1');
-        connectstring += this.HostName.value + ":6001";
-        this.Socket_ = new WebSocket(connectstring);
+
+     
         this.Socket_.binaryType = 'arraybuffer';
         this.ClientDriver_ = CreateClientDriverConfiguration()
             .onConnection((ws: WebSocket, ev: Event) => {
@@ -822,6 +821,9 @@ class ClientWindow {
                 }
                 this.OriginalImage_ = image;
             }).Build(this.Socket_);
+        this.Socket_.onerror = (ev: Event) => {
+            console.log(ev);
+        });
     }
 
     public getScalingFactor(): number {

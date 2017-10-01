@@ -19,8 +19,11 @@ Encryption (openssl)
 Latest standards: c++ 17 
 </li>
 </ul>
-<h3>How to get started:</h3>
-<p>https://github.com/smasherprog/Projects_Setup</p>
+<h3>Required tools</h3>
+<ul>
+<li><a href="http://www.nasm.us/">NASM Assembler</a></li>
+<li><a href="https://cmake.org/download/">Cmake (Latest!)</a></li>
+</ul>
 <p>The library is not yet stable and in development . . . </p>
 
 

@@ -89,8 +89,6 @@ namespace RAT_Server {
                                     a.mids.erase(itr);
                                 }
                             }
-                            SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level,
-                                       "onNewFrame " << msg.len << "Last byte " << (int)msg.data[msg.len - 1]);
                             ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames),
                                                                            [&](const auto i) { return i.mids.empty(); }),
                                                             end(ClientsThatNeedFullFrames));

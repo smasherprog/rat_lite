@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
     <title>rat_lite html viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <script src="input_lite.js"></script>
     <script src="rat_lite.js"></script>
     <script src="rat_client.js"></script>
+
 </head>
-<body style="padding:0;margin:0;" id="ratarea">
+<body id="ratarea">
     <script>
         document.addEventListener("DOMContentLoaded", function (event) {
             if ("WebSocket" in window) {

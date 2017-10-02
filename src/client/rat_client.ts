@@ -112,47 +112,28 @@
             }).onClipboardChanged((clipstring: string) => {
 
             }).onFrameChanged((image: HTMLImageElement, monitor: Monitor) => {
-                if (this.ScaleImage) {
-                    var scale = this.getScalingFactor();
-                    this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, monitor.OffsetX * scale, monitor.OffsetY * scale, monitor.Width * scale, monitor.Height * scale);
-                }
-                else {
-                    this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, monitor.OffsetX * scale, monitor.OffsetY);
-                }
+             
+               // this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, monitor.OffsetX, monitor.OffsetY);
+                
             }).onMonitorsChanged((monitors: Monitor[]) => {
 
             }).onMouseImageChanged((image: ImageData) => {
                 this.Cursor_ = image;
                 this.HTMLCanvasMouseImage_.getContext("2d").putImageData(this.Cursor_, 0, 0);
             }).onMousePositionChanged((pos: Point) => {
-                if (this.ScaleImage) {
-                    var scale = this.getScalingFactor();
-                    this.HTMLCanvasMouseImage_.style.top = (pos.Y * scale) + "px";
-                    this.HTMLCanvasMouseImage_.style.left = (pos.X * scale) + "px";
-                }
-                else {
+         
+             
                     this.HTMLCanvasMouseImage_.style.top = pos.Y + "px";
                     this.HTMLCanvasMouseImage_.style.left = pos.X + "px";
-                }
+                
             }).onNewFrame((image: HTMLImageElement, monitor: Monitor) => {
-         
-                if (this.ScaleImage) {
-                  
-                    var scale = this.getScalingFactor();
-                    this.HTMLCanvasScreenImage_.width = image.width * scale;
-                    this.HTMLCanvasScreenImage_.height = image.height * scale;
-                    this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
-                    this.HTMLRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
-                    this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, 0, 0, this.HTMLCanvasScreenImage_.width, this.HTMLCanvasScreenImage_.height);
-                }
-                else {
-                  
+          
                     this.HTMLCanvasScreenImage_.width = image.width;
                     this.HTMLCanvasScreenImage_.height = image.height;
-                    this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
-                    this.HTMLRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
+                    //this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
+                   // this.HTMLRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
                     this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, 0, 0);
-                }
+                
                 this.OriginalImage_ = image;
             }).Build(this.Socket_);
 

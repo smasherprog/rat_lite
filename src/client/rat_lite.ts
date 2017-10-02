@@ -320,7 +320,7 @@ class IClientDriverConfiguration extends IClientDriver {
                     break;
                 case PACKET_TYPES.ONFRAMECHANGED:
                     if (this.onFrameChanged_) {
-                        // this.Frame(ws, new DataView(ev.data, 4), this.onFrameChanged_);
+                        this.Frame(ws, new DataView(ev.data, 4), this.onFrameChanged_);
                     }
                     break;
                 case PACKET_TYPES.ONNEWFRAME:

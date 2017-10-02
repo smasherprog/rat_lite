@@ -1,8 +1,14 @@
 ﻿{
   "compileOnSave": true,
-  "compilerOptions": { 
+  "compilerOptions": {
     "inlineSourceMap": true,
     "declaration": false,
-    "target": "es2015"
+    "target": "es2015", 
+    "types": [ 
+      "node"
+    ], 
+    "typeRoots": [ 
+      "node_modules/@types"
+    ]
   }
 }

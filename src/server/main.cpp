@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     bool shareclipboard = false;
     int ImageCompressionSetting = 70;
     int MouseCaptureRate = 50;
-    int ScreenImageCaptureRate = 10;
+    int ScreenImageCaptureRate = 100;
     bool SendGrayScaleImages = false;
     int MaxNumConnections = 10;
     int MaxWebSocketThreads = 1;

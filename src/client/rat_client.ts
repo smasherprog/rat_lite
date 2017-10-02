@@ -49,6 +49,21 @@
         this.InfoDiv.appendChild(this.HostName);
         this.InfoDiv.appendChild(this.Port);
         this.InfoDiv.appendChild(this.ConnectButton);
+
+        var scalebutton = document.createElement('button');
+        scalebutton.onclick = () => {
+            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.style.width == "100%") {
+                this.HTMLCanvasScreenImage_.style.width = "";
+                scalebutton.innerText = "Scale";
+            } else if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.style.width == "") {
+                this.HTMLCanvasScreenImage_.style.width = "100%";
+                scalebutton.innerText = "Scale";
+            } 
+        };
+        scalebutton.style.position = 'absolute';
+        scalebutton.style.left = scalebutton.style.top = scalebutton.style.zIndex = '400';
+        scalebutton.innerText = "Scale";
+        this.HTMLRoot_.appendChild(scalebutton);
     }
     private Connect(): void {
         if (this.ConnectButton.disabled) return;
@@ -75,7 +90,7 @@
                 this.HTMLCanvasScreenImage_ = document.createElement('canvas');
                 this.HTMLCanvasScreenImage_.style.position = 'absolute';
                 this.HTMLCanvasScreenImage_.style.left = this.HTMLCanvasScreenImage_.style.top = this.HTMLCanvasScreenImage_.style.zIndex = '0';
-                this.HTMLCanvasScreenImage_.style.width = "100%";
+               // this.HTMLCanvasScreenImage_.style.width = "100%";
 
                 this.HTMLCanvasMouseImage_ = document.createElement('canvas');
                 this.HTMLCanvasMouseImage_.style.position = 'absolute';

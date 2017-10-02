@@ -180,12 +180,12 @@ class IClientDriverConfiguration extends IClientDriver {
                     name += String.fromCharCode.apply(dataview.getUint8(20 + i));
                 }
                 this.Monitors.push({
-                    Id: dataview.getInt32(0),
-                    Index: dataview.getInt32(4),
-                    Height: dataview.getInt32(8),
-                    Width: dataview.getInt32(12),
-                    OffsetX: dataview.getInt32(16),
-                    OffsetY: dataview.getInt32(20),
+                    Id: dataview.getInt32(0, true),
+                    Index: dataview.getInt32(4, true),
+                    Height: dataview.getInt32(8, true),
+                    Width: dataview.getInt32(12, true),
+                    OffsetX: dataview.getInt32(16, true),
+                    OffsetY: dataview.getInt32(20, true),
                     Name: name
                 });
             }
@@ -200,7 +200,7 @@ class IClientDriverConfiguration extends IClientDriver {
         }
         ws.close(1000, "Invalid Monitor Count");
     }
-    private Frame(ws: WebSocket, dataview: DataView, callback: (image: HTMLImageElement, monitor: Monitor) => void) {
+    private NewFrame(ws: WebSocket, dataview: DataView) {
 
         if (dataview.byteLength >= 4 * 4 + 4) {
             var monitorid = dataview.getInt32(0, true);
@@ -216,11 +216,47 @@ class IClientDriverConfiguration extends IClientDriver {
             var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
             if (foundmonitor.length > 0) {
                 var i = new Image();
-                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 16));
-              
-                i.onload = ()=> {
-                    callback(i, foundmonitor[0]);
+ 
+                var self = this;
+          
+                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 20));
+                i.onload = (ev: Event) => {
+                    console.log('HEY THERE');
+                    self.onNewFrame_(i, foundmonitor[0]);
                 };
+            }
+            return;
+        }
+        if (this.onDisconnection_) {
+            this.onDisconnection_(ws, 1000, "Received invalid lenght on onMouseImageChanged");
+        }
+        ws.close(1000, "Received invalid lenght on onMouseImageChanged");
+    }
+    private Frame(ws: WebSocket, dataview: DataView) {
+
+        if (dataview.byteLength >= 4 * 4 + 4) {
+            var monitorid = dataview.getInt32(0, true);
+            var rect = {
+                Origin: {
+                    X: dataview.getInt32(4, true),
+                    Y: dataview.getInt32(8, true)
+                },
+                Height: dataview.getInt32(12, true),
+                Width: dataview.getInt32(16, true)
+            };
+
+            var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
+            if (foundmonitor.length > 0) {
+                var i = new Image();
+              
+                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 20));
+                debugger;
+                i.onload = (ev: Event) => {
+                    console.log('GOT HERE NOW');
+                };
+                //i.onload = (ev: Event) => {
+                //    cb(i, foundmonitor[0]);
+                //};
             }
             return;
         }
@@ -262,8 +298,8 @@ class IClientDriverConfiguration extends IClientDriver {
             return;
         if (dataview.byteLength == 8) {
             var p = {
-                X: dataview.getInt32(0),
-                Y: dataview.getInt32(4)
+                X: dataview.getInt32(0, true),
+                Y: dataview.getInt32(4, true)
             };
             return this.onMousePositionChanged_(p);
         }
@@ -305,6 +341,7 @@ class IClientDriverConfiguration extends IClientDriver {
             var t0 = performance.now();
             var data = new DataView(ev.data);
             var packettype = <PACKET_TYPES>data.getInt32(0, true);
+            var self = this;
             //  console.log('received: ' + packettype);
             switch (packettype) {
                 case PACKET_TYPES.ONMONITORSCHANGED:
@@ -317,7 +354,7 @@ class IClientDriverConfiguration extends IClientDriver {
                     break;
                 case PACKET_TYPES.ONNEWFRAME:
                     if (this.onNewFrame_) {
-                        this.Frame(ws, new DataView(ev.data, 4), this.onNewFrame_);
+                        this.NewFrame(ws, new DataView(ev.data, 4));
                     }
                     break;
                 case PACKET_TYPES.ONMOUSEIMAGECHANGED:

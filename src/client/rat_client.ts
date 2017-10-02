@@ -135,7 +135,7 @@
                     this.HTMLCanvasMouseImage_.style.left = pos.X + "px";
                 }
             }).onNewFrame((image: HTMLImageElement, monitor: Monitor) => {
-                debugger;
+         
                 if (this.ScaleImage) {
                   
                     var scale = this.getScalingFactor();

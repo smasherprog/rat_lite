@@ -200,7 +200,8 @@ class IClientDriverConfiguration extends IClientDriver {
         }
         ws.close(1000, "Invalid Monitor Count");
     }
-    private NewFrame(ws: WebSocket, dataview: DataView) {
+
+    private Frame(ws: WebSocket, dataview: DataView, callback: (image: HTMLImageElement, monitor: Monitor) => void) {
 
         if (dataview.byteLength >= 4 * 4 + 4) {
             var monitorid = dataview.getInt32(0, true);
@@ -216,13 +217,15 @@ class IClientDriverConfiguration extends IClientDriver {
             var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
             if (foundmonitor.length > 0) {
                 var i = new Image();
- 
-                var self = this;
-          
-                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 20));
+                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 20 + dataview.byteOffset));
                 i.onload = (ev: Event) => {
-                    console.log('HEY THERE');
-                    self.onNewFrame_(i, foundmonitor[0]);
+                    callback(i, foundmonitor[0]);
+                };
+                i.onerror = (ev: Event) => {
+                    console.log(ev);
+                };
+                i.oninvalid = (ev: Event) => { 
+                    console.log(ev);
                 };
             }
             return;
@@ -232,39 +235,7 @@ class IClientDriverConfiguration extends IClientDriver {
         }
         ws.close(1000, "Received invalid lenght on onMouseImageChanged");
     }
-    private Frame(ws: WebSocket, dataview: DataView) {
 
-        if (dataview.byteLength >= 4 * 4 + 4) {
-            var monitorid = dataview.getInt32(0, true);
-            var rect = {
-                Origin: {
-                    X: dataview.getInt32(4, true),
-                    Y: dataview.getInt32(8, true)
-                },
-                Height: dataview.getInt32(12, true),
-                Width: dataview.getInt32(16, true)
-            };
-
-            var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
-            if (foundmonitor.length > 0) {
-                var i = new Image();
-              
-                i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 20));
-                debugger;
-                i.onload = (ev: Event) => {
-                    console.log('GOT HERE NOW');
-                };
-                //i.onload = (ev: Event) => {
-                //    cb(i, foundmonitor[0]);
-                //};
-            }
-            return;
-        }
-        if (this.onDisconnection_) {
-            this.onDisconnection_(ws, 1000, "Received invalid lenght on onMouseImageChanged");
-        }
-        ws.close(1000, "Received invalid lenght on onMouseImageChanged");
-    }
 
     private MouseImageChanged(ws: WebSocket, dataview: DataView) {
         if (!this.onMouseImageChanged_)
@@ -354,7 +325,7 @@ class IClientDriverConfiguration extends IClientDriver {
                     break;
                 case PACKET_TYPES.ONNEWFRAME:
                     if (this.onNewFrame_) {
-                        this.NewFrame(ws, new DataView(ev.data, 4));
+                        this.Frame(ws, new DataView(ev.data, 4), this.onNewFrame_);
                     }
                     break;
                 case PACKET_TYPES.ONMOUSEIMAGECHANGED:

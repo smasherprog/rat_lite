@@ -1,9 +1,9 @@
 ﻿class ClientWindow {
     Cursor_: ImageData;
     ScaleImage_ = false;
-    Monitors_: Array<Monitor>;
     ClientDriver_: IClientDriver;
     Socket_: WebSocket;
+    Monitors = new Array<Monitor>();
 
     OriginalImage_: HTMLImageElement;
     HTMLCanvasScreenImage_: HTMLCanvasElement;
@@ -62,7 +62,7 @@
                 //window.addEventListener("resize", this.onresize);
                 window.addEventListener("mousedown", this.onmousedown);
                 window.addEventListener("mouseup", this.onmouseup);
-                window.addEventListener("mousemove",  this.onmove);
+                window.addEventListener("mousemove", this.onmove);
                 window.addEventListener("wheel", this.onwheel);
                 window.addEventListener("keydown", this.onkeydown);
                 window.addEventListener("keyup", this.onkeyup);
@@ -75,6 +75,7 @@
                 this.HTMLCanvasScreenImage_ = document.createElement('canvas');
                 this.HTMLCanvasScreenImage_.style.position = 'absolute';
                 this.HTMLCanvasScreenImage_.style.left = this.HTMLCanvasScreenImage_.style.top = this.HTMLCanvasScreenImage_.style.zIndex = '0';
+                this.HTMLCanvasScreenImage_.style.width = "100%";
 
                 this.HTMLCanvasMouseImage_ = document.createElement('canvas');
                 this.HTMLCanvasMouseImage_.style.position = 'absolute';
@@ -85,7 +86,7 @@
                 this.HTMLRoot_.appendChild(this.HTMLCanvasMouseImage_);
 
             }).onMessage((ws: WebSocket, message: WSMessage) => {
-
+                console.log('onMessage length:' + message.data.byteLength);
             }).onDisconnection((ws: WebSocket, code: number, message: string) => {
                 console.log('onDisconnection');
                 window.removeEventListener("mousedown", this.onmousedown);
@@ -102,38 +103,36 @@
                 }
                 this.Cursor_ = null;
                 this.ScaleImage_ = false;
-                this.Monitors_ = null;
+                this.Monitors = new Array<Monitor>();
                 this.ClientDriver_ = null;
                 this.Socket_ = null;
                 this.OriginalImage_ = null;
                 this.HTMLCanvasScreenImage_ = this.HTMLCanvasMouseImage_ = null;
                 this.HTMLRoot_.appendChild(this.InfoDiv);
                 this.ConnectButton.disabled = false;
-            }).onClipboardChanged((clipstring: string) => {
-
-            }).onFrameChanged((image: HTMLImageElement, monitor: Monitor) => {
-             
-               // this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, monitor.OffsetX, monitor.OffsetY);
-                
+            }).onClipboardChanged((clipstring: string) => { 
+                console.log('onClipboardChanged: ' + clipstring);
+            }).onFrameChanged((image: HTMLImageElement, monitor: Monitor, rect: Rect) => {
+                this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, monitor.OffsetX + rect.Origin.X, monitor.OffsetY + rect.Origin.Y);
             }).onMonitorsChanged((monitors: Monitor[]) => {
+                this.Monitors = monitors; 
+                var width = 0;
+                this.Monitors.forEach((m: Monitor) => { width += m.Width; });
+                var maxheight = 0;
+                this.Monitors.forEach((m: Monitor) => { if (m.Height > maxheight) maxheight = m.Height; });
+                this.HTMLCanvasScreenImage_.width = width;
+                this.HTMLCanvasScreenImage_.height = maxheight;
 
             }).onMouseImageChanged((image: ImageData) => {
                 this.Cursor_ = image;
                 this.HTMLCanvasMouseImage_.getContext("2d").putImageData(this.Cursor_, 0, 0);
             }).onMousePositionChanged((pos: Point) => {
-         
-             
-                    this.HTMLCanvasMouseImage_.style.top = pos.Y + "px";
-                    this.HTMLCanvasMouseImage_.style.left = pos.X + "px";
-                
-            }).onNewFrame((image: HTMLImageElement, monitor: Monitor) => {
-          
-                    this.HTMLCanvasScreenImage_.width = image.width;
-                    this.HTMLCanvasScreenImage_.height = image.height;
-                    //this.HTMLRoot_.style.width = this.HTMLCanvasScreenImage_.width + 'px';
-                   // this.HTMLRoot_.style.height = this.HTMLCanvasScreenImage_.height + 'px';
-                    this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, 0, 0);
-                
+
+                this.HTMLCanvasMouseImage_.style.top = pos.Y + "px";
+                this.HTMLCanvasMouseImage_.style.left = pos.X + "px";
+
+            }).onNewFrame((image: HTMLImageElement, monitor: Monitor, rect: Rect) => {
+                this.HTMLCanvasScreenImage_.getContext("2d").drawImage(image, monitor.OffsetX, monitor.OffsetY);
                 this.OriginalImage_ = image;
             }).Build(this.Socket_);
 
@@ -142,15 +141,7 @@
             console.log(ev);
         };
     }
-
-    public getScalingFactor(): number {
-        if (this.ScaleImage && this.OriginalImage_ != null) {
-            return window.innerHeight / this.OriginalImage_.height;
-        }
-        else {
-            return 1.0;
-        }
-    }
+    
     private onkeydown = (ev: KeyboardEvent) => {
         this.ClientDriver_.SendKeyDown(ConvertToKeyCode(ev));
     }

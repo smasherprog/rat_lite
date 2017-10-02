@@ -50,8 +50,8 @@ class IClientDriver {
     protected onMessage_: (ws: WebSocket, message: WSMessage) => void;
     protected onDisconnection_: (ws: WebSocket, code: number, message: string) => void;
     protected onMonitorsChanged_: (monitors: Monitor[]) => void;
-    protected onFrameChanged_: (image: HTMLImageElement, monitor: Monitor) => void;
-    protected onNewFrame_: (image: HTMLImageElement, monitor: Monitor) => void;
+    protected onFrameChanged_: (image: HTMLImageElement, monitor: Monitor, rect: Rect) => void;
+    protected onNewFrame_: (image: HTMLImageElement, monitor: Monitor, rect: Rect) => void;
     protected onMouseImageChanged_: (image: ImageData) => void;
     protected onMousePositionChanged_: (point: Point) => void;
     protected onClipboardChanged_: (clipstring: string) => void;
@@ -139,11 +139,11 @@ class IClientDriverConfiguration extends IClientDriver {
         this.onMonitorsChanged_ = callback;
         return this;
     }
-    onFrameChanged(callback: (image: HTMLImageElement, monitor: Monitor) => void): IClientDriverConfiguration {
+    onFrameChanged(callback: (image: HTMLImageElement, monitor: Monitor, rect: Rect) => void): IClientDriverConfiguration {
         this.onFrameChanged_ = callback;
         return this;
     }
-    onNewFrame(callback: (image: HTMLImageElement, monitor: Monitor) => void): IClientDriverConfiguration {
+    onNewFrame(callback: (image: HTMLImageElement, monitor: Monitor, rect: Rect) => void): IClientDriverConfiguration {
         this.onNewFrame_ = callback;
         return this;
     }
@@ -172,23 +172,26 @@ class IClientDriverConfiguration extends IClientDriver {
             return;
         let sizeofmonitor = 6 * 4 + 128;
         let num = dataview.byteLength / sizeofmonitor;
-        this.Monitors = new Array<Monitor>();
+        
         if (dataview.byteLength == num * sizeofmonitor && num < 8) {
+            this.Monitors = new Array<Monitor>();
+            let currentoffset = 0;
             for (var i = 0; i < num; i++) {
+                currentoffset = i * sizeofmonitor;
                 var name = '';
-                for (var i = 0, strLen = 128; i < strLen; i++) {
-                    name += String.fromCharCode.apply(dataview.getUint8(20 + i));
+                for (var j = 0, strLen = 128; j < strLen; j++) {
+                    name += String.fromCharCode.apply(dataview.getUint8((20 +j) + currentoffset));
                 }
                 this.Monitors.push({
-                    Id: dataview.getInt32(0, true),
-                    Index: dataview.getInt32(4, true),
-                    Height: dataview.getInt32(8, true),
-                    Width: dataview.getInt32(12, true),
-                    OffsetX: dataview.getInt32(16, true),
-                    OffsetY: dataview.getInt32(20, true),
+                    Id: dataview.getInt32(0 + currentoffset, true),
+                    Index: dataview.getInt32(4 + currentoffset, true),
+                    Height: dataview.getInt32(8 + currentoffset, true),
+                    Width: dataview.getInt32(12 + currentoffset, true),
+                    OffsetX: dataview.getInt32(16 + currentoffset, true),
+                    OffsetY: dataview.getInt32(20 + currentoffset, true),
                     Name: name
                 });
-            }
+            } 
             return this.onMonitorsChanged_(this.Monitors);
         }
         else if (dataview.byteLength == 0) {
@@ -201,7 +204,7 @@ class IClientDriverConfiguration extends IClientDriver {
         ws.close(1000, "Invalid Monitor Count");
     }
 
-    private Frame(ws: WebSocket, dataview: DataView, callback: (image: HTMLImageElement, monitor: Monitor) => void) {
+    private Frame(ws: WebSocket, dataview: DataView, callback: (image: HTMLImageElement, monitor: Monitor, rect: Rect) => void) {
 
         if (dataview.byteLength >= 4 * 4 + 4) {
             var monitorid = dataview.getInt32(0, true);
@@ -215,11 +218,12 @@ class IClientDriverConfiguration extends IClientDriver {
             };
 
             var foundmonitor = this.Monitors.filter(a => a.Id == monitorid);
+  
             if (foundmonitor.length > 0) {
                 var i = new Image();
                 i.src = "data:image/jpeg;base64," + this._arrayBufferToBase64(new Uint8Array(dataview.buffer, 20 + dataview.byteOffset));
                 i.onload = (ev: Event) => {
-                    callback(i, foundmonitor[0]);
+                    callback(i, foundmonitor[0], rect);
                 };
                 i.onerror = (ev: Event) => {
                     console.log(ev);
@@ -332,10 +336,10 @@ class IClientDriverConfiguration extends IClientDriver {
                     this.MouseImageChanged(ws, new DataView(ev.data, 4));
                     break;
                 case PACKET_TYPES.ONMOUSEPOSITIONCHANGED:
-                    //  this.MousePositionChanged(ws, new DataView(ev.data, 4));
+                    this.MousePositionChanged(ws, new DataView(ev.data, 4));
                     break;
                 case PACKET_TYPES.ONCLIPBOARDTEXTCHANGED:
-                    //  this.ClipboardTextChanged(new DataView(ev.data, 4));
+                    this.ClipboardTextChanged(new DataView(ev.data, 4));
                     break;
                 default:
                     if (this.onMessage_) {

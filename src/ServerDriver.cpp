@@ -225,7 +225,7 @@ namespace RAT_Lite {
         auto srcbuffer = std::make_unique<unsigned char[]>(RowStride(img) * Height(img));
         Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img) * Height(img));
         auto srcbuf = (unsigned char *)srcbuffer.get();
-        auto colorencoding = TJPF_RGBX;
+        auto colorencoding = TJPF_BGRX;
         auto outjpegsize = maxsize;
 
         if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, imagecompression,

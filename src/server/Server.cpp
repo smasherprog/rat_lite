@@ -108,11 +108,13 @@ namespace RAT_Server {
                             std::this_thread::sleep_for(100ms);
                             ScreenImageCaptureRateActual += 100; // slower the capture rate ....
                             ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
+                            SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
                         }
                         else if (IServerDriver_->MemoryUsed() >= MaxPendingData && ScreenImageCaptureRateActual != ScreenImageCaptureRateRequested) {
                             // increase the capture rate here
                             ScreenImageCaptureRateActual -= 100; // increase the capture rate ....
                             ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
+                            SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
                         }
                         SendtoAll(msg);
                     })

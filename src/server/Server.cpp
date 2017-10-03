@@ -36,18 +36,21 @@ namespace RAT_Server {
         bool ShareClip = false;
         int ImageCompressionSetting = 70;
         int MouseCaptureRate = 50;
-        int ScreenImageCaptureRate = 10;
+        int ScreenImageCaptureRateRequested = 100;
+        int ScreenImageCaptureRateActual = 100;
+
         bool IgnoreIncomingKeyboardEvents = false;
         bool IgnoreIncomingMouseEvents = false;
         bool EncodeImagesAsGrayScale = false;
+        size_t MaxPendingData = 1024 * 1024 * 100;
 
         ServerImpl()
         {
             Status_ = Server_Status::SERVER_STOPPED;
             Clipboard_ = Clipboard_Lite::CreateClipboard()
                              ->onText([&](const std::string &text) {
-                                 if (ShareClip) {
-                                     SendtoAll(RAT_Lite::IServerDriver::PrepareClipboardChanged(text));
+                                 if (ShareClip && IServerDriver_) {
+                                     SendtoAll(IServerDriver_->PrepareClipboardChanged(text));
                                  }
                              })
                              ->run();
@@ -55,7 +58,9 @@ namespace RAT_Server {
             ScreenCaptureManager_ =
                 Screen_Capture::CreateCaptureConfiguration([&]() {
                     auto monitors = Screen_Capture::GetMonitors();
-                    SendtoAll(RAT_Lite::IServerDriver::PrepareMonitorsChanged(monitors));
+                    if (!IServerDriver_)
+                        return monitors;
+                    SendtoAll(IServerDriver_->PrepareMonitorsChanged(monitors));
                     // add everyone to the list!
 
                     std::vector<NewClient> newclients;
@@ -77,8 +82,8 @@ namespace RAT_Server {
                     return monitors;
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                        if (!ClientsThatNeedFullFrames.empty()) {
-                            auto msg = RAT_Lite::IServerDriver::PrepareNewFrame(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale);
+                        if (!ClientsThatNeedFullFrames.empty() && IServerDriver_) {
+                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale);
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             for (auto &a : ClientsThatNeedFullFrames) {
                                 auto itr = std::find_if(std::begin(a.mids), std::end(a.mids),
@@ -95,18 +100,34 @@ namespace RAT_Server {
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                        SendtoAll(RAT_Lite::IServerDriver::PrepareFrameChanged(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale));
+                        if (!IServerDriver_)
+                            return;
+                        auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale);
+                        if (IServerDriver_->MemoryUsed() >= MaxPendingData) {
+                            // decrease the capture rate to accomidate slow connections
+                            std::this_thread::sleep_for(100ms);
+                            ScreenImageCaptureRateActual += 100; // slower the capture rate ....
+                            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
+                        }
+                        else if (IServerDriver_->MemoryUsed() >= MaxPendingData && ScreenImageCaptureRateActual != ScreenImageCaptureRateRequested) {
+                            // increase the capture rate here
+                            ScreenImageCaptureRateActual -= 100; // increase the capture rate ....
+                            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
+                        }
+                        SendtoAll(msg);
                     })
                     ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
+                        if (!IServerDriver_)
+                            return;
                         if (img) {
-                            SendtoAll(RAT_Lite::IServerDriver::PrepareMouseImageChanged(*img));
+                            SendtoAll(IServerDriver_->PrepareMouseImageChanged(*img));
                         }
-                        SendtoAll(RAT_Lite::IServerDriver::PrepareMousePositionChanged(point));
+                        SendtoAll(IServerDriver_->PrepareMousePositionChanged(point));
                     })
                     ->start_capturing();
 
             ScreenCaptureManager_->setMouseChangeInterval(std::chrono::milliseconds(MouseCaptureRate));
-            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRate));
+            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
             ScreenCaptureManager_->pause();
         }
 
@@ -172,7 +193,7 @@ namespace RAT_Server {
                         for (auto &a : p) {
                             ids.push_back(Screen_Capture::Id(a));
                         }
-                        socket->send(RAT_Lite::IServerDriver::PrepareMonitorsChanged(p), false);
+                        socket->send(IServerDriver_->PrepareMonitorsChanged(p), false);
                         {
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             ClientsThatNeedFullFrames.push_back({socket, ids});
@@ -277,15 +298,15 @@ namespace RAT_Server {
     }
     void Server::FrameChangeInterval(int delay_in_ms)
     {
-        ServerImpl_->ScreenImageCaptureRate = delay_in_ms;
+        ServerImpl_->ScreenImageCaptureRateRequested = ServerImpl_->ScreenImageCaptureRateActual = delay_in_ms;
         if (ServerImpl_->IServerDriver_) {
             ServerImpl_->ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(delay_in_ms));
         }
     }
-    int Server::FrameChangeInterval() const { return ServerImpl_->ScreenImageCaptureRate; }
+    int Server::FrameChangeInterval() const { return ServerImpl_->ScreenImageCaptureRateRequested; }
     void Server::MouseChangeInterval(int delay_in_ms)
     {
-        ServerImpl_->ScreenImageCaptureRate = delay_in_ms;
+        ServerImpl_->MouseCaptureRate = delay_in_ms;
         if (ServerImpl_->IServerDriver_) {
             ServerImpl_->ScreenCaptureManager_->setMouseChangeInterval(std::chrono::milliseconds(delay_in_ms));
         }

@@ -17,11 +17,12 @@ namespace RAT_Lite {
     class ServerDriver : public IServerDriver {
 
       public:
-        ServerDriver() {}
+        ServerDriver() { MemoryInUse = 0; }
         virtual ~ServerDriver() {}
         std::atomic<int> ClientCount;
         bool ShareClip = false;
         int MaxNumConnections = 10;
+        std::atomic<size_t> MemoryInUse;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> onKeyUp;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> onKeyDown;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> onMouseUp;
@@ -42,6 +43,7 @@ namespace RAT_Lite {
             MaxNumConnections = maxconnections;
         }
         virtual int MaxConnections() const override { return MaxNumConnections; }
+        virtual size_t MemoryUsed() const override { return MemoryInUse; }
 
         void KeyUp(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
         {
@@ -152,6 +154,7 @@ namespace RAT_Lite {
             ClientCount = 0;
             wslistenerconfig
                 ->onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
+                    UNUSED(header);
                     if (MaxNumConnections > 0 && ClientCount + 1 > MaxNumConnections) {
                         socket->close(1000, "Closing due to max number of connections!");
                     }
@@ -205,99 +208,120 @@ namespace RAT_Lite {
                     }
                 });
         }
+
+        WS_LITE::WSMessage PrepareImage(const Screen_Capture::Image &img, int imagecompression, bool usegrayscale,
+                                        const Screen_Capture::Monitor &monitor, PACKET_TYPES p)
+        {
+            Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
+            auto set = usegrayscale ? TJSAMP_GRAY : TJSAMP_420;
+            unsigned long maxsize =
+                tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
+            auto jpegCompressor = tjInitCompress();
+            MemoryInUse += maxsize;
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[maxsize], [maxsize, this](auto *p) {
+                delete[] p;
+                MemoryInUse -= maxsize;
+            });
+            auto dst = (unsigned char *)buffer.get();
+            memcpy(dst, &p, sizeof(p));
+            dst += sizeof(p);
+            memcpy(dst, &monitor.Id, sizeof(monitor.Id));
+            dst += sizeof(monitor.Id);
+            memcpy(dst, &r, sizeof(r));
+            dst += sizeof(r);
+            auto srcbuffer = std::make_unique<unsigned char[]>(RowStride(img) * Height(img));
+            Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img) * Height(img));
+            auto srcbuf = (unsigned char *)srcbuffer.get();
+            auto colorencoding = TJPF_BGRX;
+            auto outjpegsize = maxsize;
+
+            if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, imagecompression,
+                            TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
+                SL_RAT_LOG(RAT_Lite::Logging_Levels::ERROR_log_level, tjGetErrorStr());
+            }
+            //	std::cout << "Sending " << r << std::endl;
+            auto finalsize = sizeof(p) + sizeof(r) + sizeof(monitor.Id) + outjpegsize; // adjust the correct size
+            tjDestroy(jpegCompressor);
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
+        }
+
+        WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors)
+        {
+            auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
+            const auto finalsize = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
+
+            MemoryInUse += finalsize;
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [finalsize, this](auto *p) {
+                delete[] p;
+                MemoryInUse -= finalsize;
+            });
+
+            auto buf = buffer.get();
+            memcpy(buf, &p, sizeof(p));
+            buf += sizeof(p);
+            for (auto &a : monitors) {
+                memcpy(buf, &a, sizeof(a));
+                buf += sizeof(Screen_Capture::Monitor);
+            }
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
+        }
+        virtual WS_LITE::WSMessage PrepareFrameChanged(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
+                                                       int imagecompression, bool usegrayscale) override
+        {
+            assert(imagecompression > 0 && imagecompression <= 100);
+            return PrepareImage(image, imagecompression, usegrayscale, monitor, PACKET_TYPES::ONFRAMECHANGED);
+        }
+        virtual WS_LITE::WSMessage PrepareNewFrame(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor, int imagecompression,
+                                                   bool usegrayscale) override
+        {
+            assert(imagecompression > 0 && imagecompression <= 100);
+            return PrepareImage(image, imagecompression, usegrayscale, monitor, PACKET_TYPES::ONNEWFRAME);
+        }
+        virtual WS_LITE::WSMessage PrepareMouseImageChanged(const Screen_Capture::Image &image) override
+        {
+            Rect r(Point(0, 0), Height(image), Width(image));
+            auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEIMAGECHANGED);
+            auto finalsize = (Screen_Capture::RowStride(image) * Screen_Capture::Height(image)) + sizeof(p) + sizeof(r);
+            MemoryInUse += finalsize;
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [finalsize, this](auto *p) {
+                delete[] p;
+                MemoryInUse -= finalsize;
+            });
+            auto dst = buffer.get();
+            memcpy(dst, &p, sizeof(p));
+            dst += sizeof(p);
+            memcpy(dst, &r, sizeof(r));
+            dst += sizeof(r);
+            Screen_Capture::Extract(image, (unsigned char *)dst, Screen_Capture::RowStride(image) * Screen_Capture::Height(image));
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
+        }
+        virtual WS_LITE::WSMessage PrepareMousePositionChanged(const SL::Screen_Capture::Point &pos) override
+        {
+            auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
+            const auto finalsize = sizeof(pos) + sizeof(p);
+            MemoryInUse += finalsize;
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [finalsize, this](auto *p) {
+                delete[] p;
+                MemoryInUse -= finalsize;
+            });
+            memcpy(buffer.get(), &p, sizeof(p));
+            memcpy(buffer.get() + sizeof(p), &pos, sizeof(pos));
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
+        }
+        virtual WS_LITE::WSMessage PrepareClipboardChanged(const std::string &text) override
+        {
+            auto p = static_cast<unsigned int>(PACKET_TYPES::ONCLIPBOARDTEXTCHANGED);
+            auto finalsize = text.size() + sizeof(p);
+            MemoryInUse += finalsize;
+            auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [finalsize, this](auto *p) {
+                delete[] p;
+                MemoryInUse -= finalsize;
+            });
+            memcpy(buffer.get(), &p, sizeof(p));
+            memcpy(buffer.get() + sizeof(p), text.data(), text.size());
+            return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
+        }
     };
-
-    WS_LITE::WSMessage PrepareImage(const Screen_Capture::Image &img, int imagecompression, bool usegrayscale, const Screen_Capture::Monitor &monitor,
-                                    PACKET_TYPES p)
-    {
-        Rect r(Point(img.Bounds.left, img.Bounds.top), Height(img), Width(img));
-        auto set = usegrayscale ? TJSAMP_GRAY : TJSAMP_420;
-        unsigned long maxsize = tjBufSize(Screen_Capture::Width(img), Screen_Capture::Height(img), set) + sizeof(r) + sizeof(p) + sizeof(monitor.Id);
-        auto jpegCompressor = tjInitCompress();
-        auto buffer = std::shared_ptr<unsigned char>(new unsigned char[maxsize], [](auto *p) { delete[] p; });
-        auto dst = (unsigned char *)buffer.get();
-        memcpy(dst, &p, sizeof(p));
-        dst += sizeof(p);
-        memcpy(dst, &monitor.Id, sizeof(monitor.Id));
-        dst += sizeof(monitor.Id);
-        memcpy(dst, &r, sizeof(r));
-        dst += sizeof(r);
-        auto srcbuffer = std::make_unique<unsigned char[]>(RowStride(img) * Height(img));
-        Screen_Capture::Extract(img, srcbuffer.get(), RowStride(img) * Height(img));
-        auto srcbuf = (unsigned char *)srcbuffer.get();
-        auto colorencoding = TJPF_BGRX;
-        auto outjpegsize = maxsize;
-
-        if (tjCompress2(jpegCompressor, srcbuf, r.Width, 0, r.Height, colorencoding, &dst, &outjpegsize, set, imagecompression,
-                        TJFLAG_FASTDCT | TJFLAG_NOREALLOC) == -1) {
-            SL_RAT_LOG(RAT_Lite::Logging_Levels::ERROR_log_level, tjGetErrorStr());
-        }
-        //	std::cout << "Sending " << r << std::endl;
-        auto finalsize = sizeof(p) + sizeof(r) + sizeof(monitor.Id) + outjpegsize; // adjust the correct size
-        tjDestroy(jpegCompressor);
-        return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
-    }
-
-    WS_LITE::WSMessage IServerDriver::PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors)
-    {
-        auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
-        const auto finalsize = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
-
-        auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
-        auto buf = buffer.get();
-        memcpy(buf, &p, sizeof(p));
-        buf += sizeof(p);
-        for (auto &a : monitors) {
-            memcpy(buf, &a, sizeof(a));
-            buf += sizeof(Screen_Capture::Monitor);
-        }
-        return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
-    }
-    WS_LITE::WSMessage IServerDriver::PrepareFrameChanged(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
-                                                          int imagecompression, bool usegrayscale)
-    {
-        assert(imagecompression > 0 && imagecompression <= 100);
-        return PrepareImage(image, imagecompression, usegrayscale, monitor, PACKET_TYPES::ONFRAMECHANGED);
-    }
-    WS_LITE::WSMessage IServerDriver::PrepareNewFrame(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
-                                                      int imagecompression, bool usegrayscale)
-    {
-        assert(imagecompression > 0 && imagecompression <= 100);
-        return PrepareImage(image, imagecompression, usegrayscale, monitor, PACKET_TYPES::ONNEWFRAME);
-    }
-    WS_LITE::WSMessage IServerDriver::PrepareMouseImageChanged(const Screen_Capture::Image &image)
-    {
-        Rect r(Point(0, 0), Height(image), Width(image));
-        auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEIMAGECHANGED);
-        auto finalsize = (Screen_Capture::RowStride(image) * Screen_Capture::Height(image)) + sizeof(p) + sizeof(r);
-        auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
-        auto dst = buffer.get();
-        memcpy(dst, &p, sizeof(p));
-        dst += sizeof(p);
-        memcpy(dst, &r, sizeof(r));
-        dst += sizeof(r);
-        Screen_Capture::Extract(image, (unsigned char *)dst, Screen_Capture::RowStride(image) * Screen_Capture::Height(image));
-        return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
-    }
-    WS_LITE::WSMessage IServerDriver::PrepareMousePositionChanged(const SL::Screen_Capture::Point &pos)
-    {
-        auto p = static_cast<unsigned int>(PACKET_TYPES::ONMOUSEPOSITIONCHANGED);
-        const auto finalsize = sizeof(pos) + sizeof(p);
-        auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
-        memcpy(buffer.get(), &p, sizeof(p));
-        memcpy(buffer.get() + sizeof(p), &pos, sizeof(pos));
-        return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
-    }
-    WS_LITE::WSMessage IServerDriver::PrepareClipboardChanged(const std::string &text)
-    {
-        auto p = static_cast<unsigned int>(PACKET_TYPES::ONCLIPBOARDTEXTCHANGED);
-        auto finalsize = text.size() + sizeof(p);
-        auto buffer = std::shared_ptr<unsigned char>(new unsigned char[finalsize], [](auto *p) { delete[] p; });
-        memcpy(buffer.get(), &p, sizeof(p));
-        memcpy(buffer.get() + sizeof(p), text.data(), text.size());
-        return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
-    }
-
     class ServerDriverConfiguration : public IServerDriverConfiguration {
         std::shared_ptr<ServerDriver> ServerDriver_;
 

@@ -138,17 +138,17 @@ namespace RAT_Lite {
 
         virtual void MaxConnections(int maxconnections) = 0;
         virtual int MaxConnections() const = 0;
-
-        static WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors);
+        virtual size_t MemoryUsed() const = 0;
+        virtual WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors) = 0;
         // imagecompression is [0, 100]    = [WORST, BEST]   Better compression also takes more time .. 70 seems to work well
-        static WS_LITE::WSMessage PrepareFrameChanged(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
-                                                      int imagecompression = 70, bool usegrayscale = false);
+        virtual WS_LITE::WSMessage PrepareFrameChanged(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
+                                                       int imagecompression = 70, bool usegrayscale = false) = 0;
         // imagecompression is [0, 100]    = [WORST, BEST]
-        static WS_LITE::WSMessage PrepareNewFrame(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
-                                                  int imagecompression = 70, bool usegrayscale = false);
-        static WS_LITE::WSMessage PrepareMouseImageChanged(const Screen_Capture::Image &image);
-        static WS_LITE::WSMessage PrepareMousePositionChanged(const SL::Screen_Capture::Point &pos);
-        static WS_LITE::WSMessage PrepareClipboardChanged(const std::string &text);
+        virtual WS_LITE::WSMessage PrepareNewFrame(const Screen_Capture::Image &image, const Screen_Capture::Monitor &monitor,
+                                                   int imagecompression = 70, bool usegrayscale = false) = 0;
+        virtual WS_LITE::WSMessage PrepareMouseImageChanged(const Screen_Capture::Image &image) = 0;
+        virtual WS_LITE::WSMessage PrepareMousePositionChanged(const SL::Screen_Capture::Point &pos) = 0;
+        virtual WS_LITE::WSMessage PrepareClipboardChanged(const std::string &text) = 0;
     };
 
     class RAT_LITE_EXTERN IServerDriverConfiguration : public INetworkHandlers<IServerDriverConfiguration> {

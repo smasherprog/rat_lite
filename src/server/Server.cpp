@@ -34,7 +34,8 @@ namespace RAT_Server {
         std::vector<NewClient> ClientsThatNeedFullFrames;
 
         bool ShareClip = false;
-        int ImageCompressionSetting = 70;
+        int ImageCompressionSettingRequested = 70;
+        int ImageCompressionSettingActual = 70;
         int MouseCaptureRate = 50;
         int ScreenImageCaptureRateRequested = 100;
         int ScreenImageCaptureRateActual = 100;
@@ -83,7 +84,7 @@ namespace RAT_Server {
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!ClientsThatNeedFullFrames.empty() && IServerDriver_) {
-                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale);
+                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
                             std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
                             for (auto &a : ClientsThatNeedFullFrames) {
                                 auto itr = std::find_if(std::begin(a.mids), std::end(a.mids),
@@ -102,19 +103,30 @@ namespace RAT_Server {
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!IServerDriver_)
                             return;
-                        auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSetting, EncodeImagesAsGrayScale);
+                        auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
                         if (IServerDriver_->MemoryUsed() >= MaxPendingData) {
                             // decrease the capture rate to accomidate slow connections
                             std::this_thread::sleep_for(100ms);
                             ScreenImageCaptureRateActual += 100; // slower the capture rate ....
                             ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
-                            SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
+                            ImageCompressionSettingActual -= 10; // decrease the quality of the image compression ....
+                            if (ImageCompressionSettingActual < 30)
+                                ImageCompressionSettingActual = 30; // anything below 30 will be pretty bad....
+                            //  SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
                         }
-                        else if (IServerDriver_->MemoryUsed() >= MaxPendingData && ScreenImageCaptureRateActual != ScreenImageCaptureRateRequested) {
+                        else if (IServerDriver_->MemoryUsed() < MaxPendingData &&
+                                 (ScreenImageCaptureRateActual != ScreenImageCaptureRateRequested ||
+                                  ImageCompressionSettingActual != ImageCompressionSettingRequested)) {
                             // increase the capture rate here
                             ScreenImageCaptureRateActual -= 100; // increase the capture rate ....
+                            if (ScreenImageCaptureRateActual <= 0)
+                                ScreenImageCaptureRateActual = ScreenImageCaptureRateRequested;
                             ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
-                            SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
+                            ImageCompressionSettingActual += 10;
+                            if (abs(ImageCompressionSettingActual - ImageCompressionSettingRequested) < 10 ||
+                                ImageCompressionSettingActual >= ImageCompressionSettingRequested)
+                                ImageCompressionSettingActual = ImageCompressionSettingRequested;
+                            // SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
                         }
                         SendtoAll(msg);
                     })
@@ -314,8 +326,11 @@ namespace RAT_Server {
         }
     }
     int Server::MouseChangeInterval() const { return ServerImpl_->MouseCaptureRate; }
-    void Server::ImageCompressionSetting(int compression) { ServerImpl_->ImageCompressionSetting = compression; }
-    int Server::ImageCompressionSetting() const { return ServerImpl_->ImageCompressionSetting; }
+    void Server::ImageCompressionSetting(int compression)
+    {
+        ServerImpl_->ImageCompressionSettingRequested = ServerImpl_->ImageCompressionSettingActual = compression;
+    }
+    int Server::ImageCompressionSetting() const { return ServerImpl_->ImageCompressionSettingRequested; }
     void Server::EncodeImagesAsGrayScale(bool usegrayscale) { ServerImpl_->EncodeImagesAsGrayScale = usegrayscale; }
     bool Server::EncodeImagesAsGrayScale() const { return ServerImpl_->EncodeImagesAsGrayScale; }
 

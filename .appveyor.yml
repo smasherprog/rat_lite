@@ -1,7 +1,7 @@
 image: Visual Studio 2017
 
 configuration:
-  - Debug
+  - Release
   
 clone_folder: c:\projects\proj
 
@@ -34,9 +34,9 @@ build_script:
   - cd build
   - cmake -DBUILD_SHARED_LIBS=OFF -DVCPKG_TARGET_TRIPLET=x86-windows-static "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
   - cmake --build .
-  - ctest -V -C Debug
+  - ctest -V -C Release
   - cmake -DBUILD_SHARED_LIBS=ON "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
   - cmake --build .
   - cmake --build .
-  - ctest -V -C Debug
+  - ctest -V -C Release
 

@@ -20,8 +20,9 @@ Latest standards: c++ 17
 </li>
 </ul>
 <h3>Required tools</h3>
+
 <ul>
-<li><a href="http://www.nasm.us/">NASM Assembler</a></li>
+<li><a href="http://www.nasm.us/">NASM Assembler</a><p>For mac, use homebrew to install nasm<p></li>
 <li><a href="https://cmake.org/download/">Cmake (Latest!)</a></li>
 <li><a href="https://nodejs.org/en/download/">Node.js</a></li>
 <li>TypeScript install: npm install typescript -g</li>

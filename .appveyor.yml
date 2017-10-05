@@ -24,9 +24,7 @@ install:
   - powershell -exec bypass scripts\bootstrap.ps1
   - .\vcpkg integrate install
   - .\vcpkg install zlib:x86-windows-static openssl:x86-windows-static zlib openssl
-  - npm install typescript -g
-  - cd c:\projects\proj\src\client
-  - npm install
+
     
 build_script:
   - cd c:\projects\proj

@@ -33,12 +33,7 @@ before_install:
       brew update && brew upgrade cmake || brew install cmake;
       brew install gcc openssl nasm
     fi
-  - npm install typescript -g;
-  - cd src
-  - cd client
-  - npm install
-  - cd ..
-  - cd ..
+
   
 script:
   - mkdir build

@@ -28,7 +28,8 @@ Latest standards: c++ 17
 <li>TypeScript install: npm install typescript -g</li>
 </ul>
 <p>The library is not yet stable and in development . . . </p>
-
+<h3>Mac issues</h3>
+<p>To build on mac, I only support command line builds. There are too many strange issues when creating an Xcode project. So, to build with mac, you would have to do something like: cmake -DBUILD_SHARED_LIBS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl .. && make </p>
 
 <h5>Windows Connecting to Mac</h5>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Projects_Setup/master/rat_content/Windows_Mac.PNG" target="_blank"/>

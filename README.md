@@ -33,7 +33,7 @@ Latest standards: c++ 17
 <li>Ubutnu: sudo apt-get install libxext-dev libx11-dev libxfixes-dev libxinerama-dev libxtst-dev libjpeg-turbo8-dev libssl-dev zlib1g-dev nasm -y</li>
 </ul>
 
-<h3>Building<h3>
+<h3>Building</h3>
 <p>Below are examples to build. Some paths, like windows vcpkg will need to be updated to your location to the vcpkg.cmake</p>
 <ul>
 <li>Mac: cmake -DBUILD_SHARED_LIBS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl . && make</li>

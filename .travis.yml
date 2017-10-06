@@ -32,7 +32,7 @@ before_install:
       npm install typescript -g;
     else
       brew update && brew upgrade cmake || brew install cmake;
-      brew install gcc openssl nasm
+      brew install gcc  openssl zlib libjpeg-turbo
     fi
 
   

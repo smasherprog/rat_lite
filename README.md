@@ -21,7 +21,6 @@ Latest standards: c++ 17
 </ul>
 <h3>Required tools</h3>
 <ul>
-<li><a href="http://www.nasm.us/">NASM Assembler</a></li>
 <li><a href="https://cmake.org/download/">Cmake (Latest!)</a></li>
 <li><a href="https://nodejs.org/en/download/">Node.js (Latest!)</a>
 </li>
@@ -30,9 +29,9 @@ Latest standards: c++ 17
 <h3>Libraries</h3>
 <ul>
 <li>TypeScript install: npm install typescript -g</li>
-<li>Mac: brew install openssl zlib nasm libjpeg-turbo</li>
+<li>Mac: brew install openssl zlib libjpeg-turbo</li>
 <li>Windows: vcpkg install openssl zlib libjpeg-turbo</li>
-<li>Ubutnu: sudo apt-get npm install libxext-dev libx11-dev libxfixes-dev libxinerama-dev libxtst-dev libjpeg-turbo8-dev libssl-dev zlib1g-dev nasm -y</li>
+<li>Ubutnu: sudo apt-get npm install libxext-dev libx11-dev libxfixes-dev libxinerama-dev libxtst-dev libjpeg-turbo8-dev libssl-dev zlib1g-dev -y</li>
 </ul>
 
 <h3>Building</h3>

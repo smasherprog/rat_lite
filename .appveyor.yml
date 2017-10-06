@@ -23,7 +23,7 @@ install:
   - cd vcpkg
   - powershell -exec bypass scripts\bootstrap.ps1
   - .\vcpkg integrate install
-  - .\vcpkg install zlib:x86-windows-static openssl:x86-windows-static zlib openssl
+  - .\vcpkg install zlib:x86-windows-static libjpeg-turbo:x86-windows-static openssl:x86-windows-static zlib openssl libjpeg-turbo
 
     
 build_script:

@@ -36,8 +36,8 @@ Latest standards: c++ 17
 <h3>Building</h3>
 <p>Below are examples to build. Some paths, like windows vcpkg will need to be updated to your location to the vcpkg.cmake</p>
 <ul>
-<li>Mac: cmake -DBUILD_SHARED_LIBS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl . && make</li>
-<li>Windows: cmake -DBUILD_SHARED_LIBS=ON "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" . </li>
+<li>Mac: cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl . && make</li>
+<li>Windows: cmake -DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake . </li>
 <li>Ubutnu: cmake . && make</li>
 </ul>
 

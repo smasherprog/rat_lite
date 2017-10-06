@@ -15,13 +15,7 @@ add_custom_command(
 	POST_BUILD
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND npm install
-)
-add_custom_command(
-	TARGET rat_client
-	POST_BUILD
-	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND npm install typescript
-)
+) 
 add_custom_command(
 	TARGET rat_client
 	POST_BUILD

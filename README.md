@@ -29,7 +29,7 @@ Latest standards: c++ 17
 <h3>Libraries</h3>
 <ul>
 <li>Mac: brew install openssl zlib nasm libjpeg-turbo</li>
-<li>Windows: vcpkg install openssl zlib nasm libjpeg-turbo</li>
+<li>Windows: vcpkg install openssl zlib libjpeg-turbo</li>
 <li>Ubutnu: sudo apt-get install libxext-dev libx11-dev libxfixes-dev libxinerama-dev libxtst-dev libjpeg-turbo8-dev libssl-dev zlib1g-dev nasm -y</li>
 </ul>
 

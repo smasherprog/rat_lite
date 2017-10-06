@@ -20,16 +20,26 @@ Latest standards: c++ 17
 </li>
 </ul>
 <h3>Required tools</h3>
-
 <ul>
-<li><a href="http://www.nasm.us/">NASM Assembler</a><p>For mac, use homebrew to install nasm<p></li>
+<li><a href="http://www.nasm.us/">NASM Assembler</a></li>
 <li><a href="https://cmake.org/download/">Cmake (Latest!)</a></li>
 <li><a href="https://nodejs.org/en/download/">Node.js</a></li>
 <li>TypeScript install: npm install typescript -g</li>
 </ul>
-<p>The library is not yet stable and in development . . . </p>
-<h3>Mac issues</h3>
-<p>To build on mac, I only support command line builds. There are too many strange issues when creating an Xcode project. So, to build with mac, you would have to do something like: cmake -DBUILD_SHARED_LIBS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl .. && make </p>
+<h3>Libraries</h3>
+<ul>
+<li>Mac: brew install openssl zlib nasm libjpeg-turbo</li>
+<li>Windows: vcpkg install openssl zlib nasm libjpeg-turbo</li>
+<li>Ubutnu: sudo apt-get install libxext-dev libx11-dev libxfixes-dev libxinerama-dev libxtst-dev libjpeg-turbo8-dev libssl-dev zlib1g-dev nasm -y</li>
+</ul>
+
+<h3>Building<h3>
+<p>Below are examples to build. Some paths, like windows vcpkg will need to be updated to your location to the vcpkg.cmake</p>
+<ul>
+<li>Mac: cmake -DBUILD_SHARED_LIBS=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl . && make</li>
+<li>Windows: cmake -DBUILD_SHARED_LIBS=ON "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" . </li>
+<li>Ubutnu: cmake . && make</li>
+</ul>
 
 <h5>Windows Connecting to Mac</h5>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Projects_Setup/master/rat_content/Windows_Mac.PNG" target="_blank"/>

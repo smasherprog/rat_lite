@@ -23,7 +23,7 @@ Latest standards: c++ 17
 <ul>
 <li><a href="http://www.nasm.us/">NASM Assembler</a></li>
 <li><a href="https://cmake.org/download/">Cmake (Latest!)</a></li>
-<li><a href="https://nodejs.org/en/download/">Node.js</a>
+<li><a href="https://nodejs.org/en/download/">Node.js (Latest!)</a>
 </li>
 
 </ul>

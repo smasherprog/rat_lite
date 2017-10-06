@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(BUILD_EXAMPLE ON)
 option(BUILD_SHARED_LIBS "Build shared library" OFF) 
+set (CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules")
 
 include(CMakeLists-ExternalProjects.txt)
 
@@ -32,12 +33,14 @@ endif()
 
 find_package(ZLIB REQUIRED) 
 find_package(OpenSSL REQUIRED) 
+find_package(LIBJPEGTURBO REQUIRED)  
 
 set(COMMON_INCLUDE_DIRS
 	include
 	${CMAKE_BINARY_DIR}/bin/include
 	${OPENSSL_INCLUDE_DIR}
-	${ZLIB_INCLUDE_DIRs} 
+	${ZLIB_INCLUDE_DIRS} 
+	${LIBJPEGTURBO_INCLUDE_DIRS}
 )
 include_directories(
 	${COMMON_INCLUDE_DIRS}
@@ -48,7 +51,7 @@ add_library(${PROJECT_NAME}
 	src/ClientDriver.cpp
 	src/ServerDriver.cpp
 )
-add_dependencies(${PROJECT_NAME} libjpeg-turbo websocket_lite input_lite clipboard_lite screen_capture_lite)
+add_dependencies(${PROJECT_NAME} websocket_lite input_lite clipboard_lite screen_capture_lite)
 if(WIN32) 
 	target_link_libraries(${PROJECT_NAME} Crypt32 Dwmapi)
 elseif(APPLE) 	
@@ -75,9 +78,8 @@ else()
 	endif()
 endif() 
 if(${BUILD_SHARED_LIBS})
-	target_link_libraries(${PROJECT_NAME}  
-			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}jpeg${LIBEXTENSION} 
-			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}turbojpeg${LIBEXTENSION} 
+	target_link_libraries(${PROJECT_NAME}   
+			${LIBJPEGTURBO_LIBRARIES}
 			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}websocket_lite${LIBEXTENSION} 
 			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}input_lite${LIBEXTENSION} 
 			${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clipboard_lite${LIBEXTENSION} 

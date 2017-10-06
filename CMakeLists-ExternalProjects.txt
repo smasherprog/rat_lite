@@ -1,21 +1,6 @@
 include(ExternalProject)
 
 ExternalProject_Add(
-  libjpeg-turbo
-
-  GIT_REPOSITORY "https://github.com/libjpeg-turbo/libjpeg-turbo.git"
-  GIT_TAG "dev"
-  
-  UPDATE_COMMAND ""
-  PATCH_COMMAND ""
-  
-  SOURCE_DIR "${CMAKE_BINARY_DIR}/libs/libjpeg-turbo"
-  CMAKE_ARGS -DENABLE_TESTING=FALSE -ENABLE_SHARED=${BUILD_SHARED_LIBS} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/bin
-  
-  TEST_COMMAND ""
-)
-
-ExternalProject_Add(
   websocket_lite
 
   GIT_REPOSITORY "https://github.com/smasherprog/websocket_lite.git"

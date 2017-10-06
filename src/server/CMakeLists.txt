@@ -21,7 +21,13 @@ add_definitions(
 )
 find_package(ZLIB REQUIRED) 
 find_package(OpenSSL REQUIRED) 
-include_directories(${COMMON_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(LIBJPEGTURBO REQUIRED)  
+
+include_directories(
+	${COMMON_INCLUDE_DIRS} 
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${LIBJPEGTURBO_INCLUDE_DIRS}
+)
 add_executable(${PROJECT_NAME} 	
 	Server.h
 	main.cpp
@@ -56,8 +62,7 @@ target_link_libraries(${PROJECT_NAME}
 	rat_lite
 	${OPENSSL_LIBRARIES}
 	${ZLIB_LIBRARIES}
-	${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}jpeg${LIBEXTENSION}    
-	${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}turbojpeg${LIBEXTENSION}    
+	${LIBJPEGTURBO_LIBRARIES}
 	${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}websocket_lite${LIBEXTENSION}    
 	${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}input_lite${LIBEXTENSION}    
 	${CMAKE_BINARY_DIR}/bin/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clipboard_lite${LIBEXTENSION}    
@@ -66,22 +71,11 @@ target_link_libraries(${PROJECT_NAME}
 
 if(${BUILD_SHARED_LIBS}) 
 	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL RAT_LITE_DLL)  
-	set(sharedjpegname jpeg62)
 	set(librarylocation bin)
 	if(APPLE)
-		set(sharedjpegname jpeg)
 		set(librarylocation lib)
 	endif()
 	
-	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		${CMAKE_BINARY_DIR}/bin/${librarylocation}/${CMAKE_SHARED_LIBRARY_PREFIX}${sharedjpegname}${CMAKE_SHARED_LIBRARY_SUFFIX}              
-		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
-		
-	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		${CMAKE_BINARY_DIR}/bin/${librarylocation}/${CMAKE_SHARED_LIBRARY_PREFIX}turbojpeg${CMAKE_SHARED_LIBRARY_SUFFIX}           
-		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		${CMAKE_BINARY_DIR}/bin/${librarylocation}/${CMAKE_SHARED_LIBRARY_PREFIX}websocket_lite${CMAKE_SHARED_LIBRARY_SUFFIX}             

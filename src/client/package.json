@@ -1,10 +1,35 @@
 {
-  "name": "rat-viewer",
-  "version": "0.1.0",
+  "name": "ratclient",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
   "main": "electron-main.js",
+  "scripts": {
+    "build": "tsc electron-main.ts --outdir dist && ng build --prod --aot"
+  },
+  "dependencies": {
+    "@angular/animations": "^4.2.4",
+    "@angular/common": "^4.2.4",
+    "@angular/compiler": "^4.2.4",
+    "@angular/core": "^4.2.4",
+    "@angular/forms": "^4.2.4",
+    "@angular/http": "^4.2.4",
+    "@angular/platform-browser": "^4.2.4",
+    "@angular/platform-browser-dynamic": "^4.2.4",
+    "@angular/router": "^4.2.4",
+    "core-js": "^2.4.1",
+    "rxjs": "^5.4.2",
+    "zone.js": "^0.8.14"
+  },
   "devDependencies": {
+    "@angular/cli": "1.4.7",
+    "@angular/compiler-cli": "^4.2.4",
+    "@angular/language-service": "^4.2.4",
     "@types/node": "^8.0.31",
+    "codelyzer": "~3.2.0",
     "electron": "^1.6.14",
+    "ts-node": "~3.2.0",
+    "tslint": "~5.7.0",
     "typescript": "2.5.3"
   }
 }

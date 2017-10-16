@@ -22,7 +22,7 @@ namespace RAT_Server {
     };
     class ServerImpl {
       public:
-        std::shared_ptr<Screen_Capture::ScreenCaptureManager> ScreenCaptureManager_;
+        std::shared_ptr<Screen_Capture::IScreenCaptureManager> ScreenCaptureManager_;
         std::shared_ptr<Clipboard_Lite::IClipboard_Manager> Clipboard_;
         std::shared_ptr<RAT_Lite::IServerDriver> IServerDriver_;
 

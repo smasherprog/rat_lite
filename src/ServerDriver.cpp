@@ -7,10 +7,6 @@
 
 #include <atomic>
 
-#ifdef __APPLE__
-#include <ApplicationServices/ApplicationServices.h>
-#endif
-
 namespace SL {
 namespace RAT_Lite {
 
@@ -212,7 +208,7 @@ namespace RAT_Lite {
             return WS_LITE::WSMessage{buffer.get(), finalsize, WS_LITE::OpCode::BINARY, buffer};
         }
 
-        WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors)
+        virtual WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors) override
         {
             auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
             const auto finalsize = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);

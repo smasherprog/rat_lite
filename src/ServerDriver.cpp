@@ -92,39 +92,6 @@ namespace RAT_Lite {
                 return;
             if (len == sizeof(Point)) {
                 auto p = *reinterpret_cast<const Point *>(data);
-
-#ifdef __APPLE__
-
-                CGDisplayCount count = 0;
-                CGGetActiveDisplayList(0, 0, &count);
-                std::vector<CGDirectDisplayID> displays;
-                displays.resize(count);
-                CGGetActiveDisplayList(count, displays.data(), &count);
-
-                for (auto i = 0; i < count; i++) {
-                    // only include non-mirrored displays
-                    if (CGDisplayMirrorsDisplay(displays[i]) == kCGNullDirectDisplay) {
-
-                        auto dismode = CGDisplayCopyDisplayMode(displays[i]);
-                        auto scaledsize = CGDisplayBounds(displays[i]);
-
-                        auto pixelwidth = CGDisplayModeGetPixelWidth(dismode);
-                        auto pixelheight = CGDisplayModeGetPixelHeight(dismode);
-
-                        CGDisplayModeRelease(dismode);
-
-                        if (scaledsize.size.width != pixelwidth) { // scaling going on!
-                            p.X = static_cast<float>(p.X) * static_cast<float>(scaledsize.size.width) / static_cast<float>(pixelwidth);
-                        }
-                        if (scaledsize.size.height != pixelheight) { // scaling going on!
-                            p.Y = static_cast<float>(p.Y) * static_cast<float>(scaledsize.size.height) / static_cast<float>(pixelheight);
-                        }
-                        break;
-                    }
-                }
-
-#endif
-
                 return onMousePosition(socket, p);
             }
             socket->close(1000, "Received invalid onMouseDown Event");

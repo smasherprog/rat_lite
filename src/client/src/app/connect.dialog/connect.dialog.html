@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Connect to Host</h2>
+<mat-dialog-content>
+    <form class="example-form">
+        <table class="example-full-width" cellspacing="0">
+            <tr>
+                <td>
+                    <mat-form-field class="example-full-width">
+                        <input matInput placeholder="Host" value="localhost">
+                    </mat-form-field>
+                </td>
+                <td>
+                    <mat-form-field class="example-full-width">
+                        <input matInput #port maxlength="5" placeholder="Port" value="6001">
+                        <mat-hint align="end">{{port.value.length}} / 5</mat-hint>
+                    </mat-form-field>
+                </td>
+            </tr>
+        </table>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button>Connect</button>
+</mat-dialog-actions>

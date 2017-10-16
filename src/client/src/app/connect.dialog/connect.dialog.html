@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>Connect to Host</h2>
 <mat-dialog-content>
-    <form [formGroup]="f" class="example-form">
+    <form [formGroup]="f" class="example-form"  (ngSubmit)="onSubmit()" novalidate>
         <table class="example-full-width" cellspacing="0">
             <tr>
                 <td>
@@ -22,8 +22,6 @@
                 </td>
             </tr>
         </table>
+        <button mat-button type="submit" [disabled]="!f.pristine || !f.valid">Connect</button>
     </form>
 </mat-dialog-content>
-<mat-dialog-actions>
-    <button mat-button (click)="tryconnect();">Connect</button>
-</mat-dialog-actions>

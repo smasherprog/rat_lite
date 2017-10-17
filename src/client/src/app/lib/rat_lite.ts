@@ -22,7 +22,7 @@ export class Monitor {
     OffsetX: number;
     OffsetY: number;
     Name: string;
-    Scale: number;
+    Scaling: number;
 
 };
 export enum PACKET_TYPES {
@@ -192,7 +192,7 @@ export class IClientDriverConfiguration extends IClientDriver {
                     OffsetX: dataview.getInt32(16 + currentoffset, true),
                     OffsetY: dataview.getInt32(20 + currentoffset, true),
                     Name: name,
-                    Scale: dataview.getFloat32(24 + currentoffset, true),
+                    Scaling: dataview.getFloat32(24 + currentoffset, true),
                 });
             } 
             return this.onMonitorsChanged_(this.Monitors);

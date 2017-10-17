@@ -22,6 +22,8 @@ export class Monitor {
     OffsetX: number;
     OffsetY: number;
     Name: string;
+    Scale: number;
+
 };
 export enum PACKET_TYPES {
     INVALID,
@@ -170,7 +172,7 @@ export class IClientDriverConfiguration extends IClientDriver {
 
         if (!this.onMonitorsChanged_)
             return;
-        let sizeofmonitor = 6 * 4 + 128;
+        let sizeofmonitor = 7 * 4 + 128;
         let num = dataview.byteLength / sizeofmonitor;
         
         if (dataview.byteLength == num * sizeofmonitor && num < 8) {
@@ -189,7 +191,8 @@ export class IClientDriverConfiguration extends IClientDriver {
                     Width: dataview.getInt32(12 + currentoffset, true),
                     OffsetX: dataview.getInt32(16 + currentoffset, true),
                     OffsetY: dataview.getInt32(20 + currentoffset, true),
-                    Name: name
+                    Name: name,
+                    Scale: dataview.getFloat32(24 + currentoffset, true),
                 });
             } 
             return this.onMonitorsChanged_(this.Monitors);

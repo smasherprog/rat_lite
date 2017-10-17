@@ -1,4 +1,7 @@
-﻿class ClientWindow {
+﻿import { window } from 'rxjs/operator/window';
+import { CreateClientDriverConfiguration, IClientDriver, Monitor, Point, Rect, WSMessage } from './rat_lite';
+
+class ClientWindow {
     Cursor_: ImageData;
     ScaleImage_ = false;
     ClientDriver_: IClientDriver;
@@ -33,10 +36,7 @@
         wss.value = "wss";
         this.Protocol.options.add(wss);
 
-        if (window.location.protocol == "https:") {
-            this.Protocol.value = "wss";
-            ws.disabled = true;
-        }
+
         this.Port = document.createElement('input');
         this.Port.value = '6001';
 
@@ -75,13 +75,7 @@
             .onConnection((ws: WebSocket, ev: Event) => {
                 console.log('onConnection');
                 //window.addEventListener("resize", this.onresize);
-                window.addEventListener("mousedown", this.onmousedown);
-                window.addEventListener("mouseup", this.onmouseup);
-                window.addEventListener("mousemove", this.onmove);
-                window.addEventListener("wheel", this.onwheel);
-                window.addEventListener("keydown", this.onkeydown);
-                window.addEventListener("keyup", this.onkeyup);
-
+ 
                 //window.addEventListener("touchend", this.ontouchend);
                 //window.addEventListener("touchstart", this.ontouchstart);
                 //window.addEventListener("touchmove", this.ontouchmove);
@@ -104,12 +98,6 @@
                 console.log('onMessage length:' + message.data.byteLength);
             }).onDisconnection((ws: WebSocket, code: number, message: string) => {
                 console.log('onDisconnection');
-                window.removeEventListener("mousedown", this.onmousedown);
-                window.removeEventListener("mouseup", this.onmouseup);
-                window.removeEventListener("mousemove", this.onmove);
-                window.removeEventListener("wheel", this.onwheel);
-                window.removeEventListener("keydown", this.onkeydown);
-                window.removeEventListener("keyup", this.onkeyup);
                 if (this.HTMLRoot_ && this.HTMLCanvasMouseImage_) {
                     this.HTMLRoot_.removeChild(this.HTMLCanvasMouseImage_);
                 }

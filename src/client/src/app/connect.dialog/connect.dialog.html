@@ -1,14 +1,22 @@
 <h2 mat-dialog-title>Connect to Host</h2>
 <mat-dialog-content>
-    <form [formGroup]="f" class="example-form"  (ngSubmit)="onSubmit()" novalidate>
+    <form [formGroup]="f" (ngSubmit)="onSubmit()" novalidate>
         <table class="example-full-width" cellspacing="0">
             <tr>
                 <td>
                     <mat-form-field class="example-full-width">
+                        <mat-select placeholder="Protocol" formControlName="Protocol">
+                            <mat-option *ngFor="let protocol of Protocols" [value]="protocol">{{ protocol }}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </td>
+                <td>
+                    <mat-form-field class="example-full-width">
                         <input matInput placeholder="Host" formControlName="Host">
                         <mat-error *ngIf="f.get('Host').hasError('required') || f.get('Host').hasError('minLength') ">
-                            Host is <strong>required</strong>
-                        </mat-error> 
+                            Host is
+                            <strong>required</strong>
+                        </mat-error>
                     </mat-form-field>
                 </td>
                 <td>
@@ -16,8 +24,9 @@
                         <input type="number" matInput #port maxlength="5" placeholder="Port" formControlName="Port">
                         <mat-hint align="end">{{port.value.length}} / 5</mat-hint>
                         <mat-error *ngIf="f.get('Port').hasError('required') || f.get('Port').hasError('minLength') ">
-                            Port is <strong>required</strong>
-                        </mat-error> 
+                            Port is
+                            <strong>required</strong>
+                        </mat-error>
                     </mat-form-field>
                 </td>
             </tr>

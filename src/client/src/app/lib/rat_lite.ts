@@ -1,18 +1,18 @@
-﻿enum OpCode { CONTINUATION = 0, TEXT = 1, BINARY = 2, CLOSE = 8, PING = 9, PONG = 10, INVALID = 255 };
-class WSMessage {
+﻿export enum OpCode { CONTINUATION = 0, TEXT = 1, BINARY = 2, CLOSE = 8, PING = 9, PONG = 10, INVALID = 255 };
+export class WSMessage {
     data: DataView;
     code: OpCode;
 };
-class Point {
+export class Point {
     X: number;
     Y: number;
 };
-class Rect {
+export class Rect {
     Origin: Point;
     Height: number;
     Width: number;
 };
-class Monitor {
+export class Monitor {
     Id: number;
     Index: number;
     Height: number;
@@ -23,7 +23,7 @@ class Monitor {
     OffsetY: number;
     Name: string;
 };
-enum PACKET_TYPES {
+export enum PACKET_TYPES {
     INVALID,
     HTTP_MSG,
     ONMONITORSCHANGED,
@@ -41,7 +41,7 @@ enum PACKET_TYPES {
     LAST_PACKET_TYPE
 };
 
-class IClientDriver {
+export class IClientDriver {
     protected ShareClip = false;
     protected Monitors = new Array<Monitor>();
     protected WebSocket_: WebSocket;
@@ -122,7 +122,7 @@ class IClientDriver {
 
 };
 
-class IClientDriverConfiguration extends IClientDriver {
+export class IClientDriverConfiguration extends IClientDriver {
     onConnection(callback: (ws: WebSocket, ev: Event) => void): IClientDriverConfiguration {
         this.onConnection_ = callback;
         return this;
@@ -361,6 +361,6 @@ class IClientDriverConfiguration extends IClientDriver {
         return this;
     }
 };
-function CreateClientDriverConfiguration(): IClientDriverConfiguration {
+export function CreateClientDriverConfiguration(): IClientDriverConfiguration {
     return new IClientDriverConfiguration();
 }

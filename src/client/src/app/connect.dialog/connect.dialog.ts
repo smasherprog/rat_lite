@@ -4,14 +4,24 @@ import {MatDialogRef} from '@angular/material';
 import {selector} from 'rxjs/operator/multicast';
  
 import {ValidateNumericOnly} from '../validators/numericonly';
+import { ConnectModel } from '../models/connect.model';
 
-@Component({templateUrl : './connect.dialog.html', styleUrls : [ './connect.dialog.css' ]})
+@Component({templateUrl : './connect.dialog.html'})
 export class ConnectDialog implements OnInit {
     public f: FormGroup;
+    submitting=false;
+    public Protocols = ['ws', 'wss'];
     constructor(public dialogRef: MatDialogRef<ConnectDialog>, private fb: FormBuilder) {}
     public ngOnInit(): void
     {
-        this.f = this.fb.group({
+        var defaltproto = 'ws';
+        if (window.location.protocol == "https:") {
+            defaltproto= "wss"; 
+        }
+        this.f = this.fb.group({ 
+            'Protocol' : [
+                defaltproto, [ Validators.required ]
+            ],
             'Host' : [
                 'localhost', [ Validators.required, Validators.minLength(2) ]
             ],
@@ -19,5 +29,10 @@ export class ConnectDialog implements OnInit {
                 [ '6001', [ Validators.required, Validators.minLength(2), ValidateNumericOnly ] ]
         });
     }
-    public tryconnect(): void {}
+    public onSubmit(): void {
+        if(!this.submitting && this.f.valid){
+            this.submitting = true;
+            this.dialogRef.close(this.f.value as ConnectModel);
+        }
+    }
 }

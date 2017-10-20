@@ -1,3 +1,4 @@
+import { OptionsDialog } from './options.dialog/options.dialog';
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {MatDialog} from '@angular/material';
 
@@ -28,6 +29,9 @@ export class AppComponent implements OnInit {
             this.Socket_.close(1000);
         }
     }
+    public toggleoptions(): void{
+        this.dialog.open(OptionsDialog);
+    }
     public OpenDialog(): void
     {
         this.dialog.open(ConnectDialog, {disableClose : true}).afterClosed().subscribe((a: ConnectModel) => {
@@ -53,8 +57,11 @@ export class AppComponent implements OnInit {
                         })
                         .onClipboardChanged((clipstring: string) => { console.log('onClipboardChanged: ' + clipstring); })
                         .onFrameChanged((image: HTMLImageElement, monitor: Monitor, rect: Rect) => {
-                            this.HTMLCanvasScreenImage_.nativeElement.getContext("2d").drawImage(image, monitor.OffsetX + rect.Origin.X,
+
+                            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.nativeElement ) {
+                                this.HTMLCanvasScreenImage_.nativeElement.getContext("2d").drawImage(image, monitor.OffsetX + rect.Origin.X,
                                                                                                  monitor.OffsetY + rect.Origin.Y);
+                            }
                         })
                         .onMonitorsChanged((monitors: Monitor[]) => {
                             this.Monitors = monitors;
@@ -65,24 +72,27 @@ export class AppComponent implements OnInit {
                                 if (m.Height > maxheight)
                                     maxheight = m.Height;
                             });
-                            this.HTMLCanvasScreenImage_.nativeElement.width = width;
-                            this.HTMLCanvasScreenImage_.nativeElement.height = maxheight;
-
+                            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.nativeElement ) {
+                                this.HTMLCanvasScreenImage_.nativeElement.width = width;
+                                this.HTMLCanvasScreenImage_.nativeElement.height = maxheight;
+                            }
                         })
                         .onMouseImageChanged((image: ImageData) => {
                             this.Cursor_ = image;
-                            if (this.HTMLCanvasMouseImage_) {
+                            if (this.HTMLCanvasMouseImage_ && this.HTMLCanvasMouseImage_.nativeElement ) {
                                 this.HTMLCanvasMouseImage_.nativeElement.getContext("2d").putImageData(this.Cursor_, 0, 0);
                             }
                         })
                         .onMousePositionChanged((pos: Point) => {
-                            if (this.HTMLCanvasMouseImage_) {
+                            if (this.HTMLCanvasMouseImage_ && this.HTMLCanvasMouseImage_.nativeElement ) {
                                 this.HTMLCanvasMouseImage_.nativeElement.style.top = pos.Y + "px";
                                 this.HTMLCanvasMouseImage_.nativeElement.style.left = pos.X + "px";
                             }
                         })
                         .onNewFrame((image: HTMLImageElement, monitor: Monitor, rect: Rect) => {
-                            this.HTMLCanvasScreenImage_.nativeElement.getContext("2d").drawImage(image, monitor.OffsetX, monitor.OffsetY);
+                            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.nativeElement ) {
+                                this.HTMLCanvasScreenImage_.nativeElement.getContext("2d").drawImage(image, monitor.OffsetX, monitor.OffsetY);
+                            }
                             this.OriginalImage_ = image;
                         })
                         .Build(this.Socket_);

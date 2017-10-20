@@ -1,0 +1,6 @@
+<h2 mat-dialog-title></h2>
+<mat-dialog-content>
+    <form [formGroup]="f" (ngSubmit)="onSubmit()" novalidate>
+        <button mat-button type="submit" [disabled]="!f.pristine || !f.valid">Connect</button>
+    </form>
+</mat-dialog-content>

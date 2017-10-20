@@ -1,3 +1,9 @@
 .ImageScale {
     width:100%;
 }
+.OptionsButtonHidden{
+    position:relative;
+    width:200px;
+    margin:auto;
+    z-index:50;
+}

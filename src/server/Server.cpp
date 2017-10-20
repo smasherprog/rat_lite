@@ -12,6 +12,8 @@
 #include "ScreenCapture.h"
 
 #include "WS_Lite.h"
+
+#include "ClientConfig.h"
 using namespace std::chrono_literals;
 
 namespace SL {

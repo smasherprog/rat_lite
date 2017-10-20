@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
 	Server.h
 	main.cpp
 	Server.cpp
+	ClientConfig.h
 	${${PROJECT_NAME}_PLATFORM_SRC}
 )
 

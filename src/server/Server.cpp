@@ -2,26 +2,25 @@
 #include <assert.h>
 #include <chrono>
 #include <mutex>
+#include <shared_mutex>
 #include <string.h>
 #include <thread>
+#include <vector>
 
 #include "Clipboard_Lite.h"
-#include "Input_Lite.h"
 #include "Logging.h"
 #include "RAT.h"
 #include "ScreenCapture.h"
 
 #include "WS_Lite.h"
 
-#include "ClientConfig.h"
+#include "Client.h"
+#include "ServerFunctions.h"
+
 using namespace std::chrono_literals;
 
 namespace SL {
 namespace RAT_Server {
-    struct NewClient {
-        std::shared_ptr<WS_LITE::IWSocket> s;
-        std::vector<int> mids;
-    };
     class ServerImpl {
       public:
         std::shared_ptr<Screen_Capture::IScreenCaptureManager> ScreenCaptureManager_;
@@ -29,11 +28,8 @@ namespace RAT_Server {
         std::shared_ptr<RAT_Lite::IServerDriver> IServerDriver_;
 
         Server_Status Status_ = Server_Status::SERVER_STOPPED;
-        std::mutex ClientsLock;
-        std::vector<std::shared_ptr<WS_LITE::IWSocket>> Clients;
-
-        std::mutex ClientsThatNeedFullFramesLock;
-        std::vector<NewClient> ClientsThatNeedFullFrames;
+        std::shared_mutex ClientsLock;
+        std::vector<Client> Clients;
 
         bool ShareClip = false;
         int ImageCompressionSettingRequested = 70;
@@ -66,40 +62,42 @@ namespace RAT_Server {
                     SendtoAll(IServerDriver_->PrepareMonitorsChanged(monitors));
                     // add everyone to the list!
 
-                    std::vector<NewClient> newclients;
-                    {
-                        std::lock_guard<std::mutex> lock(ClientsLock);
-                        for (const auto &a : Clients) {
-                            std::vector<int> ids;
-                            for (auto &monitor : monitors) {
-                                ids.push_back(Screen_Capture::Id(monitor));
+                    std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                    for (const auto &a : Clients) {
+                        std::vector<int> ids;
+                        for (auto &monitor : monitors) {
+                            auto mon = monitor.Id;
+                            auto clientneeds = std::find_if(begin(a.MonitorsToWatch), end(a.MonitorsToWatch), [mon](auto m) { return m == mon; });
+                            if (clientneeds != end(a.MonitorsToWatch)) {
+                                auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return m == mon; });
+                                if (found == end(a.MonitorsNeeded)) {
+                                    a.MonitorsNeeded.push_back(mon);
+                                }
                             }
-                            newclients.push_back({a, ids});
                         }
                     }
-                    {
-                        std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
-                        ClientsThatNeedFullFrames = newclients;
-                    }
-
                     return monitors;
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                        if (!ClientsThatNeedFullFrames.empty() && IServerDriver_) {
-                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
-                            std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
-                            for (auto &a : ClientsThatNeedFullFrames) {
-                                auto itr = std::find_if(std::begin(a.mids), std::end(a.mids),
-                                                        [&](const auto i) { return i == Screen_Capture::Id(monitor); });
-                                if (itr != std::end(a.mids)) {
-                                    // send and erase the montor from the list
-                                    a.s->send(msg, false);
-                                    a.mids.erase(itr);
+
+                        if (IServerDriver_) {
+                            std::vector<std::shared_ptr<WS_LITE::IWSocket>> clients;
+                            clients.reserve(Clients.size());
+                            {
+                                std::unique_lock<std::shared_mutex> lock(ClientsLock);
+
+                                for (const auto &a : Clients) {
+                                    auto mon = monitor.Id;
+                                    auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return mon == m; });
+                                    if (found != end(a.MonitorsNeeded)) {
+                                        clients.push_back(a.Socket);
+                                    }
                                 }
                             }
-                            ClientsThatNeedFullFrames.erase(std::remove_if(begin(ClientsThatNeedFullFrames), end(ClientsThatNeedFullFrames),
-                                                                           [&](const auto i) { return i.mids.empty(); }),
-                                                            end(ClientsThatNeedFullFrames));
+                            for (const auto &a : clients) {
+                                auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
+                                a->send(msg, false);
+                            }
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
@@ -155,7 +153,7 @@ namespace RAT_Server {
         }
         void SendtoAll(const WS_LITE::WSMessage &msg)
         {
-            std::lock_guard<std::mutex> lock(ClientsLock);
+            std::shared_lock<std::shared_mutex> lock(ClientsLock);
             for (const auto &a : Clients) {
                 a->send(msg, false);
             }
@@ -200,6 +198,7 @@ namespace RAT_Server {
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
+
                         {
                             std::lock_guard<std::mutex> lock(ClientsLock);
                             Clients.push_back(socket);
@@ -240,56 +239,24 @@ namespace RAT_Server {
                         UNUSED(msg);
                     })
                     ->onKeyUp([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key) {
-                        if (!IgnoreIncomingKeyboardEvents) {
-                            Input_Lite::KeyEvent kevent;
-                            kevent.Key = key;
-                            kevent.Pressed = false;
-                            Input_Lite::SendInput(kevent);
-                        }
+                        onKeyUp(IgnoreIncomingKeyboardEvents, socket, key);
                     })
                     ->onKeyDown([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key) {
-                        if (!IgnoreIncomingKeyboardEvents) {
-                            Input_Lite::KeyEvent kevent;
-                            kevent.Key = key;
-                            kevent.Pressed = true;
-                            Input_Lite::SendInput(kevent);
-                        }
+                        onKeyDown(IgnoreIncomingKeyboardEvents, socket, key);
                     })
                     ->onMouseUp([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button) {
-                        if (!IgnoreIncomingMouseEvents) {
-                            Input_Lite::MouseButtonEvent mbevent;
-                            mbevent.Pressed = false;
-                            mbevent.Button = button;
-                            Input_Lite::SendInput(mbevent);
-                        }
+                        onMouseUp(IgnoreIncomingMouseEvents, socket, button);
                     })
                     ->onMouseDown([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button) {
-                        if (!IgnoreIncomingMouseEvents) {
-                            Input_Lite::MouseButtonEvent mbevent;
-                            mbevent.Pressed = true;
-                            mbevent.Button = button;
-                            Input_Lite::SendInput(mbevent);
-                        }
+                        onMouseDown(IgnoreIncomingMouseEvents, socket, button);
                     })
                     ->onMouseScroll([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset) {
-                        if (!IgnoreIncomingMouseEvents) {
-                            Input_Lite::MouseScrollEvent mbevent;
-                            mbevent.Offset = offset;
-                            Input_Lite::SendInput(mbevent);
-                        }
+                        onMouseScroll(IgnoreIncomingMouseEvents, socket, offset);
                     })
                     ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos) {
-                        if (!IgnoreIncomingMouseEvents) {
-                            Input_Lite::MousePositionAbsoluteEvent mbevent;
-                            mbevent.X = pos.X;
-                            mbevent.Y = pos.Y;
-                            Input_Lite::SendInput(mbevent);
-                        }
+                        onMousePosition(IgnoreIncomingMouseEvents, socket, pos);
                     })
-                    ->onClipboardChanged([&](const std::string &text) {
-                        SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onClipboardChanged " << text.size());
-                        Clipboard_->copy(text);
-                    })
+                    ->onClipboardChanged([&](const std::string &text) { onClipboardChanged(text, Clipboard_); })
                     ->Build(clientctx);
             clientctx->listen();
         }

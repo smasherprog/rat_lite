@@ -1,9 +1,13 @@
 #pragma once
+#include <memory>
 #include <vector>
 
 namespace SL {
+namespace WS_LITE {
+    class IWSocket;
+}
 namespace RAT_Server {
-    struct ClientConfig {
+    struct Client {
         bool ShareClip = false;
         int ImageCompressionSetting = 70;
 
@@ -11,6 +15,9 @@ namespace RAT_Server {
         bool IgnoreIncomingMouseEvents = false;
         bool EncodeImagesAsGrayScale = false;
         std::vector<int> MonitorsToWatch;
+        std::vector<int> MonitorsNeeded;
+
+        std::shared_ptr<WS_LITE::IWSocket> Socket;
     };
 
 } // namespace RAT_Server

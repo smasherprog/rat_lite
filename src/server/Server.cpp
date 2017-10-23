@@ -41,7 +41,7 @@ namespace RAT_Server {
         bool IgnoreIncomingKeyboardEvents = false;
         bool IgnoreIncomingMouseEvents = false;
         bool EncodeImagesAsGrayScale = false;
-        size_t MaxPendingData = 1024 * 1024 * 100;
+        size_t MaxMemoryUsed = 1024 * 1024 * 100;
 
         ServerImpl()
         {
@@ -79,55 +79,41 @@ namespace RAT_Server {
                     return monitors;
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                        if (!IServerDriver_)
+                            return;
+                        std::vector<std::shared_ptr<WS_LITE::IWSocket>> clients;
+                        clients.reserve(Clients.size());
+                        {
+                            std::shared_lock<std::shared_mutex> lock(ClientsLock);
 
-                        if (IServerDriver_) {
-                            std::vector<std::shared_ptr<WS_LITE::IWSocket>> clients;
-                            clients.reserve(Clients.size());
-                            {
-                                std::shared_lock<std::shared_mutex> lock(ClientsLock);
-
-                                for (const auto &a : Clients) {
-                                    auto mon = monitor.Id;
-                                    auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return mon == m; });
-                                    if (found != end(a.MonitorsNeeded)) {
-                                        clients.push_back(a.Socket);
-                                    }
+                            for (const auto &a : Clients) {
+                                auto mon = monitor.Id;
+                                auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return mon == m; });
+                                if (found != end(a.MonitorsNeeded)) {
+                                    clients.push_back(a.Socket);
                                 }
                             }
-                            for (const auto &a : clients) {
-                                auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
-                                a->send(msg, false);
-                            }
                         }
+                        for (const auto &a : clients) {
+                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
+                            a->send(msg, false);
+                        }
+
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!IServerDriver_)
                             return;
+
                         auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
-                        if (IServerDriver_->MemoryUsed() >= MaxPendingData) {
-                            // decrease the capture rate to accomidate slow connections
-                            std::this_thread::sleep_for(100ms);
-                            ScreenImageCaptureRateActual += 100; // slower the capture rate ....
-                            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
-                            ImageCompressionSettingActual -= 10; // decrease the quality of the image compression ....
-                            if (ImageCompressionSettingActual < 30)
-                                ImageCompressionSettingActual = 30; // anything below 30 will be pretty bad....
-                            //  SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
+                        auto newscreencapturerate = GetNewScreenCaptureRate(IServerDriver_->MemoryUsed(), MaxMemoryUsed, ScreenImageCaptureRateActual,
+                                                                            ScreenImageCaptureRateRequested);
+                        if (newscreencapturerate != ScreenImageCaptureRateActual) {
+                            ScreenImageCaptureRateActual = newscreencapturerate;
+                            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(newscreencapturerate));
                         }
-                        else if (IServerDriver_->MemoryUsed() < MaxPendingData &&
-                                 (ScreenImageCaptureRateActual != ScreenImageCaptureRateRequested ||
-                                  ImageCompressionSettingActual != ImageCompressionSettingRequested)) {
-                            // increase the capture rate here
-                            ScreenImageCaptureRateActual -= 100; // increase the capture rate ....
-                            if (ScreenImageCaptureRateActual <= 0)
-                                ScreenImageCaptureRateActual = ScreenImageCaptureRateRequested;
-                            ScreenCaptureManager_->setFrameChangeInterval(std::chrono::milliseconds(ScreenImageCaptureRateActual));
-                            ImageCompressionSettingActual += 10;
-                            if (abs(ImageCompressionSettingActual - ImageCompressionSettingRequested) < 10 ||
-                                ImageCompressionSettingActual >= ImageCompressionSettingRequested)
-                                ImageCompressionSettingActual = ImageCompressionSettingRequested;
-                            // SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "setFrameChangeInterval " << ScreenImageCaptureRateActual);
-                        }
+                        ImageCompressionSettingActual = GetNewImageCompression(IServerDriver_->MemoryUsed(), MaxMemoryUsed,
+                                                                               ImageCompressionSettingActual, ImageCompressionSettingRequested);
+
                         SendtoAll(msg);
                     })
                     ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {

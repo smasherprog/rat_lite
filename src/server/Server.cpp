@@ -29,7 +29,7 @@ namespace RAT_Server {
 
         Server_Status Status_ = Server_Status::SERVER_STOPPED;
         std::shared_mutex ClientsLock;
-        std::vector<Client> Clients;
+        std::vector<std::shared_ptr<Client>> Clients;
 
         bool ShareClip = false;
         int ImageCompressionSettingRequested = 70;
@@ -69,22 +69,22 @@ namespace RAT_Server {
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!IServerDriver_)
                             return;
-                        std::vector<std::shared_ptr<WS_LITE::IWSocket>> clients;
+                        decltype(Clients) clients;
                         clients.reserve(Clients.size());
                         {
                             std::shared_lock<std::shared_mutex> lock(ClientsLock);
                             for (auto &a : Clients) {
                                 auto found =
-                                    std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [&monitor](auto m) { return monitor.Id == m.Id; });
-                                if (found != end(a.MonitorsNeeded)) {
-                                    clients.push_back(a.Socket);
+                                    std::find_if(begin(a->MonitorsNeeded), end(a->MonitorsNeeded), [&monitor](auto m) { return monitor.Id == m.Id; });
+                                if (found != end(a->MonitorsNeeded)) {
+                                    clients.push_back(a);
                                 }
-                                a.MonitorsNeeded.erase(found);
+                                a->MonitorsNeeded.erase(found);
                             }
                         }
-                        auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
                         for (auto &a : clients) {
-                            a->send(msg, false);
+                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
+                            a->Socket->send(msg, false);
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
@@ -128,7 +128,7 @@ namespace RAT_Server {
         {
             std::shared_lock<std::shared_mutex> lock(ClientsLock);
             for (const auto &a : Clients) {
-                a.Socket->send(msg, false);
+                a->Socket->send(msg, false);
             }
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
@@ -175,11 +175,11 @@ namespace RAT_Server {
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
-                        Client c;
-                        c.Socket = socket;
+                        auto c = std::make_shared<Client>();
+                        c->Socket = socket;
                         auto m = Screen_Capture::GetMonitors();
-                        c.MonitorsNeeded = m;
-                        c.MonitorsToWatch = m;
+                        c->MonitorsNeeded = m;
+                        c->MonitorsToWatch = m;
                         socket->send(IServerDriver_->PrepareMonitorsChanged(m), false);
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
                         Clients.push_back(c);
@@ -191,13 +191,12 @@ namespace RAT_Server {
                     })
                     ->onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                        Clients.erase(std::remove_if(std::begin(Clients), std::end(Clients), [&](auto &s) { return s.Socket == socket; }),
+                        Clients.erase(std::remove_if(std::begin(Clients), std::end(Clients), [&](auto &s) { return s->Socket == socket; }),
                                       std::end(Clients));
                         if (Clients.empty()) {
                             // make sure to stop capturing if isnt needed
                             ScreenCaptureManager_->pause();
                         }
-
                         UNUSED(code);
                         UNUSED(msg);
                     })

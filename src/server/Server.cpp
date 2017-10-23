@@ -63,7 +63,7 @@ namespace RAT_Server {
                     // add everyone to the list!
 
                     std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                    for (const auto &a : Clients) {
+                    for (auto &a : Clients) {
                         std::vector<int> ids;
                         for (auto &monitor : monitors) {
                             auto mon = monitor.Id;
@@ -84,7 +84,7 @@ namespace RAT_Server {
                             std::vector<std::shared_ptr<WS_LITE::IWSocket>> clients;
                             clients.reserve(Clients.size());
                             {
-                                std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                                std::shared_lock<std::shared_mutex> lock(ClientsLock);
 
                                 for (const auto &a : Clients) {
                                     auto mon = monitor.Id;
@@ -155,7 +155,7 @@ namespace RAT_Server {
         {
             std::shared_lock<std::shared_mutex> lock(ClientsLock);
             for (const auto &a : Clients) {
-                a->send(msg, false);
+                a.Socket->send(msg, false);
             }
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
@@ -198,20 +198,16 @@ namespace RAT_Server {
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
-
-                        {
-                            std::lock_guard<std::mutex> lock(ClientsLock);
-                            Clients.push_back(socket);
-                        }
-                        std::vector<int> ids;
+                        Client c;
+                        c.Socket = socket;
                         auto p = Screen_Capture::GetMonitors();
                         for (auto &a : p) {
-                            ids.push_back(Screen_Capture::Id(a));
+                            c.MonitorsNeeded.push_back(Screen_Capture::Id(a));
                         }
                         socket->send(IServerDriver_->PrepareMonitorsChanged(p), false);
                         {
-                            std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
-                            ClientsThatNeedFullFrames.push_back({socket, ids});
+                            std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                            Clients.push_back(c);
                         }
                         ScreenCaptureManager_->resume();
                     })
@@ -220,21 +216,14 @@ namespace RAT_Server {
                         UNUSED(msg);
                     })
                     ->onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
-                        {
-                            std::lock_guard<std::mutex> lock(ClientsLock);
-                            Clients.erase(std::remove_if(std::begin(Clients), std::end(Clients), [&](auto &s) { return s == socket; }),
-                                          std::end(Clients));
-                            if (Clients.empty()) {
-                                // make sure to stop capturing if isnt needed
-                                ScreenCaptureManager_->pause();
-                            }
+                        std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                        Clients.erase(std::remove_if(std::begin(Clients), std::end(Clients), [&](auto &s) { return s.Socket == socket; }),
+                                      std::end(Clients));
+                        if (Clients.empty()) {
+                            // make sure to stop capturing if isnt needed
+                            ScreenCaptureManager_->pause();
                         }
-                        { // make sure to remove any clients here too
-                            std::lock_guard<std::mutex> lock(ClientsThatNeedFullFramesLock);
-                            ClientsThatNeedFullFrames.erase(std::remove_if(std::begin(ClientsThatNeedFullFrames), std::end(ClientsThatNeedFullFrames),
-                                                                           [&](auto &s) { return s.s.get() == socket.get(); }),
-                                                            std::end(ClientsThatNeedFullFrames));
-                        }
+
                         UNUSED(code);
                         UNUSED(msg);
                     })

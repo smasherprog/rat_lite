@@ -28,10 +28,6 @@ namespace RAT_Server {
         bool EncodeImagesAsGrayScale() const;
 
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate);
-
-#if __ANDROID__
-        void OnImage(char *buf, int width, int height);
-#endif
     };
 } // namespace RAT_Server
 } // namespace SL

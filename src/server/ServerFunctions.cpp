@@ -44,6 +44,34 @@ namespace RAT_Server {
         }
         return imagecompressionactual;
     }
+    void onClientSettingsChanged(WS_LITE::IWSocket *socket, std::vector<Client> &clients, const RAT_Lite::ClientSettings &clientsettings)
+    {
+        auto found = std::find_if(std::begin(clients), std::end(clients), [socket](const auto &client) { return client.Socket.get() == socket; });
+        if (found != std::end(clients)) {
+            found->EncodeImagesAsGrayScale = clientsettings.EncodeImagesAsGrayScale;
+            found->ImageCompressionSetting = clientsettings.ImageCompressionSetting;
+            found->ShareClip = clientsettings.ShareClip;
+            for (auto &m : clientsettings.MonitorsToWatch) {
+                auto newmonitor = std::find_if(std::begin(clientsettings.MonitorsToWatch), std::end(clientsettings.MonitorsToWatch),
+                                               [&m](const auto &mon) { return mon.Id == m.Id; });
+                if (newmonitor == std::end(clientsettings.MonitorsToWatch)) {
+                    found->MonitorsNeeded.push_back(m);
+                }
+            }
+            found->MonitorsToWatch = clientsettings.MonitorsToWatch;
+        }
+    }
+    void onGetMonitors(std::vector<Client> &clients, const std::vector<Screen_Capture::Monitor> &monitors)
+    {
+        for (auto &a : clients) {
+            for (auto &monitor : monitors) {
+                auto clientneeds =
+                    std::find_if(begin(a.MonitorsToWatch), end(a.MonitorsToWatch), [&monitor](const auto &m) { return m.Id == monitor.Id; });
+                a.MonitorsNeeded = monitors;
+            }
+        }
+    }
+
     void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::KeyCodes &keycode)
     {
         if (!ignoreIncomingKeyboardEvents) {

@@ -63,19 +63,7 @@ namespace RAT_Server {
                     // add everyone to the list!
 
                     std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                    for (auto &a : Clients) {
-                        std::vector<int> ids;
-                        for (auto &monitor : monitors) {
-                            auto mon = monitor.Id;
-                            auto clientneeds = std::find_if(begin(a.MonitorsToWatch), end(a.MonitorsToWatch), [mon](auto m) { return m == mon; });
-                            if (clientneeds != end(a.MonitorsToWatch)) {
-                                auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return m == mon; });
-                                if (found == end(a.MonitorsNeeded)) {
-                                    a.MonitorsNeeded.push_back(mon);
-                                }
-                            }
-                        }
-                    }
+                    onGetMonitors(Clients, monitors);
                     return monitors;
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
@@ -85,16 +73,19 @@ namespace RAT_Server {
                         clients.reserve(Clients.size());
                         {
                             std::shared_lock<std::shared_mutex> lock(ClientsLock);
-                            for (const auto &a : Clients) {
-                                auto mon = monitor.Id;
-                                auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return mon == m; });
+                            for (auto &a : Clients) {
+                                auto found =
+                                    std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [&monitor](auto m) { return monitor.Id == m.Id; });
                                 if (found != end(a.MonitorsNeeded)) {
                                     clients.push_back(a.Socket);
                                 }
+                                a.MonitorsNeeded.erase(found);
                             }
                         }
                         auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
-                        SendtoAll(msg);
+                        for (auto &a : clients) {
+                            a->send(msg, false);
+                        }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!IServerDriver_)
@@ -144,49 +135,52 @@ namespace RAT_Server {
         {
             Status_ = Server_Status::SERVER_RUNNING;
 
-            auto clientctx =
-                SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
-                    ->NoTLS()
-                    /*
-                                        ->UseTLS(
-                                            [&](SL::WS_LITE::ITLSContext *context) {
-                                                context->set_options(SL::WS_LITE::options::default_workarounds | SL::WS_LITE::options::no_sslv2 |
-                                                                     SL::WS_LITE::options::no_sslv3 | SL::WS_LITE::options::single_dh_use);
-                                                std::error_code ec;
+            auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
+#if DEBUG || _DEBUG
+                                 ->NoTLS()
+#elif
+                                 ->UseTLS(
+                                     [&](SL::WS_LITE::ITLSContext *context) {
+                                         context->set_options(SL::WS_LITE::options::default_workarounds | SL::WS_LITE::options::no_sslv2 |
+                                                              SL::WS_LITE::options::no_sslv3 | SL::WS_LITE::options::single_dh_use);
+                                         std::error_code ec;
 
-                                                context->set_password_callback(
-                                                    [PasswordToPrivateKey](std::size_t s, SL::WS_LITE::password_purpose p) { return
-                       PasswordToPrivateKey; }, ec); if (ec) { std::cout << "set_password_callback failed: " << ec.message(); ec.clear();
-                                                }
-                                                context->use_certificate_chain_file(PathTo_Public_Certficate, ec);
-                                                if (ec) {
-                                                    std::cout << "use_certificate_chain_file failed: " << ec.message();
-                                                    ec.clear();
-                                                }
-                                                context->set_default_verify_paths(ec);
-                                                if (ec) {
-                                                    std::cout << "set_default_verify_paths failed: " << ec.message();
-                                                    ec.clear();
-                                                }
-                                                context->use_private_key_file(std::string(PathTo_Private_Key), SL::WS_LITE::file_format::pem, ec);
-                                                if (ec) {
-                                                    std::cout << "use_private_key_file failed: " << ec.message();
-                                                    ec.clear();
-                                                }
-                                            },
-                                            SL::WS_LITE::method::tlsv11_server)
-                    */
-                    ->CreateListener(port);
+                                         context->set_password_callback(
+                                             [PasswordToPrivateKey](std::size_t s, SL::WS_LITE::password_purpose p) { return PasswordToPrivateKey; },
+                                             ec);
+                                         if (ec) {
+                                             std::cout << "set_password_callback failed: " << ec.message();
+                                             ec.clear();
+                                         }
+                                         context->use_certificate_chain_file(PathTo_Public_Certficate, ec);
+                                         if (ec) {
+                                             std::cout << "use_certificate_chain_file failed: " << ec.message();
+                                             ec.clear();
+                                         }
+                                         context->set_default_verify_paths(ec);
+                                         if (ec) {
+                                             std::cout << "set_default_verify_paths failed: " << ec.message();
+                                             ec.clear();
+                                         }
+                                         context->use_private_key_file(std::string(PathTo_Private_Key), SL::WS_LITE::file_format::pem, ec);
+                                         if (ec) {
+                                             std::cout << "use_private_key_file failed: " << ec.message();
+                                             ec.clear();
+                                         }
+                                     },
+                                     SL::WS_LITE::method::tlsv11_server)
+#endif
+
+                                 ->CreateListener(port);
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
                     ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
                         Client c;
                         c.Socket = socket;
-                        auto p = Screen_Capture::GetMonitors();
-                        for (auto &a : p) {
-                            c.MonitorsNeeded.push_back(Screen_Capture::Id(a));
-                        }
-                        socket->send(IServerDriver_->PrepareMonitorsChanged(p), false);
+                        auto m = Screen_Capture::GetMonitors();
+                        c.MonitorsNeeded = m;
+                        c.MonitorsToWatch = m;
+                        socket->send(IServerDriver_->PrepareMonitorsChanged(m), false);
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
                         Clients.push_back(c);
                         ScreenCaptureManager_->resume();
@@ -226,6 +220,10 @@ namespace RAT_Server {
                         onMousePosition(IgnoreIncomingMouseEvents, socket, pos);
                     })
                     ->onClipboardChanged([&](const std::string &text) { onClipboardChanged(ShareClip, text, Clipboard_); })
+                    ->onClientSettingsChanged([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::ClientSettings &clientsettings) {
+                        std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                        onClientSettingsChanged(socket.get(), Clients, clientsettings);
+                    })
                     ->Build(clientctx);
             clientctx->listen();
         }
@@ -280,13 +278,6 @@ namespace RAT_Server {
             std::this_thread::sleep_for(50ms);
         }
     }
-
-#if __ANDROID__
-    void Server::Server::OnImage(char *buf, int width, int height)
-    {
-        return _ServerImpl->OnScreen(Utilities::Image::CreateImage(height, width, buf, 4));
-    }
-#endif
 
 } // namespace RAT_Server
 } // namespace SL

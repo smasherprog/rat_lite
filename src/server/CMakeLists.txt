@@ -33,8 +33,7 @@ add_executable(${PROJECT_NAME}
 	main.cpp
 	Server.cpp
 	ServerFunctions.h
-	ServerFunctions.cpp
-	Client.h
+	ServerFunctions.cpp 
 	${${PROJECT_NAME}_PLATFORM_SRC}
 )
 

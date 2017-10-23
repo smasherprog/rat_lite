@@ -112,11 +112,20 @@ namespace RAT_Lite {
                 return;
             ClientSettings c;
             auto beginsize = sizeof(c.ShareClip) + sizeof(c.ImageCompressionSetting) + sizeof(c.EncodeImagesAsGrayScale);
-            if (len >= (beginsize + sizeof(int)) &&       // min size received at least 1 monitor
-                ((len - beginsize) % sizeof(int) == 0)) { // the remaining bytes are divisible by sizeof int
+            auto remainingdata = len - beginsize;
+            if (len >= (beginsize + sizeof(int)) &&   // min size received at least 1 monitor
+                (remainingdata % sizeof(int) == 0)) { // the remaining bytes are divisible by sizeof int
                 memcpy(&c, data, beginsize);
-                // auto begin = reinterpret_cast<const int *>(data);
-                //   std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+                auto begin = reinterpret_cast<const int *>(data);
+                auto end = begin + remainingdata + sizeof(int);
+                std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+                for (auto b = begin; b < end; b++) {
+                    auto found = std::find_if(std::begin(Monitors), std::end(Monitors), [b](auto &mon) { return mon.Id == *b; });
+                    if (found != std::end(Monitors)) {
+                        c.MonitorsToWatch.push_back(*found);
+                    }
+                }
+                return onClientSettingsChanged(socket, c);
             }
             socket->close(1000, "Received invalid onClientSettingsChanged Event");
         }
@@ -387,7 +396,7 @@ namespace RAT_Lite {
             ServerDriver_->onDisconnection = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
-        virtual std::shared_ptr<IServerDriverConfiguration> onSettingsChanged(
+        virtual std::shared_ptr<IServerDriverConfiguration> onClientSettingsChanged(
             const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const ClientSettings &settings)> &callback) override
         {
             assert(!ServerDriver_->onClientSettingsChanged);

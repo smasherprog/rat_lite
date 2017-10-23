@@ -32,9 +32,7 @@ install:
   - npm install -g typescript electron
     
 build_script:
-  - cd c:\projects\proj
-  - mkdir build
-  - cd build
+  - cd c:\projects\proj\build 
   - cmake -DBUILD_SHARED_LIBS=OFF -DVCPKG_TARGET_TRIPLET=x86-windows-static "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
   - cmake --build .
   - ctest -V -C Debug

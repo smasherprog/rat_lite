@@ -11,14 +11,11 @@
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(RAT_LITE_DLL)
 #define RAT_LITE_EXTERN __declspec(dllexport)
-#define RAT_EXPIMP_TEMPLATE
 #else
 #define RAT_LITE_EXTERN
-#define RAT_EXPIMP_TEMPLATE extern
 #endif
 #else
 #define RAT_LITE_EXTERN
-#define RAT_EXPIMP_TEMPLATE
 #endif
 
 namespace SL {
@@ -31,7 +28,12 @@ namespace RAT_Lite {
         Point(int x, int y) : X(x), Y(y) {}
         int X, Y;
     };
-
+    struct ClientSettings {
+        bool ShareClip = false;
+        int ImageCompressionSetting = 70;
+        bool EncodeImagesAsGrayScale = false;
+        std::vector<Screen_Capture::Monitor> MonitorsToWatch;
+    };
     typedef Point Size;
     class Rect {
 
@@ -113,6 +115,7 @@ namespace RAT_Lite {
         ONMOUSEDOWN,
         ONMOUSESCROLL,
         ONCLIPBOARDTEXTCHANGED,
+        ONCLIENTSETTINGSCHANGED,
         // use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
         LAST_PACKET_TYPE
     };
@@ -167,6 +170,8 @@ namespace RAT_Lite {
         onMouseScroll(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration>
         onMousePosition(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos)> &callback) = 0;
+        virtual std::shared_ptr<IServerDriverConfiguration>
+        onSettingsChanged(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const ClientSettings &settings)> &callback) = 0;
 
         virtual std::shared_ptr<IServerDriverConfiguration> onClipboardChanged(const std::function<void(const std::string &text)> &callback) = 0;
         virtual std::shared_ptr<IServerDriver> Build(const std::shared_ptr<SL::WS_LITE::IWSListener_Configuration> &wslistenerconfig) = 0;

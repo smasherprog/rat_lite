@@ -85,7 +85,6 @@ namespace RAT_Server {
                         clients.reserve(Clients.size());
                         {
                             std::shared_lock<std::shared_mutex> lock(ClientsLock);
-
                             for (const auto &a : Clients) {
                                 auto mon = monitor.Id;
                                 auto found = std::find_if(begin(a.MonitorsNeeded), end(a.MonitorsNeeded), [mon](auto m) { return mon == m; });
@@ -94,11 +93,8 @@ namespace RAT_Server {
                                 }
                             }
                         }
-                        for (const auto &a : clients) {
-                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
-                            a->send(msg, false);
-                        }
-
+                        auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
+                        SendtoAll(msg);
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!IServerDriver_)
@@ -191,10 +187,8 @@ namespace RAT_Server {
                             c.MonitorsNeeded.push_back(Screen_Capture::Id(a));
                         }
                         socket->send(IServerDriver_->PrepareMonitorsChanged(p), false);
-                        {
-                            std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                            Clients.push_back(c);
-                        }
+                        std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                        Clients.push_back(c);
                         ScreenCaptureManager_->resume();
                     })
                     ->onMessage([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage &msg) {
@@ -231,7 +225,7 @@ namespace RAT_Server {
                     ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos) {
                         onMousePosition(IgnoreIncomingMouseEvents, socket, pos);
                     })
-                    ->onClipboardChanged([&](const std::string &text) { onClipboardChanged(text, Clipboard_); })
+                    ->onClipboardChanged([&](const std::string &text) { onClipboardChanged(ShareClip, text, Clipboard_); })
                     ->Build(clientctx);
             clientctx->listen();
         }

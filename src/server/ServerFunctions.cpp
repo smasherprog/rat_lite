@@ -105,10 +105,11 @@ namespace RAT_Server {
         }
         UNUSED(socket);
     }
-    void onClipboardChanged(const std::string &str, std::shared_ptr<Clipboard_Lite::IClipboard_Manager> clipboard)
+    void onClipboardChanged(bool shareclip, const std::string &str, std::shared_ptr<Clipboard_Lite::IClipboard_Manager> clipboard)
     {
-        SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onClipboardChanged " << str.size());
-        clipboard->copy(str);
+        if (shareclip) {
+            clipboard->copy(str);
+        }
     }
 } // namespace RAT_Server
 } // namespace SL

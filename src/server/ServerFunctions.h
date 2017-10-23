@@ -31,6 +31,6 @@ namespace RAT_Server {
     void onMouseDown(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::MouseButtons &button);
     void onMouseScroll(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, int offset);
     void onMousePosition(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos);
-    void onClipboardChanged(const std::string &str, std::shared_ptr<Clipboard_Lite::IClipboard_Manager> clipboard);
+    void onClipboardChanged(bool shareclipboard, const std::string &str, std::shared_ptr<Clipboard_Lite::IClipboard_Manager> clipboard);
 } // namespace RAT_Server
 } // namespace SL

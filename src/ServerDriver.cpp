@@ -6,6 +6,7 @@
 #include "turbojpeg.h"
 
 #include <atomic>
+#include <shared_mutex>
 
 namespace SL {
 namespace RAT_Lite {
@@ -23,6 +24,7 @@ namespace RAT_Lite {
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> onKeyDown;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> onMouseUp;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> onMouseDown;
+        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const ClientSettings &settings)> onClientSettingsChanged;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset)> onMouseScroll;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos)> onMousePosition;
         std::function<void(const std::string &text)> onClipboardChanged;
@@ -30,6 +32,9 @@ namespace RAT_Lite {
         std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket>)> onConnection;
         std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage)> onMessage;
         std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string)> onDisconnection;
+
+        std::shared_mutex MonitorsLock;
+        std::vector<Screen_Capture::Monitor> Monitors;
 
         virtual void ShareClipboard(bool share) override { ShareClip = share; }
         virtual bool ShareClipboard() const override { return ShareClip; }
@@ -101,6 +106,20 @@ namespace RAT_Lite {
             }
             socket->close(1000, "Received invalid onMouseScroll Event");
         }
+        void ClientSettingsChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        {
+            if (!onClientSettingsChanged)
+                return;
+            ClientSettings c;
+            auto beginsize = sizeof(c.ShareClip) + sizeof(c.ImageCompressionSetting) + sizeof(c.EncodeImagesAsGrayScale);
+            if (len >= (beginsize + sizeof(int)) &&       // min size received at least 1 monitor
+                ((len - beginsize) % sizeof(int) == 0)) { // the remaining bytes are divisible by sizeof int
+                memcpy(&c, data, beginsize);
+                // auto begin = reinterpret_cast<const int *>(data);
+                //   std::shared_lock<std::shared_mutex> lock(MonitorsLock);
+            }
+            socket->close(1000, "Received invalid onClientSettingsChanged Event");
+        }
         void ClipboardChanged(const unsigned char *data, size_t len)
         {
             if (!onClipboardChanged || !ShareClip)
@@ -158,6 +177,9 @@ namespace RAT_Lite {
                     case PACKET_TYPES::ONMOUSEPOSITIONCHANGED:
                         MousePosition(socket, datastart, datasize);
                         break;
+                    case PACKET_TYPES::ONCLIENTSETTINGSCHANGED:
+                        ClientSettingsChanged(socket, datastart, datasize);
+                        break;
                     case PACKET_TYPES::ONMOUSESCROLL:
                         MouseScroll(socket, datastart, datasize);
                         break;
@@ -210,6 +232,10 @@ namespace RAT_Lite {
 
         virtual WS_LITE::WSMessage PrepareMonitorsChanged(const std::vector<Screen_Capture::Monitor> &monitors) override
         {
+            {
+                std::unique_lock<std::shared_mutex> lock(MonitorsLock);
+                Monitors = monitors;
+            }
             auto p = static_cast<unsigned int>(PACKET_TYPES::ONMONITORSCHANGED);
             const auto finalsize = (monitors.size() * sizeof(Screen_Capture::Monitor)) + sizeof(p);
 
@@ -359,6 +385,13 @@ namespace RAT_Lite {
         {
             assert(!ServerDriver_->onDisconnection);
             ServerDriver_->onDisconnection = callback;
+            return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
+        }
+        virtual std::shared_ptr<IServerDriverConfiguration> onSettingsChanged(
+            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const ClientSettings &settings)> &callback) override
+        {
+            assert(!ServerDriver_->onClientSettingsChanged);
+            ServerDriver_->onClientSettingsChanged = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriver> Build(const std::shared_ptr<SL::WS_LITE::IWSListener_Configuration> &wslistenerconfig) override

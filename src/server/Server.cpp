@@ -78,8 +78,8 @@ namespace RAT_Server {
                                     std::find_if(begin(a->MonitorsNeeded), end(a->MonitorsNeeded), [&monitor](auto m) { return monitor.Id == m.Id; });
                                 if (found != end(a->MonitorsNeeded)) {
                                     clients.push_back(a);
+                                    a->MonitorsNeeded.erase(found);
                                 }
-                                a->MonitorsNeeded.erase(found);
                             }
                         }
                         for (auto &a : clients) {

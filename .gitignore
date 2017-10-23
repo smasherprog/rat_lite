@@ -31,7 +31,6 @@ libs/
 # Roslyn cache directories
 *.ide/
 src/client/dist/
-src/client/build/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

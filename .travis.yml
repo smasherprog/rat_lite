@@ -26,7 +26,7 @@ before_install:
   - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
   - |
     if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      CMAKE_URL="https://cmake.org/files/v3.9/cmake-3.9.3-Linux-x86_64.tar.gz"
+      CMAKE_URL="https://cmake.org/files/v3.9/cmake-3.9.4-Linux-x86_64.tar.gz"
       mkdir -p ${TRAVIS_BUILD_DIR}/deps/cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C ${TRAVIS_BUILD_DIR}/deps/cmake
       export PATH="${TRAVIS_BUILD_DIR}/deps/cmake/bin:${PATH}";
     else

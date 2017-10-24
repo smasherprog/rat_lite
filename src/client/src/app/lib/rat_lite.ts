@@ -1,4 +1,7 @@
 ﻿export enum OpCode { CONTINUATION = 0, TEXT = 1, BINARY = 2, CLOSE = 8, PING = 9, PONG = 10, INVALID = 255 };
+
+export enum ImageEncoding {  COLOR, GRAYSCALE };
+export enum ClipboardSharing { NOT_SHARED, SHARED  };
 export class WSMessage {
     data: DataView;
     code: OpCode;
@@ -25,9 +28,9 @@ export class Monitor {
     Scaling: number;
 };
 export class ClientSettings {
-    ShareClip = false;
+    ShareClip = ClipboardSharing.NOT_SHARED;
     ImageCompressionSetting = 70;
-    EncodeImagesAsGrayScale = false;
+    EncodeImagesAsGrayScale = ImageEncoding.COLOR;
     MonitorsToWatch = new Array<Monitor>();
 };
 export enum PACKET_TYPES {
@@ -73,7 +76,7 @@ export class IClientDriver {
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONKEYUP);
         dataview.setUint8(4, key);
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendKeyDown(key: KeyCodes): void {
         if (this.ConnectedToSelf_) return;
@@ -81,7 +84,7 @@ export class IClientDriver {
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONKEYDOWN);
         dataview.setUint8(4, key);
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendMouseUp(button: MouseButtons): void {
         if (this.ConnectedToSelf_) return;
@@ -89,7 +92,7 @@ export class IClientDriver {
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEUP);
         dataview.setUint8(4, button);
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendMouseDown(button: MouseButtons): void {
         if (this.ConnectedToSelf_) return;
@@ -97,7 +100,7 @@ export class IClientDriver {
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEDOWN);
         dataview.setUint8(4, button);
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendMouseScroll(offset: number): void {
         if (this.ConnectedToSelf_) return;
@@ -105,7 +108,7 @@ export class IClientDriver {
         var dataview = new DataView(data.buffer);
         dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
         dataview.setUint32(4, offset);
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendMousePosition(pos: Point): void {
         if (this.ConnectedToSelf_) return;
@@ -114,8 +117,7 @@ export class IClientDriver {
         dataview.setUint32(0, PACKET_TYPES.ONMOUSEPOSITIONCHANGED);
         dataview.setInt32(4, pos.X);
         dataview.setInt32(8, pos.X);
-
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendClipboardChanged(text: string): void {
         if (this.ConnectedToSelf_) return;
@@ -125,7 +127,7 @@ export class IClientDriver {
         for (var i = 0; i < text.length; i++) {
             data[4 + i] = text.charCodeAt(0);
         }
-        this.WebSocket_.send(data);
+        this.WebSocket_.send(data.buffer);
     }
     SendClientSettingsChanged(clientsettings:ClientSettings): void {
         if (!clientsettings || !clientsettings.MonitorsToWatch || clientsettings.MonitorsToWatch.length<=0) return;
@@ -133,19 +135,20 @@ export class IClientDriver {
         var data = new Uint8Array(4 +beginsize + (4*clientsettings.MonitorsToWatch.length));
         var dataview = new DataView(data.buffer);
         var offset =0;
-        dataview.setUint32(offset, PACKET_TYPES.ONCLIENTSETTINGSCHANGED);
+        dataview.setUint32(offset, PACKET_TYPES.ONCLIENTSETTINGSCHANGED, true);
         offset +=4;
-        dataview.setInt8(offset, clientsettings.ShareClip ? 1: 0);
+        dataview.setUint8(offset, clientsettings.ShareClip);
         offset +=1;
-        dataview.setInt32(offset, clientsettings.ImageCompressionSetting);
+        dataview.setInt32(offset, clientsettings.ImageCompressionSetting, true);
         offset +=4;
-        dataview.setInt8(offset, clientsettings.EncodeImagesAsGrayScale ? 1: 0);
+        dataview.setUint8(offset, clientsettings.EncodeImagesAsGrayScale);
         offset +=1; 
         for (var i = 0; i < clientsettings.MonitorsToWatch.length; i++) {
-            dataview.setInt32(offset, clientsettings.MonitorsToWatch[i].Id);
-            offset +=4;
-        }
-        this.WebSocket_.send(data);
+            dataview.setInt32(offset, clientsettings.MonitorsToWatch[i].Id, true);
+            offset +=4; 
+        }   
+        debugger;
+        this.WebSocket_.send(data.buffer);
     }
 };
 
@@ -327,6 +330,7 @@ export class IClientDriverConfiguration extends IClientDriver {
         }
     }
     Build(ws: WebSocket): IClientDriver {
+        this.WebSocket_ = ws;
         var self = this;
         ws.binaryType = 'arraybuffer';
         this.ConnectedToSelf_ = ws.url.toLowerCase().indexOf('127.0.0.1') != -1 || ws.url.toLowerCase().indexOf('localhost') != -1 || ws.url.toLowerCase().indexOf('::1') != -1;

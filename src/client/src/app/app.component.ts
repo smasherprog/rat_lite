@@ -26,6 +26,7 @@ export class AppComponent implements OnInit {
     Monitors = new Array<Monitor>();
     ClientSettings_ : ClientSettings;
     Cursor_: ImageData; 
+    width = '1000px';
 
     constructor(public dialog: MatDialog) {}
     public ngOnInit(): void
@@ -38,7 +39,7 @@ export class AppComponent implements OnInit {
             this.Socket_.close(1000);
         }
     }
-    public toggleoptions(): void{
+    public toggleoptions(): void{ 
         this.dialog.open(OptionsDialog, {
             data: 
             { 
@@ -46,7 +47,7 @@ export class AppComponent implements OnInit {
                 Monitors: this.Monitors
             }
         }).afterClosed().subscribe((a: ClientSettings)=>{
-            if(a){
+            if(a){ 
                 this.ClientSettings_ = a;
                 this.ClientDriver_.SendClientSettingsChanged(a);
             }
@@ -67,7 +68,7 @@ export class AppComponent implements OnInit {
                         })
                         .onMessage((ws: WebSocket, message: WSMessage) => { console.log('onMessage length:' + message.data.byteLength); })
                         .onDisconnection((ws: WebSocket, code: number, message: string) => {
-                            console.log('onDisconnection');
+                            console.log('onDisconnection ' + code + "  "+ message);
                             this.Cursor_ = null;
                             this.ScaleImage_ = false;
                             this.Monitors = new Array<Monitor>();
@@ -81,6 +82,9 @@ export class AppComponent implements OnInit {
                             this.MonitorCanvas.forEach((a: MonitorsCanvasComponent)=>{
                                 a.onFrameChanged(image, monitor, rect);
                             }); 
+                            var totalwidth=0;
+                            this.MonitorCanvas.forEach((a: MonitorsCanvasComponent)=>{ totalwidth += (a.getScalingFactor() * a.Monitor.Width); });
+                            this.width = totalwidth.toString() + 'px';
                         })
                         .onMonitorsChanged((monitors: Monitor[]) => {
                             if(this.ClientSettings_.MonitorsToWatch.length ==0){

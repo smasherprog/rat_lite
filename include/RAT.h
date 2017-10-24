@@ -96,8 +96,8 @@ namespace RAT_Lite {
     };
 
     enum Server_Status { SERVER_RUNNING, SERVER_STOPPING, SERVER_STOPPED };
-    enum class ImageEncoding : unsigned char { GRAYSCALE, COLOR };
-    enum class ClipboardSharing : unsigned char { SHARED, NOT_SHARED };
+    enum class ImageEncoding : unsigned char { COLOR, GRAYSCALE };
+    enum class ClipboardSharing : unsigned char { NOT_SHARED, SHARED };
     enum class PACKET_TYPES : unsigned int {
         INVALID,
         HTTP_MSG,

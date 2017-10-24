@@ -1,18 +1,10 @@
 #pragma once
+#include "Clipboard_Lite.h"
 #include "RAT.h"
 #include <memory>
 #include <string>
 
 namespace SL {
-namespace WS_LITE {
-    class IWSocket;
-}
-namespace Clipboard_Lite {
-    class IClipboard_Manager;
-}
-namespace Screen_Capture {
-    struct Monitor;
-}
 namespace RAT_Server {
     struct Point;
 

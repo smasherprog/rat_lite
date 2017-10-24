@@ -31,5 +31,5 @@
 </mat-dialog-content>
 <mat-dialog-actions>
     <button mat-button type="button" color="warn" style="float:left;" (click)="cancel();">Cancel</button>
-    <button mat-button type="button" [disabled]="f && (!f.pristine || !f.valid)" (click)="onSubmit();" style="float:right;">Save</button>
+    <button mat-button type="button" [disabled]="!f && (!f.pristine || !f.valid)" (click)="onSubmit();" style="float:right;">Save</button>
 </mat-dialog-actions>

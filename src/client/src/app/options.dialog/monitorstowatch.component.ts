@@ -12,8 +12,16 @@ export class MonitorsToWatchComponent implements OnInit {
     warningtext = null;
     constructor(private fb: FormBuilder) {}
     public ngOnInit(): void
-    {
+    { 
         this.MonitorsToWatch.forEach((a: Monitor) => { this.f.push(new FormControl(a.Id)); });
+    }
+    public isChecked(mon: Monitor): boolean{
+      var found = this.f.controls.find((a: AbstractControl) => { return a.value == mon.Id; });
+      if(found) {
+          return true;
+      } else {
+          return false;
+      } 
     }
     public checked(changedevent: MatCheckboxChange, mon: Monitor): void
     {

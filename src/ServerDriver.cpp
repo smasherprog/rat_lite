@@ -116,8 +116,8 @@ namespace RAT_Lite {
             if (len >= (beginsize + sizeof(int)) &&   // min size received at least 1 monitor
                 (remainingdata % sizeof(int) == 0)) { // the remaining bytes are divisible by sizeof int
                 memcpy(&c, data, beginsize);
-                auto begin = reinterpret_cast<const int *>(data);
-                auto end = begin + remainingdata + sizeof(int);
+                auto begin = reinterpret_cast<const int *>(data + beginsize);
+                auto end = reinterpret_cast<const int *>(data + beginsize + remainingdata + sizeof(int));
                 std::shared_lock<std::shared_mutex> lock(MonitorsLock);
                 for (auto b = begin; b < end; b++) {
                     auto found = std::find_if(std::begin(Monitors), std::end(Monitors), [b](auto &mon) { return mon.Id == *b; });

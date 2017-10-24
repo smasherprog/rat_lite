@@ -1,6 +1,6 @@
 <p *ngIf="warningtext" class="text-danger">{{warningtext}}</p>
 <mat-list>
     <mat-list-item *ngFor="let monitor of Monitors">
-        <mat-checkbox (change)="checked($event, monitor)">{{monitor.Name}} {{monitor.Width}}x{{monitor.Height}}</mat-checkbox>
+        <mat-checkbox (change)="checked($event, monitor)" [checked]="isChecked(monitor)">{{monitor.Name}} {{monitor.Width}}x{{monitor.Height}}</mat-checkbox>
     </mat-list-item>
 </mat-list>

@@ -17,7 +17,7 @@ namespace RAT_Lite {
         ServerDriver() { MemoryInUse = 0; }
         virtual ~ServerDriver() {}
         std::atomic<int> ClientCount;
-        bool ShareClip = false;
+        ClipboardSharing ShareClip = ClipboardSharing::NOT_SHARED;
         int MaxNumConnections = 10;
         std::atomic<size_t> MemoryInUse;
         std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> onKeyUp;
@@ -36,8 +36,8 @@ namespace RAT_Lite {
         std::shared_mutex MonitorsLock;
         std::vector<Screen_Capture::Monitor> Monitors;
 
-        virtual void ShareClipboard(bool share) override { ShareClip = share; }
-        virtual bool ShareClipboard() const override { return ShareClip; }
+        virtual void ShareClipboard(ClipboardSharing share) override { ShareClip = share; }
+        virtual ClipboardSharing ShareClipboard() const override { return ShareClip; }
         virtual void MaxConnections(int maxconnections) override
         {
             assert(maxconnections >= 0);
@@ -131,7 +131,7 @@ namespace RAT_Lite {
         }
         void ClipboardChanged(const unsigned char *data, size_t len)
         {
-            if (!onClipboardChanged || !ShareClip)
+            if (!onClipboardChanged || ShareClip == ClipboardSharing::NOT_SHARED)
                 return;
             if (len < 1024 * 100) { // 100K max
                 std::string str(reinterpret_cast<const char *>(data), len);

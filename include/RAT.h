@@ -136,8 +136,8 @@ namespace RAT_Lite {
     class RAT_LITE_EXTERN IConfig {
       public:
         virtual ~IConfig() {}
-        virtual void ShareClipboard(bool share) = 0;
-        virtual bool ShareClipboard() const = 0;
+        virtual void ShareClipboard(ClipboardSharing share) = 0;
+        virtual ClipboardSharing ShareClipboard() const = 0;
     };
     class RAT_LITE_EXTERN IServerDriver : public IConfig {
       public:

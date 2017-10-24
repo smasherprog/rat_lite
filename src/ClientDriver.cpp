@@ -64,7 +64,7 @@ namespace RAT_Lite {
         }
         void ClipboardTextChanged(const unsigned char *data, size_t len)
         {
-            if (!ShareClip || !onClipboardChanged)
+            if (ShareClip == ClipboardSharing::NOT_SHARED || !onClipboardChanged)
                 return;
             if (len < 1024 * 100) { // 100K max
                 std::string str(reinterpret_cast<const char *>(data), len);
@@ -122,7 +122,7 @@ namespace RAT_Lite {
         std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket>)> onConnection;
         std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage)> onMessage;
         std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string)> onDisconnection;
-        bool ShareClip = false;
+        ClipboardSharing ShareClip = ClipboardSharing::NOT_SHARED;
 
         ClientDriver() {}
         virtual ~ClientDriver() {}
@@ -181,8 +181,8 @@ namespace RAT_Lite {
 
                 });
         }
-        virtual void ShareClipboard(bool share) override { ShareClip = share; }
-        virtual bool ShareClipboard() const override { return ShareClip; }
+        virtual void ShareClipboard(ClipboardSharing share) override { ShareClip = share; }
+        virtual ClipboardSharing ShareClipboard() const override { return ShareClip; }
         template <typename STRUCT> void SendStruct_Impl(STRUCT key, PACKET_TYPES ptype)
         {
             if (!Socket_) {

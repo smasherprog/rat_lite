@@ -28,5 +28,5 @@ export class MonitorsCanvasComponent implements OnInit {
         if (this.Monitor && this.ThisCanvas && this.ThisCanvas.nativeElement && this.Monitor.Id == monitor.Id) {
             this.ThisCanvas.nativeElement.getContext("2d").drawImage(image, 0, 0, this.getScalingFactor()*image.width, this.getScalingFactor()*image.height);
         }
-    };
+    }
 }

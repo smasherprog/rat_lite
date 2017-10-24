@@ -24,7 +24,7 @@
         </div>
         <div class="row">
             <div class="col-xs-12">
-                <monitors-towatch [f]="f" [MonitorsToWatch]="data.MonitorsToWatch" [Monitors]="data.Monitors"></monitors-towatch>
+                <monitors-towatch [f]="f.get('MonitorsToWatch')" [MonitorsToWatch]="data.ClientSettings.MonitorsToWatch" [Monitors]="data.Monitors"></monitors-towatch>
             </div>
         </div>
     </form>

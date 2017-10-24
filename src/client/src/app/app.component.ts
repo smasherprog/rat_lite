@@ -1,5 +1,6 @@
+import { MonitorsCanvasComponent } from './monitorcanvas/monitorcanvas.component';
 import { OptionsDialog } from './options.dialog/options.dialog';
-import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild, QueryList, ViewChildren} from '@angular/core';
 import {MatDialog} from '@angular/material';
 
 import {ConnectDialog} from './connect.dialog/connect.dialog';
@@ -17,15 +18,14 @@ import {ConnectModel} from './models/connect.model';
 @Component({selector : 'app-root', templateUrl : './app.component.html', styleUrls : [ './app.component.css' ]})
 export class AppComponent implements OnInit {
     @ViewChild('HTMLCanvasMouseImage_') HTMLCanvasMouseImage_: ElementRef;
-    @ViewChild('HTMLCanvasScreenImage_') HTMLCanvasScreenImage_: ElementRef;
-    OriginalImage_: HTMLImageElement;
+    @ViewChildren('HTMLCanvasScreenImage_') MonitorCanvas: QueryList<MonitorsCanvasComponent>;
 
     ScaleImage_ = false;
     ClientDriver_: IClientDriver;
     Socket_: WebSocket;
     Monitors = new Array<Monitor>();
     ClientSettings_ : ClientSettings;
-    Cursor_: ImageData;
+    Cursor_: ImageData; 
 
     constructor(public dialog: MatDialog) {}
     public ngOnInit(): void
@@ -78,28 +78,15 @@ export class AppComponent implements OnInit {
                         })
                         .onClipboardChanged((clipstring: string) => { console.log('onClipboardChanged: ' + clipstring); })
                         .onFrameChanged((image: HTMLImageElement, monitor: Monitor, rect: Rect) => {
-
-                            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.nativeElement ) {
-                                this.HTMLCanvasScreenImage_.nativeElement.getContext("2d").drawImage(image, monitor.OffsetX + rect.Origin.X,
-                                                                                                 monitor.OffsetY + rect.Origin.Y);
-                            }
+                            this.MonitorCanvas.forEach((a: MonitorsCanvasComponent)=>{
+                                a.onFrameChanged(image, monitor, rect);
+                            }); 
                         })
                         .onMonitorsChanged((monitors: Monitor[]) => {
                             if(this.ClientSettings_.MonitorsToWatch.length ==0){
                                 this.ClientSettings_.MonitorsToWatch = monitors;
                             }
-                            this.Monitors = monitors;
-                            var width = 0;
-                            this.Monitors.forEach((m: Monitor) => { width += m.Width; });
-                            var maxheight = 0;
-                            this.Monitors.forEach((m: Monitor) => {
-                                if (m.Height > maxheight)
-                                    maxheight = m.Height;
-                            });
-                            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.nativeElement ) {
-                                this.HTMLCanvasScreenImage_.nativeElement.width = width;
-                                this.HTMLCanvasScreenImage_.nativeElement.height = maxheight;
-                            }
+                            this.Monitors = monitors; 
                         })
                         .onMouseImageChanged((image: ImageData) => {
                             this.Cursor_ = image;
@@ -114,10 +101,9 @@ export class AppComponent implements OnInit {
                             }
                         })
                         .onNewFrame((image: HTMLImageElement, monitor: Monitor, rect: Rect) => {
-                            if (this.HTMLCanvasScreenImage_ && this.HTMLCanvasScreenImage_.nativeElement ) {
-                                this.HTMLCanvasScreenImage_.nativeElement.getContext("2d").drawImage(image, monitor.OffsetX, monitor.OffsetY);
-                            }
-                            this.OriginalImage_ = image;
+                            this.MonitorCanvas.forEach((a: MonitorsCanvasComponent)=>{
+                                a.onNewFrame(image, monitor, rect);
+                            }); 
                         })
                         .Build(this.Socket_);
 

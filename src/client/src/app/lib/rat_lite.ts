@@ -28,7 +28,7 @@ export class ClientSettings {
     ShareClip = false;
     ImageCompressionSetting = 70;
     EncodeImagesAsGrayScale = false;
-   MonitorsToWatch = new Array<Monitor>();
+    MonitorsToWatch = new Array<Monitor>();
 };
 export enum PACKET_TYPES {
     INVALID,

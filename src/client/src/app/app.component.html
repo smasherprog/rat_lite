@@ -4,7 +4,7 @@
     </button>
     <button mat-raised-button color="warn" (click)="Disconnect();">Disconnect</button>
 </div>
-<div style="position:relative;top:-48px;z-index:1;">
-    <canvas [ngClass]="{'ImageScale': ScaleImage_}" #HTMLCanvasScreenImage_ style="position:absolute;"></canvas>
+<div *ngIf="Socket_ && ClientSettings_" style="position:relative;top:-48px;z-index:1;">
+    <monitor-canvas *ngFor="let mon of ClientSettings_.MonitorsToWatch" [Monitor]="mon" #HTMLCanvasScreenImage_></monitor-canvas>
     <canvas #HTMLCanvasMouseImage_ style="position:absolute;"></canvas>
 </div>

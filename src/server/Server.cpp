@@ -138,7 +138,7 @@ namespace RAT_Server {
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
 #if DEBUG || _DEBUG
                                  ->NoTLS()
-#elif
+#else
                                  ->UseTLS(
                                      [&](SL::WS_LITE::ITLSContext *context) {
                                          context->set_options(SL::WS_LITE::options::default_workarounds | SL::WS_LITE::options::no_sslv2 |

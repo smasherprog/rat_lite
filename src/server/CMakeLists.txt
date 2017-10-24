@@ -1,6 +1,5 @@
 project(rat_server)
-
-
+ 
 if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_SRC
 		windows/resource.h

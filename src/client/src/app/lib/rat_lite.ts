@@ -23,7 +23,12 @@ export class Monitor {
     OffsetY: number;
     Name: string;
     Scaling: number;
-
+};
+export class ClientSettings {
+    ShareClip = false;
+    ImageCompressionSetting = 70;
+    EncodeImagesAsGrayScale = false;
+   MonitorsToWatch = new Array<Monitor>();
 };
 export enum PACKET_TYPES {
     INVALID,
@@ -39,6 +44,7 @@ export enum PACKET_TYPES {
     ONMOUSEDOWN,
     ONMOUSESCROLL,
     ONCLIPBOARDTEXTCHANGED,
+    ONCLIENTSETTINGSCHANGED,
     // use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
     LAST_PACKET_TYPE
 };
@@ -121,7 +127,26 @@ export class IClientDriver {
         }
         this.WebSocket_.send(data);
     }
-
+    SendClientSettingsChanged(clientsettings:ClientSettings): void {
+        if (!clientsettings || !clientsettings.MonitorsToWatch || clientsettings.MonitorsToWatch.length<=0) return;
+        var beginsize = 1 + 4 + 1;
+        var data = new Uint8Array(4 +beginsize + (4*clientsettings.MonitorsToWatch.length));
+        var dataview = new DataView(data.buffer);
+        var offset =0;
+        dataview.setUint32(offset, PACKET_TYPES.ONCLIENTSETTINGSCHANGED);
+        offset +=4;
+        dataview.setInt8(offset, clientsettings.ShareClip ? 1: 0);
+        offset +=1;
+        dataview.setInt32(offset, clientsettings.ImageCompressionSetting);
+        offset +=4;
+        dataview.setInt8(offset, clientsettings.EncodeImagesAsGrayScale ? 1: 0);
+        offset +=1; 
+        for (var i = 0; i < clientsettings.MonitorsToWatch.length; i++) {
+            dataview.setInt32(offset, clientsettings.MonitorsToWatch[i].Id);
+            offset +=4;
+        }
+        this.WebSocket_.send(data);
+    }
 };
 
 export class IClientDriverConfiguration extends IClientDriver {

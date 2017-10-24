@@ -3,7 +3,15 @@ import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/c
 import {MatDialog} from '@angular/material';
 
 import {ConnectDialog} from './connect.dialog/connect.dialog';
-import {CreateClientDriverConfiguration, IClientDriver, Monitor, Point, Rect, WSMessage} from './lib/rat_lite';
+import {
+    ClientSettings,
+    CreateClientDriverConfiguration,
+    IClientDriver,
+    Monitor,
+    Point,
+    Rect,
+    WSMessage,
+} from './lib/rat_lite';
 import {ConnectModel} from './models/connect.model';
 
 @Component({selector : 'app-root', templateUrl : './app.component.html', styleUrls : [ './app.component.css' ]})
@@ -16,6 +24,7 @@ export class AppComponent implements OnInit {
     ClientDriver_: IClientDriver;
     Socket_: WebSocket;
     Monitors = new Array<Monitor>();
+    ClientSettings_ : ClientSettings;
     Cursor_: ImageData;
 
     constructor(public dialog: MatDialog) {}
@@ -30,7 +39,19 @@ export class AppComponent implements OnInit {
         }
     }
     public toggleoptions(): void{
-        this.dialog.open(OptionsDialog);
+        debugger;
+        this.dialog.open(OptionsDialog, {
+            data: 
+            { 
+                ClientSettings:this.ClientSettings_,
+                Monitors: this.Monitors
+            }
+        }).afterClosed().subscribe((a: ClientSettings)=>{
+            if(a){
+                this.ClientSettings_ = a;
+                this.ClientDriver_.SendClientSettingsChanged(a);
+            }
+        });
     }
     public OpenDialog(): void
     {
@@ -43,7 +64,7 @@ export class AppComponent implements OnInit {
                     CreateClientDriverConfiguration()
                         .onConnection((ws: WebSocket, ev: Event) => {
                             console.log('onConnection');
-
+                            this.ClientSettings_ = new ClientSettings(); 
                         })
                         .onMessage((ws: WebSocket, message: WSMessage) => { console.log('onMessage length:' + message.data.byteLength); })
                         .onDisconnection((ws: WebSocket, code: number, message: string) => {
@@ -53,6 +74,7 @@ export class AppComponent implements OnInit {
                             this.Monitors = new Array<Monitor>();
                             this.ClientDriver_ = null;
                             this.Socket_ = null;
+                            this.ClientSettings_ = new ClientSettings(); 
                             this.OpenDialog();
                         })
                         .onClipboardChanged((clipstring: string) => { console.log('onClipboardChanged: ' + clipstring); })
@@ -64,6 +86,9 @@ export class AppComponent implements OnInit {
                             }
                         })
                         .onMonitorsChanged((monitors: Monitor[]) => {
+                            if(this.ClientSettings_.MonitorsToWatch.length ==0){
+                                this.ClientSettings_.MonitorsToWatch = monitors;
+                            }
                             this.Monitors = monitors;
                             var width = 0;
                             this.Monitors.forEach((m: Monitor) => { width += m.Width; });

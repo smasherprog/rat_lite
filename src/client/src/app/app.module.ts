@@ -7,12 +7,14 @@ import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { ConnectDialog } from './connect.dialog/connect.dialog';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MonitorsToWatchComponent } from './options.dialog/monitorstowatch.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ConnectDialog,
-    OptionsDialog
+    OptionsDialog,
+    MonitorsToWatchComponent
   ],
   imports: [
     BrowserModule,

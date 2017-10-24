@@ -1,6 +1,35 @@
-<h2 mat-dialog-title></h2>
+<h2 mat-dialog-title>Options</h2>
 <mat-dialog-content>
-    <form [formGroup]="f" (ngSubmit)="onSubmit()" novalidate>
-        <button mat-button type="submit" [disabled]="!f.pristine || !f.valid">Connect</button>
+    <form [formGroup]="f" novalidate>
+        <div class="row">
+            <div class="col-xs-12">
+                <mat-form-field class="example-full-width">
+                    <mat-select placeholder="Compression" formControlName="ImageCompressionSetting">
+                        <mat-option *ngFor="let comp of CompressionOptions" [value]="comp">{{ comp }}</mat-option>
+                    </mat-select> 
+                </mat-form-field>
+                <p>Larger numbers == better quality, but are slower to generate</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <mat-checkbox formControlName="ShareClip">Share Clipboard</mat-checkbox>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <mat-checkbox formControlName="EncodeImagesAsGrayScale">Encode Images as Grayscale</mat-checkbox>
+                <p>Grayscale will improve network and system performance!</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <monitors-towatch [f]="f" [MonitorsToWatch]="data.MonitorsToWatch" [Monitors]="data.Monitors"></monitors-towatch>
+            </div>
+        </div>
     </form>
 </mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button type="button" color="warn" style="float:left;" (click)="cancel();">Cancel</button>
+    <button mat-button type="button" [disabled]="f && (!f.pristine || !f.valid)" (click)="onSubmit();" style="float:right;">Save</button>
+</mat-dialog-actions>

@@ -199,7 +199,7 @@ namespace RAT_Lite {
             buf.Buffer = ptr;
             buf.len = size;
             buf.data = ptr.get();
-            Socket_->send(buf, false);
+            Socket_->send(buf, SL::WS_LITE::CompressionOptions::NO_COMPRESSION);
         }
         virtual void SendClipboardChanged(const std::string &text) override
         {
@@ -221,7 +221,7 @@ namespace RAT_Lite {
             buf.Buffer = ptr;
             buf.len = size;
             buf.data = ptr.get();
-            Socket_->send(buf, false);
+            Socket_->send(buf, SL::WS_LITE::CompressionOptions::NO_COMPRESSION);
         }
         virtual void SendKeyUp(Input_Lite::KeyCodes key) override { SendStruct_Impl(key, PACKET_TYPES::ONKEYUP); }
         virtual void SendKeyDown(Input_Lite::KeyCodes key) override { SendStruct_Impl(key, PACKET_TYPES::ONKEYDOWN); }

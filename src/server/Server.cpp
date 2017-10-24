@@ -85,7 +85,7 @@ namespace RAT_Server {
                             auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual,
                                                                        EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE ||
                                                                            a->EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE);
-                            a->Socket->send(msg, false);
+                            a->Socket->send(msg, SL::WS_LITE::CompressionOptions::NO_COMPRESSION);
                         }
                     })
                     ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
@@ -117,7 +117,7 @@ namespace RAT_Server {
                             auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSettingActual,
                                                                            EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE ||
                                                                                a->EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE);
-                            a->Socket->send(msg, false);
+                            a->Socket->send(msg, SL::WS_LITE::CompressionOptions::NO_COMPRESSION);
                         }
 
                     })
@@ -146,7 +146,7 @@ namespace RAT_Server {
         {
             std::shared_lock<std::shared_mutex> lock(ClientsLock);
             for (const auto &a : Clients) {
-                a->Socket->send(msg, false);
+                a->Socket->send(msg, SL::WS_LITE::CompressionOptions::NO_COMPRESSION);
             }
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
@@ -198,7 +198,7 @@ namespace RAT_Server {
                         auto m = Screen_Capture::GetMonitors();
                         c->MonitorsNeeded = m;
                         c->MonitorsToWatch = m;
-                        socket->send(IServerDriver_->PrepareMonitorsChanged(m), false);
+                        socket->send(IServerDriver_->PrepareMonitorsChanged(m), SL::WS_LITE::CompressionOptions::NO_COMPRESSION);
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
                         Clients.push_back(c);
                         ScreenCaptureManager_->resume();

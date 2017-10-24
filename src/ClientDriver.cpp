@@ -135,6 +135,7 @@ namespace RAT_Lite {
                     Socket_ = socket;
                     if (onConnection)
                         onConnection(socket);
+                    UNUSED(header);
                 })
                 ->onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
                     SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onDisconnection ");

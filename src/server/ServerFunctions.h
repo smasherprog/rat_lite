@@ -1,5 +1,5 @@
 #pragma once
-#include "Client.h"
+#include "RAT.h"
 #include <memory>
 #include <string>
 
@@ -7,30 +7,22 @@ namespace SL {
 namespace WS_LITE {
     class IWSocket;
 }
-namespace Input_Lite {
-    enum KeyCodes;
-    enum class MouseButtons : unsigned char;
-} // namespace Input_Lite
 namespace Clipboard_Lite {
     class IClipboard_Manager;
 }
 namespace Screen_Capture {
     struct Monitor;
 }
-namespace RAT_Lite {
-    struct Point;
-    struct ClientSettings;
-} // namespace RAT_Lite
 namespace RAT_Server {
     struct Point;
 
     struct Client {
-        bool ShareClip = false;
+        RAT_Lite::ClipboardSharing ShareClip = RAT_Lite::ClipboardSharing::NOT_SHARED;
         int ImageCompressionSetting = 70;
 
         bool IgnoreIncomingKeyboardEvents = false;
         bool IgnoreIncomingMouseEvents = false;
-        bool EncodeImagesAsGrayScale = false;
+        RAT_Lite::ImageEncoding EncodeImagesAsGrayScale = RAT_Lite::ImageEncoding::COLOR;
         std::vector<Screen_Capture::Monitor> MonitorsToWatch;
         std::vector<Screen_Capture::Monitor> MonitorsNeeded;
 

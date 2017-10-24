@@ -60,12 +60,12 @@ int main(int argc, char *argv[])
     }
 
     SL::RAT_Server::Server serv;
-    serv.ShareClipboard(shareclipboard);
+    serv.ShareClipboard(shareclipboard ? SL::RAT_Lite::ClipboardSharing::SHARED : SL::RAT_Lite::ClipboardSharing::NOT_SHARED);
     serv.ImageCompressionSetting(ImageCompressionSetting);
     serv.FrameChangeInterval(ScreenImageCaptureRate);
     serv.MouseChangeInterval(MouseCaptureRate);
     serv.MaxConnections(MaxNumConnections);
-    serv.EncodeImagesAsGrayScale(SendGrayScaleImages);
+    serv.EncodeImagesAsGrayScale(SendGrayScaleImages ? SL::RAT_Lite::ImageEncoding::GRAYSCALE : SL::RAT_Lite::ImageEncoding::COLOR);
 
     serv.Run(tlsport, PasswordToPrivateKey, PathTo_Private_Key, PathTo_Public_Certficate);
     return 0;

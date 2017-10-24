@@ -206,8 +206,12 @@ export class IClientDriverConfiguration extends IClientDriver {
             for (var i = 0; i < num; i++) {
                 currentoffset = i * sizeofmonitor;
                 var name = '';
-                for (var j = 0, strLen = 128; j < strLen; j++) {
-                    name += String.fromCharCode.apply(dataview.getUint8((20 +j) + currentoffset));
+                for (var j = 0, strLen = 128; j < strLen; j++) { 
+                    var char =String.fromCharCode(dataview.getUint8((24 +j) + currentoffset));
+                    if(char == '\0') {
+                        break;
+                    }
+                    name += char; 
                 }
                 this.Monitors.push({
                     Id: dataview.getInt32(0 + currentoffset, true),
@@ -215,10 +219,10 @@ export class IClientDriverConfiguration extends IClientDriver {
                     Height: dataview.getInt32(8 + currentoffset, true),
                     Width: dataview.getInt32(12 + currentoffset, true),
                     OffsetX: dataview.getInt32(16 + currentoffset, true),
-                    OffsetY: dataview.getInt32(20 + currentoffset, true),
+                    OffsetY: dataview.getInt32(20 + currentoffset, true), 
                     Name: name,
-                    Scaling: dataview.getFloat32(24 + currentoffset, true),
-                });
+                    Scaling: dataview.getFloat32(24 + 128 + currentoffset, true)
+                }); 
             } 
             return this.onMonitorsChanged_(this.Monitors);
         }

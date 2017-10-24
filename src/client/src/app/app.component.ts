@@ -39,7 +39,6 @@ export class AppComponent implements OnInit {
         }
     }
     public toggleoptions(): void{
-        debugger;
         this.dialog.open(OptionsDialog, {
             data: 
             { 

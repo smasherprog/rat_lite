@@ -28,12 +28,6 @@ namespace RAT_Lite {
         Point(int x, int y) : X(x), Y(y) {}
         int X, Y;
     };
-    struct ClientSettings {
-        bool ShareClip = false;
-        int ImageCompressionSetting = 70;
-        bool EncodeImagesAsGrayScale = false;
-        std::vector<Screen_Capture::Monitor> MonitorsToWatch;
-    };
     typedef Point Size;
     class Rect {
 
@@ -101,6 +95,9 @@ namespace RAT_Lite {
         size_t Length = 0;
     };
 
+    enum Server_Status { SERVER_RUNNING, SERVER_STOPPING, SERVER_STOPPED };
+    enum class ImageEncoding : unsigned char { GRAYSCALE, COLOR };
+    enum class ClipboardSharing : unsigned char { SHARED, NOT_SHARED };
     enum class PACKET_TYPES : unsigned int {
         INVALID,
         HTTP_MSG,
@@ -118,6 +115,13 @@ namespace RAT_Lite {
         ONCLIENTSETTINGSCHANGED,
         // use LAST_PACKET_TYPE as the starting point of your custom packet types. Everything before this is used internally by the library
         LAST_PACKET_TYPE
+    };
+
+    struct ClientSettings {
+        ClipboardSharing ShareClip = ClipboardSharing::NOT_SHARED;
+        int ImageCompressionSetting = 70;
+        ImageEncoding EncodeImagesAsGrayScale = ImageEncoding::COLOR;
+        std::vector<Screen_Capture::Monitor> MonitorsToWatch;
     };
     template <class CONFIGTYPE> class INetworkHandlers {
       public:

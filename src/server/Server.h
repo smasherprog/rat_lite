@@ -1,10 +1,9 @@
 #pragma once
+#include "RAT.h"
 #include <string>
 
 namespace SL {
 namespace RAT_Server {
-
-    enum Server_Status { SERVER_RUNNING, SERVER_STOPPING, SERVER_STOPPED };
 
     class ServerImpl;
     class Server {
@@ -13,8 +12,8 @@ namespace RAT_Server {
       public:
         Server();
         ~Server();
-        void ShareClipboard(bool share);
-        bool ShareClipboard() const;
+        void ShareClipboard(RAT_Lite::ClipboardSharing clipsharing);
+        RAT_Lite::ClipboardSharing ShareClipboard() const;
         void MaxConnections(int maxconnections);
         int MaxConnections() const;
         void FrameChangeInterval(int delay_in_ms);
@@ -24,8 +23,8 @@ namespace RAT_Server {
         // imagecompression is [0, 100]    = [WORST, BEST]
         void ImageCompressionSetting(int compression);
         int ImageCompressionSetting() const;
-        void EncodeImagesAsGrayScale(bool usegrayscale);
-        bool EncodeImagesAsGrayScale() const;
+        void EncodeImagesAsGrayScale(RAT_Lite::ImageEncoding encoding);
+        RAT_Lite::ImageEncoding EncodeImagesAsGrayScale() const;
 
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate);
     };

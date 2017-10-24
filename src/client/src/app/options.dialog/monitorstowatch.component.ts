@@ -1,8 +1,8 @@
 import {Component, Inject, Input, OnInit} from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA} from '@angular/material';
 
-import { ClientSettings, Monitor } from '../lib/rat_lite';
+import {ClientSettings, Monitor} from '../lib/rat_lite';
 
 @Component({selector : 'monitors-towatch', templateUrl : './monitorstowatch.component.html'})
 export class MonitorsToWatchComponent implements OnInit {
@@ -10,7 +10,5 @@ export class MonitorsToWatchComponent implements OnInit {
     @Input() MonitorsToWatch: Monitor[];
     @Input() Monitors: Monitor[];
     constructor(private fb: FormBuilder) {}
-    public ngOnInit(): void {  
-
-    }
+    public ngOnInit(): void { console.log(this.Monitors); }
 }

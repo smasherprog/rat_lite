@@ -14,7 +14,6 @@
 
 #include "WS_Lite.h"
 
-#include "Client.h"
 #include "ServerFunctions.h"
 
 using namespace std::chrono_literals;
@@ -27,11 +26,11 @@ namespace RAT_Server {
         std::shared_ptr<Clipboard_Lite::IClipboard_Manager> Clipboard_;
         std::shared_ptr<RAT_Lite::IServerDriver> IServerDriver_;
 
-        Server_Status Status_ = Server_Status::SERVER_STOPPED;
+        RAT_Lite::Server_Status Status_ = RAT_Lite::Server_Status::SERVER_STOPPED;
         std::shared_mutex ClientsLock;
         std::vector<std::shared_ptr<Client>> Clients;
 
-        bool ShareClip = false;
+        RAT_Lite::ClipboardSharing ShareClip = RAT_Lite::ClipboardSharing::NOT_SHARED;
         int ImageCompressionSettingRequested = 70;
         int ImageCompressionSettingActual = 70;
         int MouseCaptureRate = 50;
@@ -40,15 +39,15 @@ namespace RAT_Server {
 
         bool IgnoreIncomingKeyboardEvents = false;
         bool IgnoreIncomingMouseEvents = false;
-        bool EncodeImagesAsGrayScale = false;
+        RAT_Lite::ImageEncoding EncodeImagesAsGrayScale = RAT_Lite::ImageEncoding::COLOR;
         size_t MaxMemoryUsed = 1024 * 1024 * 100;
 
         ServerImpl()
         {
-            Status_ = Server_Status::SERVER_STOPPED;
+            Status_ = RAT_Lite::Server_Status::SERVER_STOPPED;
             Clipboard_ = Clipboard_Lite::CreateClipboard()
                              ->onText([&](const std::string &text) {
-                                 if (ShareClip && IServerDriver_) {
+                                 if (ShareClip == RAT_Lite::ClipboardSharing::SHARED && IServerDriver_) {
                                      SendtoAll(IServerDriver_->PrepareClipboardChanged(text));
                                  }
                              })
@@ -83,7 +82,9 @@ namespace RAT_Server {
                             }
                         }
                         for (auto &a : clients) {
-                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
+                            auto msg = IServerDriver_->PrepareNewFrame(img, monitor, ImageCompressionSettingActual,
+                                                                       EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE ||
+                                                                           a->EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE);
                             a->Socket->send(msg, false);
                         }
                     })
@@ -91,7 +92,19 @@ namespace RAT_Server {
                         if (!IServerDriver_)
                             return;
 
-                        auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSettingActual, EncodeImagesAsGrayScale);
+                        decltype(Clients) clients;
+                        clients.reserve(Clients.size());
+                        {
+                            std::shared_lock<std::shared_mutex> lock(ClientsLock);
+                            for (auto &a : Clients) {
+                                auto found = std::find_if(begin(a->MonitorsToWatch), end(a->MonitorsToWatch),
+                                                          [&monitor](auto m) { return monitor.Id == m.Id; });
+                                if (found != end(a->MonitorsToWatch)) {
+                                    clients.push_back(a);
+                                }
+                            }
+                        }
+
                         auto newscreencapturerate = GetNewScreenCaptureRate(IServerDriver_->MemoryUsed(), MaxMemoryUsed, ScreenImageCaptureRateActual,
                                                                             ScreenImageCaptureRateRequested);
                         if (newscreencapturerate != ScreenImageCaptureRateActual) {
@@ -100,8 +113,13 @@ namespace RAT_Server {
                         }
                         ImageCompressionSettingActual = GetNewImageCompression(IServerDriver_->MemoryUsed(), MaxMemoryUsed,
                                                                                ImageCompressionSettingActual, ImageCompressionSettingRequested);
+                        for (auto &a : clients) {
+                            auto msg = IServerDriver_->PrepareFrameChanged(img, monitor, ImageCompressionSettingActual,
+                                                                           EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE ||
+                                                                               a->EncodeImagesAsGrayScale == RAT_Lite::ImageEncoding::GRAYSCALE);
+                            a->Socket->send(msg, false);
+                        }
 
-                        SendtoAll(msg);
                     })
                     ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
                         if (!IServerDriver_)
@@ -122,7 +140,7 @@ namespace RAT_Server {
         {
             ScreenCaptureManager_.reset();
             Clipboard_.reset(); // make sure to prevent race conditions
-            Status_ = Server_Status::SERVER_STOPPED;
+            Status_ = RAT_Lite::Server_Status::SERVER_STOPPED;
         }
         void SendtoAll(const WS_LITE::WSMessage &msg)
         {
@@ -133,7 +151,7 @@ namespace RAT_Server {
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
         {
-            Status_ = Server_Status::SERVER_RUNNING;
+            Status_ = RAT_Lite::Server_Status::SERVER_RUNNING;
 
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
 #if DEBUG || _DEBUG
@@ -218,7 +236,8 @@ namespace RAT_Server {
                     ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos) {
                         onMousePosition(IgnoreIncomingMouseEvents, socket, pos);
                     })
-                    ->onClipboardChanged([&](const std::string &text) { onClipboardChanged(ShareClip, text, Clipboard_); })
+                    ->onClipboardChanged(
+                        [&](const std::string &text) { onClipboardChanged(ShareClip == RAT_Lite::ClipboardSharing::SHARED, text, Clipboard_); })
                     ->onClientSettingsChanged([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::ClientSettings &clientsettings) {
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
                         onClientSettingsChanged(socket.get(), Clients, clientsettings);
@@ -230,8 +249,8 @@ namespace RAT_Server {
 
     Server::Server() { ServerImpl_ = new ServerImpl(); }
     Server::~Server() { delete ServerImpl_; }
-    void Server::ShareClipboard(bool share) { ServerImpl_->ShareClip = share; }
-    bool Server::ShareClipboard() const { return ServerImpl_->ShareClip; }
+    void Server::ShareClipboard(RAT_Lite::ClipboardSharing share) { ServerImpl_->ShareClip = share; }
+    RAT_Lite::ClipboardSharing Server::ShareClipboard() const { return ServerImpl_->ShareClip; }
     void Server::MaxConnections(int maxconnections)
     {
         if (ServerImpl_->IServerDriver_) {
@@ -266,14 +285,14 @@ namespace RAT_Server {
         ServerImpl_->ImageCompressionSettingRequested = ServerImpl_->ImageCompressionSettingActual = compression;
     }
     int Server::ImageCompressionSetting() const { return ServerImpl_->ImageCompressionSettingRequested; }
-    void Server::EncodeImagesAsGrayScale(bool usegrayscale) { ServerImpl_->EncodeImagesAsGrayScale = usegrayscale; }
-    bool Server::EncodeImagesAsGrayScale() const { return ServerImpl_->EncodeImagesAsGrayScale; }
+    void Server::EncodeImagesAsGrayScale(RAT_Lite::ImageEncoding usegrayscale) { ServerImpl_->EncodeImagesAsGrayScale = usegrayscale; }
+    RAT_Lite::ImageEncoding Server::EncodeImagesAsGrayScale() const { return ServerImpl_->EncodeImagesAsGrayScale; }
 
     void Server::Server::Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key,
                              std::string PathTo_Public_Certficate)
     {
         ServerImpl_->Run(port, PasswordToPrivateKey, PathTo_Private_Key, PathTo_Public_Certficate);
-        while (ServerImpl_->Status_ == Server_Status::SERVER_RUNNING) {
+        while (ServerImpl_->Status_ == RAT_Lite::Server_Status::SERVER_RUNNING) {
             std::this_thread::sleep_for(50ms);
         }
     }

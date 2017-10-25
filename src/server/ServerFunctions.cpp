@@ -45,7 +45,7 @@ namespace RAT_Server {
         return imagecompressionactual;
     }
     void onClientSettingsChanged(WS_LITE::IWSocket *socket, std::vector<std::shared_ptr<Client>> &clients,
-                                 const RAT_Lite::ClientSettings &clientsettings)
+                                 const std::vector<Screen_Capture::Monitor> &monitors, const RAT_Lite::ClientSettings &clientsettings)
     {
         auto found = std::find_if(std::begin(clients), std::end(clients), [socket](const auto &client) { return client->Socket.get() == socket; });
         if (found != std::end(clients)) {
@@ -60,9 +60,8 @@ namespace RAT_Server {
             }
             (*found)->ShareClip = clientsettings.ShareClip;
             for (auto &m : clientsettings.MonitorsToWatch) {
-                auto newmonitor = std::find_if(std::begin(clientsettings.MonitorsToWatch), std::end(clientsettings.MonitorsToWatch),
-                                               [&m](const auto &mon) { return mon.Id == m.Id; });
-                if (newmonitor == std::end(clientsettings.MonitorsToWatch)) {
+                auto newmonitor = std::find_if(std::begin(monitors), std::end(monitors), [&m](const auto &mon) { return mon.Id == m.Id; });
+                if (newmonitor == std::end(monitors)) {
                     (*found)->MonitorsNeeded.push_back(m);
                 }
             }

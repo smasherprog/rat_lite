@@ -29,6 +29,7 @@ namespace RAT_Server {
         RAT_Lite::Server_Status Status_ = RAT_Lite::Server_Status::SERVER_STOPPED;
         std::shared_mutex ClientsLock;
         std::vector<std::shared_ptr<Client>> Clients;
+        std::vector<Screen_Capture::Monitor> AllMonitors;
 
         RAT_Lite::ClipboardSharing ShareClip = RAT_Lite::ClipboardSharing::NOT_SHARED;
         int ImageCompressionSettingRequested = 70;
@@ -55,15 +56,15 @@ namespace RAT_Server {
 
             ScreenCaptureManager_ =
                 Screen_Capture::CreateCaptureConfiguration([&]() {
-                    auto monitors = Screen_Capture::GetMonitors();
+                    AllMonitors = Screen_Capture::GetMonitors();
                     if (!IServerDriver_)
-                        return monitors;
-                    SendtoAll(IServerDriver_->PrepareMonitorsChanged(monitors));
+                        return AllMonitors;
+                    SendtoAll(IServerDriver_->PrepareMonitorsChanged(AllMonitors));
                     // add everyone to the list!
 
                     std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                    onGetMonitors(Clients, monitors);
-                    return monitors;
+                    onGetMonitors(Clients, AllMonitors);
+                    return AllMonitors;
                 })
                     ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                         if (!IServerDriver_)
@@ -240,7 +241,7 @@ namespace RAT_Server {
                         [&](const std::string &text) { onClipboardChanged(ShareClip == RAT_Lite::ClipboardSharing::SHARED, text, Clipboard_); })
                     ->onClientSettingsChanged([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::ClientSettings &clientsettings) {
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                        onClientSettingsChanged(socket.get(), Clients, clientsettings);
+                        onClientSettingsChanged(socket.get(), Clients, AllMonitors, clientsettings);
                     })
                     ->Build(clientctx);
             clientctx->listen();

@@ -12,16 +12,18 @@ export class MonitorsToWatchComponent implements OnInit {
     warningtext = null;
     constructor(private fb: FormBuilder) {}
     public ngOnInit(): void
-    { 
+    {
         this.MonitorsToWatch.forEach((a: Monitor) => { this.f.push(new FormControl(a.Id)); });
     }
-    public isChecked(mon: Monitor): boolean{
-      var found = this.f.controls.find((a: AbstractControl) => { return a.value == mon.Id; });
-      if(found) {
-          return true;
-      } else {
-          return false;
-      } 
+    public isChecked(mon: Monitor): boolean
+    {
+        var found = this.f.controls.find((a: AbstractControl) => { return a.value == mon.Id; });
+        if (found) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     public checked(changedevent: MatCheckboxChange, mon: Monitor): void
     {
@@ -30,17 +32,20 @@ export class MonitorsToWatchComponent implements OnInit {
             var found = this.f.controls.findIndex((a: AbstractControl) => { return a.value == mon.Id; });
             if (found == -1) {
                 this.f.push(new FormControl(mon.Id));
+                this.f.setErrors(null);
             }
         }
         else {
-            if (this.f.controls.length <= 1) {
+            var found = this.f.controls.findIndex((a: AbstractControl) => { return a.value == mon.Id; });
+            if (found != -1) {
+                this.f.removeAt(found);
+            }
+            if (this.f.controls.length ==0) {
                 this.warningtext = "You must have at least one monitor selected!";
+                this.f.setErrors({onemonitorneeded : true});
             }
             else {
-                var found = this.f.controls.findIndex((a: AbstractControl) => { return a.value == mon.Id; });
-                if (found != -1) {
-                    this.f.removeAt(found);
-                }
+                this.f.setErrors(null);
             }
         }
     }

@@ -146,8 +146,7 @@ export class IClientDriver {
         for (var i = 0; i < clientsettings.MonitorsToWatch.length; i++) {
             dataview.setInt32(offset, clientsettings.MonitorsToWatch[i].Id, true);
             offset +=4; 
-        }   
-        debugger;
+        }    
         this.WebSocket_.send(data.buffer);
     }
 };

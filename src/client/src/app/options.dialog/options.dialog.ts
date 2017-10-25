@@ -36,6 +36,7 @@ export class OptionsDialog implements OnInit {
                     nc.MonitorsToWatch.push(found);
                 }
             });  
+            console.log(nc.MonitorsToWatch);
             this.dialogRef.close(nc);
         }
     }

@@ -1,3 +1,4 @@
+import { window } from 'rxjs/operators';
 import { MonitorsCanvasComponent } from './monitorcanvas/monitorcanvas.component';
 import { OptionsDialog } from './options.dialog/options.dialog';
 import {Component, ElementRef, HostListener, OnInit, ViewChild, QueryList, ViewChildren} from '@angular/core';
@@ -26,7 +27,8 @@ export class AppComponent implements OnInit {
     Monitors = new Array<Monitor>();
     ClientSettings_ : ClientSettings;
     Cursor_: ImageData; 
-    width = '1000px';
+    width = '1000px'; 
+    ConnectedTo = '';
 
     constructor(public dialog: MatDialog) {}
     public ngOnInit(): void
@@ -53,18 +55,34 @@ export class AppComponent implements OnInit {
             }
         });
     }
+    private humanFileSize(bytes: number) : string {
+        var thresh =  1024;
+        if(Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
+        var units =['kB','MB','GB','TB','PB','EB','ZB','YB'] ;
+        var u = -1;
+        do {
+            bytes /= thresh;
+            ++u;
+        } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+        return bytes.toFixed(1)+' '+units[u];
+    }
     public OpenDialog(): void
     {
         this.dialog.open(ConnectDialog, {disableClose : true}).afterClosed().subscribe((a: ConnectModel) => {
             if (a) {
                 this.Socket_ = new WebSocket(a.Protocol + "://" + a.Host + ":" + a.Port);
                 this.Socket_.binaryType = 'arraybuffer';
-
+                this.ConnectedTo = a.Protocol + "://" + a.Host + ":" + a.Port;
                 this.ClientDriver_ =
                     CreateClientDriverConfiguration()
                         .onConnection((ws: WebSocket, ev: Event) => {
                             console.log('onConnection');
                             this.ClientSettings_ = new ClientSettings(); 
+                        })
+                        .onBytesPerSecond((bytespersecond: number)=>{ 
+                            document.title = 'Connected to '+ this.ConnectedTo + '  ' + this.humanFileSize(bytespersecond) + '/sec'; 
                         })
                         .onMessage((ws: WebSocket, message: WSMessage) => { console.log('onMessage length:' + message.data.byteLength); })
                         .onDisconnection((ws: WebSocket, code: number, message: string) => {

@@ -33,7 +33,7 @@ before_install:
       brew update && brew upgrade cmake || brew install cmake;
       brew install openssl zlib libjpeg-turbo;
     fi
-  - npm install -g typescript electron;
+  - npm install -g typescript electron @angular/cli@latest;
   
 script:
   - mkdir build

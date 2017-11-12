@@ -1,9 +1,7 @@
-<h2>All development happens in the master branch. To get stable releases, use tags by going to the release section.</h2>
-<h3>Remote Access Library</h3>
+## [Getting Started](https://github.com/smasherprog/rat_lite/wiki)
+### All development happens in the master branch. To get stable releases, use tags by going to the release section.
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/rat_lite.svg?branch=master"/><p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/vmascb1xd2ogy8af"/><p>
-
-## [Getting Started](https://github.com/smasherprog/rat_lite/wiki)
 
 <h5>Windows Connecting to Mac</h5>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Projects_Setup/master/rat_content/Windows_Mac.PNG" target="_blank"/>

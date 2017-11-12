@@ -3,10 +3,14 @@ const path = require('path')
 const url = require('url')
 
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let win
+let win, serve;
+const args = process.argv.slice(1);
+serve = args.some(val => val === '--serve');
 
+if (serve) {
+  require('electron-reload')(__dirname, {
+  });
+}
 function createWindow() {
     // Create the browser window.
     win = new BrowserWindow({ width: 800, height: 600 })
@@ -19,7 +23,10 @@ function createWindow() {
     }))
 
     // Open the DevTools.
-    win.webContents.openDevTools();
+    if (serve) {
+        win.webContents.openDevTools();
+      }
+      
     // Emitted when the window is closed.
     win.on('closed', () => {
         // Dereference the window object, usually you would store windows

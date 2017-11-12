@@ -1,42 +1,9 @@
 <h2>All development happens in the master branch. To get stable releases, use tags by going to the release section.</h2>
-
 <h3>Remote Access Library</h3>
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/rat_lite.svg?branch=master"/><p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/vmascb1xd2ogy8af"/><p>
 
-<p>This library is intended to be a VNC-like application, but with a few design goals:
-<ul>
-<li>
-Cross-platform:Windows, Linux, Modern Web Browsers, Andriod, Mac
-</li>
-<li>
-Performance 
-</li>
-<li>
-Encryption (openssl)
-</li>
-<li>
-Latest standards: c++ 17 
-</li>
-</ul>
-
-## Required tools
-* [Cmake](https://cmake.org/download/)(Latest!)
-* [Nodejs](https://nodejs.org/en/download/current/)(Latest!)
-* TypeScript/Electron/Angular install: `npm install -g typescript electron @angular/cli@latest`
-
-## Required Libraries
-* Mac: brew install openssl zlib libjpeg-turbo
-* Windows: vcpkg install openssl zlib libjpeg-turbo
-* Ubutnu: sudo apt-get npm install libxext-dev libx11-dev libxfixes-dev libxinerama-dev libxtst-dev libjpeg-turbo8-dev libssl-dev zlib1g-dev -y
-
-<h3>Building</h3>
-<p>Below are examples to build. Some paths, like windows vcpkg will need to be updated to your location to the vcpkg.cmake</p>
-<ul>
-<li>Mac: cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl . && make</li>
-<li>Windows: cmake -DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake . </li>
-<li>Ubutnu: cmake . && make</li>
-</ul>
+## [Getting Started](https://github.com/smasherprog/rat_lite/wiki)
 
 <h5>Windows Connecting to Mac</h5>
 <img style="width:50%;float:left;" src="https://raw.githubusercontent.com/smasherprog/Projects_Setup/master/rat_content/Windows_Mac.PNG" target="_blank"/>

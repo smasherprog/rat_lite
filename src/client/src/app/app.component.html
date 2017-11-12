@@ -8,3 +8,8 @@
     <monitor-canvas *ngFor="let mon of ClientSettings_.MonitorsToWatch" [Monitor]="mon" #HTMLCanvasScreenImage_></monitor-canvas>
     <canvas #HTMLCanvasMouseImage_ style="position:absolute;"></canvas>
 </div>
+<div *ngIf="Socket_ && this.Socket_.readyState === this.Socket_.CONNECTING">
+    <h1 style="text-align:center;">Connecting to {{ConnectedTo}}</h1>
+    <mat-progress-spinner class="connect-spinner" mode="indeterminate" diameter="32" [value]="50"> </mat-progress-spinner>
+</div>
+

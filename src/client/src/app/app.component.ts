@@ -71,8 +71,8 @@ export class AppComponent implements OnInit {
     public OpenDialog(): void
     {
         this.dialog.open(ConnectDialog, {disableClose : true}).afterClosed().subscribe((a: ConnectModel) => {
-            if (a) {
-                this.Socket_ = new WebSocket(a.Protocol + "://" + a.Host + ":" + a.Port);
+            if (a) {  
+                this.Socket_ = new WebSocket(a.Protocol + "://" + a.Host + ":" + a.Port); 
                 this.Socket_.binaryType = 'arraybuffer';
                 this.ConnectedTo = a.Protocol + "://" + a.Host + ":" + a.Port;
                 this.ClientDriver_ =
@@ -87,6 +87,7 @@ export class AppComponent implements OnInit {
                         .onMessage((ws: WebSocket, message: WSMessage) => { console.log('onMessage length:' + message.data.byteLength); })
                         .onDisconnection((ws: WebSocket, code: number, message: string) => {
                             console.log('onDisconnection ' + code + "  "+ message);
+                            this.ConnectedTo ='';
                             this.Cursor_ = null;
                             this.ScaleImage_ = false;
                             this.Monitors = new Array<Monitor>();

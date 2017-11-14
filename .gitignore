@@ -25,6 +25,8 @@ libs/
 [Jj]ni[Ll]ibs/
 .vs/
 *.js
+!postcss.config.js
+!webpack.config.js
 .codelite/
 .build-*/
 *.tlog

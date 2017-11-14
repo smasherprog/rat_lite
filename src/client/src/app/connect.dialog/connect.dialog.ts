@@ -9,14 +9,16 @@ import { ConnectModel } from '../models/connect.model';
 export class ConnectDialog implements OnInit {
     public f: FormGroup;
     submitting=false;
-    public Protocols = ['ws', 'wss'];
+    public Protocols = ['ws'
+   // , 'wss'
+    ];
     constructor(public dialogRef: MatDialogRef<ConnectDialog>, private fb: FormBuilder) {}
     public ngOnInit(): void
     {
         var defaltproto = 'ws';
-        if (window.location.protocol == "https:") {
-            defaltproto= "wss"; 
-        }
+        //if (window.location.protocol == "https:") {
+        //    defaltproto= "wss"; 
+       // }
         this.f = this.fb.group({ 
             'Protocol' : [
                 defaltproto, [ Validators.required ]

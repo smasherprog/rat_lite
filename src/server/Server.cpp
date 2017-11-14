@@ -155,9 +155,9 @@ namespace RAT_Server {
             Status_ = RAT_Lite::Server_Status::SERVER_RUNNING;
 
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
-#if DEBUG || _DEBUG
+
                                  ->NoTLS()
-#else
+/*
                                  ->UseTLS(
                                      [&](SL::WS_LITE::ITLSContext *context) {
                                          context->set_options(SL::WS_LITE::options::default_workarounds | SL::WS_LITE::options::no_sslv2 |
@@ -187,8 +187,8 @@ namespace RAT_Server {
                                              ec.clear();
                                          }
                                      },
-                                     SL::WS_LITE::method::tlsv11_server)
-#endif
+                                     SL::WS_LITE::method::tlsv11_server)*/
+
 
                                  ->CreateListener(port);
             IServerDriver_ =

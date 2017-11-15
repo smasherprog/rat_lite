@@ -137,53 +137,52 @@ export class AppComponent implements OnInit {
             }
         });
     }
-
-    @HostListener('mousedown', [ '$event' ])
-    mousedown(ev: MouseEvent)
-    {
-        if (this.ClientDriver_) {
-            this.ClientDriver_.SendMouseDown(ev.button);
-        }
-    }
     @HostListener('onkeydown', [ '$event' ])
     onkeydown(ev: KeyboardEvent)
     {
-        if (this.ClientDriver_) {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendKeyDown(ConvertToKeyCode(ev));
         }
     }
     @HostListener('onkeyup', [ '$event' ])
     onkeyup(ev: KeyboardEvent)
     {
-        if (this.ClientDriver_) {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendKeyUp(ConvertToKeyCode(ev));
         }
     }
-    @HostListener('onwheel', [ '$event' ])
+    @HostListener('mousewheel', [ '$event' ])
     onwheel(ev: WheelEvent)
     {
-        if (this.ClientDriver_) {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendMouseScroll(ev.deltaY < 0 ? -1 : 1);
         }
     }
     @HostListener('mousemove', [ '$event' ])
     onmove(ev: WheelEvent)
     { 
-        if (this.ClientDriver_) {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendMousePosition({Y : ev.pageY, X : ev.pageX});
         }
     }
-    @HostListener('onmouseup', [ '$event' ])
+    @HostListener('mouseup', [ '$event' ])
     onmouseup(ev: MouseEvent)
     {
-        if (this.ClientDriver_) {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendMouseUp(ev.button);
         }
     }
-    @HostListener('onwonmousedownheel', [ '$event' ])
+    @HostListener('onmousedownheel', [ '$event' ])
     onmousedown(ev: MouseEvent)
     {
-        if (this.ClientDriver_) {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
+            this.ClientDriver_.SendMouseDown(ev.button);
+        }
+    }
+    @HostListener('mousedown', [ '$event' ])
+    mousedown(ev: MouseEvent)
+    {
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendMouseDown(ev.button);
         }
     }

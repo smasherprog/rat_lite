@@ -98,7 +98,7 @@ export class IClientDriver {
             return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONKEYUP);
+        dataview.setUint32(0, PACKET_TYPES.ONKEYUP, true);
         dataview.setUint8(4, key);
         this.WebSocket_.send(data.buffer);
     }
@@ -108,7 +108,7 @@ export class IClientDriver {
             return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONKEYDOWN);
+        dataview.setUint32(0, PACKET_TYPES.ONKEYDOWN, true);
         dataview.setUint8(4, key);
         this.WebSocket_.send(data.buffer);
     }
@@ -118,7 +118,7 @@ export class IClientDriver {
             return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONMOUSEUP);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSEUP, true);
         dataview.setUint8(4, button);
         this.WebSocket_.send(data.buffer);
     }
@@ -128,7 +128,7 @@ export class IClientDriver {
             return;
         var data = new Uint8Array(4 + 1);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONMOUSEDOWN);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSEDOWN, true);
         dataview.setUint8(4, button);
         this.WebSocket_.send(data.buffer);
     }
@@ -138,19 +138,19 @@ export class IClientDriver {
             return;
         var data = new Uint8Array(4 + 4);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
-        dataview.setUint32(4, offset);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL, true);
+        dataview.setUint32(4, offset, true);
         this.WebSocket_.send(data.buffer);
     }
     SendMousePosition(pos: Point): void
-    {
+    { 
         if (this.ConnectedToSelf_)
             return;
         var data = new Uint8Array(4 + 8);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONMOUSEPOSITIONCHANGED);
-        dataview.setInt32(4, pos.X);
-        dataview.setInt32(8, pos.X);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSEPOSITIONCHANGED, true);
+        dataview.setInt32(4, pos.X, true);
+        dataview.setInt32(8, pos.Y, true);
         this.WebSocket_.send(data.buffer);
     }
     SendClipboardChanged(text: string): void
@@ -159,7 +159,7 @@ export class IClientDriver {
             return;
         var data = new Uint8Array(4 + text.length);
         var dataview = new DataView(data.buffer);
-        dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL);
+        dataview.setUint32(0, PACKET_TYPES.ONMOUSESCROLL, true);
         for (var i = 0; i < text.length; i++) {
             data[4 + i] = text.charCodeAt(0);
         }

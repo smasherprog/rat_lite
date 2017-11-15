@@ -138,49 +138,49 @@ export class AppComponent implements OnInit {
         });
     }
 
-    @HostListener('window:mousedown', [ '$event' ])
+    @HostListener('mousedown', [ '$event' ])
     mousedown(ev: MouseEvent)
     {
         if (this.ClientDriver_) {
             this.ClientDriver_.SendMouseDown(ev.button);
         }
     }
-    @HostListener('window:onkeydown', [ '$event' ])
+    @HostListener('onkeydown', [ '$event' ])
     onkeydown(ev: KeyboardEvent)
     {
         if (this.ClientDriver_) {
             this.ClientDriver_.SendKeyDown(ConvertToKeyCode(ev));
         }
     }
-    @HostListener('window:onkeyup', [ '$event' ])
+    @HostListener('onkeyup', [ '$event' ])
     onkeyup(ev: KeyboardEvent)
     {
         if (this.ClientDriver_) {
             this.ClientDriver_.SendKeyUp(ConvertToKeyCode(ev));
         }
     }
-    @HostListener('window:onwheel', [ '$event' ])
+    @HostListener('onwheel', [ '$event' ])
     onwheel(ev: WheelEvent)
     {
         if (this.ClientDriver_) {
             this.ClientDriver_.SendMouseScroll(ev.deltaY < 0 ? -1 : 1);
         }
     }
-    @HostListener('window:onmove', [ '$event' ])
+    @HostListener('mousemove', [ '$event' ])
     onmove(ev: WheelEvent)
-    {
+    { 
         if (this.ClientDriver_) {
             this.ClientDriver_.SendMousePosition({Y : ev.pageY, X : ev.pageX});
         }
     }
-    @HostListener('window:onmouseup', [ '$event' ])
+    @HostListener('onmouseup', [ '$event' ])
     onmouseup(ev: MouseEvent)
     {
         if (this.ClientDriver_) {
             this.ClientDriver_.SendMouseUp(ev.button);
         }
     }
-    @HostListener('window:onwonmousedownheel', [ '$event' ])
+    @HostListener('onwonmousedownheel', [ '$event' ])
     onmousedown(ev: MouseEvent)
     {
         if (this.ClientDriver_) {

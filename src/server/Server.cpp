@@ -72,7 +72,7 @@ namespace RAT_Server {
                         decltype(Clients) clients;
                         clients.reserve(Clients.size());
                         {
-                            std::shared_lock<std::shared_mutex> lock(ClientsLock);
+                            std::unique_lock<std::shared_mutex> lock(ClientsLock);
                             for (auto &a : Clients) {
                                 auto found =
                                     std::find_if(begin(a->MonitorsNeeded), end(a->MonitorsNeeded), [&monitor](auto m) { return monitor.Id == m.Id; });
@@ -152,6 +152,10 @@ namespace RAT_Server {
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
         {
+            for (auto x = 1000; x < 1400; x++) {
+                SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionAbsoluteEvent{ 300, x });
+                std::this_thread::sleep_for(10ms);
+            }
             Status_ = RAT_Lite::Server_Status::SERVER_RUNNING;
 
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))

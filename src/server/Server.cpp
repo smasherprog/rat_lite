@@ -152,10 +152,6 @@ namespace RAT_Server {
         }
         void Run(unsigned short port, std::string PasswordToPrivateKey, std::string PathTo_Private_Key, std::string PathTo_Public_Certficate)
         {
-            for (auto x = 1000; x < 1400; x++) {
-                SL::Input_Lite::SendInput(SL::Input_Lite::MousePositionAbsoluteEvent{ 300, x });
-                std::this_thread::sleep_for(10ms);
-            }
             Status_ = RAT_Lite::Server_Status::SERVER_RUNNING;
 
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))

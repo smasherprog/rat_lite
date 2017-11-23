@@ -6,7 +6,7 @@
 </div>
 <div *ngIf="Socket_ && ClientSettings_" style="position:relative;top:-36px;z-index:1;" [style.width]="width">
     
-    <monitor-canvas *ngFor="let mon of ClientSettings_.MonitorsToWatch" [Monitor]="mon" #HTMLCanvasScreenImage_></monitor-canvas>
+    <monitor-canvas *ngFor="let mon of ClientSettings_.MonitorsToWatch" [Monitor]="mon" #HTMLCanvasScreenImage_ (mouseenter)="overmonitor(mon)"></monitor-canvas>
     <canvas #HTMLCanvasMouseImage_ style="position:absolute;"></canvas>
 </div>
 <div *ngIf="Socket_ && this.Socket_.readyState === this.Socket_.CONNECTING">

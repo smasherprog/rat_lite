@@ -25,6 +25,7 @@ export class AppComponent implements OnInit {
     ClientDriver_: IClientDriver;
     Socket_: WebSocket;
     Monitors = new Array<Monitor>();
+    MouseOverMonitor: Monitor;
     ClientSettings_ : ClientSettings;
     Cursor_: ImageData; 
     width = '1000px'; 
@@ -54,6 +55,10 @@ export class AppComponent implements OnInit {
                 this.ClientDriver_.SendClientSettingsChanged(a);
             }
         });
+    }
+    public overmonitor(mon: Monitor): void{
+        this.MouseOverMonitor=mon;
+        console.log('overmonitor');
     }
     private humanFileSize(bytes: number) : string {
         var thresh =  1024;
@@ -93,6 +98,7 @@ export class AppComponent implements OnInit {
                             this.Monitors = new Array<Monitor>();
                             this.ClientDriver_ = null;
                             this.Socket_ = null;
+                            this.MouseOverMonitor=null;
                             this.ClientSettings_ = new ClientSettings(); 
                             this.OpenDialog();
                         })
@@ -161,9 +167,8 @@ export class AppComponent implements OnInit {
     @HostListener('mousemove', [ '$event' ])
     onmove(ev: WheelEvent)
     { 
-        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN && this.Monitors && this.Monitors.length >0) {
-            //scale the mouse coords before sending
-            let scaling = this.Monitors[0].Scaling; 
+        if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN && this.MouseOverMonitor) {
+            let scaling = this.MouseOverMonitor.Scaling; 
             let point = {Y : ev.pageY * scaling, X : ev.pageX* scaling} as Point;
             this.ClientDriver_.SendMousePosition(point);
         }

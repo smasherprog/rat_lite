@@ -1,3 +1,4 @@
+import { ConvertToKeyCode } from './lib/input_lite';
 import { window } from 'rxjs/operators';
 import { MonitorsCanvasComponent } from './monitorcanvas/monitorcanvas.component';
 import { OptionsDialog } from './options.dialog/options.dialog';
@@ -30,7 +31,7 @@ export class AppComponent implements OnInit {
     Cursor_: ImageData; 
     width = '1000px'; 
     ConnectedTo = '';
-
+    
     constructor(public dialog: MatDialog) {}
     public ngOnInit(): void
     {
@@ -143,14 +144,14 @@ export class AppComponent implements OnInit {
             }
         });
     }
-    @HostListener('onkeydown', [ '$event' ])
+    @HostListener('document:keydown', [ '$event' ])
     onkeydown(ev: KeyboardEvent)
     {
         if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {
             this.ClientDriver_.SendKeyDown(ConvertToKeyCode(ev));
         }
     }
-    @HostListener('onkeyup', [ '$event' ])
+    @HostListener('document:keyup', [ '$event' ])
     onkeyup(ev: KeyboardEvent)
     {
         if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN) {

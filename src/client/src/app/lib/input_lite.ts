@@ -1,6 +1,6 @@
 ﻿
 
-enum KeyCodes {
+export enum KeyCodes {
     KEY_A = 4,
     KEY_B = 5,
     KEY_C = 6,
@@ -123,7 +123,8 @@ enum KeyCodes {
     INVALID = 255
 };
 
-function ConvertToKeyCode(key: KeyboardEvent): KeyCodes {
+export function ConvertToKeyCode(key: KeyboardEvent): KeyCodes {
+  
     switch (key.key) {
         case "0":
             return KeyCodes.KEY_0;
@@ -136,7 +137,7 @@ function ConvertToKeyCode(key: KeyboardEvent): KeyCodes {
         case "7":
         case "8":
         case "9":
-            return KeyCodes.KEY_1 + (+key.key - 1);
+            return KeyCodes.KEY_1 + (key.key.charCodeAt(0) - 1);
         case "A":
         case "B":
         case "C":
@@ -190,7 +191,7 @@ function ConvertToKeyCode(key: KeyboardEvent): KeyCodes {
         case "x":
         case "y":
         case "z":
-            return KeyCodes.KEY_A + (+key.key - +"a");
+            return KeyCodes.KEY_A + (key.key.charCodeAt(0) - "a".charCodeAt(0));
         case "Enter":
             return KeyCodes.KEY_Enter;
         case "Escape":
@@ -319,24 +320,24 @@ function ConvertToKeyCode(key: KeyboardEvent): KeyCodes {
 
 }
 
-enum MouseButtons { LEFT, MIDDLE, RIGHT };
+export enum MouseButtons { LEFT, MIDDLE, RIGHT };
 
-class KeyEvent {
+export class KeyEvent {
     Pressed: boolean;
     Key: KeyCodes;
 };
-class MouseButtonEvent {
+export class MouseButtonEvent {
     Pressed: boolean;
     Button: MouseButtons;
 };
-class MouseScrollEvent {
+export class MouseScrollEvent {
     Offset = 0;
 };
-class MousePositionOffsetEvent {
+export class MousePositionOffsetEvent {
     X = 0;
     Y = 0;
 };
-class MousePositionAbsoluteEvent {
+export class MousePositionAbsoluteEvent {
     X = 0;
     Y = 0;
 };

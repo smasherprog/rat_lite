@@ -1,4 +1,5 @@
-﻿export enum OpCode {
+﻿import { KeyCodes, MouseButtons } from './input_lite';
+export enum OpCode {
     CONTINUATION = 0,
     TEXT = 1,
     BINARY = 2,

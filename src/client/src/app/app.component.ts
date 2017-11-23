@@ -163,9 +163,9 @@ export class AppComponent implements OnInit {
     { 
         if (this.ClientDriver_ && this.Socket_.readyState === this.Socket_.OPEN && this.Monitors && this.Monitors.length >0) {
             //scale the mouse coords before sending
-            let scaling = this.Monitors[0].Scaling;
-            console.log({Y : ev.pageY, X : ev.pageX});
-            this.ClientDriver_.SendMousePosition({Y : ev.pageY, X : ev.pageX});
+            let scaling = this.Monitors[0].Scaling; 
+            let point = {Y : ev.pageY * scaling, X : ev.pageX* scaling} as Point;
+            this.ClientDriver_.SendMousePosition(point);
         }
     }
     @HostListener('mouseup', [ '$event' ])

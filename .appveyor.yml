@@ -21,7 +21,7 @@ install:
   - move C:\projects\deps\cmake-* C:\projects\deps\cmake # Move to a version-agnostic directory
   - set PATH=C:\projects\deps\cmake\bin;%PATH%
   - cmake --version
-  - ps: Install-Product node 9.2.0
+  - ps: Install-Product node 8.8.1
   - cd c:\projects
   - mkdir build
   - cd build

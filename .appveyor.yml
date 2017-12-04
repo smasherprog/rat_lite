@@ -39,7 +39,6 @@ build_script:
   - cmake --build .
   - ctest -V -C Debug
   - cmake -DBUILD_SHARED_LIBS=ON "-DCMAKE_TOOLCHAIN_FILE=c:\projects\build\vcpkg\scripts\buildsystems\vcpkg.cmake" .. 
-  - cmake --build .
-  - cmake --build .
+  - cmake --build . 
   - ctest -V -C Debug
 

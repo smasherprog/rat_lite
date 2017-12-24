@@ -19,7 +19,7 @@ ExternalProject_Add(
   input_lite
 
   GIT_REPOSITORY "https://github.com/smasherprog/input_lite.git"
-  GIT_TAG "master"
+  GIT_TAG "3.0.0"
   
   UPDATE_COMMAND ""
   PATCH_COMMAND ""
@@ -34,7 +34,7 @@ ExternalProject_Add(
   clipboard_lite
 
   GIT_REPOSITORY "https://github.com/smasherprog/clipboard_lite.git"
-  GIT_TAG "master"
+  GIT_TAG "3.4"
   
   UPDATE_COMMAND ""
   PATCH_COMMAND ""
@@ -49,7 +49,7 @@ ExternalProject_Add(
   screen_capture_lite
 
   GIT_REPOSITORY "https://github.com/smasherprog/screen_capture_lite.git"
-  GIT_TAG "master"
+  GIT_TAG "14.0.6"
   
   UPDATE_COMMAND ""
   PATCH_COMMAND ""

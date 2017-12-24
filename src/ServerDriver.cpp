@@ -151,7 +151,7 @@ namespace RAT_Lite {
 
             ClientCount = 0;
             wslistenerconfig
-                ->onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
+                ->onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const SL::WS_LITE::HttpHeader &header) {
                     UNUSED(header);
                     if (MaxNumConnections > 0 && ClientCount + 1 > MaxNumConnections) {
                         socket->close(1000, "Closing due to max number of connections!");

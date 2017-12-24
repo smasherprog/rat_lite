@@ -130,7 +130,7 @@ namespace RAT_Lite {
         {
 
             wsclientconfig
-                ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const std::unordered_map<std::string, std::string> &header) {
+                ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const SL::WS_LITE::HttpHeader &header) {
                     SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onConnection ");
                     Socket_ = socket;
                     if (onConnection)

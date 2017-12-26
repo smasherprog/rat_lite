@@ -36,6 +36,7 @@ export class AppComponent implements OnInit {
     public ngOnInit(): void
     {
         setTimeout(() => { this.OpenDialog(); }, 100);
+
     }
     public Disconnect(): void
     {

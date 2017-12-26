@@ -157,43 +157,39 @@ namespace RAT_Server {
             auto clientctx = SL::WS_LITE::CreateContext(SL::WS_LITE::ThreadCount(1))
 
                                  ->NoTLS()
-/*
-                                 ->UseTLS(
-                                     [&](SL::WS_LITE::ITLSContext *context) {
-                                         context->set_options(SL::WS_LITE::options::default_workarounds | SL::WS_LITE::options::no_sslv2 |
-                                                              SL::WS_LITE::options::no_sslv3 | SL::WS_LITE::options::single_dh_use);
-                                         std::error_code ec;
+                                 /*
+                                                                  ->UseTLS(
+                                                                      [&](SL::WS_LITE::ITLSContext *context) {
+                                                                          context->set_options(SL::WS_LITE::options::default_workarounds |
+                                    SL::WS_LITE::options::no_sslv2 | SL::WS_LITE::options::no_sslv3 | SL::WS_LITE::options::single_dh_use);
+                                                                          std::error_code ec;
 
-                                         context->set_password_callback(
-                                             [PasswordToPrivateKey](std::size_t s, SL::WS_LITE::password_purpose p) { return PasswordToPrivateKey; },
-                                             ec);
-                                         if (ec) {
-                                             std::cout << "set_password_callback failed: " << ec.message();
-                                             ec.clear();
-                                         }
-                                         context->use_certificate_chain_file(PathTo_Public_Certficate, ec);
-                                         if (ec) {
-                                             std::cout << "use_certificate_chain_file failed: " << ec.message();
-                                             ec.clear();
-                                         }
-                                         context->set_default_verify_paths(ec);
-                                         if (ec) {
-                                             std::cout << "set_default_verify_paths failed: " << ec.message();
-                                             ec.clear();
-                                         }
-                                         context->use_private_key_file(std::string(PathTo_Private_Key), SL::WS_LITE::file_format::pem, ec);
-                                         if (ec) {
-                                             std::cout << "use_private_key_file failed: " << ec.message();
-                                             ec.clear();
-                                         }
-                                     },
-                                     SL::WS_LITE::method::tlsv11_server)*/
-
+                                                                          context->set_password_callback(
+                                                                              [PasswordToPrivateKey](std::size_t s, SL::WS_LITE::password_purpose p) {
+                                    return PasswordToPrivateKey; }, ec); if (ec) { std::cout << "set_password_callback failed: " << ec.message();
+                                                                              ec.clear();
+                                                                          }
+                                                                          context->use_certificate_chain_file(PathTo_Public_Certficate, ec);
+                                                                          if (ec) {
+                                                                              std::cout << "use_certificate_chain_file failed: " << ec.message();
+                                                                              ec.clear();
+                                                                          }
+                                                                          context->set_default_verify_paths(ec);
+                                                                          if (ec) {
+                                                                              std::cout << "set_default_verify_paths failed: " << ec.message();
+                                                                              ec.clear();
+                                                                          }
+                                                                          context->use_private_key_file(std::string(PathTo_Private_Key),
+                                    SL::WS_LITE::file_format::pem, ec); if (ec) { std::cout << "use_private_key_file failed: " << ec.message();
+                                                                              ec.clear();
+                                                                          }
+                                                                      },
+                                                                      SL::WS_LITE::method::tlsv11_server)*/
 
                                  ->CreateListener(port);
             IServerDriver_ =
                 RAT_Lite::CreateServerDriverConfiguration()
-                    ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) {
+                    ->onConnection([&](const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket) {
                         auto c = std::make_shared<Client>();
                         c->Socket = socket;
                         auto m = Screen_Capture::GetMonitors();
@@ -204,11 +200,11 @@ namespace RAT_Server {
                         Clients.push_back(c);
                         ScreenCaptureManager_->resume();
                     })
-                    ->onMessage([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage &msg) {
+                    ->onMessage([&](const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const WS_LITE::WSMessage &msg) {
                         UNUSED(socket);
                         UNUSED(msg);
                     })
-                    ->onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
+                    ->onDisconnection([&](const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, unsigned short code, const std::string &msg) {
                         std::unique_lock<std::shared_mutex> lock(ClientsLock);
                         Clients.erase(std::remove_if(std::begin(Clients), std::end(Clients), [&](auto &s) { return s->Socket == socket; }),
                                       std::end(Clients));
@@ -219,30 +215,31 @@ namespace RAT_Server {
                         UNUSED(code);
                         UNUSED(msg);
                     })
-                    ->onKeyUp([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key) {
+                    ->onKeyUp([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key) {
                         onKeyUp(IgnoreIncomingKeyboardEvents, socket, key);
                     })
-                    ->onKeyDown([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key) {
+                    ->onKeyDown([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key) {
                         onKeyDown(IgnoreIncomingKeyboardEvents, socket, key);
                     })
-                    ->onMouseUp([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button) {
+                    ->onMouseUp([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button) {
                         onMouseUp(IgnoreIncomingMouseEvents, socket, button);
                     })
-                    ->onMouseDown([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button) {
+                    ->onMouseDown([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button) {
                         onMouseDown(IgnoreIncomingMouseEvents, socket, button);
                     })
-                    ->onMouseScroll([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset) {
+                    ->onMouseScroll([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, int offset) {
                         onMouseScroll(IgnoreIncomingMouseEvents, socket, offset);
                     })
-                    ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos) {
+                    ->onMousePosition([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, const RAT_Lite::Point &pos) {
                         onMousePosition(IgnoreIncomingMouseEvents, socket, pos);
                     })
                     ->onClipboardChanged(
                         [&](const std::string &text) { onClipboardChanged(ShareClip == RAT_Lite::ClipboardSharing::SHARED, text, Clipboard_); })
-                    ->onClientSettingsChanged([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const RAT_Lite::ClientSettings &clientsettings) {
-                        std::unique_lock<std::shared_mutex> lock(ClientsLock);
-                        onClientSettingsChanged(socket.get(), Clients, AllMonitors, clientsettings);
-                    })
+                    ->onClientSettingsChanged(
+                        [&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, const RAT_Lite::ClientSettings &clientsettings) {
+                            std::unique_lock<std::shared_mutex> lock(ClientsLock);
+                            onClientSettingsChanged(socket.get(), Clients, AllMonitors, clientsettings);
+                        })
                     ->Build(clientctx);
             clientctx->listen();
         }

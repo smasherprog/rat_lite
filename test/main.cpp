@@ -75,9 +75,9 @@ std::string cliptext = "thisitheweasdsxzzxc436t456u7658u/asd.";
 //        lowerlevel->SendClipboardChanged(cliptext);
 //    }
 //
-//    virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) override {}
-//    virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const SL::WS_LITE::WSMessage &msg) override {}
-//    virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) override {}
+//    virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket) override {}
+//    virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const SL::WS_LITE::WSMessage &msg) override {}
+//    virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, unsigned short code, const std::string &msg) override {}
 //};
 //
 // class TestServerDriver : public SL::RAT::IServerDriver {
@@ -86,7 +86,7 @@ std::string cliptext = "thisitheweasdsxzzxc436t456u7658u/asd.";
 //    char asciikeyreceived = ' ';
 //
 //  public:
-//    std::shared_ptr<SL::WS_LITE::IWSocket> Socket;
+//    std::shared_ptr<SL::WS_LITE::IWebSocket> Socket;
 //
 //    TestServerDriver()
 //    {
@@ -113,41 +113,41 @@ std::string cliptext = "thisitheweasdsxzzxc436t456u7658u/asd.";
 //
 //    virtual ~TestServerDriver() {}
 //
-//    virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket) override
+//    virtual void onConnection(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket) override
 //    {
 //        Socket = socket;
 //        // lowerlevel->SendMonitorsChanged(socket, MonitorsToSend);
 //    }
-//    virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const SL::WS_LITE::WSMessage &msg) override {}
-//    virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) override {}
-//    virtual void onKeyUp(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, SL::Input_Lite::KeyCodes key) override
+//    virtual void onMessage(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const SL::WS_LITE::WSMessage &msg) override {}
+//    virtual void onDisconnection(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, unsigned short code, const std::string &msg) override {}
+//    virtual void onKeyUp(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, SL::Input_Lite::KeyCodes key) override
 //    {
 //        asciikeyreceived++;
 //        if (key >= '~') {
 //            // lowerlevel->SendClipboardChanged(cliptext);
 //        }
 //    }
-//    virtual void onKeyDown(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, SL::Input_Lite::KeyCodes key) override
+//    virtual void onKeyDown(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, SL::Input_Lite::KeyCodes key) override
 //    {
 //        std::cout << "Received Ascii test successfully" << std::endl;
 //    }
 //
-//    virtual void onMouseUp(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, SL::Input_Lite::MouseButtons button) override
+//    virtual void onMouseUp(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, SL::Input_Lite::MouseButtons button) override
 //    {
 //        assert(SL::Input_Lite::MouseButtons::RIGHT == button);
 //        std::cout << "Received onMouseUp successfully" << std::endl;
 //    }
-//    virtual void onMouseDown(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, SL::Input_Lite::MouseButtons button) override
+//    virtual void onMouseDown(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, SL::Input_Lite::MouseButtons button) override
 //    {
 //        assert(SL::Input_Lite::MouseButtons::MIDDLE == button);
 //        std::cout << "Received onMouseDown successfully" << std::endl;
 //    }
-//    virtual void onMouseScroll(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, int offset) override
+//    virtual void onMouseScroll(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, int offset) override
 //    {
 //        assert(offset == 46);
 //        std::cout << "Received onMouseScroll successfully" << std::endl;
 //    }
-//    virtual void onMousePosition(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const SL::RAT::Point &pos) override
+//    virtual void onMousePosition(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const SL::RAT::Point &pos) override
 //    {
 //        assert(pos == mpoint);
 //        std::cout << "Received onMousePosition successfully" << std::endl;

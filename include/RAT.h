@@ -127,11 +127,11 @@ namespace RAT_Lite {
       public:
         virtual ~INetworkHandlers() {}
 
-        virtual std::shared_ptr<CONFIGTYPE> onConnection(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket>)> &callback) = 0;
+        virtual std::shared_ptr<CONFIGTYPE> onConnection(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket>)> &callback) = 0;
         virtual std::shared_ptr<CONFIGTYPE>
-        onMessage(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage)> &callback) = 0;
+        onMessage(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const WS_LITE::WSMessage)> &callback) = 0;
         virtual std::shared_ptr<CONFIGTYPE> onDisconnection(
-            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string)> &callback) = 0;
+            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, unsigned short code, const std::string)> &callback) = 0;
     };
     class RAT_LITE_EXTERN IConfig {
       public:
@@ -163,19 +163,19 @@ namespace RAT_Lite {
         virtual ~IServerDriverConfiguration() {}
         // events raised from the server
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onKeyUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) = 0;
+        onKeyUp(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onKeyDown(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) = 0;
+        onKeyDown(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMouseUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> &callback) = 0;
+        onMouseUp(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMouseDown(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> &callback) = 0;
+        onMouseDown(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMouseScroll(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset)> &callback) = 0;
+        onMouseScroll(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, int offset)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMousePosition(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos)> &callback) = 0;
+        onMousePosition(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Point &pos)> &callback) = 0;
         virtual std::shared_ptr<IServerDriverConfiguration> onClientSettingsChanged(
-            const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const ClientSettings &settings)> &callback) = 0;
+            const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const ClientSettings &settings)> &callback) = 0;
 
         virtual std::shared_ptr<IServerDriverConfiguration> onClipboardChanged(const std::function<void(const std::string &text)> &callback) = 0;
         virtual std::shared_ptr<IServerDriver> Build(const std::shared_ptr<SL::WS_LITE::IWSListener_Configuration> &wslistenerconfig) = 0;

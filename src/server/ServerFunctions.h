@@ -18,25 +18,25 @@ namespace RAT_Server {
         std::vector<Screen_Capture::Monitor> MonitorsToWatch;
         std::vector<Screen_Capture::Monitor> MonitorsNeeded;
 
-        std::shared_ptr<WS_LITE::IWSocket> Socket;
+        std::shared_ptr<WS_LITE::IWebSocket> Socket;
     };
 
     int GetNewScreenCaptureRate(size_t memoryused, size_t maxmemoryused, int imgcapturerateactual, int imgcaptureraterequested);
     int GetNewImageCompression(size_t memoryused, size_t maxmemoryused, int imagecompressionactual, int imagecompressionrequested);
 
-    void onClientSettingsChanged(WS_LITE::IWSocket *socket, std::vector<std::shared_ptr<Client>> &clients,
+    void onClientSettingsChanged(WS_LITE::IWebSocket *socket, std::vector<std::shared_ptr<Client>> &clients,
                                  const std::vector<Screen_Capture::Monitor> &monitors, const RAT_Lite::ClientSettings &clientsettings);
     void onGetMonitors(std::vector<std::shared_ptr<Client>> &clients, const std::vector<Screen_Capture::Monitor> &monitors);
 
-    void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::KeyCodes &keycode);
+    void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::KeyCodes &keycode);
 
-    void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::KeyCodes &keycode);
-    void onKeyDown(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::KeyCodes &keycode);
+    void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::KeyCodes &keycode);
+    void onKeyDown(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::KeyCodes &keycode);
 
-    void onMouseUp(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::MouseButtons &button);
-    void onMouseDown(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::MouseButtons &button);
-    void onMouseScroll(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, int offset);
-    void onMousePosition(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos);
+    void onMouseUp(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::MouseButtons &button);
+    void onMouseDown(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::MouseButtons &button);
+    void onMouseScroll(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, int offset);
+    void onMousePosition(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const RAT_Lite::Point &pos);
     void onClipboardChanged(bool shareclipboard, const std::string &str, std::shared_ptr<Clipboard_Lite::IClipboard_Manager> clipboard);
 } // namespace RAT_Server
 } // namespace SL

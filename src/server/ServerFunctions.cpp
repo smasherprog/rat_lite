@@ -44,7 +44,7 @@ namespace RAT_Server {
         }
         return imagecompressionactual;
     }
-    void onClientSettingsChanged(WS_LITE::IWSocket *socket, std::vector<std::shared_ptr<Client>> &clients,
+    void onClientSettingsChanged(WS_LITE::IWebSocket *socket, std::vector<std::shared_ptr<Client>> &clients,
                                  const std::vector<Screen_Capture::Monitor> &monitors, const RAT_Lite::ClientSettings &clientsettings)
     {
         auto found = std::find_if(std::begin(clients), std::end(clients), [socket](const auto &client) { return client->Socket.get() == socket; });
@@ -79,7 +79,7 @@ namespace RAT_Server {
         }
     }
 
-    void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::KeyCodes &keycode)
+    void onKeyUp(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::KeyCodes &keycode)
     {
         if (!ignoreIncomingKeyboardEvents) {
             Input_Lite::KeyEvent kevent;
@@ -90,7 +90,7 @@ namespace RAT_Server {
         UNUSED(socket);
     }
 
-    void onKeyDown(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::KeyCodes &keycode)
+    void onKeyDown(bool ignoreIncomingKeyboardEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::KeyCodes &keycode)
     {
         if (!ignoreIncomingKeyboardEvents) {
             Input_Lite::KeyEvent kevent;
@@ -101,7 +101,7 @@ namespace RAT_Server {
         UNUSED(socket);
     }
 
-    void onMouseScroll(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, int offset)
+    void onMouseScroll(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, int offset)
     {
         if (!ignoreIncomingMouseEvents) {
             Input_Lite::MouseScrollEvent mbevent;
@@ -111,7 +111,7 @@ namespace RAT_Server {
         UNUSED(socket);
     }
 
-    void onMouseUp(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::MouseButtons &button)
+    void onMouseUp(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::MouseButtons &button)
     {
         if (!ignoreIncomingMouseEvents) {
             Input_Lite::MouseButtonEvent mbevent;
@@ -121,7 +121,7 @@ namespace RAT_Server {
         }
         UNUSED(socket);
     }
-    void onMouseDown(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWSocket> &socket, const Input_Lite::MouseButtons &button)
+    void onMouseDown(bool ignoreIncomingMouseEvents, const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Input_Lite::MouseButtons &button)
     {
         if (!ignoreIncomingMouseEvents) {
             Input_Lite::MouseButtonEvent mbevent;
@@ -131,7 +131,7 @@ namespace RAT_Server {
         }
         UNUSED(socket);
     }
-    void onMousePosition(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const RAT_Lite::Point &pos)
+    void onMousePosition(bool ignoreIncomingMouseEvents, const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const RAT_Lite::Point &pos)
     {
         if (!ignoreIncomingMouseEvents) {
             Input_Lite::MousePositionAbsoluteEvent mbevent;

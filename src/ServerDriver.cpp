@@ -20,18 +20,18 @@ namespace RAT_Lite {
         ClipboardSharing ShareClip = ClipboardSharing::NOT_SHARED;
         int MaxNumConnections = 10;
         std::atomic<size_t> MemoryInUse;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> onKeyUp;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> onKeyDown;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> onMouseUp;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> onMouseDown;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const ClientSettings &settings)> onClientSettingsChanged;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset)> onMouseScroll;
-        std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos)> onMousePosition;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key)> onKeyUp;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key)> onKeyDown;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button)> onMouseUp;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button)> onMouseDown;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const ClientSettings &settings)> onClientSettingsChanged;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, int offset)> onMouseScroll;
+        std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Point &pos)> onMousePosition;
         std::function<void(const std::string &text)> onClipboardChanged;
 
-        std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket>)> onConnection;
-        std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage)> onMessage;
-        std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string)> onDisconnection;
+        std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket>)> onConnection;
+        std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const WS_LITE::WSMessage)> onMessage;
+        std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, unsigned short code, const std::string)> onDisconnection;
 
         std::shared_mutex MonitorsLock;
         std::vector<Screen_Capture::Monitor> Monitors;
@@ -46,7 +46,7 @@ namespace RAT_Lite {
         virtual int MaxConnections() const override { return MaxNumConnections; }
         virtual size_t MemoryUsed() const override { return MemoryInUse; }
 
-        void KeyUp(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void KeyUp(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onKeyUp)
                 return;
@@ -57,7 +57,7 @@ namespace RAT_Lite {
                 return socket->close(1000, "Received invalid onKeyUp Event");
             }
         }
-        void KeyDown(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void KeyDown(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onKeyDown)
                 return;
@@ -68,7 +68,7 @@ namespace RAT_Lite {
                 return socket->close(1000, "Received invalid onKeyDown Event");
             }
         }
-        void MouseUp(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void MouseUp(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onMouseUp)
                 return;
@@ -78,7 +78,7 @@ namespace RAT_Lite {
             socket->close(1000, "Received invalid onMouseUp Event");
         }
 
-        void MouseDown(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void MouseDown(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onMouseDown)
                 return;
@@ -87,7 +87,7 @@ namespace RAT_Lite {
             }
             socket->close(1000, "Received invalid onMouseDown Event");
         }
-        void MousePosition(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void MousePosition(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onMousePosition)
                 return;
@@ -97,7 +97,7 @@ namespace RAT_Lite {
             }
             socket->close(1000, "Received invalid onMouseDown Event");
         }
-        void MouseScroll(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void MouseScroll(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onMouseScroll)
                 return;
@@ -106,7 +106,7 @@ namespace RAT_Lite {
             }
             socket->close(1000, "Received invalid onMouseScroll Event");
         }
-        void ClientSettingsChanged(const std::shared_ptr<WS_LITE::IWSocket> &socket, const unsigned char *data, size_t len)
+        void ClientSettingsChanged(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const unsigned char *data, size_t len)
         {
             if (!onClientSettingsChanged)
                 return;
@@ -151,7 +151,7 @@ namespace RAT_Lite {
 
             ClientCount = 0;
             wslistenerconfig
-                ->onConnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const SL::WS_LITE::HttpHeader &header) {
+                ->onConnection([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, const SL::WS_LITE::HttpHeader &header) {
                     UNUSED(header);
                     if (MaxNumConnections > 0 && ClientCount + 1 > MaxNumConnections) {
                         socket->close(1000, "Closing due to max number of connections!");
@@ -162,13 +162,13 @@ namespace RAT_Lite {
                         ClientCount += 1;
                     }
                 })
-                ->onDisconnection([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, unsigned short code, const std::string &msg) {
+                ->onDisconnection([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, unsigned short code, const std::string &msg) {
                     SL_RAT_LOG(RAT_Lite::Logging_Levels::INFO_log_level, "onDisconnection  ");
                     ClientCount -= 1;
                     if (onDisconnection)
                         onDisconnection(socket, code, msg);
                 })
-                ->onMessage([&](const std::shared_ptr<WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage &message) {
+                ->onMessage([&](const std::shared_ptr<WS_LITE::IWebSocket> &socket, const WS_LITE::WSMessage &message) {
 
                     auto p = PACKET_TYPES::INVALID;
                     assert(message.len >= sizeof(p));
@@ -334,42 +334,42 @@ namespace RAT_Lite {
         ServerDriverConfiguration(const std::shared_ptr<SL::RAT_Lite::ServerDriver> &c) : ServerDriver_(c) {}
         virtual ~ServerDriverConfiguration() {}
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onKeyUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
+        onKeyUp(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
         {
             assert(!ServerDriver_->onKeyUp);
             ServerDriver_->onKeyUp = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onKeyDown(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
+        onKeyDown(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::KeyCodes key)> &callback) override
         {
             assert(!ServerDriver_->onKeyDown);
             ServerDriver_->onKeyDown = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMouseUp(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> &callback) override
+        onMouseUp(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button)> &callback) override
         {
             assert(!ServerDriver_->onMouseUp);
             ServerDriver_->onMouseUp = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMouseDown(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, Input_Lite::MouseButtons button)> &callback) override
+        onMouseDown(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, Input_Lite::MouseButtons button)> &callback) override
         {
             assert(!ServerDriver_->onMouseDown);
             ServerDriver_->onMouseDown = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMouseScroll(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, int offset)> &callback) override
+        onMouseScroll(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, int offset)> &callback) override
         {
             assert(!ServerDriver_->onMouseScroll);
             ServerDriver_->onMouseScroll = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMousePosition(const std::function<void(const std::shared_ptr<WS_LITE::IWSocket> &socket, const Point &pos)> &callback) override
+        onMousePosition(const std::function<void(const std::shared_ptr<WS_LITE::IWebSocket> &socket, const Point &pos)> &callback) override
         {
             assert(!ServerDriver_->onMousePosition);
             ServerDriver_->onMousePosition = callback;
@@ -382,21 +382,21 @@ namespace RAT_Lite {
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onConnection(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket>)> &callback) override
+        onConnection(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket>)> &callback) override
         {
             assert(!ServerDriver_->onConnection);
             ServerDriver_->onConnection = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration>
-        onMessage(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const WS_LITE::WSMessage)> &callback) override
+        onMessage(const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const WS_LITE::WSMessage)> &callback) override
         {
             assert(!ServerDriver_->onMessage);
             ServerDriver_->onMessage = callback;
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration> onDisconnection(
-            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, unsigned short code, const std::string)> &callback)
+            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, unsigned short code, const std::string)> &callback)
             override
         {
             assert(!ServerDriver_->onDisconnection);
@@ -404,7 +404,7 @@ namespace RAT_Lite {
             return std::make_shared<ServerDriverConfiguration>(ServerDriver_);
         }
         virtual std::shared_ptr<IServerDriverConfiguration> onClientSettingsChanged(
-            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWSocket> &socket, const ClientSettings &settings)> &callback) override
+            const std::function<void(const std::shared_ptr<SL::WS_LITE::IWebSocket> &socket, const ClientSettings &settings)> &callback) override
         {
             assert(!ServerDriver_->onClientSettingsChanged);
             ServerDriver_->onClientSettingsChanged = callback;

@@ -1,4 +1,5 @@
 ## [Getting Started](https://github.com/smasherprog/rat_lite/wiki)
+### I am not updating this regularly, if anyone wants to take over, please issue PR
 ### All development happens in the master branch. To get stable releases, use tags by going to the release section.
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/rat_lite.svg?branch=master"/><p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/vmascb1xd2ogy8af"/><p>
